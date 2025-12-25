@@ -32,9 +32,10 @@ import {
   ArrowRight,
   ArrowRightLeft,
 } from 'lucide-react'
-import { generateWeeklyPlanWithDetails, regenerateDayPlan, generateShoppingList, generateRecipeDetails } from '@/app/actions/weekly-planner'
-import type { WeeklyPlanPreferences, WeeklyPlan, MealPlanDay, MealPlanMeal } from '@/app/actions/weekly-planner'
+import { generateWeeklyPlanWithDetails, regenerateDayPlan, generateShoppingList, generateRecipeDetails, proposeCheatMealDay } from '@/app/actions/weekly-planner'
+import type { WeeklyPlanPreferences, WeeklyPlan, MealPlanDay, MealPlanMeal, ConsumedMealsContext } from '@/app/actions/weekly-planner'
 import { useUserStore } from '@/stores/user-store'
+import { useMealsStore } from '@/stores/meals-store'
 
 interface WeeklyPlanGeneratorProps {
   onPlanGenerated?: (plan: WeeklyPlan) => void
@@ -63,6 +64,7 @@ interface RecipeDetails {
 
 export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGeneratorProps) {
   const { profile } = useUserStore()
+  const { meals, getDailyNutrition, recentFoods } = useMealsStore()
   const nutritionalNeeds = profile?.nutritionalNeeds
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -86,11 +88,53 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
   // Preferences
   const [includeCheatMeal, setIncludeCheatMeal] = useState(true)
 
+  // Cheat meal proposal state
+  const [showCheatMealProposal, setShowCheatMealProposal] = useState(false)
+  const [isProposingCheatMeal, setIsProposingCheatMeal] = useState(false)
+
   // Days labels for move modal
   const dayLabels = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
   // Recipe cache
   const [recipeCache, setRecipeCache] = useState<Record<string, RecipeDetails>>({})
+
+  // Get consumed meals context for the planner
+  const getConsumedContext = (): ConsumedMealsContext => {
+    const today = new Date().toISOString().split('T')[0]
+    const todayNutrition = getDailyNutrition(today)
+
+    // Get recent meals from the last 7 days
+    const recentMealsList: { name: string; type: string; calories: number }[] = []
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      return d.toISOString().split('T')[0]
+    })
+
+    last7Days.forEach(date => {
+      const dayMeals = meals[date] || []
+      dayMeals.forEach(meal => {
+        meal.items.forEach(item => {
+          recentMealsList.push({
+            name: item.food.name,
+            type: meal.type,
+            calories: item.food.nutrition.calories * item.quantity,
+          })
+        })
+      })
+    })
+
+    const weekCalories = last7Days.reduce((sum, date) => {
+      return sum + getDailyNutrition(date).calories
+    }, 0)
+
+    return {
+      todayCalories: todayNutrition.calories,
+      weekCalories,
+      averageDailyCalories: weekCalories / 7,
+      recentMeals: recentMealsList.slice(0, 20),
+    }
+  }
 
   const getPreferences = (): WeeklyPlanPreferences => {
     return {
@@ -117,10 +161,12 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
     setWeeklyPlan(null)
     setShoppingList(null)
     setValidatedMeals(new Set())
+    setShowCheatMealProposal(false)
 
     try {
       const preferences = getPreferences()
-      const result = await generateWeeklyPlanWithDetails(preferences, profile || undefined)
+      const consumedContext = getConsumedContext()
+      const result = await generateWeeklyPlanWithDetails(preferences, profile || undefined, consumedContext)
 
       if (result.success && result.plan) {
         setWeeklyPlan(result.plan)
@@ -215,6 +261,37 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
     })
 
     setValidatedMeals(newValidated)
+
+    // Check if we should propose cheat meal (when day 4 = Vendredi is validated)
+    if (dayIndex === 4 && weeklyPlan && !weeklyPlan.cheatMealProposed && includeCheatMeal) {
+      // Check if most of day 5 (Friday) meals are validated
+      const day5Meals = weeklyPlan.days[4].meals.filter(m => !m.isFasting)
+      const day5Validated = day5Meals.filter((_, idx) => newValidated.has(`4-${weeklyPlan.days[4].meals.indexOf(day5Meals[idx])}`)).length
+      if (day5Validated >= day5Meals.length * 0.5) {
+        setShowCheatMealProposal(true)
+      }
+    }
+  }
+
+  // Handle cheat meal proposal
+  const handleProposeCheatMeal = async (preferredDay: 5 | 6) => {
+    if (!weeklyPlan) return
+
+    setIsProposingCheatMeal(true)
+    try {
+      const preferences = getPreferences()
+      const result = await proposeCheatMealDay(weeklyPlan, preferences, preferredDay)
+
+      if (result.success && result.updatedPlan) {
+        setWeeklyPlan(result.updatedPlan)
+        onPlanGenerated?.(result.updatedPlan)
+        setShowCheatMealProposal(false)
+      }
+    } catch {
+      console.error('Error proposing cheat meal')
+    } finally {
+      setIsProposingCheatMeal(false)
+    }
   }
 
   const handleDeleteMeal = (dayIndex: number, mealIndex: number) => {
@@ -980,6 +1057,96 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                   className="w-full py-2.5 rounded-xl border border-[var(--border-default)] text-[var(--text-secondary)] font-medium text-sm"
                 >
                   Annuler
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cheat meal proposal modal */}
+      <AnimatePresence>
+        {showCheatMealProposal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+            onClick={() => setShowCheatMealProposal(false)}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-stone-900 rounded-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-4 border-b border-stone-100 dark:border-stone-800 bg-gradient-to-r from-orange-500 to-amber-500">
+                <div className="flex items-start justify-between">
+                  <div className="text-white">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Cookie className="w-5 h-5" />
+                      <span className="text-sm opacity-80">Félicitations !</span>
+                    </div>
+                    <h3 className="font-bold text-lg">Repas Plaisir 🎉</h3>
+                    <p className="text-sm opacity-80">
+                      Vous avez suivi votre plan ! Un repas plaisir vous attend.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCheatMealProposal(false)}
+                    className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 space-y-4">
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Choisissez quand vous voulez vous faire plaisir ce week-end :
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleProposeCheatMeal(5)}
+                    disabled={isProposingCheatMeal}
+                    className="py-4 px-4 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-center"
+                  >
+                    <span className="text-3xl mb-2 block">🍕</span>
+                    <span className="font-semibold text-orange-700 dark:text-orange-300">Samedi</span>
+                    <span className="text-xs text-orange-600 dark:text-orange-400 block mt-1">Dîner gourmand</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleProposeCheatMeal(6)}
+                    disabled={isProposingCheatMeal}
+                    className="py-4 px-4 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-center"
+                  >
+                    <span className="text-3xl mb-2 block">🍔</span>
+                    <span className="font-semibold text-purple-700 dark:text-purple-300">Dimanche</span>
+                    <span className="text-xs text-purple-600 dark:text-purple-400 block mt-1">Brunch festif</span>
+                  </motion.button>
+                </div>
+
+                {isProposingCheatMeal && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Préparation de votre repas plaisir...
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-stone-100 dark:border-stone-800">
+                <button
+                  onClick={() => setShowCheatMealProposal(false)}
+                  className="w-full py-2.5 rounded-xl border border-[var(--border-default)] text-[var(--text-secondary)] font-medium text-sm"
+                >
+                  Peut-être plus tard
                 </button>
               </div>
             </motion.div>

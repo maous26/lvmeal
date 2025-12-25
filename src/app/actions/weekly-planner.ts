@@ -28,6 +28,22 @@ function cleanJsonResponse(text: string): string {
   return text.replace(/```json\n?|\n?```/g, '').trim()
 }
 
+// Gustar API configuration
+const RAPIDAPI_HOST = 'gustar-io-deutsche-rezepte.p.rapidapi.com'
+const GUSTAR_BASE_URL = `https://${RAPIDAPI_HOST}`
+
+function isGustarAvailable(): boolean {
+  return !!process.env.RAPIDAPI_KEY
+}
+
+function getGustarHeaders(): HeadersInit {
+  return {
+    'x-rapidapi-host': RAPIDAPI_HOST,
+    'x-rapidapi-key': process.env.RAPIDAPI_KEY || '',
+    'Content-Type': 'application/json',
+  }
+}
+
 export interface WeeklyPlanPreferences {
   dailyCalories: number
   proteins: number
@@ -64,121 +80,224 @@ export interface MealPlanMeal {
   recipeId?: string
   isCheatMeal?: boolean
   isFasting?: boolean
+  source: 'gustar' | 'ciqual' | 'openfoodfacts' | 'ai' | 'user'
+  ingredients?: { name: string; amount: number; unit: string }[]
 }
 
 export interface WeeklyPlan {
   days: MealPlanDay[]
+  cheatMealDay?: number // Index of the day with cheat meal (0-6)
+  cheatMealProposed?: boolean // Whether cheat meal has been proposed at day 5
+}
+
+export interface ConsumedMealsContext {
+  todayCalories: number
+  weekCalories: number
+  averageDailyCalories: number
+  recentMeals: { name: string; type: string; calories: number }[]
 }
 
 /**
- * Generate a complete 7-day meal plan
+ * Search recipes from Gustar API
  */
-export async function generateWeeklyPlanWithDetails(
-  preferences: WeeklyPlanPreferences,
-  userProfile?: UserProfile
-): Promise<{ success: boolean; plan?: WeeklyPlan; error?: string }> {
+async function searchGustarRecipes(
+  query: string,
+  dietType?: string,
+  maxPrepTime?: number,
+  limit: number = 5
+): Promise<MealPlanMeal[]> {
+  if (!isGustarAvailable()) {
+    return []
+  }
+
   try {
-    if (!isOpenAIAvailable()) {
-      return {
-        success: false,
-        error: "L'IA n'est pas configurée. Veuillez configurer OPENAI_API_KEY."
+    const searchParams = new URLSearchParams({
+      text: query,
+      limit: limit.toString(),
+    })
+
+    // Map diet types
+    if (dietType) {
+      const dietMap: Record<string, string> = {
+        vegetarian: 'vegetarian',
+        vegan: 'vegan',
+        pescatarian: 'pescatarian',
+        keto: 'keto',
+        paleo: 'paleo',
+      }
+      if (dietMap[dietType]) {
+        searchParams.append('diet', dietMap[dietType])
       }
     }
 
-    const client = getOpenAIClient()
-    console.log('Generating weekly meal plan...')
-
-    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-    const weekPlan: MealPlanDay[] = []
-    const usedRecipeTitles: string[] = []
-
-    const profileContext = userProfile ? generateUserProfileContext(userProfile) : ''
-
-    // Determine Cheat Meal slot if requested
-    let cheatMealDayIndex = -1
-    let cheatMealType: 'lunch' | 'dinner' = 'dinner'
-
-    if (preferences.includeCheatMeal) {
-      const weekendIndices = [4, 5, 6]
-      cheatMealDayIndex = weekendIndices[Math.floor(Math.random() * weekendIndices.length)]
-      cheatMealType = Math.random() > 0.5 ? 'dinner' : 'lunch'
+    if (maxPrepTime) {
+      searchParams.append('maxPrepTime', maxPrepTime.toString())
     }
 
-    for (let i = 0; i < days.length; i++) {
-      const day = days[i]
-      const dayMeals: MealPlanMeal[] = []
+    const response = await fetch(`${GUSTAR_BASE_URL}/search_api?${searchParams}`, {
+      method: 'GET',
+      headers: getGustarHeaders(),
+    })
 
-      const dailyTheme = Math.random() > 0.5 ? getRandomTheme() : getSeasonalTheme()
+    if (!response.ok) {
+      console.error('Gustar API error:', response.status)
+      return []
+    }
 
-      const mealTypes = [
-        { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: preferences.dailyCalories * 0.25 },
-        { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: preferences.dailyCalories * 0.35 },
-        { type: 'snack' as const, name: 'Collation', calorieTarget: preferences.dailyCalories * 0.10 },
-        { type: 'dinner' as const, name: 'Dîner', calorieTarget: preferences.dailyCalories * 0.30 },
-      ]
+    const data = await response.json()
+    const results = data.results || data.recipes || []
 
-      for (const mealType of mealTypes) {
-        const isCheatMeal = i === cheatMealDayIndex && mealType.type === cheatMealType
-
-        // Check fasting window for breakfast
-        let skipMeal = false
-        if (preferences.fastingSchedule && preferences.fastingSchedule.type !== 'none') {
-          const windowStart = parseInt(preferences.fastingSchedule.eatingWindowStart || '12')
-          if (mealType.type === 'breakfast' && windowStart >= 12) {
-            skipMeal = true
-          }
-        }
-
-        if (skipMeal) {
-          dayMeals.push({
-            type: mealType.type,
-            name: 'Jeûne - Eau/Thé/Café',
-            description: 'Période de jeûne - hydratation uniquement',
-            calories: 0,
-            proteins: 0,
-            carbs: 0,
-            fats: 0,
-            prepTime: 0,
-            isFasting: true
+    return results.map((recipe: Record<string, unknown>) => ({
+      type: 'lunch' as const, // Will be overridden
+      name: String(recipe.title || recipe.name || 'Recette'),
+      description: recipe.description as string | undefined,
+      calories: Number(recipe.nutrition?.calories || recipe.calories || 0),
+      proteins: Number(recipe.nutrition?.proteins || recipe.proteins || 0),
+      carbs: Number(recipe.nutrition?.carbs || recipe.carbs || 0),
+      fats: Number(recipe.nutrition?.fats || recipe.fats || 0),
+      prepTime: Number(recipe.prepTime || recipe.prep_time || 30),
+      imageUrl: recipe.image as string | undefined,
+      recipeId: String(recipe.id || recipe._id || ''),
+      source: 'gustar' as const,
+      ingredients: Array.isArray(recipe.ingredients)
+        ? recipe.ingredients.map((ing: unknown) => {
+            if (typeof ing === 'string') return { name: ing, amount: 1, unit: '' }
+            const i = ing as Record<string, unknown>
+            return {
+              name: String(i.name || i.ingredient || ''),
+              amount: Number(i.amount || i.quantity || 1),
+              unit: String(i.unit || ''),
+            }
           })
-          continue
-        }
-
-        const meal = await generateMeal(
-          client,
-          day,
-          mealType,
-          preferences,
-          profileContext,
-          usedRecipeTitles,
-          dailyTheme,
-          i >= 5, // isWeekend
-          isCheatMeal
-        )
-
-        usedRecipeTitles.push(meal.name)
-        dayMeals.push(meal)
-      }
-
-      const totalCalories = dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0)
-
-      weekPlan.push({
-        day,
-        meals: dayMeals,
-        totalCalories,
-      })
-    }
-
-    console.log('Weekly plan generated successfully!')
-    return { success: true, plan: { days: weekPlan } }
+        : [],
+    }))
   } catch (error) {
-    console.error('Error generating weekly plan:', error)
-    return { success: false, error: 'Impossible de générer le plan hebdomadaire' }
+    console.error('Error searching Gustar recipes:', error)
+    return []
   }
 }
 
-async function generateMeal(
-  client: OpenAI,
+/**
+ * Search foods from Ciqual database
+ */
+async function searchCiqualFoods(
+  query: string,
+  limit: number = 5
+): Promise<MealPlanMeal[]> {
+  try {
+    // Import Ciqual data dynamically (it's a large file)
+    const ciqualData = await import('@/data/ciqual.json').then(m => m.default)
+
+    const queryLower = query.toLowerCase()
+    const matches = ciqualData
+      .filter((food: { name: string }) => food.name.toLowerCase().includes(queryLower))
+      .slice(0, limit)
+
+    return matches.map((food: Record<string, unknown>) => ({
+      type: 'lunch' as const,
+      name: String(food.name),
+      description: `${food.groupName || ''} - ${food.subGroupName || ''}`.trim() || undefined,
+      calories: Number((food.nutrition as Record<string, number>)?.calories || 0),
+      proteins: Number((food.nutrition as Record<string, number>)?.proteins || 0),
+      carbs: Number((food.nutrition as Record<string, number>)?.carbs || 0),
+      fats: Number((food.nutrition as Record<string, number>)?.fats || 0),
+      prepTime: 10,
+      source: 'ciqual' as const,
+    }))
+  } catch (error) {
+    console.error('Error searching Ciqual:', error)
+    return []
+  }
+}
+
+/**
+ * Search products from Open Food Facts
+ */
+async function searchOpenFoodFacts(
+  query: string,
+  limit: number = 5
+): Promise<MealPlanMeal[]> {
+  try {
+    const response = await fetch(
+      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=${limit}&countries_tags_fr=france`,
+      { next: { revalidate: 3600 } }
+    )
+
+    if (!response.ok) {
+      return []
+    }
+
+    const data = await response.json()
+    const products = data.products || []
+
+    return products.map((product: Record<string, unknown>) => {
+      const nutriments = (product.nutriments || {}) as Record<string, number>
+      return {
+        type: 'lunch' as const,
+        name: String(product.product_name_fr || product.product_name || 'Produit'),
+        description: product.brands as string | undefined,
+        calories: Math.round(nutriments['energy-kcal_100g'] || nutriments.energy_100g / 4.184 || 0),
+        proteins: Math.round((nutriments.proteins_100g || 0) * 10) / 10,
+        carbs: Math.round((nutriments.carbohydrates_100g || 0) * 10) / 10,
+        fats: Math.round((nutriments.fat_100g || 0) * 10) / 10,
+        prepTime: 5,
+        imageUrl: product.image_front_small_url as string | undefined,
+        source: 'openfoodfacts' as const,
+      }
+    }).filter((p: MealPlanMeal) => p.calories > 0)
+  } catch (error) {
+    console.error('Error searching Open Food Facts:', error)
+    return []
+  }
+}
+
+/**
+ * Get meal suggestions based on type and preferences
+ */
+async function getMealSuggestions(
+  mealType: 'breakfast' | 'lunch' | 'snack' | 'dinner',
+  preferences: WeeklyPlanPreferences,
+  usedNames: string[],
+  isWeekend: boolean
+): Promise<MealPlanMeal[]> {
+  const queries: Record<string, string[]> = {
+    breakfast: ['petit déjeuner', 'oeufs', 'tartine', 'yaourt fruits', 'flocons avoine'],
+    lunch: ['poulet légumes', 'salade composée', 'poisson grillé', 'pâtes', 'riz'],
+    snack: ['fruit', 'yaourt', 'noix', 'fromage blanc'],
+    dinner: ['soupe', 'salade', 'légumes grillés', 'poisson vapeur', 'omelette'],
+  }
+
+  const typeQueries = queries[mealType] || ['repas']
+  const randomQuery = typeQueries[Math.floor(Math.random() * typeQueries.length)]
+
+  const maxPrepTime = isWeekend
+    ? (preferences.cookingTimeWeekend || 45)
+    : (preferences.cookingTimeWeekday || 20)
+
+  const allSuggestions: MealPlanMeal[] = []
+
+  // 1. First try Gustar API
+  const gustarResults = await searchGustarRecipes(randomQuery, preferences.dietType, maxPrepTime, 3)
+  allSuggestions.push(...gustarResults)
+
+  // 2. Then Ciqual
+  const ciqualResults = await searchCiqualFoods(randomQuery, 3)
+  allSuggestions.push(...ciqualResults)
+
+  // 3. Then Open Food Facts
+  const offResults = await searchOpenFoodFacts(randomQuery, 2)
+  allSuggestions.push(...offResults)
+
+  // Filter out already used meals
+  return allSuggestions
+    .filter(meal => !usedNames.includes(meal.name.toLowerCase()))
+    .map(meal => ({ ...meal, type: mealType }))
+}
+
+/**
+ * Generate a meal using AI (fallback when no good matches found)
+ */
+async function generateMealWithAI(
   day: string,
   mealType: { type: 'breakfast' | 'lunch' | 'snack' | 'dinner'; name: string; calorieTarget: number },
   preferences: WeeklyPlanPreferences,
@@ -188,6 +307,11 @@ async function generateMeal(
   isWeekend: boolean,
   isCheatMeal: boolean
 ): Promise<MealPlanMeal> {
+  if (!isOpenAIAvailable()) {
+    return getFallbackMeal(mealType, isCheatMeal)
+  }
+
+  const client = getOpenAIClient()
   const maxCookingTime = isWeekend
     ? (preferences.cookingTimeWeekend || 45)
     : (preferences.cookingTimeWeekday || 20)
@@ -221,13 +345,16 @@ Réponds UNIQUEMENT en JSON:
   "proteins": 25,
   "carbs": 35,
   "fats": 12,
-  "prepTime": ${Math.min(maxCookingTime, 25)}
+  "prepTime": ${Math.min(maxCookingTime, 25)},
+  "ingredients": [
+    { "name": "ingrédient", "amount": 100, "unit": "g" }
+  ]
 }`
 
   try {
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.4,
       messages: [{ role: 'user', content: prompt }],
     })
@@ -250,10 +377,11 @@ Réponds UNIQUEMENT en JSON:
       fats: recipe.fats,
       prepTime: recipe.prepTime,
       isCheatMeal,
+      source: 'ai',
+      ingredients: recipe.ingredients,
     }
   } catch (error) {
-    console.error(`Error generating meal for ${day} ${mealType.type}:`, error)
-    // Fallback meal
+    console.error(`Error generating meal with AI for ${day} ${mealType.type}:`, error)
     return getFallbackMeal(mealType, isCheatMeal)
   }
 }
@@ -272,7 +400,8 @@ function getFallbackMeal(
       carbs: 50,
       fats: 12,
       prepTime: 5,
-      isCheatMeal: false
+      isCheatMeal: false,
+      source: 'ai',
     },
     lunch: {
       type: 'lunch',
@@ -283,7 +412,8 @@ function getFallbackMeal(
       carbs: isCheatMeal ? 80 : 40,
       fats: isCheatMeal ? 50 : 15,
       prepTime: 25,
-      isCheatMeal
+      isCheatMeal,
+      source: 'ai',
     },
     snack: {
       type: 'snack',
@@ -294,7 +424,8 @@ function getFallbackMeal(
       carbs: 20,
       fats: 3,
       prepTime: 2,
-      isCheatMeal: false
+      isCheatMeal: false,
+      source: 'ai',
     },
     dinner: {
       type: 'dinner',
@@ -305,10 +436,260 @@ function getFallbackMeal(
       carbs: isCheatMeal ? 70 : 25,
       fats: isCheatMeal ? 35 : 8,
       prepTime: isCheatMeal ? 30 : 20,
-      isCheatMeal
-    }
+      isCheatMeal,
+      source: 'ai',
+    },
   }
   return fallbacks[mealType.type]
+}
+
+/**
+ * Generate a complete 7-day meal plan
+ * Priority: Gustar API > Ciqual > Open Food Facts > AI generation
+ */
+export async function generateWeeklyPlanWithDetails(
+  preferences: WeeklyPlanPreferences,
+  userProfile?: UserProfile,
+  consumedContext?: ConsumedMealsContext
+): Promise<{ success: boolean; plan?: WeeklyPlan; error?: string }> {
+  try {
+    console.log('Generating weekly meal plan...')
+    console.log('Sources available:', {
+      gustar: isGustarAvailable(),
+      openai: isOpenAIAvailable(),
+    })
+
+    const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    const weekPlan: MealPlanDay[] = []
+    const usedRecipeNames: string[] = []
+
+    // Add recently consumed meals to avoid repetition
+    if (consumedContext?.recentMeals) {
+      usedRecipeNames.push(...consumedContext.recentMeals.map(m => m.name.toLowerCase()))
+    }
+
+    const profileContext = userProfile ? generateUserProfileContext(userProfile) : ''
+
+    // Calculate remaining calories if user has already eaten today
+    let adjustedDailyCalories = preferences.dailyCalories
+    if (consumedContext?.todayCalories) {
+      const remaining = preferences.dailyCalories - consumedContext.todayCalories
+      if (remaining > 0) {
+        console.log(`User has consumed ${consumedContext.todayCalories} kcal today, ${remaining} remaining`)
+      }
+    }
+
+    // Determine Cheat Meal day (will be proposed at day 5)
+    let cheatMealDayIndex = -1
+    let cheatMealType: 'lunch' | 'dinner' = 'dinner'
+
+    if (preferences.includeCheatMeal) {
+      // Default to Saturday or Sunday
+      cheatMealDayIndex = 5 + Math.floor(Math.random() * 2) // 5 or 6
+      cheatMealType = Math.random() > 0.5 ? 'dinner' : 'lunch'
+    }
+
+    for (let i = 0; i < days.length; i++) {
+      const day = days[i]
+      const dayMeals: MealPlanMeal[] = []
+      const isWeekend = i >= 5
+
+      const dailyTheme = Math.random() > 0.5 ? getRandomTheme() : getSeasonalTheme()
+
+      const mealTypes = [
+        { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: adjustedDailyCalories * 0.25 },
+        { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: adjustedDailyCalories * 0.35 },
+        { type: 'snack' as const, name: 'Collation', calorieTarget: adjustedDailyCalories * 0.10 },
+        { type: 'dinner' as const, name: 'Dîner', calorieTarget: adjustedDailyCalories * 0.30 },
+      ]
+
+      for (const mealType of mealTypes) {
+        const isCheatMeal = i === cheatMealDayIndex && mealType.type === cheatMealType
+
+        // Check fasting window for breakfast
+        let skipMeal = false
+        if (preferences.fastingSchedule && preferences.fastingSchedule.type !== 'none') {
+          const windowStart = parseInt(preferences.fastingSchedule.eatingWindowStart || '12')
+          if (mealType.type === 'breakfast' && windowStart >= 12) {
+            skipMeal = true
+          }
+        }
+
+        if (skipMeal) {
+          dayMeals.push({
+            type: mealType.type,
+            name: 'Jeûne - Eau/Thé/Café',
+            description: 'Période de jeûne - hydratation uniquement',
+            calories: 0,
+            proteins: 0,
+            carbs: 0,
+            fats: 0,
+            prepTime: 0,
+            isFasting: true,
+            source: 'ai',
+          })
+          continue
+        }
+
+        let meal: MealPlanMeal | null = null
+
+        // Skip cheat meal for now if it's before day 5 (will be proposed later)
+        if (!isCheatMeal) {
+          // 1. Try to find meals from existing sources
+          const suggestions = await getMealSuggestions(mealType.type, preferences, usedRecipeNames, isWeekend)
+
+          if (suggestions.length > 0) {
+            // Find a meal that fits the calorie target (±30%)
+            const targetMin = mealType.calorieTarget * 0.7
+            const targetMax = mealType.calorieTarget * 1.3
+
+            meal = suggestions.find(s => s.calories >= targetMin && s.calories <= targetMax)
+
+            if (!meal && suggestions.length > 0) {
+              // If no exact match, take the first one and adjust portion description
+              meal = { ...suggestions[0] }
+            }
+          }
+        }
+
+        // 2. If no suitable meal found, generate with AI
+        if (!meal) {
+          meal = await generateMealWithAI(
+            day,
+            mealType,
+            preferences,
+            profileContext,
+            usedRecipeNames,
+            dailyTheme,
+            isWeekend,
+            isCheatMeal
+          )
+        }
+
+        usedRecipeNames.push(meal.name.toLowerCase())
+        dayMeals.push(meal)
+      }
+
+      const totalCalories = dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0)
+
+      weekPlan.push({
+        day,
+        meals: dayMeals,
+        totalCalories,
+      })
+    }
+
+    console.log('Weekly plan generated successfully!')
+
+    return {
+      success: true,
+      plan: {
+        days: weekPlan,
+        cheatMealDay: cheatMealDayIndex,
+        cheatMealProposed: false,
+      },
+    }
+  } catch (error) {
+    console.error('Error generating weekly plan:', error)
+    return { success: false, error: 'Impossible de générer le plan hebdomadaire' }
+  }
+}
+
+/**
+ * Propose cheat meal modification for day 6 or 7
+ * Called when user reaches day 5
+ */
+export async function proposeCheatMealDay(
+  currentPlan: WeeklyPlan,
+  preferences: WeeklyPlanPreferences,
+  preferredDay: 5 | 6 // Samedi (5) ou Dimanche (6)
+): Promise<{ success: boolean; updatedPlan?: WeeklyPlan; error?: string }> {
+  try {
+    if (!isOpenAIAvailable()) {
+      return { success: false, error: "L'IA n'est pas disponible" }
+    }
+
+    const client = getOpenAIClient()
+    const day = preferredDay === 5 ? 'Samedi' : 'Dimanche'
+
+    const prompt = `Génère un REPAS PLAISIR (cheat meal) gourmand mais pas trop excessif.
+
+CONTRAINTES:
+- Calories max: 1200 kcal
+- Doit être appétissant et réconfortant
+- Type de régime de base: ${preferences.dietType || 'omnivore'}
+- Allergies à éviter: ${preferences.allergies?.join(', ') || 'aucune'}
+
+Réponds UNIQUEMENT en JSON:
+{
+  "title": "Nom fun du plat",
+  "description": "Description gourmande",
+  "calories": 900,
+  "proteins": 35,
+  "carbs": 80,
+  "fats": 45,
+  "prepTime": 30,
+  "mealType": "dinner"
+}`
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 500,
+      temperature: 0.6,
+      messages: [{ role: 'user', content: prompt }],
+    })
+
+    const textContent = response.choices[0]?.message?.content
+    if (!textContent) {
+      throw new Error('No response from AI')
+    }
+
+    const jsonStr = cleanJsonResponse(textContent)
+    const cheatMeal = JSON.parse(jsonStr)
+
+    // Update the plan with the cheat meal
+    const updatedDays = currentPlan.days.map((dayPlan, index) => {
+      if (index !== preferredDay) return dayPlan
+
+      const mealType = cheatMeal.mealType === 'lunch' ? 'lunch' : 'dinner'
+      const updatedMeals = dayPlan.meals.map(meal => {
+        if (meal.type === mealType) {
+          return {
+            ...meal,
+            name: cheatMeal.title,
+            description: cheatMeal.description,
+            calories: cheatMeal.calories,
+            proteins: cheatMeal.proteins,
+            carbs: cheatMeal.carbs,
+            fats: cheatMeal.fats,
+            prepTime: cheatMeal.prepTime,
+            isCheatMeal: true,
+            source: 'ai' as const,
+          }
+        }
+        return meal
+      })
+
+      return {
+        ...dayPlan,
+        meals: updatedMeals,
+        totalCalories: updatedMeals.reduce((sum, m) => sum + m.calories, 0),
+      }
+    })
+
+    return {
+      success: true,
+      updatedPlan: {
+        ...currentPlan,
+        days: updatedDays,
+        cheatMealDay: preferredDay,
+        cheatMealProposed: true,
+      },
+    }
+  } catch (error) {
+    console.error('Error proposing cheat meal:', error)
+    return { success: false, error: 'Impossible de proposer le repas plaisir' }
+  }
 }
 
 /**
@@ -321,25 +702,17 @@ export async function regenerateDayPlan(
   userProfile?: UserProfile
 ): Promise<{ success: boolean; dayPlan?: MealPlanDay; error?: string }> {
   try {
-    if (!isOpenAIAvailable()) {
-      return {
-        success: false,
-        error: "L'IA n'est pas configurée."
-      }
-    }
-
-    const client = getOpenAIClient()
     const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
     const day = days[dayIndex]
 
     const profileContext = userProfile ? generateUserProfileContext(userProfile) : ''
 
     // Collect titles from other days to avoid duplicates
-    const usedRecipeTitles: string[] = []
+    const usedRecipeNames: string[] = []
     existingPlan.days.forEach((d, idx) => {
       if (idx !== dayIndex) {
         d.meals.forEach((m) => {
-          if (m.name) usedRecipeTitles.push(m.name)
+          if (m.name) usedRecipeNames.push(m.name.toLowerCase())
         })
       }
     })
@@ -375,24 +748,36 @@ export async function regenerateDayPlan(
           carbs: 0,
           fats: 0,
           prepTime: 0,
-          isFasting: true
+          isFasting: true,
+          source: 'ai',
         })
         continue
       }
 
-      const meal = await generateMeal(
-        client,
-        day,
-        mealType,
-        preferences,
-        profileContext,
-        usedRecipeTitles,
-        theme,
-        isWeekend,
-        false
-      )
+      // Try existing sources first
+      const suggestions = await getMealSuggestions(mealType.type, preferences, usedRecipeNames, isWeekend)
+      let meal: MealPlanMeal | null = null
 
-      usedRecipeTitles.push(meal.name)
+      if (suggestions.length > 0) {
+        const targetMin = mealType.calorieTarget * 0.7
+        const targetMax = mealType.calorieTarget * 1.3
+        meal = suggestions.find(s => s.calories >= targetMin && s.calories <= targetMax) || suggestions[0]
+      }
+
+      if (!meal) {
+        meal = await generateMealWithAI(
+          day,
+          mealType,
+          preferences,
+          profileContext,
+          usedRecipeNames,
+          theme,
+          isWeekend,
+          false
+        )
+      }
+
+      usedRecipeNames.push(meal.name.toLowerCase())
       dayMeals.push(meal)
     }
 
@@ -404,7 +789,7 @@ export async function regenerateDayPlan(
         day,
         meals: dayMeals,
         totalCalories,
-      }
+      },
     }
   } catch (error) {
     console.error('Error regenerating day:', error)
@@ -420,28 +805,40 @@ export async function generateShoppingList(weeklyPlan: WeeklyPlan, budget?: numb
     if (!isOpenAIAvailable()) {
       return {
         success: false,
-        error: "L'IA n'est pas configurée."
+        error: "L'IA n'est pas configurée.",
       }
     }
 
     const client = getOpenAIClient()
 
-    // Collect all meal names with details
+    // Collect all meal names and ingredients
     const allMeals: string[] = []
+    const allIngredients: string[] = []
+
     weeklyPlan.days.forEach((day) => {
       day.meals.forEach((meal) => {
         if (meal.name && !meal.isFasting) {
           allMeals.push(`- ${meal.name} (${meal.calories} kcal, P:${meal.proteins}g)`)
+          if (meal.ingredients) {
+            meal.ingredients.forEach(ing => {
+              allIngredients.push(`${ing.amount} ${ing.unit} ${ing.name}`)
+            })
+          }
         }
       })
     })
 
     const budgetContext = budget ? `Budget hebdomadaire maximum: ${budget}€. Respecte ce budget!` : ''
 
+    const ingredientsContext = allIngredients.length > 0
+      ? `\n\nINGRÉDIENTS DÉJÀ IDENTIFIÉS:\n${allIngredients.join('\n')}`
+      : ''
+
     const prompt = `Tu es un expert en courses alimentaires en France. Génère une liste de courses COMPLÈTE et RÉALISTE.
 
 REPAS DE LA SEMAINE (${allMeals.length} repas):
 ${allMeals.join('\n')}
+${ingredientsContext}
 
 ${budgetContext}
 
@@ -519,21 +916,45 @@ Réponds UNIQUEMENT avec ce JSON:
 /**
  * Generate detailed recipe for a meal
  */
-export async function generateRecipeDetails(meal: {
-  name: string
-  description?: string
-  calories: number
-  proteins: number
-  carbs: number
-  fats: number
-  prepTime: number
-  type: string
-}, userProfile?: UserProfile) {
+export async function generateRecipeDetails(
+  meal: {
+    name: string
+    description?: string
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+    prepTime: number
+    type: string
+    ingredients?: { name: string; amount: number; unit: string }[]
+  },
+  userProfile?: UserProfile
+) {
+  // If meal already has ingredients, return them formatted
+  if (meal.ingredients && meal.ingredients.length > 0) {
+    return {
+      success: true,
+      recipe: {
+        ingredients: meal.ingredients.map(ing => ({
+          name: ing.name,
+          quantity: String(ing.amount),
+          unit: ing.unit,
+        })),
+        instructions: [
+          'Préparer tous les ingrédients',
+          'Suivre les étapes de préparation habituelles',
+          'Servir et déguster',
+        ],
+        tips: ['Recette basée sur les ingrédients fournis'],
+      },
+    }
+  }
+
   try {
     if (!isOpenAIAvailable()) {
       return {
         success: false,
-        error: "L'IA n'est pas configurée."
+        error: "L'IA n'est pas configurée.",
       }
     }
 
@@ -544,7 +965,7 @@ export async function generateRecipeDetails(meal: {
       breakfast: 'petit-déjeuner',
       lunch: 'déjeuner',
       snack: 'collation',
-      dinner: 'dîner'
+      dinner: 'dîner',
     }
 
     const prompt = `Tu es un chef cuisinier français expert. Crée une recette COMPLÈTE et DÉTAILLÉE.
