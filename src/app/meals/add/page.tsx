@@ -10,7 +10,6 @@ import {
   Camera,
   Mic,
   Barcode,
-  BookOpen,
   Sparkles,
   Star,
   Plus,
@@ -20,6 +19,7 @@ import {
   ShoppingBag,
   Check,
   X,
+  ArrowLeft,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { PageContainer, Section } from '@/components/layout/page-container'
@@ -30,6 +30,10 @@ import { Badge } from '@/components/ui/badge'
 import { cn, formatNumber } from '@/lib/utils'
 import { useMealsStore } from '@/stores'
 import { useFoodSearch, type FoodSource, type FoodProduct, type ServingUnit } from '@/hooks/use-food-search'
+import { PhotoFoodScanner } from '@/components/features/scanner/PhotoFoodScanner'
+import { VoiceFoodInput } from '@/components/features/voice/VoiceFoodInput'
+import { BarcodeScanner } from '@/components/features/barcode/BarcodeScanner'
+import { AIMealGenerator } from '@/components/features/ai/AIMealGenerator'
 import type { MealType, FoodItem } from '@/types'
 
 const mealTypes: { id: MealType; label: string; icon: string }[] = [
@@ -40,12 +44,11 @@ const mealTypes: { id: MealType; label: string; icon: string }[] = [
 ]
 
 const inputMethods = [
-  { id: 'search', label: 'Rechercher', icon: Search, description: 'Base de données alimentaire' },
-  { id: 'photo', label: 'Photo', icon: Camera, description: 'Scanner votre repas' },
-  { id: 'voice', label: 'Vocal', icon: Mic, description: 'Dictez votre repas' },
-  { id: 'barcode', label: 'Code-barres', icon: Barcode, description: 'Scanner un produit' },
-  { id: 'recipe', label: 'Recettes', icon: BookOpen, description: 'Depuis vos recettes' },
-  { id: 'ai', label: 'IA', icon: Sparkles, description: 'Description libre' },
+  { id: 'search', label: 'Rechercher', icon: Search, color: 'text-blue-500', bgColor: 'bg-blue-50' },
+  { id: 'photo', label: 'Photo', icon: Camera, color: 'text-rose-500', bgColor: 'bg-rose-50' },
+  { id: 'voice', label: 'Vocal', icon: Mic, color: 'text-purple-500', bgColor: 'bg-purple-50' },
+  { id: 'barcode', label: 'Code-barres', icon: Barcode, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
+  { id: 'ai', label: 'IA', icon: Sparkles, color: 'text-amber-500', bgColor: 'bg-amber-50' },
 ]
 
 const sourceFilters: { id: FoodSource; label: string; icon: typeof Apple; description: string }[] = [
@@ -54,7 +57,7 @@ const sourceFilters: { id: FoodSource; label: string; icon: typeof Apple; descri
   { id: 'branded', label: 'Marques', icon: ShoppingBag, description: 'Produits industriels' },
 ]
 
-type Step = 'method' | 'search'
+type InputMethod = 'method' | 'search' | 'photo' | 'voice' | 'barcode' | 'ai'
 
 // Get unit label for display
 function getUnitLabel(unit: ServingUnit | string): string {
@@ -133,7 +136,7 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
   const { addFoodToMeal, recentFoods, favoriteFoods, addToFavorites, removeFromFavorites, currentDate } = useMealsStore()
   const { products, isLoading, isLoadingMore, error, search, clear } = useFoodSearch()
 
-  const [step, setStep] = React.useState<Step>('method')
+  const [activeMethod, setActiveMethod] = React.useState<InputMethod>('method')
   const [selectedType, setSelectedType] = React.useState<MealType>(initialType)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedSource, setSelectedSource] = React.useState<FoodSource>('all')
@@ -172,14 +175,50 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
   const searchResults = React.useMemo(() => products.map(toFoodItem), [products])
 
   const handleMethodSelect = (methodId: string) => {
-    if (methodId === 'search') {
-      setStep('search')
+    setActiveMethod(methodId as InputMethod)
+  }
+
+  const handleBack = () => {
+    if (activeMethod !== 'method') {
+      setActiveMethod('method')
+    } else {
+      router.push('/meals')
     }
+  }
+
+  // Handle food detected from AI features (photo, voice, AI generator)
+  const handleFoodsDetected = (foods: FoodItem[]) => {
+    foods.forEach(food => {
+      addFoodToMeal(food, selectedType, currentDate, 1)
+      setAddedFoodIds(prev => new Set(prev).add(food.id))
+    })
+
+    // Clear added feedback after 2s
+    setTimeout(() => {
+      setAddedFoodIds(new Set())
+    }, 2000)
+  }
+
+  // Handle single food from barcode
+  const handleProductFound = (food: FoodItem) => {
+    openQuantityModal(food)
+  }
+
+  // Handle recipe from AI generator
+  const handleRecipeGenerated = (food: FoodItem) => {
+    addFoodToMeal(food, selectedType, currentDate, 1)
+    setAddedFoodIds(prev => new Set(prev).add(food.id))
+    setTimeout(() => {
+      setAddedFoodIds(prev => {
+        const next = new Set(prev)
+        next.delete(food.id)
+        return next
+      })
+    }, 2000)
   }
 
   // Open quantity modal for a food item
   const openQuantityModal = (food: FoodItem) => {
-    // Default to grams, user can change
     const defaultUnit = 'g' as ServingUnit
     const defaultQty = getDefaultQuantity(defaultUnit)
     setQuantityModal({
@@ -220,14 +259,10 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
 
   // Calculate nutrition for the selected quantity and unit
   const calculateNutrition = (food: FoodItem, quantity: number, unit: ServingUnit | 'portion') => {
-    // Base nutrition is per 100g
-    // For units/portions, we use a standard weight estimate
     let gramsEquivalent = quantity
     if (unit === 'ml') {
-      // ml ≈ g for most liquids
       gramsEquivalent = quantity
     } else if (unit === 'unit' || unit === 'portion') {
-      // Assume 1 unit/portion ≈ serving size (default 100g if not specified)
       gramsEquivalent = quantity * (food.serving || 100)
     }
 
@@ -247,26 +282,16 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
     const food = quantityModal.food
     const { quantity, unit } = quantityModal
 
-    // Calculate multiplier based on unit
     let quantityMultiplier = quantity / 100
     if (unit === 'unit' || unit === 'portion') {
-      // For units/portions, quantity is the multiplier directly
       quantityMultiplier = quantity
     }
 
-    // Update the food's servingUnit to match user selection
     const updatedFood = { ...food, servingUnit: unit }
-
-    // Add food to meal with quantity multiplier
     addFoodToMeal(updatedFood, selectedType, currentDate, quantityMultiplier)
-
-    // Mark as added for visual feedback
     setAddedFoodIds(prev => new Set(prev).add(food.id))
-
-    // Close modal
     closeQuantityModal()
 
-    // Remove the visual feedback after 2 seconds
     setTimeout(() => {
       setAddedFoodIds(prev => {
         const next = new Set(prev)
@@ -279,13 +304,24 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
   const isFavorite = (foodId: string) => favoriteFoods.some((f) => f.id === foodId)
   const isAdded = (foodId: string) => addedFoodIds.has(foodId)
 
+  const getMethodTitle = () => {
+    switch (activeMethod) {
+      case 'search': return 'Rechercher un aliment'
+      case 'photo': return 'Scanner votre repas'
+      case 'voice': return 'Dictée vocale'
+      case 'barcode': return 'Scanner code-barres'
+      case 'ai': return 'Générer une recette IA'
+      default: return 'Ajouter un repas'
+    }
+  }
+
   return (
     <>
       <Header
-        title={step === 'method' ? 'Ajouter un repas' : 'Rechercher'}
+        title={getMethodTitle()}
         showBack
-        backHref={step === 'method' ? '/meals' : undefined}
-        onBack={step !== 'method' ? () => setStep('method') : undefined}
+        backHref={activeMethod === 'method' ? '/meals' : undefined}
+        onBack={activeMethod !== 'method' ? handleBack : undefined}
       />
 
       <PageContainer className="pb-32">
@@ -310,289 +346,370 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
           </div>
         </Section>
 
-        {step === 'method' && (
-          <div>
-            {/* Input methods */}
-            <Section title="Comment ajouter ?">
-              <div className="grid grid-cols-2 gap-3">
-                {inputMethods.map((method, index) => {
-                  const Icon = method.icon
-                  return (
-                    <button
-                      key={method.id}
-                      onClick={() => handleMethodSelect(method.id)}
-                      className={cn(
-                        'flex flex-col items-center gap-2 p-4 rounded-xl text-center',
-                        'bg-[var(--bg-elevated)] border border-[var(--border-light)]',
-                        'hover:border-[var(--accent-primary)] hover:bg-[var(--accent-light)]',
-                        'transition-all duration-200'
-                      )}
-                      style={{
-                        animation: `fadeIn 0.2s ease-out ${index * 0.05}s both`,
-                      }}
-                    >
-                      <div className="p-3 rounded-xl bg-[var(--bg-secondary)]">
-                        <Icon className="h-6 w-6 text-[var(--accent-primary)]" />
-                      </div>
-                      <span className="font-semibold text-[var(--text-primary)]">{method.label}</span>
-                      <span className="text-xs text-[var(--text-tertiary)]">{method.description}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </Section>
-
-            {/* Recent foods */}
-            {recentFoods.length > 0 && (
-              <Section title="Récents">
-                <div className="space-y-2">
-                  {recentFoods.slice(0, 5).map((food) => (
-                    <Card key={food.id} padding="default" className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
-                        <p className="text-sm text-[var(--text-tertiary)]">
-                          {food.serving}{getUnitLabel(food.servingUnit)} · {formatNumber(food.nutrition.calories)} kcal
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => openQuantityModal(food)}
-                        disabled={isAdded(food.id)}
+        <AnimatePresence mode="wait">
+          {/* Method selection */}
+          {activeMethod === 'method' && (
+            <motion.div
+              key="method"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {/* Input methods grid */}
+              <Section title="Comment ajouter ?">
+                <div className="grid grid-cols-3 gap-3">
+                  {inputMethods.map((method, index) => {
+                    const Icon = method.icon
+                    return (
+                      <motion.button
+                        key={method.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => handleMethodSelect(method.id)}
                         className={cn(
-                          "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
-                          isAdded(food.id)
-                            ? "bg-[var(--success)] text-white"
-                            : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
+                          'flex flex-col items-center gap-2 p-4 rounded-xl text-center',
+                          'bg-[var(--bg-elevated)] border border-[var(--border-light)]',
+                          'hover:border-[var(--accent-primary)] hover:shadow-md',
+                          'transition-all duration-200 active:scale-95'
                         )}
                       >
-                        {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                      </button>
-                    </Card>
-                  ))}
+                        <div className={cn('p-3 rounded-xl', method.bgColor)}>
+                          <Icon className={cn('h-6 w-6', method.color)} />
+                        </div>
+                        <span className="font-semibold text-sm text-[var(--text-primary)]">{method.label}</span>
+                      </motion.button>
+                    )
+                  })}
                 </div>
               </Section>
-            )}
 
-            {/* Favorites */}
-            {favoriteFoods.length > 0 && (
-              <Section title="Favoris">
-                <div className="space-y-2">
-                  {favoriteFoods.slice(0, 5).map((food) => (
-                    <Card key={food.id} padding="default" className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
-                        <p className="text-sm text-[var(--text-tertiary)]">
-                          {food.serving}{getUnitLabel(food.servingUnit)} · {formatNumber(food.nutrition.calories)} kcal
-                        </p>
-                      </div>
+              {/* Recent foods */}
+              {recentFoods.length > 0 && (
+                <Section title="Récents">
+                  <div className="space-y-2">
+                    {recentFoods.slice(0, 5).map((food) => (
+                      <Card key={food.id} padding="default" className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
+                          <p className="text-sm text-[var(--text-tertiary)]">
+                            {food.serving}{getUnitLabel(food.servingUnit)} · {formatNumber(food.nutrition.calories)} kcal
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openQuantityModal(food)}
+                          disabled={isAdded(food.id)}
+                          className={cn(
+                            "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
+                            isAdded(food.id)
+                              ? "bg-[var(--success)] text-white"
+                              : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
+                          )}
+                        >
+                          {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        </button>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* Favorites */}
+              {favoriteFoods.length > 0 && (
+                <Section title="Favoris">
+                  <div className="space-y-2">
+                    {favoriteFoods.slice(0, 5).map((food) => (
+                      <Card key={food.id} padding="default" className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
+                          <p className="text-sm text-[var(--text-tertiary)]">
+                            {food.serving}{getUnitLabel(food.servingUnit)} · {formatNumber(food.nutrition.calories)} kcal
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openQuantityModal(food)}
+                          disabled={isAdded(food.id)}
+                          className={cn(
+                            "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
+                            isAdded(food.id)
+                              ? "bg-[var(--success)] text-white"
+                              : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
+                          )}
+                        >
+                          {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        </button>
+                      </Card>
+                    ))}
+                  </div>
+                </Section>
+              )}
+            </motion.div>
+          )}
+
+          {/* Search mode */}
+          {activeMethod === 'search' && (
+            <motion.div
+              key="search"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              {/* Search input */}
+              <Section>
+                <Input
+                  placeholder="Rechercher un aliment, une marque..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  leftIcon={Search}
+                  autoFocus
+                />
+              </Section>
+
+              {/* Source filter */}
+              <Section>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {sourceFilters.map((filter) => {
+                    const Icon = filter.icon
+                    return (
                       <button
-                        type="button"
-                        onClick={() => openQuantityModal(food)}
-                        disabled={isAdded(food.id)}
+                        key={filter.id}
+                        onClick={() => setSelectedSource(filter.id)}
                         className={cn(
-                          "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
-                          isAdded(food.id)
-                            ? "bg-[var(--success)] text-white"
-                            : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
+                          'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all',
+                          selectedSource === filter.id
+                            ? 'bg-[var(--accent-primary)] text-white'
+                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
                         )}
                       >
-                        {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        <Icon className="h-3.5 w-3.5" />
+                        <span>{filter.label}</span>
                       </button>
-                    </Card>
-                  ))}
+                    )
+                  })}
                 </div>
+                <p className="text-xs text-[var(--text-tertiary)] mt-2">
+                  {sourceFilters.find(f => f.id === selectedSource)?.description}
+                </p>
               </Section>
-            )}
-          </div>
-        )}
 
-        {step === 'search' && (
-          <div>
-            {/* Search input */}
-            <Section>
-              <Input
-                placeholder="Rechercher un aliment, une marque..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                leftIcon={Search}
-                autoFocus
-              />
-            </Section>
+              {/* Loading state */}
+              {isLoading && (
+                <div className="flex items-center justify-center gap-2 py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-[var(--accent-primary)]" />
+                  <span className="text-sm text-[var(--text-secondary)]">Recherche en cours...</span>
+                </div>
+              )}
 
-            {/* Source filter */}
-            <Section>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                {sourceFilters.map((filter) => {
-                  const Icon = filter.icon
-                  return (
-                    <button
-                      key={filter.id}
-                      onClick={() => setSelectedSource(filter.id)}
-                      className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all',
-                        selectedSource === filter.id
-                          ? 'bg-[var(--accent-primary)] text-white'
-                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+              {/* Error state */}
+              {error && (
+                <div className="p-4 rounded-xl bg-[var(--error)]/10 border border-[var(--error)]/20">
+                  <p className="text-sm text-[var(--error)]">{error}</p>
+                </div>
+              )}
+
+              {/* Search results */}
+              {!isLoading && searchQuery.length >= 2 && (
+                <Section
+                  title={
+                    <div className="flex items-center gap-2">
+                      <span>{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''}</span>
+                      {isLoadingMore && (
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Chargement des marques...</span>
+                        </div>
                       )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>{filter.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              <p className="text-xs text-[var(--text-tertiary)] mt-2">
-                {sourceFilters.find(f => f.id === selectedSource)?.description}
-              </p>
-            </Section>
+                    </div>
+                  }
+                >
+                  <div className="space-y-2">
+                    {searchResults.map((food, index) => (
+                      <motion.div
+                        key={food.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="bg-[var(--bg-elevated)] border border-[var(--border-light)] rounded-xl p-4 flex items-center gap-3"
+                      >
+                        {/* Product image */}
+                        {food.imageUrl ? (
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-secondary)]">
+                            <Image
+                              src={food.imageUrl}
+                              alt={food.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center flex-shrink-0">
+                            {food.source === 'ciqual' ? (
+                              <Apple className="h-5 w-5 text-[var(--text-tertiary)]" />
+                            ) : (
+                              <ShoppingBag className="h-5 w-5 text-[var(--text-tertiary)]" />
+                            )}
+                          </div>
+                        )}
 
-            {/* Loading state */}
-            {isLoading && (
-              <div className="flex items-center justify-center gap-2 py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-[var(--accent-primary)]" />
-                <span className="text-sm text-[var(--text-secondary)]">Recherche en cours...</span>
-              </div>
-            )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <Badge
+                              variant={food.source === 'ciqual' ? 'success' : 'secondary'}
+                              size="sm"
+                              className="text-[10px]"
+                            >
+                              {food.source === 'ciqual' ? 'Générique' : 'Marque'}
+                            </Badge>
+                            <span className="text-sm text-[var(--text-secondary)]">
+                              {formatNumber(food.nutrition.calories)} kcal
+                            </span>
+                          </div>
+                          <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+                            P {food.nutrition.proteins}g · G {food.nutrition.carbs}g · L {food.nutrition.fats}g
+                          </p>
+                        </div>
 
-            {/* Error state */}
-            {error && (
-              <div className="p-4 rounded-xl bg-[var(--error)]/10 border border-[var(--error)]/20">
-                <p className="text-sm text-[var(--error)]">{error}</p>
-              </div>
-            )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (isFavorite(food.id)) {
+                              removeFromFavorites(food.id)
+                            } else {
+                              addToFavorites(food)
+                            }
+                          }}
+                          className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
+                        >
+                          <Star
+                            className={cn(
+                              'h-5 w-5',
+                              isFavorite(food.id)
+                                ? 'fill-[var(--warning)] text-[var(--warning)]'
+                                : 'text-[var(--text-tertiary)]'
+                            )}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openQuantityModal(food)
+                          }}
+                          disabled={isAdded(food.id)}
+                          className={cn(
+                            "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
+                            isAdded(food.id)
+                              ? "bg-[var(--success)] text-white"
+                              : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
+                          )}
+                        >
+                          {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        </button>
+                      </motion.div>
+                    ))}
 
-            {/* Search results */}
-            {!isLoading && searchQuery.length >= 2 && (
-              <Section
-                title={
-                  <div className="flex items-center gap-2">
-                    <span>{searchResults.length} résultat{searchResults.length > 1 ? 's' : ''}</span>
-                    {isLoadingMore && (
-                      <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Chargement des marques...</span>
+                    {searchResults.length === 0 && !isLoading && (
+                      <div className="text-center py-8">
+                        <p className="text-[var(--text-tertiary)]">Aucun résultat pour &quot;{searchQuery}&quot;</p>
+                        <p className="text-sm text-[var(--text-tertiary)] mt-1">
+                          Essayez avec un autre mot-clé ou une marque
+                        </p>
                       </div>
                     )}
                   </div>
-                }
-              >
-                <div className="space-y-2">
-                  {searchResults.map((food, index) => (
-                    <div
-                      key={food.id}
-                      className="bg-[var(--bg-elevated)] border border-[var(--border-light)] rounded-xl p-4 flex items-center gap-3"
-                      style={{
-                        animation: `fadeIn 0.2s ease-out ${index * 0.03}s both`,
-                      }}
-                    >
-                      {/* Product image */}
-                      {food.imageUrl ? (
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-secondary)]">
-                          <Image
-                            src={food.imageUrl}
-                            alt={food.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center flex-shrink-0">
-                          {food.source === 'ciqual' ? (
-                            <Apple className="h-5 w-5 text-[var(--text-tertiary)]" />
-                          ) : (
-                            <ShoppingBag className="h-5 w-5 text-[var(--text-tertiary)]" />
-                          )}
-                        </div>
-                      )}
+                </Section>
+              )}
 
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[var(--text-primary)] truncate">{food.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <Badge
-                            variant={food.source === 'ciqual' ? 'success' : 'secondary'}
-                            size="sm"
-                            className="text-[10px]"
-                          >
-                            {food.source === 'ciqual' ? 'Générique' : 'Marque'}
-                          </Badge>
-                          <span className="text-sm text-[var(--text-secondary)]">
-                            {formatNumber(food.nutrition.calories)} kcal
-                          </span>
-                        </div>
-                        <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                          P {food.nutrition.proteins}g · G {food.nutrition.carbs}g · L {food.nutrition.fats}g
-                        </p>
-                      </div>
+              {/* Initial state - show suggestions */}
+              {!isLoading && searchQuery.length < 2 && (
+                <Section title="Suggestions">
+                  <div className="text-center py-8">
+                    <Search className="h-8 w-8 text-[var(--text-tertiary)] mx-auto mb-3" />
+                    <p className="text-[var(--text-secondary)]">
+                      Tapez au moins 2 caractères pour rechercher
+                    </p>
+                    <p className="text-sm text-[var(--text-tertiary)] mt-1">
+                      Ex: poulet, riz, yaourt, Danone, Lays...
+                    </p>
+                  </div>
+                </Section>
+              )}
+            </motion.div>
+          )}
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (isFavorite(food.id)) {
-                            removeFromFavorites(food.id)
-                          } else {
-                            addToFavorites(food)
-                          }
-                        }}
-                        className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
-                      >
-                        <Star
-                          className={cn(
-                            'h-5 w-5',
-                            isFavorite(food.id)
-                              ? 'fill-[var(--warning)] text-[var(--warning)]'
-                              : 'text-[var(--text-tertiary)]'
-                          )}
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          openQuantityModal(food)
-                        }}
-                        disabled={isAdded(food.id)}
-                        className={cn(
-                          "h-9 px-3 text-xs rounded-xl transition-all inline-flex items-center justify-center",
-                          isAdded(food.id)
-                            ? "bg-[var(--success)] text-white"
-                            : "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
-                        )}
-                      >
-                        {isAdded(food.id) ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  ))}
-
-                  {searchResults.length === 0 && !isLoading && (
-                    <div className="text-center py-8">
-                      <p className="text-[var(--text-tertiary)]">Aucun résultat pour &quot;{searchQuery}&quot;</p>
-                      <p className="text-sm text-[var(--text-tertiary)] mt-1">
-                        Essayez avec un autre mot-clé ou une marque
-                      </p>
-                    </div>
-                  )}
-                </div>
+          {/* Photo scanner mode */}
+          {activeMethod === 'photo' && (
+            <motion.div
+              key="photo"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Section>
+                <PhotoFoodScanner
+                  mealType={selectedType}
+                  onFoodsDetected={handleFoodsDetected}
+                />
               </Section>
-            )}
+            </motion.div>
+          )}
 
-            {/* Initial state - show suggestions */}
-            {!isLoading && searchQuery.length < 2 && (
-              <Section title="Suggestions">
-                <div className="text-center py-8">
-                  <Search className="h-8 w-8 text-[var(--text-tertiary)] mx-auto mb-3" />
-                  <p className="text-[var(--text-secondary)]">
-                    Tapez au moins 2 caractères pour rechercher
-                  </p>
-                  <p className="text-sm text-[var(--text-tertiary)] mt-1">
-                    Ex: poulet, riz, yaourt, Danone, Lays...
-                  </p>
-                </div>
+          {/* Voice input mode */}
+          {activeMethod === 'voice' && (
+            <motion.div
+              key="voice"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Section>
+                <VoiceFoodInput
+                  mealType={selectedType}
+                  onFoodsDetected={handleFoodsDetected}
+                />
               </Section>
-            )}
-          </div>
-        )}
+            </motion.div>
+          )}
+
+          {/* Barcode scanner mode */}
+          {activeMethod === 'barcode' && (
+            <motion.div
+              key="barcode"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Section>
+                <BarcodeScanner
+                  mealType={selectedType}
+                  onProductFound={handleProductFound}
+                />
+              </Section>
+            </motion.div>
+          )}
+
+          {/* AI generator mode */}
+          {activeMethod === 'ai' && (
+            <motion.div
+              key="ai"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <Section>
+                <AIMealGenerator
+                  mealType={selectedType}
+                  onRecipeGenerated={handleRecipeGenerated}
+                />
+              </Section>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </PageContainer>
 
       {/* Fixed bottom action - go to journal */}
