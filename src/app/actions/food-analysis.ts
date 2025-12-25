@@ -1,6 +1,6 @@
 'use server'
 
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
 // Types for food analysis
 export interface AnalyzedFood {
@@ -48,56 +48,21 @@ export interface AIRecipeResult {
   error?: string
 }
 
-// Anthropic client (initialized lazily)
-let anthropicClient: Anthropic | null = null
+// OpenAI client (initialized lazily)
+let openaiClient: OpenAI | null = null
 
-function getAnthropicClient(): Anthropic {
-  if (!anthropicClient) {
-    const apiKey = process.env.ANTHROPIC_API_KEY
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY is not configured')
+      throw new Error('OPENAI_API_KEY is not configured')
     }
-    anthropicClient = new Anthropic({ apiKey })
+    openaiClient = new OpenAI({ apiKey })
   }
-  return anthropicClient
+  return openaiClient
 }
 
-/**
- * Analyze a food image using Claude Vision
- */
-export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResult> {
-  try {
-    const client = getAnthropicClient()
-
-    // Determine media type from base64 header
-    let mediaType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
-    if (imageBase64.startsWith('data:image/png')) {
-      mediaType = 'image/png'
-    } else if (imageBase64.startsWith('data:image/webp')) {
-      mediaType = 'image/webp'
-    }
-
-    // Remove data URL prefix if present
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '')
-
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: base64Data,
-              },
-            },
-            {
-              type: 'text',
-              text: `Analyse cette image de nourriture et identifie tous les aliments visibles.
+const FOOD_ANALYSIS_PROMPT = `Analyse cette image de nourriture et identifie tous les aliments visibles.
 
 Pour chaque aliment, estime:
 1. Le nom en français
@@ -125,20 +90,51 @@ Réponds UNIQUEMENT en JSON avec ce format exact:
 }
 
 Si tu ne vois pas de nourriture, réponds avec un tableau vide et une description expliquant pourquoi.`
-            }
+
+/**
+ * Analyze a food image using GPT-4 Vision
+ */
+export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResult> {
+  try {
+    const client = getOpenAIClient()
+
+    // Ensure we have the full data URL format
+    let imageUrl = imageBase64
+    if (!imageBase64.startsWith('data:')) {
+      imageUrl = `data:image/jpeg;base64,${imageBase64}`
+    }
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      max_tokens: 1024,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl,
+                detail: 'low', // Use low detail for faster/cheaper processing
+              },
+            },
+            {
+              type: 'text',
+              text: FOOD_ANALYSIS_PROMPT,
+            },
           ],
         },
       ],
     })
 
     // Extract text content from response
-    const textContent = response.content.find(c => c.type === 'text')
-    if (!textContent || textContent.type !== 'text') {
+    const textContent = response.choices[0]?.message?.content
+    if (!textContent) {
       throw new Error('No text response from AI')
     }
 
     // Parse JSON from response
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/)
+    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('Could not parse AI response')
     }
@@ -175,14 +171,14 @@ Si tu ne vois pas de nourriture, réponds avec un tableau vide et une descriptio
 }
 
 /**
- * Analyze food from voice/text description
+ * Analyze food from voice/text description using GPT-4
  */
 export async function analyzeFoodDescription(description: string): Promise<FoodAnalysisResult> {
   try {
-    const client = getAnthropicClient()
+    const client = getOpenAIClient()
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1024,
       messages: [
         {
@@ -219,12 +215,12 @@ Réponds UNIQUEMENT en JSON:
       ],
     })
 
-    const textContent = response.content.find(c => c.type === 'text')
-    if (!textContent || textContent.type !== 'text') {
+    const textContent = response.choices[0]?.message?.content
+    if (!textContent) {
       throw new Error('No text response from AI')
     }
 
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/)
+    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('Could not parse AI response')
     }
@@ -260,7 +256,7 @@ Réponds UNIQUEMENT en JSON:
 }
 
 /**
- * Generate a recipe based on user preferences
+ * Generate a recipe based on user preferences using GPT-4
  */
 export async function generateRecipe(params: {
   mealType: string
@@ -270,7 +266,7 @@ export async function generateRecipe(params: {
   restrictions?: string[]
 }): Promise<AIRecipeResult> {
   try {
-    const client = getAnthropicClient()
+    const client = getOpenAIClient()
 
     const { mealType, description, maxCalories, dietType, restrictions } = params
 
@@ -310,18 +306,18 @@ export async function generateRecipe(params: {
   "servings": 2
 }`
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const textContent = response.content.find(c => c.type === 'text')
-    if (!textContent || textContent.type !== 'text') {
+    const textContent = response.choices[0]?.message?.content
+    if (!textContent) {
       throw new Error('No text response from AI')
     }
 
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/)
+    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('Could not parse AI response')
     }
@@ -342,7 +338,7 @@ export async function generateRecipe(params: {
 }
 
 /**
- * Lookup product by barcode using Open Food Facts
+ * Lookup product by barcode using Open Food Facts (free, no API key needed)
  */
 export async function lookupBarcode(barcode: string): Promise<{
   success: boolean
