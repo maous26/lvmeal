@@ -1,0 +1,353 @@
+// Prisma Schema pour PRESENCE - Application de suivi nutritionnel
+// Base de données: PostgreSQL sur Railway
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTHENTIFICATION (NextAuth)
+// ============================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// UTILISATEUR
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations NextAuth
+  accounts Account[]
+  sessions Session[]
+
+  // Profil utilisateur
+  profile UserProfile?
+
+  // Données nutritionnelles
+  meals          Meal[]
+  weightEntries  WeightEntry[]
+  hydrationLogs  HydrationLog[]
+  favoriteRecipes UserFavoriteRecipe[]
+  favoriteFoods   UserFavoriteFood[]
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Informations personnelles
+  firstName     String?
+  lastName      String?
+  birthDate     DateTime?
+  gender        String?   // male, female, other
+  height        Float?    // cm
+  activityLevel String?   // sedentary, light, moderate, active, very_active
+
+  // Objectifs
+  goal            String?   // weight_loss, muscle_gain, maintenance, health
+  targetWeight    Float?    // kg
+  weeklyGoal      Float?    // kg per week (-0.5, -0.25, 0, +0.25, +0.5)
+
+  // Préférences alimentaires
+  dietType        String?   // omnivore, vegetarian, vegan, pescatarian, keto, paleo
+  allergies       String[]  // array of allergen names
+  dislikedFoods   String[]
+
+  // Objectifs nutritionnels calculés
+  dailyCalories   Int?
+  dailyProteins   Int?      // g
+  dailyCarbs      Int?      // g
+  dailyFats       Int?      // g
+  dailyFiber      Int?      // g
+  dailyWater      Int?      // ml
+
+  // Paramètres app
+  notifications   Boolean   @default(true)
+  reminderTimes   String[]  // ["08:00", "12:00", "19:00"]
+
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+  onboardingStep      Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// ALIMENTS
+// ============================================================================
+
+model Food {
+  id          String   @id @default(cuid())
+  name        String
+  brand       String?
+  barcode     String?  @unique
+
+  // Portion
+  serving     Float    // quantité de référence
+  servingUnit String   // g, ml, pièce, etc.
+
+  // Valeurs nutritionnelles (pour 1 serving)
+  calories    Float
+  proteins    Float
+  carbs       Float
+  fats        Float
+  fiber       Float?
+  sugar       Float?
+  sodium      Float?
+  saturatedFat Float?
+
+  // Métadonnées
+  imageUrl    String?
+  source      String   // openfoodfacts, ciqual, manual, recipe, ai
+  verified    Boolean  @default(false)
+
+  // Si c'est une recette
+  isRecipe    Boolean  @default(false)
+  recipeId    String?
+  recipe      Recipe?  @relation(fields: [recipeId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  mealItems       MealItem[]
+  favoritedBy     UserFavoriteFood[]
+
+  @@index([name])
+  @@index([barcode])
+}
+
+model UserFavoriteFood {
+  id        String   @id @default(cuid())
+  userId    String
+  foodId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food      Food     @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, foodId])
+}
+
+// ============================================================================
+// REPAS
+// ============================================================================
+
+model Meal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date      DateTime @db.Date
+  time      String   // HH:mm
+  type      String   // breakfast, lunch, snack, dinner
+
+  // Totaux calculés
+  totalCalories  Float @default(0)
+  totalProteins  Float @default(0)
+  totalCarbs     Float @default(0)
+  totalFats      Float @default(0)
+  totalFiber     Float @default(0)
+
+  // Métadonnées
+  source    String?  // manual, photo, voice, barcode, recipe, ai
+  photoUrl  String?
+  notes     String?
+  location  String?  // home, restaurant, work, other
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  items MealItem[]
+
+  @@index([userId, date])
+  @@index([date])
+}
+
+model MealItem {
+  id        String   @id @default(cuid())
+  mealId    String
+  meal      Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodId    String
+  food      Food     @relation(fields: [foodId], references: [id])
+
+  quantity  Float    // multiplicateur du serving
+  customServing Float? // override du serving size
+
+  // Valeurs calculées (quantity * food.nutrition)
+  calories  Float
+  proteins  Float
+  carbs     Float
+  fats      Float
+
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([mealId])
+}
+
+// ============================================================================
+// RECETTES
+// ============================================================================
+
+model Recipe {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+
+  // Temps
+  servings    Int
+  prepTime    Int      // minutes
+  cookTime    Int      // minutes
+  totalTime   Int      // minutes
+
+  difficulty  String   // easy, medium, hard
+
+  // Instructions
+  instructions String[] // étapes de préparation
+
+  // Valeurs nutritionnelles par portion
+  caloriesPerServing  Float
+  proteinsPerServing  Float
+  carbsPerServing     Float
+  fatsPerServing      Float
+  fiberPerServing     Float?
+
+  // Catégorisation
+  tags        String[]
+  cuisineType String?
+  dietTypes   String[] // vegetarian, vegan, keto, etc.
+  allergens   String[]
+
+  // Source
+  source      String   // ai, user, community, import, gustar
+  sourceUrl   String?
+  externalId  String?  // ID externe (Gustar, etc.)
+
+  // Notation
+  rating      Float?
+  ratingCount Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  ingredients RecipeIngredient[]
+  foods       Food[]
+  favoritedBy UserFavoriteRecipe[]
+
+  @@index([title])
+  @@index([externalId])
+}
+
+model RecipeIngredient {
+  id          String   @id @default(cuid())
+  recipeId    String
+  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  name        String
+  quantity    Float
+  unit        String
+  preparation String?  // diced, minced, etc.
+  optional    Boolean  @default(false)
+
+  // Lien optionnel vers un aliment
+  foodId      String?
+
+  @@index([recipeId])
+}
+
+model UserFavoriteRecipe {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+}
+
+// ============================================================================
+// SUIVI SANTÉ
+// ============================================================================
+
+model WeightEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date      DateTime @db.Date
+  weight    Float    // kg
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model HydrationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date      DateTime @db.Date
+  amount    Int      // ml total pour la journée
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
