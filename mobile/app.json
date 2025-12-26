@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Presence",
+    "slug": "presence",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "presence",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F7FA"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.presence.nutrition",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Presence utilise la caméra pour scanner les aliments et codes-barres.",
+        "NSPhotoLibraryUsageDescription": "Presence accède à vos photos pour analyser les repas."
+      }
+    },
+    "android": {
+      "package": "com.presence.nutrition",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F7FA"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-haptics",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0077B6"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "presence-nutrition"
+      }
+    }
+  }
+}

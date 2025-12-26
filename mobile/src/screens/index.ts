@@ -1,0 +1,5 @@
+export { default as HomeScreen } from './HomeScreen'
+export { default as MealsScreen } from './MealsScreen'
+export { default as RecipesScreen } from './RecipesScreen'
+export { default as ProgressScreen } from './ProgressScreen'
+export { default as ProfileScreen } from './ProfileScreen'
