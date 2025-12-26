@@ -36,7 +36,6 @@
     },
     "plugins": [
       "expo-camera",
-      "expo-haptics",
       [
         "expo-notifications",
         {
