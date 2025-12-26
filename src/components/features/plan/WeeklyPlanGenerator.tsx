@@ -31,6 +31,9 @@ import {
   TrendingDown,
   ArrowRight,
   ArrowRightLeft,
+  Copy,
+  Download,
+  Share2,
 } from 'lucide-react'
 import { generateWeeklyPlanWithDetails, regenerateDayPlan, generateShoppingList, generateRecipeDetails, proposeCheatMealDay } from '@/app/actions/weekly-planner'
 import type { WeeklyPlanPreferences, WeeklyPlan, MealPlanDay, MealPlanMeal, ConsumedMealsContext } from '@/app/actions/weekly-planner'
@@ -86,17 +89,91 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
   const [recipeDetails, setRecipeDetails] = useState<RecipeDetails | null>(null)
 
   // Preferences
-  const [includeCheatMeal, setIncludeCheatMeal] = useState(true)
+  const [includeRepasPlaisir, setIncludeRepasPlaisir] = useState(true)
 
-  // Cheat meal proposal state
-  const [showCheatMealProposal, setShowCheatMealProposal] = useState(false)
-  const [isProposingCheatMeal, setIsProposingCheatMeal] = useState(false)
+  // Repas plaisir proposal state
+  const [showRepasPlaisirProposal, setShowRepasPlaisirProposal] = useState(false)
+  const [isProposingRepasPlaisir, setIsProposingRepasPlaisir] = useState(false)
 
   // Days labels for move modal
   const dayLabels = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
   // Recipe cache
   const [recipeCache, setRecipeCache] = useState<Record<string, RecipeDetails>>({})
+
+  // Shopping list actions state
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false)
+
+  // Format shopping list as text for copying/sharing
+  const formatShoppingListAsText = (): string => {
+    if (!shoppingList) return ''
+
+    let text = '🛒 LISTE DE COURSES\n'
+    text += `💰 Total estimé: ${shoppingList.totalEstimate?.toFixed(2) || '0.00'}€\n\n`
+
+    shoppingList.categories?.forEach(cat => {
+      text += `📦 ${cat.name} (${cat.subtotal?.toFixed(2)}€)\n`
+      cat.items?.forEach(item => {
+        text += `  • ${item.name} - ${item.quantity} (${item.priceEstimate?.toFixed(2)}€)\n`
+      })
+      text += '\n'
+    })
+
+    if (shoppingList.savingsTips && shoppingList.savingsTips.length > 0) {
+      text += '💡 ASTUCES ÉCONOMIES\n'
+      shoppingList.savingsTips.forEach(tip => {
+        text += `  → ${tip}\n`
+      })
+    }
+
+    text += '\n---\nGénéré par Presence 🥗'
+    return text
+  }
+
+  // Copy shopping list to clipboard
+  const handleCopyShoppingList = async () => {
+    const text = formatShoppingListAsText()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedToClipboard(true)
+      setTimeout(() => setCopiedToClipboard(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  // Share shopping list (mobile)
+  const handleShareShoppingList = async () => {
+    const text = formatShoppingListAsText()
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Liste de courses - Presence',
+          text: text,
+        })
+      } catch (err) {
+        // User cancelled or error
+        console.log('Share cancelled or failed:', err)
+      }
+    } else {
+      // Fallback to copy
+      handleCopyShoppingList()
+    }
+  }
+
+  // Download shopping list as text file
+  const handleDownloadShoppingList = () => {
+    const text = formatShoppingListAsText()
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `liste-courses-${new Date().toISOString().split('T')[0]}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   // Get consumed meals context for the planner
   const getConsumedContext = (): ConsumedMealsContext => {
@@ -145,7 +222,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
       dietType: profile?.dietType,
       allergies: profile?.allergies,
       goals: profile?.goal,
-      includeCheatMeal,
+      includeCheatMeal: includeRepasPlaisir,
       cookingSkillLevel: profile?.cookingSkillLevel,
       cookingTimeWeekday: profile?.cookingTimeWeekday,
       cookingTimeWeekend: profile?.cookingTimeWeekend,
@@ -161,7 +238,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
     setWeeklyPlan(null)
     setShoppingList(null)
     setValidatedMeals(new Set())
-    setShowCheatMealProposal(false)
+    setShowRepasPlaisirProposal(false)
 
     try {
       const preferences = getPreferences()
@@ -262,22 +339,22 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
 
     setValidatedMeals(newValidated)
 
-    // Check if we should propose cheat meal (when day 4 = Vendredi is validated)
-    if (dayIndex === 4 && weeklyPlan && !weeklyPlan.cheatMealProposed && includeCheatMeal) {
+    // Check if we should propose repas plaisir (when day 4 = Vendredi is validated)
+    if (dayIndex === 4 && weeklyPlan && !weeklyPlan.cheatMealProposed && includeRepasPlaisir) {
       // Check if most of day 5 (Friday) meals are validated
       const day5Meals = weeklyPlan.days[4].meals.filter(m => !m.isFasting)
       const day5Validated = day5Meals.filter((_, idx) => newValidated.has(`4-${weeklyPlan.days[4].meals.indexOf(day5Meals[idx])}`)).length
       if (day5Validated >= day5Meals.length * 0.5) {
-        setShowCheatMealProposal(true)
+        setShowRepasPlaisirProposal(true)
       }
     }
   }
 
-  // Handle cheat meal proposal
-  const handleProposeCheatMeal = async (preferredDay: 5 | 6) => {
+  // Handle repas plaisir proposal
+  const handleProposeRepasPlaisir = async (preferredDay: 5 | 6) => {
     if (!weeklyPlan) return
 
-    setIsProposingCheatMeal(true)
+    setIsProposingRepasPlaisir(true)
     try {
       const preferences = getPreferences()
       const result = await proposeCheatMealDay(weeklyPlan, preferences, preferredDay)
@@ -285,12 +362,12 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
       if (result.success && result.updatedPlan) {
         setWeeklyPlan(result.updatedPlan)
         onPlanGenerated?.(result.updatedPlan)
-        setShowCheatMealProposal(false)
+        setShowRepasPlaisirProposal(false)
       }
     } catch {
-      console.error('Error proposing cheat meal')
+      console.error('Error proposing repas plaisir')
     } finally {
-      setIsProposingCheatMeal(false)
+      setIsProposingRepasPlaisir(false)
     }
   }
 
@@ -453,19 +530,19 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
             <div className="flex items-center gap-3">
               <span className="text-2xl">🍔</span>
               <div>
-                <p className="font-medium text-[var(--text-primary)]">Cheat Meal</p>
+                <p className="font-medium text-[var(--text-primary)]">Repas Plaisir</p>
                 <p className="text-xs text-[var(--text-secondary)]">Un repas plaisir dans la semaine</p>
               </div>
             </div>
             <div
-              onClick={() => setIncludeCheatMeal(!includeCheatMeal)}
+              onClick={() => setIncludeRepasPlaisir(!includeRepasPlaisir)}
               className={cn(
                 'w-12 h-6 rounded-full transition-colors relative cursor-pointer',
-                includeCheatMeal ? 'bg-purple-500' : 'bg-[var(--bg-tertiary)]'
+                includeRepasPlaisir ? 'bg-purple-500' : 'bg-[var(--bg-tertiary)]'
               )}
             >
               <motion.div
-                animate={{ x: includeCheatMeal ? 24 : 2 }}
+                animate={{ x: includeRepasPlaisir ? 24 : 2 }}
                 className="absolute top-1 w-4 h-4 rounded-full bg-white shadow"
               />
             </div>
@@ -633,7 +710,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                     )}
                     {day.meals.some((m) => m.isCheatMeal) && (
                       <span className="px-2 py-1 rounded-lg bg-orange-100 text-orange-600 text-xs font-medium">
-                        🍔 Cheat
+                        🍔 Plaisir
                       </span>
                     )}
                     {expandedDay === dayIndex ? (
@@ -965,6 +1042,55 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                   </div>
                 )}
               </div>
+
+              {/* Action buttons for shopping list */}
+              <div className="p-4 border-t border-stone-100 dark:border-stone-800 bg-[var(--bg-secondary)]">
+                <div className="flex gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleCopyShoppingList}
+                    className={cn(
+                      "flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors",
+                      copiedToClipboard
+                        ? "bg-green-500 text-white"
+                        : "bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                    )}
+                  >
+                    {copiedToClipboard ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copié !
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copier
+                      </>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleShareShoppingList}
+                    className="flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 bg-[var(--bg-primary)] border border-[var(--border-default)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Partager
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleDownloadShoppingList}
+                    className="flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 bg-green-500 text-white hover:bg-green-600"
+                  >
+                    <Download className="w-4 h-4" />
+                    Télécharger
+                  </motion.button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1064,15 +1190,15 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
         )}
       </AnimatePresence>
 
-      {/* Cheat meal proposal modal */}
+      {/* Repas plaisir proposal modal */}
       <AnimatePresence>
-        {showCheatMealProposal && (
+        {showRepasPlaisirProposal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
-            onClick={() => setShowCheatMealProposal(false)}
+            onClick={() => setShowRepasPlaisirProposal(false)}
           >
             <motion.div
               initial={{ y: 100, opacity: 0 }}
@@ -1094,7 +1220,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                     </p>
                   </div>
                   <button
-                    onClick={() => setShowCheatMealProposal(false)}
+                    onClick={() => setShowRepasPlaisirProposal(false)}
                     className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
                   >
                     <X className="w-5 h-5" />
@@ -1111,8 +1237,8 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => handleProposeCheatMeal(5)}
-                    disabled={isProposingCheatMeal}
+                    onClick={() => handleProposeRepasPlaisir(5)}
+                    disabled={isProposingRepasPlaisir}
                     className="py-4 px-4 rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-center"
                   >
                     <span className="text-3xl mb-2 block">🍕</span>
@@ -1123,8 +1249,8 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => handleProposeCheatMeal(6)}
-                    disabled={isProposingCheatMeal}
+                    onClick={() => handleProposeRepasPlaisir(6)}
+                    disabled={isProposingRepasPlaisir}
                     className="py-4 px-4 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-center"
                   >
                     <span className="text-3xl mb-2 block">🍔</span>
@@ -1133,7 +1259,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
                   </motion.button>
                 </div>
 
-                {isProposingCheatMeal && (
+                {isProposingRepasPlaisir && (
                   <div className="flex items-center justify-center gap-2 text-sm text-[var(--text-secondary)]">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Préparation de votre repas plaisir...
@@ -1143,7 +1269,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
 
               <div className="p-4 border-t border-stone-100 dark:border-stone-800">
                 <button
-                  onClick={() => setShowCheatMealProposal(false)}
+                  onClick={() => setShowRepasPlaisirProposal(false)}
                   className="w-full py-2.5 rounded-xl border border-[var(--border-default)] text-[var(--text-secondary)] font-medium text-sm"
                 >
                   Peut-être plus tard

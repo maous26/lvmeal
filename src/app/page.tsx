@@ -3,69 +3,39 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { Plus, CalendarRange, Sparkles } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { PageContainer, Section } from '@/components/layout/page-container'
 import { Button } from '@/components/ui/button'
 import {
   NutritionOverview,
   MealsToday,
-  WeeklyChart,
   CaloricBalance,
   CoachInsights,
   HydrationTracker,
-  StreakBadge,
   RecipeSuggestions,
   WeightTrackerCompact,
+  GamificationPanel,
+  RewardsManager,
 } from '@/components/dashboard'
 import { useRecipeSuggestions } from '@/hooks/use-recipe-suggestions'
 import { useCaloricBankStore } from '@/stores/caloric-bank-store'
+import { useGamificationStore } from '@/stores/gamification-store'
+import { useMealsStore } from '@/stores/meals-store'
 import { getGreeting, formatDate } from '@/lib/utils'
 import type { UserProfile } from '@/types'
 
-// Mock data for demo
-const mockNutritionData = {
-  calories: { current: 1450, target: 2100 },
-  proteins: { current: 85, target: 130 },
-  carbs: { current: 165, target: 250 },
-  fats: { current: 45, target: 70 },
-}
-
-const mockMeals = [
-  { type: 'breakfast' as const, logged: true, calories: 420, items: ['Yaourt grec', 'Granola', 'Fruits rouges'] },
-  { type: 'lunch' as const, logged: true, calories: 680, items: ['Salade César', 'Poulet grillé'] },
-  { type: 'snack' as const, logged: false },
-  { type: 'dinner' as const, logged: false },
-]
-
-const mockWeeklyData = [
-  { day: 'Lundi', shortDay: 'L', calories: 2050, target: 2100, isToday: false },
-  { day: 'Mardi', shortDay: 'M', calories: 2180, target: 2100, isToday: false },
-  { day: 'Mercredi', shortDay: 'M', calories: 1950, target: 2100, isToday: false },
-  { day: 'Jeudi', shortDay: 'J', calories: 2100, target: 2100, isToday: false },
-  { day: 'Vendredi', shortDay: 'V', calories: 2250, target: 2100, isToday: false },
-  { day: 'Samedi', shortDay: 'S', calories: 1800, target: 2100, isToday: false },
-  { day: 'Dimanche', shortDay: 'D', calories: 1450, target: 2100, isToday: true },
-]
-
-// Mock data for caloric bank (7 days)
+// Mock data for Solde Plaisir (7 days) - will be replaced by caloric-bank-store data
+// TODO: Replace with real data from useCaloricBankStore
 const mockDailyBalances = [
-  { day: 'Lun', date: '23/12', consumed: 1850, target: 2100, balance: 250 }, // saved 250
-  { day: 'Mar', date: '24/12', consumed: 2200, target: 2100, balance: -100 }, // overspent 100
-  { day: 'Mer', date: '25/12', consumed: 1700, target: 2100, balance: 400 }, // saved 400
-  { day: 'Jeu', date: '26/12', consumed: 1900, target: 2100, balance: 200 }, // saved 200
-  { day: 'Ven', date: '27/12', consumed: 2000, target: 2100, balance: 100 }, // saved 100
-  { day: 'Sam', date: '28/12', consumed: 1800, target: 2100, balance: 300 }, // saved 300
-  { day: 'Dim', date: '29/12', consumed: 0, target: 2100, balance: 2100 }, // today - not yet consumed
+  { day: 'Jeu', date: '25/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Ven', date: '26/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Sam', date: '27/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Dim', date: '28/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Lun', date: '29/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Mar', date: '30/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Mer', date: '31/12', consumed: 0, target: 2100, balance: 0 },
 ]
-
-// Calculate total caloric balance (sum of all daily balances except today)
-// This represents the "banque calorique" - calories user can "spend" on treats
-const calculateTotalCaloricBalance = () => {
-  // Exclude today's balance since it's not yet "earned"
-  const pastBalances = mockDailyBalances.slice(0, -1)
-  return pastBalances.reduce((total, day) => total + day.balance, 0)
-}
 
 const mockInsights = [
   {
@@ -122,7 +92,6 @@ const fallbackRecipes = [
 export default function HomePage() {
   const router = useRouter()
   const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
-  const [hydration, setHydration] = React.useState(1200) // ml
   const [dismissedInsights, setDismissedInsights] = React.useState<string[]>([])
   const [mounted, setMounted] = React.useState(false)
   const [isHydrated, setIsHydrated] = React.useState(false)
@@ -140,9 +109,26 @@ export default function HomePage() {
     resetToToday,
   } = useCaloricBankStore()
 
+  // Gamification store
+  const {
+    checkAndUpdateStreak,
+    getStreakInfo,
+  } = useGamificationStore()
+
+  // Meals store - real data
+  const {
+    getDailyNutrition,
+    getMealsForDate,
+    getHydration,
+    addHydration,
+  } = useMealsStore()
+
+  // Get today's date string for store queries
+  const todayString = new Date().toISOString().split('T')[0]
+
   // Get values after hydration
   const currentDayIndex = isHydrated ? getCurrentDayIndex() : 0
-  const totalCaloricBalance = isHydrated ? getTotalBalance() : calculateTotalCaloricBalance()
+  const totalCaloricBalance = isHydrated ? getTotalBalance() : 0
   const canHavePlaisirFromStore = isHydrated ? checkCanHavePlaisir() : false
   const daysUntilNewWeek = isHydrated ? getDaysUntilNewWeek() : 7
   const isFirstTimeSetup = isHydrated ? checkIsFirstTimeSetup() : false
@@ -159,11 +145,16 @@ export default function HomePage() {
   // Use store value for canHavePlaisir if hydrated, otherwise use API value
   const showPlaisirMessage = isHydrated ? canHavePlaisirFromStore : canHavePlaisir
 
+  // Get streak info from gamification store
+  const streakInfo = isHydrated ? getStreakInfo() : { current: 0, longest: 0, isActive: false }
+
   React.useEffect(() => {
     setMounted(true)
     setIsHydrated(true)
     // Initialize caloric bank week if not already done
     initializeWeek()
+    // Update streak on page load
+    checkAndUpdateStreak()
     // Check if user has completed onboarding
     const storedProfile = localStorage.getItem('userProfile')
     if (storedProfile) {
@@ -171,7 +162,7 @@ export default function HomePage() {
     } else {
       router.push('/onboarding')
     }
-  }, [router, initializeWeek])
+  }, [router, initializeWeek, checkAndUpdateStreak])
 
   if (!mounted || !profile) {
     return (
@@ -185,6 +176,47 @@ export default function HomePage() {
   const today = formatDate(new Date())
   const visibleInsights = mockInsights.filter(i => !dismissedInsights.includes(i.id))
 
+  // Get real nutrition data from meals store
+  const todayNutrition = getDailyNutrition(todayString)
+  const todayMeals = getMealsForDate(todayString)
+  const currentHydration = getHydration(todayString)
+
+  // Build nutrition data from real store values with profile targets
+  const nutritionData = {
+    calories: {
+      current: todayNutrition.calories,
+      target: profile.dailyCaloriesTarget || 2100
+    },
+    proteins: {
+      current: todayNutrition.proteins,
+      target: profile.proteinTarget || 130
+    },
+    carbs: {
+      current: todayNutrition.carbs,
+      target: profile.carbsTarget || 250
+    },
+    fats: {
+      current: todayNutrition.fats,
+      target: profile.fatTarget || 70
+    },
+  }
+
+  // Build meals data from real store
+  const mealTypes = ['breakfast', 'lunch', 'snack', 'dinner'] as const
+  const mealsData = mealTypes.map(type => {
+    const mealsOfType = todayMeals.filter(m => m.type === type)
+    const isLogged = mealsOfType.length > 0
+    const totalCalories = mealsOfType.reduce((sum, m) => sum + m.totalNutrition.calories, 0)
+    const items = mealsOfType.flatMap(m => m.items.map(item => item.food.name))
+
+    return {
+      type,
+      logged: isLogged,
+      calories: isLogged ? totalCalories : undefined,
+      items: isLogged ? items : undefined,
+    }
+  })
+
   return (
     <>
       <Header
@@ -196,49 +228,59 @@ export default function HomePage() {
       />
 
       <PageContainer className="pt-2">
-        {/* Streak & Date */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-6"
-        >
-          <div>
-            <p className="text-sm text-[var(--text-tertiary)] capitalize">{today}</p>
-          </div>
-          <StreakBadge days={7} />
-        </motion.div>
+        {/* Gamification Panel (compact) */}
+        <Section>
+          <GamificationPanel
+            compact
+            onViewAll={() => router.push('/profile/achievements')}
+          />
+        </Section>
 
         {/* Main Nutrition Overview */}
         <Section>
-          <NutritionOverview data={mockNutritionData} />
+          <NutritionOverview data={nutritionData} />
         </Section>
 
         {/* Quick Actions */}
         <Section>
-          <Button
-            variant="default"
-            size="lg"
-            className="h-14 w-full"
-            onClick={() => router.push('/meals/add')}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Ajouter un repas
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="default"
+              size="lg"
+              className="h-14 flex-1"
+              onClick={() => router.push('/meals/add')}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Ajouter un repas
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 flex-1 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-emerald-300 dark:border-emerald-700 hover:from-emerald-500/20 hover:via-teal-500/20 hover:to-cyan-500/20 group"
+              onClick={() => router.push('/plan')}
+            >
+              <div className="relative">
+                <CalendarRange className="h-5 w-5 mr-2 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                <Sparkles className="h-3 w-3 absolute -top-1 -right-0 text-amber-500 animate-pulse" />
+              </div>
+              <span className="text-emerald-700 dark:text-emerald-300 font-semibold">Plan 7 jours</span>
+            </Button>
+          </div>
         </Section>
 
         {/* Hydration Tracker */}
         <Section>
           <HydrationTracker
-            current={hydration}
+            current={currentHydration}
             target={2500}
-            onAdd={(amount) => setHydration(h => h + amount)}
-            onRemove={(amount) => setHydration(h => Math.max(0, h - amount))}
+            onAdd={(amount) => addHydration(amount, todayString)}
+            onRemove={(amount) => addHydration(-amount, todayString)}
           />
         </Section>
 
         {/* Today's Meals */}
         <Section>
-          <MealsToday meals={mockMeals} />
+          <MealsToday meals={mealsData} />
         </Section>
 
         {/* Coach Insights */}
@@ -250,11 +292,6 @@ export default function HomePage() {
             />
           </Section>
         )}
-
-        {/* Weekly Overview */}
-        <Section>
-          <WeeklyChart data={mockWeeklyData} />
-        </Section>
 
         {/* Weight Tracker */}
         <Section>
@@ -273,7 +310,7 @@ export default function HomePage() {
             currentDay={currentDayIndex}
             daysUntilNewWeek={daysUntilNewWeek}
             weekStartDate={weekStartDate ?? undefined}
-            dailyTarget={profile.dailyCaloriesTarget || mockNutritionData.calories.target}
+            dailyTarget={profile.dailyCaloriesTarget || 2100}
             isFirstTimeSetup={isFirstTimeSetup}
             onConfirmStart={confirmStartDay}
             onResetDay={resetToToday}
@@ -317,6 +354,9 @@ export default function HomePage() {
         {/* Spacer for bottom nav */}
         <div className="h-4" />
       </PageContainer>
+
+      {/* Rewards notification manager */}
+      <RewardsManager />
     </>
   )
 }

@@ -1,4 +1,7 @@
 export { useUserStore } from './user-store'
 export { useMealsStore } from './meals-store'
 export { useUIStore } from './ui-store'
+export { useGamificationStore, BADGES, LEVEL_TITLES, XP_REWARDS } from './gamification-store'
+export { useCaloricBankStore } from './caloric-bank-store'
 export type { Theme, ToastType } from './ui-store'
+export type { BadgeCategory, BadgeDefinition } from './gamification-store'

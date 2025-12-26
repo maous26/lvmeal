@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, Sparkles, TrendingDown, AlertTriangle, Calendar, Info, X, Check, PiggyBank, Gift, CalendarDays } from 'lucide-react'
+import { Sparkles, TrendingUp, Calendar, Info, X, Check, Gift, CalendarDays, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -100,24 +100,18 @@ export function CaloricBalance({
   )
   const hasExceedingDays = daysExceedingLimit.length > 0
 
-  // Determine status
+  // Determine status - always positive and encouraging
   const getStatus = () => {
-    if (hasExceedingDays) {
-      return { label: 'Dépassement', variant: 'error' as const, icon: AlertTriangle }
-    }
     if (availableCredit >= maxCredit * 0.6) {
-      return { label: 'Épargne élevée', variant: 'success' as const, icon: Sparkles }
+      return { label: 'Super !', variant: 'success' as const, icon: Sparkles }
     }
     if (availableCredit >= maxCredit * 0.3) {
-      return { label: 'Bon crédit', variant: 'info' as const, icon: Wallet }
+      return { label: 'Bien parti', variant: 'info' as const, icon: TrendingUp }
     }
     if (availableCredit > 0) {
-      return { label: 'Crédit faible', variant: 'warning' as const, icon: TrendingDown }
+      return { label: 'En route', variant: 'info' as const, icon: Heart }
     }
-    if (availableCredit < 0) {
-      return { label: 'En déficit', variant: 'error' as const, icon: AlertTriangle }
-    }
-    return { label: 'Pas de crédit', variant: 'default' as const, icon: AlertTriangle }
+    return { label: 'Nouveau cycle', variant: 'default' as const, icon: Calendar }
   }
 
   const status = getStatus()
@@ -129,8 +123,8 @@ export function CaloricBalance({
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-[var(--accent-primary)]" />
-            Banque calorique
+            <Gift className="h-5 w-5 text-[var(--accent-primary)]" />
+            Solde Plaisir
             <button
               onClick={() => setShowInfoModal(true)}
               className="p-1 rounded-full hover:bg-[var(--bg-tertiary)] transition-colors"
@@ -154,13 +148,13 @@ export function CaloricBalance({
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <PiggyBank className="h-5 w-5 text-[var(--accent-primary)] flex-shrink-0" />
+              <Gift className="h-5 w-5 text-[var(--accent-primary)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[var(--text-primary)]">
-                  Cycle démarré aujourd'hui
+                  Votre cycle plaisir commence !
                 </p>
                 <p className="text-xs text-[var(--text-tertiary)] truncate">
-                  Cliquez sur <Info className="h-3 w-3 inline" /> pour comprendre le fonctionnement
+                  Économisez un peu chaque jour pour vous faire plaisir le jour 7
                 </p>
               </div>
             </div>
@@ -171,41 +165,8 @@ export function CaloricBalance({
               className="flex-shrink-0"
             >
               <Check className="h-4 w-4 mr-1" />
-              OK
+              C'est parti !
             </Button>
-          </div>
-          {/* Discrete link to change start day */}
-          {onResetDay && (
-            <div className="mt-2 pt-2 border-t border-[var(--accent-primary)]/10">
-              <button
-                onClick={onResetDay}
-                className="text-xs text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-colors underline underline-offset-2"
-              >
-                Changer le jour de départ
-              </button>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Alert for days exceeding 10% limit */}
-      {hasExceedingDays && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-xl bg-[var(--error)]/10 border border-[var(--error)]/20"
-        >
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="h-5 w-5 text-[var(--error)] flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-[var(--error)]">
-                Dépassement de la limite de 10%
-              </p>
-              <p className="text-xs text-[var(--text-secondary)] mt-1">
-                {daysExceedingLimit.length} jour{daysExceedingLimit.length > 1 ? 's' : ''} avec un écart supérieur à {maxDailyVariance} kcal.
-                Essayez de rester dans la limite de ±10% ({formatNumber(dailyTarget - maxDailyVariance)} - {formatNumber(dailyTarget + maxDailyVariance)} kcal).
-              </p>
-            </div>
           </div>
         </motion.div>
       )}
@@ -214,30 +175,27 @@ export function CaloricBalance({
       <div className="relative text-center mb-6">
         <motion.div
           className="absolute inset-0 rounded-2xl blur-2xl opacity-20"
-          style={{ backgroundColor: availableCredit >= 0 ? 'var(--accent-primary)' : 'var(--error)' }}
+          style={{ backgroundColor: 'var(--accent-primary)' }}
           animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.25, 0.15] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         />
         <div className="relative">
           <p className="text-sm text-[var(--text-tertiary)] mb-1">
-            {availableCredit >= 0 ? 'Crédit disponible' : 'Déficit à combler'}
+            Solde disponible
           </p>
           <div className="flex items-center justify-center gap-2">
             <motion.span
-              className={cn(
-                "text-4xl font-bold tabular-nums",
-                availableCredit >= 0 ? "text-[var(--accent-primary)]" : "text-[var(--error)]"
-              )}
+              className="text-4xl font-bold tabular-nums text-[var(--accent-primary)]"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 200 }}
             >
-              {availableCredit < 0 ? '-' : ''}{formatNumber(Math.abs(availableCredit))}
+              {formatNumber(Math.max(0, availableCredit))}
             </motion.span>
             <span className="text-lg text-[var(--text-secondary)]">kcal</span>
           </div>
           <p className="text-xs text-[var(--text-tertiary)] mt-1">
-            sur {formatNumber(maxCredit)} kcal max (±{Math.round(MAX_VARIANCE_PERCENT * 100)}% × 6 jours)
+            sur {formatNumber(maxCredit)} kcal max possible
           </p>
         </div>
       </div>
@@ -249,12 +207,8 @@ export function CaloricBalance({
           <motion.div
             className="h-full rounded-full"
             style={{
-              background: availableCredit >= 0
-                ? `linear-gradient(90deg, var(--accent-primary), var(--info))`
-                : `linear-gradient(90deg, var(--error), var(--warning))`,
-              boxShadow: availableCredit >= 0
-                ? '0 0 15px rgba(0, 119, 182, 0.4)'
-                : '0 0 15px rgba(239, 68, 68, 0.4)'
+              background: `linear-gradient(90deg, var(--accent-primary), var(--info))`,
+              boxShadow: '0 0 15px rgba(0, 119, 182, 0.4)'
             }}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(creditPercentage, 100)}%` }}
@@ -273,10 +227,7 @@ export function CaloricBalance({
       {/* 7-day breakdown */}
       <div className="mb-6">
         <p className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-          Consommation par jour
-          <span className="text-xs text-[var(--text-tertiary)] ml-2">
-            (limite: ±{maxDailyVariance} kcal)
-          </span>
+          Votre semaine
         </p>
         <div className="flex gap-1.5">
           {cycleDays.map((dayInfo, index) => {
@@ -287,73 +238,47 @@ export function CaloricBalance({
             const consumed = dayData?.consumed ?? 0
             const target = dayData?.target ?? dailyTarget
             const isUnderTarget = consumed <= target
-            const exceeds10Percent = isPast && isExceedingLimit(consumed, target)
 
             // Calculate bar height based on consumption (target = 100%)
-            const barHeight = Math.min((consumed / target) * 100, 120) // Allow overflow up to 120%
+            const barHeight = Math.min((consumed / target) * 100, 100)
 
             return (
               <div key={`${dayInfo.day}-${dayInfo.date}`} className="flex-1 flex flex-col items-center">
-                {/* Bar container with target line */}
+                {/* Bar container */}
                 <div className="relative h-16 w-full flex items-end justify-center mb-2">
-                  {/* Target line indicator */}
-                  {isPast && (
-                    <div className="absolute bottom-[100%] left-0 right-0 h-px bg-[var(--text-tertiary)]/30 z-10" style={{ bottom: '100%' }} />
-                  )}
-
-                  {/* 10% limit indicators */}
-                  {isPast && (
-                    <>
-                      <div className="absolute left-0 right-0 h-px bg-[var(--warning)]/40 z-10" style={{ bottom: '90%' }} />
-                      <div className="absolute left-0 right-0 h-px bg-[var(--warning)]/40 z-10" style={{ bottom: '110%' }} />
-                    </>
-                  )}
-
                   {isPast && (
                     <motion.div
                       className={cn(
                         'w-full rounded-t-lg',
-                        exceeds10Percent
-                          ? 'bg-gradient-to-t from-[var(--error)] to-[var(--warning)]'
-                          : isUnderTarget
-                            ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--info)]'
-                            : 'bg-gradient-to-t from-[var(--warning)] to-[var(--accent-secondary)]'
+                        isUnderTarget
+                          ? 'bg-gradient-to-t from-[var(--accent-primary)] to-[var(--info)]'
+                          : 'bg-gradient-to-t from-[var(--accent-secondary)] to-[var(--accent-primary)]'
                       )}
                       style={{
-                        boxShadow: exceeds10Percent
-                          ? '0 0 10px rgba(239, 68, 68, 0.4)'
-                          : isUnderTarget
-                            ? '0 0 10px rgba(0, 119, 182, 0.3)'
-                            : '0 0 10px rgba(245, 158, 11, 0.3)'
+                        boxShadow: '0 0 10px rgba(0, 119, 182, 0.3)'
                       }}
                       initial={{ height: 0 }}
-                      animate={{ height: `${Math.min(barHeight, 100)}%` }}
+                      animate={{ height: `${barHeight}%` }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     />
                   )}
                   {isCurrentDay && (
                     <motion.div
-                      className="w-full h-full rounded-lg border-2 border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/10"
+                      className="w-full rounded-lg border-2 border-dashed border-[var(--accent-primary)] bg-[var(--accent-primary)]/10"
+                      style={{ height: `${Math.max(barHeight, 20)}%` }}
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     />
                   )}
                   {isFuture && (
-                    <div className="w-full h-full rounded-lg bg-[var(--bg-tertiary)] opacity-50" />
-                  )}
-
-                  {/* Exceeding limit indicator */}
-                  {exceeds10Percent && (
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2">
-                      <AlertTriangle className="h-3 w-3 text-[var(--error)]" />
-                    </div>
+                    <div className="w-full h-full rounded-lg bg-[var(--bg-tertiary)] opacity-40" />
                   )}
                 </div>
 
                 {/* Day label with date */}
                 <span className={cn(
                   'text-xs font-medium',
-                  exceeds10Percent ? 'text-[var(--error)]' : isCurrentDay ? 'text-[var(--accent-primary)]' : 'text-[var(--text-tertiary)]'
+                  isCurrentDay ? 'text-[var(--accent-primary)]' : 'text-[var(--text-tertiary)]'
                 )}>
                   {dayInfo.day}
                 </span>
@@ -362,10 +287,10 @@ export function CaloricBalance({
                 </span>
 
                 {/* Consumed calories */}
-                {isPast && (
+                {(isPast || isCurrentDay) && consumed > 0 && (
                   <span className={cn(
                     'text-[10px] tabular-nums',
-                    exceeds10Percent ? 'text-[var(--error)] font-semibold' : isUnderTarget ? 'text-[var(--success)]' : 'text-[var(--warning)]'
+                    isUnderTarget ? 'text-[var(--success)]' : 'text-[var(--text-secondary)]'
                   )}>
                     {formatNumber(consumed)}
                   </span>
@@ -376,21 +301,18 @@ export function CaloricBalance({
         </div>
       </div>
 
-      {/* Info box */}
-      <div className="p-3 rounded-xl bg-gradient-to-r from-[var(--accent-primary)]/5 to-[var(--accent-secondary)]/5 border border-[var(--accent-primary)]/10 mb-4">
+      {/* Info box - always encouraging */}
+      <div className="p-3 rounded-xl bg-gradient-to-r from-[var(--success)]/5 to-[var(--accent-primary)]/5 border border-[var(--success)]/10 mb-4">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-sm">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--success)] to-[var(--accent-primary)] shadow-sm">
+            <Gift className="h-4 w-4 text-white" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--text-primary)]">
-              {availableCredit >= 0 ? 'Faites-vous plaisir le jour 7' : 'Réduisez votre consommation'}
+              Jour plaisir le jour 7
             </p>
             <p className="text-xs text-[var(--text-secondary)] mt-1">
-              {availableCredit >= 0
-                ? `Épargnez jusqu'à ${maxDailyVariance} kcal/jour (10%) pour obtenir un bonus de ${formatNumber(maxCredit)} kcal max.`
-                : `Vous avez ${formatNumber(Math.abs(availableCredit))} kcal à rattraper. Restez sous votre objectif les prochains jours.`
-              }
+              Chaque calorie économisée s'ajoute à votre solde pour un repas plaisir mérité !
             </p>
           </div>
         </div>
@@ -446,11 +368,11 @@ export function CaloricBalance({
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center">
-                    <Wallet className="h-5 w-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--success)] to-[var(--accent-primary)] flex items-center justify-center">
+                    <Gift className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-[var(--text-primary)]">
-                    Comment ça marche ?
+                    Solde Plaisir
                   </h3>
                 </div>
                 <button
@@ -463,90 +385,73 @@ export function CaloricBalance({
 
               {/* Explanation sections */}
               <div className="space-y-4">
-                {/* What is caloric balance */}
+                {/* What is it */}
                 <div className="p-4 rounded-xl bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-2 mb-2">
-                    <PiggyBank className="h-5 w-5 text-[var(--accent-primary)]" />
-                    <h4 className="font-semibold text-[var(--text-primary)]">Le solde calorique</h4>
+                    <Heart className="h-5 w-5 text-[var(--accent-primary)]" />
+                    <h4 className="font-semibold text-[var(--text-primary)]">Le principe</h4>
                   </div>
                   <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    Votre <strong>solde calorique</strong> représente les calories que vous avez "épargnées"
-                    en mangeant moins que votre objectif quotidien.
+                    Mangez un peu moins que votre objectif pendant 6 jours, et profitez d'un
+                    <strong> repas plaisir</strong> le 7ème jour !
                   </p>
                   <div className="mt-3 p-3 rounded-lg bg-[var(--bg-tertiary)]">
                     <p className="text-xs text-[var(--text-tertiary)]">
-                      <strong>Exemple :</strong> Avec un objectif de {formatNumber(dailyTarget)} kcal, si vous consommez {formatNumber(dailyTarget - maxDailyVariance)} kcal,
-                      vous épargnez <span className="text-[var(--success)] font-medium">+{maxDailyVariance} kcal</span> (10% max).
+                      <strong>Exemple :</strong> Économisez {maxDailyVariance} kcal/jour pendant 6 jours =
+                      <span className="text-[var(--success)] font-medium"> +{formatNumber(maxCredit)} kcal</span> pour vous faire plaisir !
                     </p>
                   </div>
                 </div>
 
-                {/* The 10% rule */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-[var(--warning)]/10 to-[var(--accent-primary)]/10 border border-[var(--warning)]/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-5 w-5 text-[var(--warning)]" />
-                    <h4 className="font-semibold text-[var(--text-primary)]">La règle des 10%</h4>
-                  </div>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    Votre écart journalier est limité à <strong>±10%</strong> de votre objectif,
-                    soit <strong>±{maxDailyVariance} kcal</strong> par jour.
-                  </p>
-                  <ul className="text-xs text-[var(--text-tertiary)] mt-2 space-y-1">
-                    <li>• Restez entre <strong>{formatNumber(dailyTarget - maxDailyVariance)}</strong> et <strong>{formatNumber(dailyTarget + maxDailyVariance)}</strong> kcal</li>
-                    <li>• Au-delà, vous serez alerté(e) pour ajuster</li>
-                    <li>• Maximum cumulable : <strong>{formatNumber(maxCredit)} kcal</strong> (6 × 10%)</li>
-                  </ul>
-                </div>
-
-                {/* How savings work */}
+                {/* How it works */}
                 <div className="p-4 rounded-xl bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingDown className="h-5 w-5 text-[var(--success)]" />
+                    <TrendingUp className="h-5 w-5 text-[var(--success)]" />
                     <h4 className="font-semibold text-[var(--text-primary)]">Comment ça marche</h4>
                   </div>
                   <ul className="text-sm text-[var(--text-secondary)] space-y-2">
                     <li className="flex items-start gap-2">
-                      <span className="text-[var(--success)]">+</span>
-                      <span>Jours 1-6 : épargnez jusqu'à <strong>{maxDailyVariance} kcal/jour</strong></span>
+                      <span className="text-[var(--success)]">1.</span>
+                      <span>Mangez légèrement sous votre objectif (jusqu'à {maxDailyVariance} kcal/jour)</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-[var(--accent-primary)]">★</span>
-                      <span>Jour 7 : profitez de votre crédit accumulé !</span>
+                      <span className="text-[var(--success)]">2.</span>
+                      <span>Votre solde s'accumule automatiquement</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-[var(--error)]">−</span>
-                      <span>Surplus ? Il sera à rattraper les jours suivants</span>
+                      <span className="text-[var(--accent-primary)]">3.</span>
+                      <span>Le jour 7 : utilisez votre solde pour un repas généreux !</span>
                     </li>
                   </ul>
                 </div>
 
-                {/* Plaisir days */}
+                {/* Plaisir day */}
                 <div className="p-4 rounded-xl bg-gradient-to-r from-[var(--success)]/10 to-[var(--accent-primary)]/10 border border-[var(--success)]/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Gift className="h-5 w-5 text-[var(--success)]" />
-                    <h4 className="font-semibold text-[var(--text-primary)]">Jour plaisir</h4>
+                    <h4 className="font-semibold text-[var(--text-primary)]">Votre jour plaisir</h4>
                   </div>
                   <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    Le <strong>7ème jour</strong>, si vous avez un solde positif,
-                    vous pouvez consommer jusqu'à <strong>{formatNumber(dailyTarget + maxCredit)} kcal</strong> !
+                    Le <strong>7ème jour</strong>, profitez de votre solde accumulé.
+                    Vous pourrez manger jusqu'à <strong>{formatNumber(dailyTarget + maxCredit)} kcal</strong> !
                   </p>
                   <p className="text-xs text-[var(--text-tertiary)] mt-2">
-                    C'est le moment de profiter de vos efforts sans culpabilité.
+                    C'est votre récompense bien méritée.
                   </p>
                 </div>
 
-                {/* Automatic cycle */}
+                {/* Cycle info */}
                 <div className="p-4 rounded-xl bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-2 mb-2">
                     <CalendarDays className="h-5 w-5 text-[var(--info)]" />
                     <h4 className="font-semibold text-[var(--text-primary)]">Cycle de 7 jours</h4>
                   </div>
                   <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-                    Votre banque fonctionne sur un cycle de <strong>7 jours</strong>.
-                    À la fin du cycle, elle se réinitialise automatiquement.
+                    Un nouveau cycle commence automatiquement chaque semaine.
+                    Pas de pression, avancez à votre rythme !
                   </p>
                   <p className="text-xs text-[var(--text-tertiary)] mt-2">
-                    Vous êtes au <strong>Jour {currentDay + 1}/7</strong>. Nouveau cycle dans {daysUntilNewWeek} jour{daysUntilNewWeek > 1 ? 's' : ''}.
+                    Vous êtes au <strong>Jour {currentDay + 1}/7</strong>. Prochain cycle dans {daysUntilNewWeek} jour{daysUntilNewWeek > 1 ? 's' : ''}.
                   </p>
                 </div>
               </div>
@@ -558,7 +463,7 @@ export function CaloricBalance({
                 onClick={() => setShowInfoModal(false)}
                 className="w-full mt-5"
               >
-                J'ai compris !
+                Super, merci !
               </Button>
             </div>
           </motion.div>

@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage, getInitials } from '@/components/u
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StreakBadge, XPDisplay } from '@/components/dashboard/streak-badge'
+import { useGamificationStore } from '@/stores/gamification-store'
 import { formatNumber } from '@/lib/utils'
 import type { UserProfile } from '@/types'
 
@@ -76,20 +77,36 @@ const settingsItems = [
 export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
+  const [mounted, setMounted] = React.useState(false)
+
+  // Gamification store
+  const {
+    totalXP,
+    currentLevel,
+    getXPForNextLevel,
+    getStreakInfo,
+    checkAndUpdateStreak,
+  } = useGamificationStore()
 
   React.useEffect(() => {
+    setMounted(true)
+    checkAndUpdateStreak()
     const storedProfile = localStorage.getItem('userProfile')
     if (storedProfile) {
       setProfile(JSON.parse(storedProfile))
     }
-  }, [])
+  }, [checkAndUpdateStreak])
 
   const handleLogout = () => {
     localStorage.removeItem('userProfile')
     router.push('/onboarding')
   }
 
-  if (!profile) {
+  // Get real gamification data after hydration
+  const streakInfo = mounted ? getStreakInfo() : { current: 0, longest: 0, isActive: false }
+  const xpForNextLevel = mounted ? getXPForNextLevel() : 100
+
+  if (!profile || !mounted) {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="animate-pulse text-[var(--text-tertiary)]">Chargement...</div>
@@ -119,13 +136,13 @@ export default function ProfilePage() {
                   {profile.email || 'Membre Premium'}
                 </p>
                 <div className="mt-2">
-                  <StreakBadge days={7} size="sm" />
+                  <StreakBadge days={streakInfo.current} isActive={streakInfo.isActive} size="sm" />
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-[var(--border-light)]">
-              <XPDisplay current={1250} level={5} toNextLevel={750} />
+              <XPDisplay current={totalXP} level={currentLevel} toNextLevel={xpForNextLevel} />
             </div>
           </Card>
         </Section>

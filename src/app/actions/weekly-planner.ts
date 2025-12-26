@@ -444,8 +444,66 @@ function getFallbackMeal(
 }
 
 /**
+ * Calculate daily calorie targets based on repas plaisir settings
+ * If repas plaisir is enabled:
+ * - Days BEFORE repas plaisir day are reduced by ~10% to save calories
+ * - Repas plaisir day gets the base + ALL accumulated savings
+ * - Days after repas plaisir are normal
+ *
+ * Example with 2100 kcal/day and repas plaisir on Saturday (day 5):
+ * - Mon-Fri (days 0-4): 1890 kcal each (save 210/day = 1050 total)
+ * - Saturday (day 5): 2100 + 1050 = 3150 kcal
+ * - Sunday (day 6): 2100 kcal
+ */
+function calculateDailyCalorieTargets(
+  baseCalories: number,
+  includeRepasPlaisir: boolean,
+  repasPlaisirDay: 5 | 6 = 5 // 5 = Samedi, 6 = Dimanche
+): { dailyTargets: number[]; repasPlaisirBonus: number } {
+  const dailyTargets: number[] = []
+
+  if (!includeRepasPlaisir) {
+    // No repas plaisir: each day gets the full calorie target
+    for (let i = 0; i < 7; i++) {
+      dailyTargets.push(baseCalories)
+    }
+    return { dailyTargets, repasPlaisirBonus: 0 }
+  }
+
+  // With repas plaisir: save 10% on days BEFORE repas plaisir day
+  const savingsPercentage = 0.10
+  const savedPerDay = Math.round(baseCalories * savingsPercentage)
+  // Days 0 to (repasPlaisirDay - 1) save calories
+  // If repasPlaisirDay = 5 (Saturday), we save on days 0-4 (Mon-Fri) = 5 days
+  // If repasPlaisirDay = 6 (Sunday), we save on days 0-5 (Mon-Sat) = 6 days
+  const daysToSave = repasPlaisirDay // Number of days that save (0-indexed)
+  const totalSavings = savedPerDay * daysToSave
+
+  console.log(`Repas plaisir calculation: ${baseCalories} base, ${savedPerDay}/day saved, ${daysToSave} days = ${totalSavings} total savings`)
+  console.log(`Repas plaisir day ${repasPlaisirDay} will have: ${baseCalories} + ${totalSavings} = ${baseCalories + totalSavings} kcal`)
+
+  for (let i = 0; i < 7; i++) {
+    if (i < repasPlaisirDay) {
+      // Days before repas plaisir: reduced calories
+      dailyTargets.push(baseCalories - savedPerDay)
+    } else if (i === repasPlaisirDay) {
+      // Repas plaisir day: base + ALL accumulated savings
+      dailyTargets.push(baseCalories + totalSavings)
+    } else {
+      // Days after repas plaisir: normal calories
+      dailyTargets.push(baseCalories)
+    }
+  }
+
+  return { dailyTargets, repasPlaisirBonus: totalSavings }
+}
+
+/**
  * Generate a complete 7-day meal plan
  * Priority: Gustar API > Ciqual > Open Food Facts > AI generation
+ *
+ * CRITICAL: Respects user's daily calorie target (±10%)
+ * If repas plaisir is enabled, reduces calories on days 1-5/6 to save for the repas plaisir
  */
 export async function generateWeeklyPlanWithDetails(
   preferences: WeeklyPlanPreferences,
@@ -454,6 +512,8 @@ export async function generateWeeklyPlanWithDetails(
 ): Promise<{ success: boolean; plan?: WeeklyPlan; error?: string }> {
   try {
     console.log('Generating weekly meal plan...')
+    console.log('User daily calorie target:', preferences.dailyCalories)
+    console.log('Repas plaisir enabled:', preferences.includeCheatMeal)
     console.log('Sources available:', {
       gustar: isGustarAvailable(),
       openai: isOpenAIAvailable(),
@@ -470,41 +530,54 @@ export async function generateWeeklyPlanWithDetails(
 
     const profileContext = userProfile ? generateUserProfileContext(userProfile) : ''
 
-    // Calculate remaining calories if user has already eaten today
-    let adjustedDailyCalories = preferences.dailyCalories
-    if (consumedContext?.todayCalories) {
-      const remaining = preferences.dailyCalories - consumedContext.todayCalories
-      if (remaining > 0) {
-        console.log(`User has consumed ${consumedContext.todayCalories} kcal today, ${remaining} remaining`)
-      }
-    }
+    // Determine repas plaisir day (will be confirmed at day 5)
+    // Default to Saturday (index 5)
+    const repasPlaisirDayIndex: 5 | 6 = 5
 
-    // Determine Cheat Meal day (will be proposed at day 5)
-    let cheatMealDayIndex = -1
-    let cheatMealType: 'lunch' | 'dinner' = 'dinner'
+    // Calculate daily calorie targets respecting repas plaisir
+    const { dailyTargets, repasPlaisirBonus } = calculateDailyCalorieTargets(
+      preferences.dailyCalories,
+      preferences.includeCheatMeal || false,
+      repasPlaisirDayIndex
+    )
 
-    if (preferences.includeCheatMeal) {
-      // Default to Saturday or Sunday
-      cheatMealDayIndex = 5 + Math.floor(Math.random() * 2) // 5 or 6
-      cheatMealType = Math.random() > 0.5 ? 'dinner' : 'lunch'
+    console.log('Daily calorie targets:', dailyTargets)
+    if (repasPlaisirBonus > 0) {
+      console.log(`Repas plaisir bonus on day ${repasPlaisirDayIndex}: +${repasPlaisirBonus} kcal`)
     }
 
     for (let i = 0; i < days.length; i++) {
       const day = days[i]
       const dayMeals: MealPlanMeal[] = []
       const isWeekend = i >= 5
+      const dailyCalorieTarget = dailyTargets[i]
+      const isRepasPlaisirDay = preferences.includeCheatMeal && i === repasPlaisirDayIndex
 
       const dailyTheme = Math.random() > 0.5 ? getRandomTheme() : getSeasonalTheme()
 
+      // Calculate meal calorie targets based on daily target
+      // Standard distribution: Breakfast 25%, Lunch 35%, Snack 10%, Dinner 30%
       const mealTypes = [
-        { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: adjustedDailyCalories * 0.25 },
-        { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: adjustedDailyCalories * 0.35 },
-        { type: 'snack' as const, name: 'Collation', calorieTarget: adjustedDailyCalories * 0.10 },
-        { type: 'dinner' as const, name: 'Dîner', calorieTarget: adjustedDailyCalories * 0.30 },
+        { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: Math.round(dailyCalorieTarget * 0.25) },
+        { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: Math.round(dailyCalorieTarget * 0.35) },
+        { type: 'snack' as const, name: 'Collation', calorieTarget: Math.round(dailyCalorieTarget * 0.10) },
+        { type: 'dinner' as const, name: 'Dîner', calorieTarget: Math.round(dailyCalorieTarget * 0.30) },
       ]
 
-      for (const mealType of mealTypes) {
-        const isCheatMeal = i === cheatMealDayIndex && mealType.type === cheatMealType
+      // Track calories for this day to ensure we hit the target
+      let dayCaloriesUsed = 0
+      const tolerance = 0.10 // ±10% tolerance
+
+      for (let mealIdx = 0; mealIdx < mealTypes.length; mealIdx++) {
+        const mealType = mealTypes[mealIdx]
+        const isLastMeal = mealIdx === mealTypes.length - 1
+
+        // For the last meal, adjust to hit daily target
+        let targetCalories = mealType.calorieTarget
+        if (isLastMeal) {
+          const remaining = dailyCalorieTarget - dayCaloriesUsed
+          targetCalories = Math.max(remaining, mealType.calorieTarget * 0.5) // At least 50% of normal
+        }
 
         // Check fasting window for breakfast
         let skipMeal = false
@@ -532,60 +605,107 @@ export async function generateWeeklyPlanWithDetails(
         }
 
         let meal: MealPlanMeal | null = null
+        const isRepasPlaisirMeal = isRepasPlaisirDay && mealType.type === 'dinner'
 
-        // Skip cheat meal for now if it's before day 5 (will be proposed later)
-        if (!isCheatMeal) {
-          // 1. Try to find meals from existing sources
+        // 1. Try to find meals from existing sources
+        if (!isRepasPlaisirMeal) {
           const suggestions = await getMealSuggestions(mealType.type, preferences, usedRecipeNames, isWeekend)
 
           if (suggestions.length > 0) {
-            // Find a meal that fits the calorie target (±30%)
-            const targetMin = mealType.calorieTarget * 0.7
-            const targetMax = mealType.calorieTarget * 1.3
+            // Find a meal that fits the calorie target (±20% for sources, we'll adjust)
+            const targetMin = targetCalories * 0.8
+            const targetMax = targetCalories * 1.2
 
             meal = suggestions.find(s => s.calories >= targetMin && s.calories <= targetMax)
 
-            if (!meal && suggestions.length > 0) {
-              // If no exact match, take the first one and adjust portion description
-              meal = { ...suggestions[0] }
+            if (!meal) {
+              // If no exact match, find closest and scale
+              const closest = suggestions.reduce((prev, curr) =>
+                Math.abs(curr.calories - targetCalories) < Math.abs(prev.calories - targetCalories) ? curr : prev
+              )
+
+              if (closest.calories > 0) {
+                // Scale the meal to match target calories
+                const scaleFactor = targetCalories / closest.calories
+                meal = {
+                  ...closest,
+                  calories: Math.round(closest.calories * scaleFactor),
+                  proteins: Math.round(closest.proteins * scaleFactor),
+                  carbs: Math.round(closest.carbs * scaleFactor),
+                  fats: Math.round(closest.fats * scaleFactor),
+                  description: closest.description ? `${closest.description} (portion ajustée)` : 'Portion ajustée',
+                }
+              }
             }
           }
         }
 
-        // 2. If no suitable meal found, generate with AI
+        // 2. If no suitable meal found, generate with AI with EXACT calorie target
         if (!meal) {
           meal = await generateMealWithAI(
             day,
-            mealType,
+            { ...mealType, calorieTarget: targetCalories },
             preferences,
             profileContext,
             usedRecipeNames,
             dailyTheme,
             isWeekend,
-            isCheatMeal
+            isRepasPlaisirMeal
           )
+        }
+
+        // Ensure meal has correct calories (force it)
+        if (meal && Math.abs(meal.calories - targetCalories) > targetCalories * 0.15) {
+          // Meal calories are too far off, scale them
+          const scaleFactor = targetCalories / (meal.calories || targetCalories)
+          meal = {
+            ...meal,
+            calories: Math.round(targetCalories),
+            proteins: Math.round((meal.proteins || 0) * scaleFactor),
+            carbs: Math.round((meal.carbs || 0) * scaleFactor),
+            fats: Math.round((meal.fats || 0) * scaleFactor),
+          }
         }
 
         usedRecipeNames.push(meal.name.toLowerCase())
         dayMeals.push(meal)
+        dayCaloriesUsed += meal.calories
       }
 
       const totalCalories = dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0)
 
+      // Validate day is within tolerance
+      const minAcceptable = dailyCalorieTarget * (1 - tolerance)
+      const maxAcceptable = dailyCalorieTarget * (1 + tolerance)
+
+      if (totalCalories < minAcceptable || totalCalories > maxAcceptable) {
+        console.warn(`Day ${day}: ${totalCalories} kcal is outside target range [${Math.round(minAcceptable)}-${Math.round(maxAcceptable)}]`)
+        // Adjust the last non-fasting meal to hit target
+        const lastMealIdx = dayMeals.findLastIndex(m => !m.isFasting)
+        if (lastMealIdx >= 0) {
+          const adjustment = dailyCalorieTarget - totalCalories
+          const adjustedMeal = dayMeals[lastMealIdx]
+          adjustedMeal.calories = Math.max(50, adjustedMeal.calories + adjustment)
+          console.log(`Adjusted ${adjustedMeal.name}: ${adjustment > 0 ? '+' : ''}${adjustment} kcal`)
+        }
+      }
+
       weekPlan.push({
         day,
         meals: dayMeals,
-        totalCalories,
+        totalCalories: dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0),
       })
     }
 
+    // Log final plan summary
     console.log('Weekly plan generated successfully!')
+    console.log('Daily totals:', weekPlan.map(d => `${d.day}: ${d.totalCalories} kcal`))
 
     return {
       success: true,
       plan: {
         days: weekPlan,
-        cheatMealDay: cheatMealDayIndex,
+        cheatMealDay: preferences.includeCheatMeal ? repasPlaisirDayIndex : undefined,
         cheatMealProposed: false,
       },
     }
@@ -596,8 +716,12 @@ export async function generateWeeklyPlanWithDetails(
 }
 
 /**
- * Propose cheat meal modification for day 6 or 7
- * Called when user reaches day 5
+ * Propose repas plaisir modification for day 6 or 7
+ * Called when user reaches day 5 (Vendredi)
+ *
+ * Recalculates the remaining days:
+ * - If user chooses Samedi (5): day 6 gets accumulated savings, day 7 is normal
+ * - If user chooses Dimanche (6): day 6 is reduced, day 7 gets all savings
  */
 export async function proposeCheatMealDay(
   currentPlan: WeeklyPlan,
@@ -610,25 +734,44 @@ export async function proposeCheatMealDay(
     }
 
     const client = getOpenAIClient()
-    const day = preferredDay === 5 ? 'Samedi' : 'Dimanche'
+    const dayName = preferredDay === 5 ? 'Samedi' : 'Dimanche'
 
-    const prompt = `Génère un REPAS PLAISIR (cheat meal) gourmand mais pas trop excessif.
+    // Calculate the accumulated savings from days 0-4 (Lundi-Vendredi)
+    // Plus potentially day 5 if user chose Sunday
+    const savedPerDay = Math.round(preferences.dailyCalories * 0.10)
+    const daysAlreadySaved = 5 // Days 0-4 already saved
+    let totalSavingsForRepasPlaisir = savedPerDay * daysAlreadySaved
+
+    if (preferredDay === 6) {
+      // If Sunday, also save from Saturday
+      totalSavingsForRepasPlaisir += savedPerDay
+    }
+
+    // The repas plaisir meal gets a significant calorie boost
+    const repasPlaisirCalories = Math.round(preferences.dailyCalories * 0.40) + Math.round(totalSavingsForRepasPlaisir * 0.5)
+
+    const prompt = `Génère un REPAS PLAISIR gourmand et festif pour ${dayName}.
+
+CONTEXTE:
+- L'utilisateur a économisé des calories toute la semaine pour ce moment
+- C'est un repas de récompense, il doit être généreux et savoureux
+- Calories cibles pour ce repas: ${repasPlaisirCalories} kcal
 
 CONTRAINTES:
-- Calories max: 1200 kcal
-- Doit être appétissant et réconfortant
+- Ce repas doit faire environ ${repasPlaisirCalories} kcal
+- Doit être appétissant, réconfortant et festif
 - Type de régime de base: ${preferences.dietType || 'omnivore'}
 - Allergies à éviter: ${preferences.allergies?.join(', ') || 'aucune'}
 
 Réponds UNIQUEMENT en JSON:
 {
-  "title": "Nom fun du plat",
-  "description": "Description gourmande",
-  "calories": 900,
-  "proteins": 35,
-  "carbs": 80,
-  "fats": 45,
-  "prepTime": 30,
+  "title": "Nom fun et gourmand du plat",
+  "description": "Description appétissante",
+  "calories": ${repasPlaisirCalories},
+  "proteins": 45,
+  "carbs": 90,
+  "fats": 50,
+  "prepTime": 35,
   "mealType": "dinner"
 }`
 
@@ -645,37 +788,64 @@ Réponds UNIQUEMENT en JSON:
     }
 
     const jsonStr = cleanJsonResponse(textContent)
-    const cheatMeal = JSON.parse(jsonStr)
+    const repasPlaisir = JSON.parse(jsonStr)
 
-    // Update the plan with the cheat meal
+    // Update the plan with the repas plaisir
     const updatedDays = currentPlan.days.map((dayPlan, index) => {
-      if (index !== preferredDay) return dayPlan
-
-      const mealType = cheatMeal.mealType === 'lunch' ? 'lunch' : 'dinner'
-      const updatedMeals = dayPlan.meals.map(meal => {
-        if (meal.type === mealType) {
+      // If user chose Sunday and this is Saturday, reduce it
+      if (preferredDay === 6 && index === 5) {
+        const reducedTarget = preferences.dailyCalories - savedPerDay
+        const updatedMeals = dayPlan.meals.map(meal => {
+          if (meal.isFasting) return meal
+          // Scale down each meal proportionally
+          const scaleFactor = reducedTarget / preferences.dailyCalories
           return {
             ...meal,
-            name: cheatMeal.title,
-            description: cheatMeal.description,
-            calories: cheatMeal.calories,
-            proteins: cheatMeal.proteins,
-            carbs: cheatMeal.carbs,
-            fats: cheatMeal.fats,
-            prepTime: cheatMeal.prepTime,
-            isCheatMeal: true,
-            source: 'ai' as const,
+            calories: Math.round(meal.calories * scaleFactor),
+            proteins: Math.round(meal.proteins * scaleFactor),
+            carbs: Math.round(meal.carbs * scaleFactor),
+            fats: Math.round(meal.fats * scaleFactor),
           }
+        })
+        return {
+          ...dayPlan,
+          meals: updatedMeals,
+          totalCalories: updatedMeals.reduce((sum, m) => sum + m.calories, 0),
         }
-        return meal
-      })
-
-      return {
-        ...dayPlan,
-        meals: updatedMeals,
-        totalCalories: updatedMeals.reduce((sum, m) => sum + m.calories, 0),
       }
+
+      // Update the repas plaisir day
+      if (index === preferredDay) {
+        const mealType = repasPlaisir.mealType === 'lunch' ? 'lunch' : 'dinner'
+        const updatedMeals = dayPlan.meals.map(meal => {
+          if (meal.type === mealType) {
+            return {
+              ...meal,
+              name: repasPlaisir.title,
+              description: repasPlaisir.description,
+              calories: repasPlaisir.calories,
+              proteins: repasPlaisir.proteins,
+              carbs: repasPlaisir.carbs,
+              fats: repasPlaisir.fats,
+              prepTime: repasPlaisir.prepTime,
+              isCheatMeal: true,
+              source: 'ai' as const,
+            }
+          }
+          return meal
+        })
+
+        return {
+          ...dayPlan,
+          meals: updatedMeals,
+          totalCalories: updatedMeals.reduce((sum, m) => sum + m.calories, 0),
+        }
+      }
+
+      return dayPlan
     })
+
+    console.log(`Repas plaisir set for ${dayName} with ${repasPlaisir.calories} kcal (savings: ${totalSavingsForRepasPlaisir} kcal)`)
 
     return {
       success: true,
@@ -687,13 +857,14 @@ Réponds UNIQUEMENT en JSON:
       },
     }
   } catch (error) {
-    console.error('Error proposing cheat meal:', error)
+    console.error('Error proposing repas plaisir:', error)
     return { success: false, error: 'Impossible de proposer le repas plaisir' }
   }
 }
 
 /**
  * Regenerate a specific day in the plan
+ * Respects the calorie target for that specific day (including repas plaisir logic)
  */
 export async function regenerateDayPlan(
   dayIndex: number,
@@ -706,6 +877,17 @@ export async function regenerateDayPlan(
     const day = days[dayIndex]
 
     const profileContext = userProfile ? generateUserProfileContext(userProfile) : ''
+
+    // Calculate the correct daily target for this day
+    const repasPlaisirDay = existingPlan.cheatMealDay as 5 | 6 | undefined
+    const { dailyTargets } = calculateDailyCalorieTargets(
+      preferences.dailyCalories,
+      preferences.includeCheatMeal || false,
+      repasPlaisirDay || 5
+    )
+    const dailyCalorieTarget = dailyTargets[dayIndex]
+
+    console.log(`Regenerating ${day} with target: ${dailyCalorieTarget} kcal`)
 
     // Collect titles from other days to avoid duplicates
     const usedRecipeNames: string[] = []
@@ -720,15 +902,28 @@ export async function regenerateDayPlan(
     const dayMeals: MealPlanMeal[] = []
     const isWeekend = dayIndex >= 5
     const theme = getRandomTheme()
+    const isRepasPlaisirDay = preferences.includeCheatMeal && dayIndex === repasPlaisirDay
 
     const mealTypes = [
-      { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: preferences.dailyCalories * 0.25 },
-      { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: preferences.dailyCalories * 0.35 },
-      { type: 'snack' as const, name: 'Collation', calorieTarget: preferences.dailyCalories * 0.10 },
-      { type: 'dinner' as const, name: 'Dîner', calorieTarget: preferences.dailyCalories * 0.30 },
+      { type: 'breakfast' as const, name: 'Petit-déjeuner', calorieTarget: Math.round(dailyCalorieTarget * 0.25) },
+      { type: 'lunch' as const, name: 'Déjeuner', calorieTarget: Math.round(dailyCalorieTarget * 0.35) },
+      { type: 'snack' as const, name: 'Collation', calorieTarget: Math.round(dailyCalorieTarget * 0.10) },
+      { type: 'dinner' as const, name: 'Dîner', calorieTarget: Math.round(dailyCalorieTarget * 0.30) },
     ]
 
-    for (const mealType of mealTypes) {
+    let dayCaloriesUsed = 0
+
+    for (let mealIdx = 0; mealIdx < mealTypes.length; mealIdx++) {
+      const mealType = mealTypes[mealIdx]
+      const isLastMeal = mealIdx === mealTypes.length - 1
+
+      // For the last meal, adjust to hit daily target
+      let targetCalories = mealType.calorieTarget
+      if (isLastMeal) {
+        const remaining = dailyCalorieTarget - dayCaloriesUsed
+        targetCalories = Math.max(remaining, mealType.calorieTarget * 0.5)
+      }
+
       // Check fasting
       let skipMeal = false
       if (preferences.fastingSchedule?.type && preferences.fastingSchedule.type !== 'none') {
@@ -754,41 +949,89 @@ export async function regenerateDayPlan(
         continue
       }
 
-      // Try existing sources first
-      const suggestions = await getMealSuggestions(mealType.type, preferences, usedRecipeNames, isWeekend)
       let meal: MealPlanMeal | null = null
+      const isRepasPlaisirMeal = isRepasPlaisirDay && mealType.type === 'dinner'
 
-      if (suggestions.length > 0) {
-        const targetMin = mealType.calorieTarget * 0.7
-        const targetMax = mealType.calorieTarget * 1.3
-        meal = suggestions.find(s => s.calories >= targetMin && s.calories <= targetMax) || suggestions[0]
+      // Try existing sources first (except for repas plaisir)
+      if (!isRepasPlaisirMeal) {
+        const suggestions = await getMealSuggestions(mealType.type, preferences, usedRecipeNames, isWeekend)
+
+        if (suggestions.length > 0) {
+          const targetMin = targetCalories * 0.8
+          const targetMax = targetCalories * 1.2
+          meal = suggestions.find(s => s.calories >= targetMin && s.calories <= targetMax)
+
+          if (!meal) {
+            const closest = suggestions.reduce((prev, curr) =>
+              Math.abs(curr.calories - targetCalories) < Math.abs(prev.calories - targetCalories) ? curr : prev
+            )
+
+            if (closest.calories > 0) {
+              const scaleFactor = targetCalories / closest.calories
+              meal = {
+                ...closest,
+                calories: Math.round(closest.calories * scaleFactor),
+                proteins: Math.round(closest.proteins * scaleFactor),
+                carbs: Math.round(closest.carbs * scaleFactor),
+                fats: Math.round(closest.fats * scaleFactor),
+                description: closest.description ? `${closest.description} (portion ajustée)` : 'Portion ajustée',
+              }
+            }
+          }
+        }
       }
 
       if (!meal) {
         meal = await generateMealWithAI(
           day,
-          mealType,
+          { ...mealType, calorieTarget: targetCalories },
           preferences,
           profileContext,
           usedRecipeNames,
           theme,
           isWeekend,
-          false
+          isRepasPlaisirMeal
         )
+      }
+
+      // Force correct calories
+      if (meal && Math.abs(meal.calories - targetCalories) > targetCalories * 0.15) {
+        const scaleFactor = targetCalories / (meal.calories || targetCalories)
+        meal = {
+          ...meal,
+          calories: Math.round(targetCalories),
+          proteins: Math.round((meal.proteins || 0) * scaleFactor),
+          carbs: Math.round((meal.carbs || 0) * scaleFactor),
+          fats: Math.round((meal.fats || 0) * scaleFactor),
+        }
       }
 
       usedRecipeNames.push(meal.name.toLowerCase())
       dayMeals.push(meal)
+      dayCaloriesUsed += meal.calories
     }
 
     const totalCalories = dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0)
+
+    // Final adjustment if needed
+    const tolerance = 0.10
+    const minAcceptable = dailyCalorieTarget * (1 - tolerance)
+    const maxAcceptable = dailyCalorieTarget * (1 + tolerance)
+
+    if (totalCalories < minAcceptable || totalCalories > maxAcceptable) {
+      const lastMealIdx = dayMeals.findLastIndex(m => !m.isFasting)
+      if (lastMealIdx >= 0) {
+        const adjustment = dailyCalorieTarget - totalCalories
+        dayMeals[lastMealIdx].calories = Math.max(50, dayMeals[lastMealIdx].calories + adjustment)
+      }
+    }
 
     return {
       success: true,
       dayPlan: {
         day,
         meals: dayMeals,
-        totalCalories,
+        totalCalories: dayMeals.reduce((sum, m) => sum + (m?.calories || 0), 0),
       },
     }
   } catch (error) {
