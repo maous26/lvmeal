@@ -48,7 +48,7 @@ const inputMethods = [
   { id: 'photo', label: 'Photo', icon: Camera, color: 'text-rose-500', bgColor: 'bg-rose-50' },
   { id: 'voice', label: 'Vocal', icon: Mic, color: 'text-purple-500', bgColor: 'bg-purple-50' },
   { id: 'barcode', label: 'Code-barres', icon: Barcode, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
-  { id: 'ai', label: 'IA', icon: Sparkles, color: 'text-amber-500', bgColor: 'bg-amber-50' },
+  { id: 'ai', label: 'LymIA', icon: Sparkles, color: 'text-amber-500', bgColor: 'bg-amber-50' },
 ]
 
 const sourceFilters: { id: FoodSource; label: string; icon: typeof Apple; description: string }[] = [
@@ -310,7 +310,7 @@ function AddMealContent({ initialType }: { initialType: MealType }) {
       case 'photo': return 'Scanner votre repas'
       case 'voice': return 'Dictée vocale'
       case 'barcode': return 'Scanner code-barres'
-      case 'ai': return 'Générer une recette IA'
+      case 'ai': return 'Generer une recette LymIA'
       default: return 'Ajouter un repas'
     }
   }

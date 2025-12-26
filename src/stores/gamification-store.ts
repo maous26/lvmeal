@@ -44,6 +44,25 @@ export const XP_REWARDS = {
   RATE_RECIPE: 10,
   ADD_RECIPE_TO_FAVORITES: 5,
   SHARE_PROGRESS: 25,
+
+  // Wellness actions
+  LOG_SLEEP: 10,
+  GOOD_SLEEP_7H: 20, // 7h+ sleep
+  LOG_WELLNESS_CHECKIN: 15,
+  LOW_STRESS_DAY: 15,
+  HIGH_ENERGY_DAY: 10,
+  REACH_STEPS_TARGET: 25,
+  REACH_FIBER_TARGET: 15,
+  WELLNESS_SCORE_80: 30, // Score >= 80
+
+  // Sport actions
+  COMPLETE_SESSION: 30,
+  COMPLETE_PHASE: 150,
+  SPORT_STREAK_DAY: 15,
+  GIVE_SESSION_FEEDBACK: 10,
+  CONNECT_WEARABLE: 50,
+  SYNC_WEARABLE: 5,
+  WEEKLY_PROGRAM_COMPLETED: 100,
 } as const
 
 // Level thresholds (XP needed to reach each level)
@@ -95,7 +114,7 @@ export const LEVEL_TITLES: Record<number, string> = {
 }
 
 // Badge categories
-export type BadgeCategory = 'streak' | 'nutrition' | 'planning' | 'milestone' | 'special'
+export type BadgeCategory = 'streak' | 'nutrition' | 'planning' | 'milestone' | 'special' | 'wellness' | 'sport'
 
 // Badge definition
 export interface BadgeDefinition {
@@ -365,6 +384,167 @@ export const BADGES: BadgeDefinition[] = [
     category: 'special',
     xpReward: 150,
     condition: { type: 'count', target: 20, metric: 'favorite_recipes' },
+  },
+
+  // ============================================================================
+  // WELLNESS BADGES
+  // ============================================================================
+  {
+    id: 'sleep_pro',
+    name: 'Dormeur Pro',
+    description: '7 nuits de 7h+ consécutives',
+    icon: '😴',
+    category: 'wellness',
+    xpReward: 200,
+    condition: { type: 'count', target: 7, metric: 'sleep_7h_streak' },
+  },
+  {
+    id: 'fiber_champion',
+    name: 'Fibre Champion',
+    description: '30g de fibres pendant 7 jours',
+    icon: '🌿',
+    category: 'wellness',
+    xpReward: 200,
+    condition: { type: 'count', target: 7, metric: 'fiber_30g_streak' },
+  },
+  {
+    id: 'hydration_perfect',
+    name: 'Hydratation Parfaite',
+    description: 'Objectif eau atteint 14 jours',
+    icon: '💧',
+    category: 'wellness',
+    xpReward: 250,
+    condition: { type: 'count', target: 14, metric: 'water_goal_streak' },
+  },
+  {
+    id: 'zen_master',
+    name: 'Zen Master',
+    description: 'Stress faible pendant 7 jours',
+    icon: '🧘',
+    category: 'wellness',
+    xpReward: 250,
+    condition: { type: 'count', target: 7, metric: 'low_stress_streak' },
+  },
+  {
+    id: 'energy_boost',
+    name: 'Plein d\'Énergie',
+    description: 'Énergie élevée pendant 7 jours',
+    icon: '⚡',
+    category: 'wellness',
+    xpReward: 200,
+    condition: { type: 'count', target: 7, metric: 'high_energy_streak' },
+  },
+  {
+    id: 'wellness_balance',
+    name: 'Équilibre Total',
+    description: 'Score wellness ≥80 pendant 7 jours',
+    icon: '🌈',
+    category: 'wellness',
+    xpReward: 400,
+    condition: { type: 'count', target: 7, metric: 'wellness_80_streak' },
+  },
+  {
+    id: 'protein_warrior',
+    name: 'Guerrier Protéines',
+    description: 'Objectif protéines atteint 14 jours',
+    icon: '🥩',
+    category: 'wellness',
+    xpReward: 300,
+    condition: { type: 'count', target: 14, metric: 'protein_goal_streak' },
+  },
+
+  // ============================================================================
+  // SPORT BADGES
+  // ============================================================================
+  {
+    id: 'sport_discovery',
+    name: 'Première Séance',
+    description: 'Complète ta première séance LymIA',
+    icon: '🎯',
+    category: 'sport',
+    xpReward: 100,
+    condition: { type: 'count', target: 1, metric: 'sessions_completed' },
+  },
+  {
+    id: 'patient_warrior',
+    name: 'Guerrier Patient',
+    description: '4 semaines de programme suivi',
+    icon: '🧘',
+    category: 'sport',
+    xpReward: 400,
+    condition: { type: 'count', target: 4, metric: 'program_weeks' },
+  },
+  {
+    id: 'step_master',
+    name: 'Marcheur Assidu',
+    description: '10 000 pas en une journée',
+    icon: '👟',
+    category: 'sport',
+    xpReward: 100,
+    condition: { type: 'milestone', target: 10000, metric: 'daily_steps' },
+  },
+  {
+    id: 'phase_evolution',
+    name: 'Évolution',
+    description: 'Compléter une phase du programme',
+    icon: '📈',
+    category: 'sport',
+    xpReward: 300,
+    condition: { type: 'count', target: 1, metric: 'phases_completed' },
+  },
+  {
+    id: 'gentle_approach',
+    name: 'Approche Bienveillante',
+    description: '30 jours de programme doux',
+    icon: '💚',
+    category: 'sport',
+    xpReward: 500,
+    condition: { type: 'count', target: 30, metric: 'gentle_program_days' },
+  },
+  {
+    id: 'first_session',
+    name: 'Première Séance',
+    description: 'Compléter ta première séance',
+    icon: '🎯',
+    category: 'sport',
+    xpReward: 50,
+    condition: { type: 'count', target: 1, metric: 'sessions_completed' },
+  },
+  {
+    id: 'sessions_10',
+    name: 'Régulier',
+    description: 'Compléter 10 séances',
+    icon: '💪',
+    category: 'sport',
+    xpReward: 200,
+    condition: { type: 'count', target: 10, metric: 'sessions_completed' },
+  },
+  {
+    id: 'sessions_50',
+    name: 'Sportif Confirmé',
+    description: 'Compléter 50 séances',
+    icon: '🏅',
+    category: 'sport',
+    xpReward: 500,
+    condition: { type: 'count', target: 50, metric: 'sessions_completed' },
+  },
+  {
+    id: 'sport_streak_7',
+    name: 'Semaine Active',
+    description: '7 jours d\'activité consécutifs',
+    icon: '🔥',
+    category: 'sport',
+    xpReward: 200,
+    condition: { type: 'streak', target: 7, metric: 'sport_streak' },
+  },
+  {
+    id: 'feedback_giver',
+    name: 'Voix Active',
+    description: 'Donner 10 feedbacks de séance',
+    icon: '💬',
+    category: 'sport',
+    xpReward: 150,
+    condition: { type: 'count', target: 10, metric: 'session_feedbacks' },
   },
 ]
 

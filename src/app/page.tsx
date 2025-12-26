@@ -11,17 +11,21 @@ import {
   NutritionOverview,
   MealsToday,
   CaloricBalance,
-  CoachInsights,
   HydrationTracker,
   RecipeSuggestions,
   WeightTrackerCompact,
   GamificationPanel,
   RewardsManager,
+  WellnessWidget,
+  SportWidget,
+  Lymia,
+  ConnectedDevices,
 } from '@/components/dashboard'
 import { useRecipeSuggestions } from '@/hooks/use-recipe-suggestions'
 import { useCaloricBankStore } from '@/stores/caloric-bank-store'
 import { useGamificationStore } from '@/stores/gamification-store'
 import { useMealsStore } from '@/stores/meals-store'
+import { useUserStore } from '@/stores/user-store'
 import { getGreeting, formatDate } from '@/lib/utils'
 import type { UserProfile } from '@/types'
 
@@ -37,23 +41,6 @@ const mockDailyBalances = [
   { day: 'Mer', date: '31/12', consumed: 0, target: 2100, balance: 0 },
 ]
 
-const mockInsights = [
-  {
-    id: '1',
-    type: 'success' as const,
-    title: 'Objectif protéines atteint !',
-    message: 'Vous avez consommé suffisamment de protéines aujourd\'hui. Continuez ainsi !',
-    dismissible: true,
-  },
-  {
-    id: '2',
-    type: 'tip' as const,
-    title: 'Conseil hydratation',
-    message: 'N\'oubliez pas de boire régulièrement. Vous êtes à 1.2L sur 2.5L recommandés.',
-    action: { label: 'Ajouter de l\'eau' },
-    dismissible: true,
-  },
-]
 
 // Fallback recipes when API suggestions are not available
 const fallbackRecipes = [
@@ -91,10 +78,12 @@ const fallbackRecipes = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
-  const [dismissedInsights, setDismissedInsights] = React.useState<string[]>([])
   const [mounted, setMounted] = React.useState(false)
   const [isHydrated, setIsHydrated] = React.useState(false)
+
+  // User store (primary source of profile data)
+  const { profile: storeProfile, isOnboarded, migrateFromLocalStorage } = useUserStore()
+  const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
 
   // Caloric bank store (7-day rolling period with automatic reset after 7 days)
   const {
@@ -155,14 +144,21 @@ export default function HomePage() {
     initializeWeek()
     // Update streak on page load
     checkAndUpdateStreak()
-    // Check if user has completed onboarding
-    const storedProfile = localStorage.getItem('userProfile')
-    if (storedProfile) {
-      setProfile(JSON.parse(storedProfile))
+    // Migrate legacy localStorage to store if needed
+    migrateFromLocalStorage()
+  }, [initializeWeek, checkAndUpdateStreak, migrateFromLocalStorage])
+
+  // Separate effect to handle profile and redirect
+  React.useEffect(() => {
+    if (!mounted) return
+
+    if (storeProfile) {
+      setProfile(storeProfile)
     } else {
+      // No profile in store, redirect to onboarding
       router.push('/onboarding')
     }
-  }, [router, initializeWeek, checkAndUpdateStreak])
+  }, [mounted, storeProfile, router])
 
   if (!mounted || !profile) {
     return (
@@ -174,7 +170,6 @@ export default function HomePage() {
 
   const greeting = getGreeting()
   const today = formatDate(new Date())
-  const visibleInsights = mockInsights.filter(i => !dismissedInsights.includes(i.id))
 
   // Get real nutrition data from meals store
   const todayNutrition = getDailyNutrition(todayString)
@@ -236,6 +231,11 @@ export default function HomePage() {
           />
         </Section>
 
+        {/* LymIA - Coach proactif */}
+        <Section>
+          <Lymia />
+        </Section>
+
         {/* Main Nutrition Overview */}
         <Section>
           <NutritionOverview data={nutritionData} />
@@ -283,15 +283,18 @@ export default function HomePage() {
           <MealsToday meals={mealsData} />
         </Section>
 
-        {/* Coach Insights */}
-        {visibleInsights.length > 0 && (
-          <Section>
-            <CoachInsights
-              insights={visibleInsights}
-              onDismiss={(id) => setDismissedInsights(prev => [...prev, id])}
-            />
-          </Section>
-        )}
+        {/* Wellness & Sport Widgets */}
+        <Section>
+          <div className="grid grid-cols-1 gap-3">
+            <WellnessWidget />
+            <SportWidget />
+          </div>
+        </Section>
+
+        {/* Connected Devices (Apple Watch, etc.) */}
+        <Section>
+          <ConnectedDevices />
+        </Section>
 
         {/* Weight Tracker */}
         <Section>

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   User,
   Settings,
@@ -11,73 +11,95 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
+  ChevronDown,
   Scale,
   Target,
   Utensils,
   Activity,
+  Heart,
+  Moon,
+  Droplets,
+  Brain,
+  Dumbbell,
+  Flame,
+  Pencil,
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
-import { PageContainer, Section, Divider } from '@/components/layout/page-container'
+import { PageContainer, Section } from '@/components/layout/page-container'
 import { Card } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage, getInitials } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StreakBadge, XPDisplay } from '@/components/dashboard/streak-badge'
 import { useGamificationStore } from '@/stores/gamification-store'
-import { formatNumber } from '@/lib/utils'
-import type { UserProfile } from '@/types'
+import { useUserStore } from '@/stores/user-store'
+import { formatNumber, cn } from '@/lib/utils'
+import type { UserProfile, DietType, ReligiousDiet, MetabolismProfile, ActivityLevel, Goal } from '@/types'
 
-const menuItems = [
-  {
-    icon: User,
-    label: 'Modifier mon profil',
-    href: '/profile/edit',
-  },
-  {
-    icon: Target,
-    label: 'Objectifs nutritionnels',
-    href: '/profile/goals',
-  },
-  {
-    icon: Utensils,
-    label: 'Préférences alimentaires',
-    href: '/profile/diet',
-  },
-  {
-    icon: Activity,
-    label: 'Appareils connectés',
-    href: '/profile/devices',
-  },
-]
+// Helper functions for display labels
+const getDietLabel = (diet?: DietType): string => {
+  const labels: Record<DietType, string> = {
+    omnivore: 'Omnivore',
+    vegetarian: 'Vegetarien',
+    vegan: 'Vegan',
+    pescatarian: 'Pescetarien',
+    keto: 'Keto',
+    paleo: 'Paleo',
+  }
+  return diet ? labels[diet] : 'Non defini'
+}
 
-const settingsItems = [
-  {
-    icon: Bell,
-    label: 'Notifications',
-    href: '/settings/notifications',
-  },
-  {
-    icon: CreditCard,
-    label: 'Abonnement',
-    href: '/settings/subscription',
-    badge: 'Premium',
-  },
-  {
-    icon: Settings,
-    label: 'Paramètres',
-    href: '/settings',
-  },
-  {
-    icon: HelpCircle,
-    label: 'Aide & Support',
-    href: '/help',
-  },
-]
+const getReligiousDietLabel = (diet?: ReligiousDiet): string | null => {
+  if (!diet) return null
+  const labels: Record<NonNullable<ReligiousDiet>, string> = {
+    halal: 'Halal',
+    casher: 'Casher',
+  }
+  return labels[diet]
+}
+
+const getActivityLabel = (level?: ActivityLevel): string => {
+  const labels: Record<ActivityLevel, string> = {
+    sedentary: 'Sedentaire',
+    light: 'Leger',
+    moderate: 'Modere',
+    active: 'Actif',
+    athlete: 'Athlete',
+  }
+  return level ? labels[level] : 'Non defini'
+}
+
+const getGoalLabel = (goal?: Goal): string => {
+  const labels: Record<Goal, string> = {
+    weight_loss: 'Perte de poids',
+    muscle_gain: 'Prise de muscle',
+    maintenance: 'Maintien',
+    health: 'Sante',
+    energy: 'Energie',
+  }
+  return goal ? labels[goal] : 'Non defini'
+}
+
+const getMetabolismLabel = (profile?: MetabolismProfile): { label: string; description: string } => {
+  if (profile === 'adaptive') {
+    return {
+      label: 'Approche bienveillante',
+      description: 'Programme progressif et adapte',
+    }
+  }
+  return {
+    label: 'Standard',
+    description: 'Approche classique',
+  }
+}
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
   const [mounted, setMounted] = React.useState(false)
+  const [expandedSection, setExpandedSection] = React.useState<string | null>(null)
+
+  // User store (primary source of profile data)
+  const { profile: storeProfile, clearProfile, migrateFromLocalStorage } = useUserStore()
 
   // Gamification store
   const {
@@ -88,18 +110,32 @@ export default function ProfilePage() {
     checkAndUpdateStreak,
   } = useGamificationStore()
 
+  // Use store profile, fallback to localStorage for backward compatibility
+  const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
+
   React.useEffect(() => {
     setMounted(true)
     checkAndUpdateStreak()
-    const storedProfile = localStorage.getItem('userProfile')
-    if (storedProfile) {
-      setProfile(JSON.parse(storedProfile))
+    // Migrate legacy localStorage to store if needed
+    migrateFromLocalStorage()
+  }, [checkAndUpdateStreak, migrateFromLocalStorage])
+
+  // Separate effect to handle profile update
+  React.useEffect(() => {
+    if (storeProfile) {
+      setProfile(storeProfile)
     }
-  }, [checkAndUpdateStreak])
+  }, [storeProfile])
 
   const handleLogout = () => {
+    // Clear both stores
+    clearProfile()
     localStorage.removeItem('userProfile')
     router.push('/onboarding')
+  }
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section)
   }
 
   // Get real gamification data after hydration
@@ -167,7 +203,7 @@ export default function ProfilePage() {
             </Card>
 
             <Card padding="default" className="text-center">
-              <Activity className="h-5 w-5 text-[var(--info)] mx-auto mb-1" />
+              <Flame className="h-5 w-5 text-[var(--calories)] mx-auto mb-1" />
               <p className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
                 {formatNumber(profile.nutritionalNeeds?.calories || 2000)}
               </p>
@@ -176,60 +212,501 @@ export default function ProfilePage() {
           </div>
         </Section>
 
-        {/* Profile menu */}
+        {/* Mon profil - Expandable sections */}
         <Section title="Mon profil">
           <Card padding="none">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.button
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => router.push(item.href)}
-                  className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)] last:border-b-0"
+            {/* Informations personnelles */}
+            <div className="border-b border-[var(--border-light)]">
+              <button
+                onClick={() => toggleSection('personal')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <User className="h-5 w-5 text-[var(--text-secondary)]" />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Informations personnelles
+                </span>
+                <motion.div
+                  animate={{ rotate: expandedSection === 'personal' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
-                    <Icon className="h-5 w-5 text-[var(--text-secondary)]" />
-                  </div>
-                  <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
-                    {item.label}
-                  </span>
-                  <ChevronRight className="h-5 w-5 text-[var(--text-tertiary)]" />
-                </motion.button>
-              )
-            })}
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'personal' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-[var(--text-secondary)]">Prenom</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{profile.firstName || '--'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Age</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{profile.age ? `${profile.age} ans` : '--'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Taille</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{profile.height ? `${profile.height} cm` : '--'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Poids actuel</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{profile.weight ? `${profile.weight} kg` : '--'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Poids objectif</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{profile.targetWeight ? `${profile.targetWeight} kg` : '--'}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Niveau d&apos;activite</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{getActivityLabel(profile.activityLevel)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Objectifs nutritionnels */}
+            <div className="border-b border-[var(--border-light)]">
+              <button
+                onClick={() => toggleSection('goals')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <Target className="h-5 w-5 text-[var(--text-secondary)]" />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Objectifs nutritionnels
+                </span>
+                <motion.div
+                  animate={{ rotate: expandedSection === 'goals' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'goals' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-[var(--text-secondary)]">Objectif</span>
+                        <span className="text-sm font-medium text-[var(--text-primary)]">{getGoalLabel(profile.goal)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
+                        <span className="text-sm text-[var(--text-secondary)]">Calories/jour</span>
+                        <span className="text-sm font-medium text-[var(--calories)]">{profile.nutritionalNeeds?.calories || '--'} kcal</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[var(--border-light)]">
+                        <div className="text-center p-2 rounded-lg bg-[var(--bg-secondary)]">
+                          <p className="text-xs text-[var(--text-tertiary)]">Proteines</p>
+                          <p className="text-sm font-semibold text-[var(--proteins)]">
+                            {profile.nutritionalNeeds?.proteins || '--'}g
+                          </p>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-[var(--bg-secondary)]">
+                          <p className="text-xs text-[var(--text-tertiary)]">Glucides</p>
+                          <p className="text-sm font-semibold text-[var(--carbs)]">
+                            {profile.nutritionalNeeds?.carbs || '--'}g
+                          </p>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-[var(--bg-secondary)]">
+                          <p className="text-xs text-[var(--text-tertiary)]">Lipides</p>
+                          <p className="text-sm font-semibold text-[var(--fats)]">
+                            {profile.nutritionalNeeds?.fats || '--'}g
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Preferences alimentaires */}
+            <div className="border-b border-[var(--border-light)]">
+              <button
+                onClick={() => toggleSection('diet')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <Utensils className="h-5 w-5 text-[var(--text-secondary)]" />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Preferences alimentaires
+                </span>
+                <motion.div
+                  animate={{ rotate: expandedSection === 'diet' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'diet' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3">
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm text-[var(--text-secondary)]">Regime</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" size="sm">{getDietLabel(profile.dietType)}</Badge>
+                          {getReligiousDietLabel(profile.religiousDiet) && (
+                            <Badge variant="outline" size="sm" className="border-amber-500 text-amber-600">
+                              {getReligiousDietLabel(profile.religiousDiet)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      {profile.allergies && profile.allergies.length > 0 && (
+                        <div className="py-2 border-t border-[var(--border-light)]">
+                          <p className="text-sm text-[var(--text-secondary)] mb-2">Allergies</p>
+                          <div className="flex flex-wrap gap-1">
+                            {profile.allergies.map((allergy) => (
+                              <Badge key={allergy} variant="destructive" size="sm">
+                                {allergy}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Approche personnalisee (metabolism) */}
+            <div className="border-b border-[var(--border-light)]">
+              <button
+                onClick={() => toggleSection('metabolism')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  profile.metabolismProfile === 'adaptive' ? 'bg-emerald-500/10' : 'bg-[var(--bg-secondary)]'
+                )}>
+                  <Heart className={cn(
+                    'h-5 w-5',
+                    profile.metabolismProfile === 'adaptive' ? 'text-emerald-500' : 'text-[var(--text-secondary)]'
+                  )} />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Approche nutritionnelle
+                </span>
+                {profile.metabolismProfile === 'adaptive' && (
+                  <Badge variant="outline" size="sm" className="border-emerald-500 text-emerald-600 mr-2">
+                    Bienveillante
+                  </Badge>
+                )}
+                <motion.div
+                  animate={{ rotate: expandedSection === 'metabolism' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'metabolism' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4">
+                      <div className={cn(
+                        'p-3 rounded-lg',
+                        profile.metabolismProfile === 'adaptive'
+                          ? 'bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20'
+                          : 'bg-[var(--bg-secondary)]'
+                      )}>
+                        <h4 className={cn(
+                          'font-semibold text-sm',
+                          profile.metabolismProfile === 'adaptive' ? 'text-emerald-600' : 'text-[var(--text-primary)]'
+                        )}>
+                          {getMetabolismLabel(profile.metabolismProfile).label}
+                        </h4>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1">
+                          {getMetabolismLabel(profile.metabolismProfile).description}
+                        </p>
+                        {profile.nutritionalStrategy && (
+                          <p className="text-xs text-[var(--text-tertiary)] mt-2 pt-2 border-t border-[var(--border-light)]">
+                            Phase: {profile.nutritionalStrategy.currentPhase === 'maintenance'
+                              ? 'Stabilisation'
+                              : profile.nutritionalStrategy.currentPhase === 'gentle_deficit'
+                                ? 'Deficit doux'
+                                : 'Reverse dieting'}
+                            {' • '}Semaine {profile.nutritionalStrategy.weekInPhase}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Habitudes de vie */}
+            <div className="border-b border-[var(--border-light)]">
+              <button
+                onClick={() => toggleSection('lifestyle')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <Moon className="h-5 w-5 text-[var(--text-secondary)]" />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Habitudes de vie
+                </span>
+                <motion.div
+                  animate={{ rotate: expandedSection === 'lifestyle' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'lifestyle' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4">
+                      {profile.lifestyleHabits ? (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="p-1.5 rounded-full bg-indigo-500/10">
+                              <Moon className="h-3.5 w-3.5 text-indigo-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text-tertiary)]">Sommeil</p>
+                              <p className="text-sm font-medium text-[var(--text-primary)]">
+                                {profile.lifestyleHabits.averageSleepHours}h/nuit
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="p-1.5 rounded-full bg-cyan-500/10">
+                              <Droplets className="h-3.5 w-3.5 text-cyan-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text-tertiary)]">Hydratation</p>
+                              <p className="text-sm font-medium text-[var(--text-primary)]">
+                                {profile.lifestyleHabits.waterIntakeDaily}L/jour
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="p-1.5 rounded-full bg-amber-500/10">
+                              <Brain className="h-3.5 w-3.5 text-amber-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text-tertiary)]">Stress</p>
+                              <p className="text-sm font-medium text-[var(--text-primary)]">
+                                {profile.lifestyleHabits.stressLevelDaily === 'low' ? 'Faible'
+                                  : profile.lifestyleHabits.stressLevelDaily === 'moderate' ? 'Modere'
+                                  : profile.lifestyleHabits.stressLevelDaily === 'high' ? 'Eleve'
+                                  : 'Tres eleve'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="p-1.5 rounded-full bg-orange-500/10">
+                              <Activity className="h-3.5 w-3.5 text-orange-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text-tertiary)]">Sedentarite</p>
+                              <p className="text-sm font-medium text-[var(--text-primary)]">
+                                {profile.lifestyleHabits.sedentaryHoursDaily}h/jour
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-[var(--text-tertiary)] text-center py-2">
+                          Aucune donnee. Refais l&apos;onboarding pour renseigner tes habitudes.
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Programme sportif */}
+            <div>
+              <button
+                onClick={() => toggleSection('sport')}
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  profile.sportTrackingEnabled ? 'bg-violet-500/10' : 'bg-[var(--bg-secondary)]'
+                )}>
+                  <Dumbbell className={cn(
+                    'h-5 w-5',
+                    profile.sportTrackingEnabled ? 'text-violet-500' : 'text-[var(--text-secondary)]'
+                  )} />
+                </div>
+                <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                  Programme sportif
+                </span>
+                {profile.sportTrackingEnabled && (
+                  <Badge variant="outline" size="sm" className="border-violet-500 text-violet-600 mr-2">
+                    Actif
+                  </Badge>
+                )}
+                <motion.div
+                  animate={{ rotate: expandedSection === 'sport' ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {expandedSection === 'sport' && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4">
+                      {profile.sportTrackingEnabled && profile.sportProgram ? (
+                        <div className="space-y-3">
+                          <div className="p-3 rounded-lg bg-gradient-to-r from-violet-500/10 to-transparent border border-violet-500/20">
+                            <h4 className="font-medium text-sm text-violet-600">
+                              {profile.sportProgram.currentPhase === 'neat_focus'
+                                ? 'Phase NEAT'
+                                : profile.sportProgram.currentPhase === 'walking_program'
+                                  ? 'Programme Marche'
+                                  : profile.sportProgram.currentPhase === 'resistance_intro'
+                                    ? 'Introduction Musculation'
+                                    : 'Programme Complet'}
+                            </h4>
+                            <p className="text-xs text-[var(--text-secondary)]">
+                              Semaine {profile.sportProgram.weekInPhase}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                              <p className="text-xs text-[var(--text-tertiary)]">Objectif pas</p>
+                              <p className="text-sm font-semibold text-[var(--text-primary)]">
+                                {formatNumber(profile.sportProgram.dailyStepsGoal)}/jour
+                              </p>
+                            </div>
+                            <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                              <p className="text-xs text-[var(--text-tertiary)]">Marche</p>
+                              <p className="text-sm font-semibold text-[var(--text-primary)]">
+                                {profile.sportProgram.weeklyWalkingMinutes}min/sem
+                              </p>
+                            </div>
+                          </div>
+                          {profile.sportProgram.neatActivities && profile.sportProgram.neatActivities.length > 0 && (
+                            <div>
+                              <p className="text-xs text-[var(--text-tertiary)] mb-1">Activites NEAT</p>
+                              <div className="flex flex-wrap gap-1">
+                                {profile.sportProgram.neatActivities.slice(0, 3).map((activity, idx) => (
+                                  <Badge key={idx} variant="outline" size="sm" className="text-xs">
+                                    {activity}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-[var(--text-tertiary)] text-center py-2">
+                          Programme sportif non active. Disponible avec l&apos;approche bienveillante.
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </Card>
         </Section>
 
-        {/* Settings menu */}
-        <Section title="Paramètres">
+        {/* Parametres */}
+        <Section title="Parametres">
           <Card padding="none">
-            {settingsItems.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.button
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + index * 0.05 }}
-                  onClick={() => router.push(item.href)}
-                  className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)] last:border-b-0"
-                >
-                  <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
-                    <Icon className="h-5 w-5 text-[var(--text-secondary)]" />
-                  </div>
-                  <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
-                    {item.label}
-                  </span>
-                  {item.badge && (
-                    <Badge variant="default" size="sm">{item.badge}</Badge>
-                  )}
-                  <ChevronRight className="h-5 w-5 text-[var(--text-tertiary)]" />
-                </motion.button>
-              )
-            })}
+            <button
+              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
+              onClick={() => {/* TODO: Notifications settings */}}
+            >
+              <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                <Bell className="h-5 w-5 text-[var(--text-secondary)]" />
+              </div>
+              <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                Notifications
+              </span>
+              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
+            </button>
+
+            <button
+              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
+              onClick={() => {/* TODO: Subscription */}}
+            >
+              <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                <CreditCard className="h-5 w-5 text-[var(--text-secondary)]" />
+              </div>
+              <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                Abonnement
+              </span>
+              <Badge variant="default" size="sm">Premium</Badge>
+            </button>
+
+            <button
+              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
+              onClick={() => {/* TODO: Settings */}}
+            >
+              <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                <Settings className="h-5 w-5 text-[var(--text-secondary)]" />
+              </div>
+              <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                Parametres
+              </span>
+              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
+            </button>
+
+            <button
+              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
+              onClick={() => {/* TODO: Help */}}
+            >
+              <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                <HelpCircle className="h-5 w-5 text-[var(--text-secondary)]" />
+              </div>
+              <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
+                Aide & Support
+              </span>
+              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
+            </button>
           </Card>
         </Section>
 
@@ -241,7 +718,7 @@ export default function ProfilePage() {
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 mr-2" />
-            Se déconnecter
+            Se deconnecter
           </Button>
         </Section>
 

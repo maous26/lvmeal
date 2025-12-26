@@ -23,7 +23,7 @@ export default function PlanPage() {
           </motion.button>
           <div>
             <h1 className="text-lg font-bold text-[var(--text-primary)]">Plan Repas</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Génération IA personnalisée</p>
+            <p className="text-xs text-[var(--text-secondary)]">Generation LymIA personnalisee</p>
           </div>
         </div>
       </header>

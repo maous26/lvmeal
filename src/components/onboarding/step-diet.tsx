@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import type { DietType, UserProfile } from '@/types'
+import type { DietType, ReligiousDiet, UserProfile } from '@/types'
 
 interface StepDietProps {
   data: Partial<UserProfile>
@@ -11,6 +11,7 @@ interface StepDietProps {
   className?: string
 }
 
+// Types d'alimentation (base)
 const dietTypes: {
   value: DietType
   label: string
@@ -25,19 +26,19 @@ const dietTypes: {
   },
   {
     value: 'vegetarian',
-    label: 'Végétarien',
+    label: 'Vegetarien',
     emoji: '🥗',
     description: 'Sans viande ni poisson',
   },
   {
     value: 'vegan',
-    label: 'Végan',
+    label: 'Vegan',
     emoji: '🌱',
     description: 'Sans produit animal',
   },
   {
     value: 'pescatarian',
-    label: 'Pescétarien',
+    label: 'Pescetarien',
     emoji: '🐟',
     description: 'Poisson mais pas de viande',
   },
@@ -45,13 +46,34 @@ const dietTypes: {
     value: 'keto',
     label: 'Keto',
     emoji: '🥑',
-    description: 'Très peu de glucides',
+    description: 'Tres peu de glucides',
   },
   {
     value: 'paleo',
-    label: 'Paléo',
+    label: 'Paleo',
     emoji: '🥩',
     description: 'Alimentation ancestrale',
+  },
+]
+
+// Options religieuses (peuvent se combiner avec le type d'alimentation)
+const religiousOptions: {
+  value: NonNullable<ReligiousDiet>
+  label: string
+  emoji: string
+  description: string
+}[] = [
+  {
+    value: 'halal',
+    label: 'Halal',
+    emoji: '🌙',
+    description: 'Selon les preceptes islamiques',
+  },
+  {
+    value: 'casher',
+    label: 'Casher',
+    emoji: '✡️',
+    description: 'Selon les lois juives',
   },
 ]
 
@@ -59,10 +81,10 @@ const commonAllergies = [
   'Gluten',
   'Lactose',
   'Arachides',
-  'Fruits à coque',
-  'Œufs',
+  'Fruits a coque',
+  'Oeufs',
   'Soja',
-  'Crustacés',
+  'Crustaces',
   'Poisson',
 ]
 
@@ -77,6 +99,15 @@ export function StepDiet({ data, onChange, className }: StepDietProps) {
       : [...selectedAllergies, allergy]
     setSelectedAllergies(updated)
     onChange({ ...data, allergies: updated })
+  }
+
+  const toggleReligiousDiet = (value: NonNullable<ReligiousDiet>) => {
+    // Si deja selectionne, on deselectionne
+    if (data.religiousDiet === value) {
+      onChange({ ...data, religiousDiet: null })
+    } else {
+      onChange({ ...data, religiousDiet: value })
+    }
   }
 
   return (
@@ -125,6 +156,63 @@ export function StepDiet({ data, onChange, className }: StepDietProps) {
         </div>
       </div>
 
+      {/* Religious dietary options - separate section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
+          Restriction religieuse
+        </h3>
+        <p className="text-xs text-[var(--text-tertiary)] mb-3">
+          Optionnel - peut se combiner avec ton type d&apos;alimentation
+        </p>
+        <div className="flex gap-3">
+          {religiousOptions.map((option) => {
+            const isSelected = data.religiousDiet === option.value
+
+            return (
+              <button
+                key={option.value}
+                onClick={() => toggleReligiousDiet(option.value)}
+                className={cn(
+                  'flex-1 flex items-center gap-3 p-4 rounded-xl',
+                  'border-2 transition-all duration-200',
+                  isSelected
+                    ? 'border-amber-500 bg-amber-500/10'
+                    : 'border-[var(--border-light)] bg-[var(--bg-elevated)] hover:border-[var(--border-focus)]'
+                )}
+              >
+                <span className="text-2xl">{option.emoji}</span>
+                <div className="text-left">
+                  <span
+                    className={cn(
+                      'block font-medium text-sm',
+                      isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-[var(--text-primary)]'
+                    )}
+                  >
+                    {option.label}
+                  </span>
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                    {option.description}
+                  </span>
+                </div>
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="ml-auto w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center"
+                  >
+                    <span className="text-white text-xs">✓</span>
+                  </motion.div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </motion.div>
+
       {/* Allergies */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -132,10 +220,10 @@ export function StepDiet({ data, onChange, className }: StepDietProps) {
         transition={{ delay: 0.2 }}
       >
         <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-          Allergies ou intolérances
+          Allergies ou intolerances
         </h3>
         <p className="text-xs text-[var(--text-tertiary)] mb-3">
-          Sélectionnez toutes celles qui s&apos;appliquent (optionnel)
+          Selectionne toutes celles qui s&apos;appliquent (optionnel)
         </p>
         <div className="flex flex-wrap gap-2">
           {commonAllergies.map((allergy) => {
@@ -159,6 +247,21 @@ export function StepDiet({ data, onChange, className }: StepDietProps) {
           })}
         </div>
       </motion.div>
+
+      {/* Resume selection */}
+      {(data.dietType || data.religiousDiet) && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="p-3 rounded-lg bg-[var(--bg-tertiary)]"
+        >
+          <p className="text-sm text-[var(--text-secondary)] text-center">
+            {data.dietType && dietTypes.find(d => d.value === data.dietType)?.label}
+            {data.dietType && data.religiousDiet && ' + '}
+            {data.religiousDiet && religiousOptions.find(r => r.value === data.religiousDiet)?.label}
+          </p>
+        </motion.div>
+      )}
     </div>
   )
 }

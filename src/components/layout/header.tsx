@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ChevronLeft, Bell, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -41,10 +41,20 @@ export function Header({
   className,
 }: HeaderProps) {
   const pathname = usePathname()
+  const router = useRouter()
 
   // Don't show on onboarding pages (they have their own headers)
   if (pathname?.startsWith('/onboarding')) {
     return null
+  }
+
+  // Default back handler - go to previous page or home
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else {
+      router.back()
+    }
   }
 
   const BackButton = showBack ? (
@@ -62,7 +72,7 @@ export function Header({
       </Link>
     ) : (
       <button
-        onClick={onBack}
+        onClick={handleBack}
         className={cn(
           'p-2 -ml-2 rounded-full',
           'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',

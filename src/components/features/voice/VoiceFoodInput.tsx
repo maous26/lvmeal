@@ -226,7 +226,7 @@ export function VoiceFoodInput({ mealType, onFoodsDetected, className }: VoiceFo
                 Dictez votre repas
               </h3>
               <p className="text-sm text-[var(--text-secondary)] max-w-xs mx-auto">
-                Décrivez ce que vous avez mangé et l'IA identifiera les aliments
+                Decrivez ce que vous avez mange et LymIA identifiera les aliments
               </p>
             </div>
 
@@ -367,7 +367,7 @@ export function VoiceFoodInput({ mealType, onFoodsDetected, className }: VoiceFo
               <span className="font-semibold text-[var(--text-primary)]">Analyse en cours...</span>
             </div>
             <p className="text-sm text-[var(--text-tertiary)]">
-              L'IA identifie les aliments mentionnés
+              LymIA identifie les aliments mentionnes
             </p>
           </motion.div>
         )}

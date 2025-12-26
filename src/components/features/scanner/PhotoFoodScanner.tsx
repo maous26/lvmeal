@@ -291,7 +291,7 @@ export function PhotoFoodScanner({ mealType, onFoodsDetected, className }: Photo
               <span className="font-semibold text-[var(--text-primary)]">Analyse en cours...</span>
             </div>
             <p className="text-sm text-[var(--text-tertiary)]">
-              L'IA identifie les aliments dans votre photo
+              LymIA identifie les aliments dans votre photo
             </p>
           </motion.div>
         )}

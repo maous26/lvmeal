@@ -5,10 +5,78 @@ export type Gender = 'male' | 'female' | 'other'
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete'
 export type Goal = 'weight_loss' | 'muscle_gain' | 'maintenance' | 'health' | 'energy'
 export type DietType = 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'paleo'
+
+// Religious dietary restrictions (can be combined with DietType)
+export type ReligiousDiet = 'halal' | 'casher' | null
 export type CookingSkillLevel = 'beginner' | 'intermediate' | 'advanced'
 export type FastingType = 'none' | '16_8' | '18_6' | '20_4' | '5_2' | 'eat_stop_eat'
 export type SubscriptionPlan = 'free' | 'premium' | 'family'
 export type AppMode = 'solo' | 'family'
+
+// Metabolism profile (internal - never show "slow" to user)
+export type MetabolismProfile = 'standard' | 'adaptive'
+
+// Metabolism diagnostic factors
+export interface MetabolismFactors {
+  restrictiveDietsHistory: boolean    // "Tu as déjà fait plusieurs régimes restrictifs ?"
+  eatsLessThanHunger: boolean         // "Tu manges souvent beaucoup moins que ta faim réelle ?"
+  restrictionCrashCycle: boolean      // "Tu as des périodes où tu manges très peu puis craquage ?"
+  metabolicSymptoms: boolean          // "Fatigue, froid, difficultés à perdre malgré peu de calories ?"
+}
+
+// Sport program phases (LymIA program - no NEAT, focus on real workouts)
+export type ActivityPhase = 'discovery' | 'walking_program' | 'resistance_intro' | 'full_program'
+
+// Sport program for LymIA
+export interface SportProgram {
+  currentPhase: ActivityPhase
+  weekInPhase: number
+  weeklyWalkingMinutes: number
+  resistanceSessionsPerWeek: number
+  cardioSessionsPerWeek: number
+  restDaysPerWeek: number
+}
+
+// Nutritional approach for adaptive metabolism
+export type NutritionalApproach = 'standard' | 'gentle' | 'reverse_dieting'
+
+export interface NutritionalStrategy {
+  approach: NutritionalApproach
+  currentPhase: 'maintenance' | 'gentle_deficit' | 'reverse'
+  weekInPhase: number
+  deficitAmount: number  // 0, 100, or 200 kcal max for adaptive
+  proteinPriority: boolean
+  focusMetabolicHealth: boolean
+}
+
+// Daily wellness tracking
+export interface DailyWellness {
+  date: string
+  // Sleep
+  sleepHours: number
+  sleepQuality: 1 | 2 | 3 | 4 | 5  // 1=poor, 5=excellent
+  // Nutrition metrics
+  fiberGrams: number
+  proteinGrams: number
+  waterLiters: number
+  // Activity
+  steps: number
+  neatMinutes: number
+  // Wellbeing
+  stressLevel: 1 | 2 | 3 | 4 | 5  // 1=zen, 5=stressed
+  energyLevel: 1 | 2 | 3 | 4 | 5
+  // Women specific
+  menstrualPhase?: 'follicular' | 'ovulation' | 'luteal' | 'menstrual'
+}
+
+// Lifestyle habits (from onboarding)
+export interface LifestyleHabits {
+  averageSleepHours: number
+  sleepQualityPerception: 'poor' | 'average' | 'good' | 'excellent'
+  stressLevelDaily: 'low' | 'moderate' | 'high' | 'very_high'
+  waterIntakeDaily: number  // liters
+  sedentaryHoursDaily: number
+}
 
 // Fasting schedule
 export interface FastingSchedule {
@@ -69,6 +137,7 @@ export interface UserProfile {
 
   // Diet
   dietType?: DietType
+  religiousDiet?: ReligiousDiet  // Halal or Casher (can be combined with dietType)
   allergies?: string[]
   intolerances?: string[]
   dislikedFoods?: string[]
@@ -91,6 +160,14 @@ export interface UserProfile {
   preferredCuisines?: string[]
   weeklyBudget?: number // euros per week
   pricePreference?: 'economy' | 'balanced' | 'premium'
+
+  // Metabolism & Wellness (NEW)
+  metabolismProfile?: MetabolismProfile
+  metabolismFactors?: MetabolismFactors
+  lifestyleHabits?: LifestyleHabits
+  sportProgram?: SportProgram
+  nutritionalStrategy?: NutritionalStrategy
+  sportTrackingEnabled?: boolean  // Toggle for non-adaptive users
 
   // Onboarding
   onboardingCompleted?: boolean

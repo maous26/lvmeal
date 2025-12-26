@@ -9,26 +9,39 @@ import {
   StepActivity,
   StepGoal,
   StepDiet,
+  StepMetabolism,
+  StepLifestyle,
   StepAnalysis,
 } from '@/components/onboarding'
+import { useUserStore } from '@/stores/user-store'
 import type { UserProfile, NutritionalNeeds } from '@/types'
 
-type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'analysis'
+type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'metabolism' | 'lifestyle' | 'analysis'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string }> = {
   welcome: { title: '', subtitle: '' },
-  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Étape 1 sur 5' },
-  activity: { title: 'Votre niveau d\'activité', subtitle: 'Étape 2 sur 5' },
-  goal: { title: 'Quel est votre objectif ?', subtitle: 'Étape 3 sur 5' },
-  diet: { title: 'Vos préférences alimentaires', subtitle: 'Étape 4 sur 5' },
-  analysis: { title: 'Votre programme personnalisé', subtitle: 'Étape 5 sur 5' },
+  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Étape 1 sur 7' },
+  activity: { title: 'Votre niveau d\'activité', subtitle: 'Étape 2 sur 7' },
+  goal: { title: 'Quel est votre objectif ?', subtitle: 'Étape 3 sur 7' },
+  diet: { title: 'Vos préférences alimentaires', subtitle: 'Étape 4 sur 7' },
+  metabolism: { title: 'Mieux te connaître', subtitle: 'Étape 5 sur 7' },
+  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Étape 6 sur 7' },
+  analysis: { title: 'Ton programme personnalisé', subtitle: 'Étape 7 sur 7' },
 }
 
-const steps: OnboardingStep[] = ['welcome', 'basic-info', 'activity', 'goal', 'diet', 'analysis']
+const steps: OnboardingStep[] = ['welcome', 'basic-info', 'activity', 'goal', 'diet', 'metabolism', 'lifestyle', 'analysis']
 
-// Calculate nutritional needs based on profile
+// Calculate nutritional needs based on profile (with adaptive metabolism support)
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
-  const { weight = 70, height = 170, age = 30, gender = 'male', activityLevel = 'moderate', goal = 'maintenance' } = profile
+  const {
+    weight = 70,
+    height = 170,
+    age = 30,
+    gender = 'male',
+    activityLevel = 'moderate',
+    goal = 'maintenance',
+    metabolismProfile = 'standard'
+  } = profile
 
   // Harris-Benedict BMR calculation
   let bmr: number
@@ -48,24 +61,53 @@ function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
   }
   const tdee = bmr * activityMultipliers[activityLevel]
 
-  // Goal adjustment
+  // Goal adjustment - ADAPTIVE METABOLISM GETS GENTLER APPROACH
   let calories: number
-  switch (goal) {
-    case 'weight_loss':
-      calories = tdee - 400
-      break
-    case 'muscle_gain':
-      calories = tdee + 300
-      break
-    default:
-      calories = tdee
+
+  if (metabolismProfile === 'adaptive') {
+    // For adaptive metabolism: start at maintenance or very gentle deficit
+    switch (goal) {
+      case 'weight_loss':
+        // Maximum 100-200 kcal deficit for adaptive profiles (vs 400 for standard)
+        calories = tdee - 100
+        break
+      case 'muscle_gain':
+        calories = tdee + 200
+        break
+      default:
+        calories = tdee
+    }
+  } else {
+    // Standard approach
+    switch (goal) {
+      case 'weight_loss':
+        calories = tdee - 400
+        break
+      case 'muscle_gain':
+        calories = tdee + 300
+        break
+      default:
+        calories = tdee
+    }
   }
   calories = Math.round(calories)
 
-  // Macro distribution
-  const proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
+  // Macro distribution - ADAPTIVE GETS HIGHER PROTEIN & FAT
+  let proteinPerKg: number
+  let fatPercentage: number
+
+  if (metabolismProfile === 'adaptive') {
+    // Higher protein for metabolic health
+    proteinPerKg = 2.0
+    // Higher fat for hormonal balance (30%)
+    fatPercentage = 0.30
+  } else {
+    proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
+    fatPercentage = 0.25
+  }
+
   const proteins = Math.round(weight * proteinPerKg)
-  const fats = Math.round((calories * 0.25) / 9)
+  const fats = Math.round((calories * fatPercentage) / 9)
   const carbs = Math.round((calories - (proteins * 4) - (fats * 9)) / 4)
 
   return {
@@ -93,6 +135,9 @@ export default function OnboardingPage() {
   const [profile, setProfile] = React.useState<Partial<UserProfile>>({})
   const [loading, setLoading] = React.useState(false)
 
+  // User store for persistent profile storage
+  const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
+
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
 
@@ -108,6 +153,12 @@ export default function OnboardingPage() {
         return !!profile.goal
       case 'diet':
         return !!profile.dietType
+      case 'metabolism':
+        // Can always proceed - questions are optional diagnostic
+        return true
+      case 'lifestyle':
+        // Can always proceed - helps personalization
+        return true
       case 'analysis':
         return true
       default:
@@ -120,7 +171,40 @@ export default function OnboardingPage() {
       setLoading(true)
       // Save profile to localStorage or API
       const needs = calculateNeeds(profile)
-      localStorage.setItem('userProfile', JSON.stringify({ ...profile, nutritionalNeeds: needs, onboardingCompleted: true }))
+
+      // Initialize sport program for adaptive profiles
+      const finalProfile: Partial<UserProfile> = {
+        ...profile,
+        nutritionalNeeds: needs,
+        onboardingCompleted: true,
+      }
+
+      // If adaptive metabolism, initialize gentle nutritional strategy
+      if (profile.metabolismProfile === 'adaptive') {
+        finalProfile.nutritionalStrategy = {
+          approach: 'gentle',
+          currentPhase: 'maintenance',
+          weekInPhase: 1,
+          deficitAmount: 0, // Start at maintenance
+          proteinPriority: true,
+          focusMetabolicHealth: true,
+        }
+        finalProfile.sportTrackingEnabled = true
+        finalProfile.sportProgram = {
+          currentPhase: 'neat_focus',
+          weekInPhase: 1,
+          dailyStepsGoal: 5000,
+          weeklyWalkingMinutes: 60,
+          resistanceSessionsPerWeek: 0,
+          restDaysPerWeek: 2,
+          neatActivities: ['Prendre les escaliers', 'Marcher en téléphonant', 'Se lever toutes les heures'],
+        }
+      }
+
+      // Save to Zustand store (persisted) AND localStorage for backward compatibility
+      setStoreProfile(finalProfile)
+      setOnboarded(true)
+      localStorage.setItem('userProfile', JSON.stringify(finalProfile))
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -157,6 +241,10 @@ export default function OnboardingPage() {
         return <StepGoal data={profile} onChange={setProfile} />
       case 'diet':
         return <StepDiet data={profile} onChange={setProfile} />
+      case 'metabolism':
+        return <StepMetabolism data={profile} onChange={setProfile} />
+      case 'lifestyle':
+        return <StepLifestyle data={profile} onChange={setProfile} />
       case 'analysis':
         return <StepAnalysis profile={profile} needs={needs} />
       default:

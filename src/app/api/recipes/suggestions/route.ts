@@ -821,15 +821,317 @@ async function fetchFromGustar(
   }
 }
 
+// Nutrition thresholds for healthy eating
+const NUTRITION_LIMITS = {
+  // Per serving limits
+  sugar: {
+    max_standard: 25, // 25g max sugar per serving for standard users
+    max_weight_loss: 15, // 15g for weight loss
+    max_adaptive: 20, // 20g for adaptive metabolism
+  },
+  saturatedFat: {
+    max_standard: 10, // 10g max saturated fat
+    max_weight_loss: 7,
+    max_adaptive: 8,
+  },
+  calories: {
+    max_breakfast: 500,
+    max_lunch: 650,
+    max_dinner: 700,
+    max_snack: 250,
+    // For weight loss, reduce by 20%
+    weight_loss_multiplier: 0.8,
+  },
+  // Minimum protein per serving (important for all, especially adaptive)
+  protein: {
+    min_standard: 10,
+    min_weight_loss: 15,
+    min_muscle_gain: 20,
+    min_adaptive: 15,
+  },
+}
+
+// Check if a recipe is healthy enough based on user profile
+function isRecipeHealthy(
+  recipe: RecipeSuggestion,
+  goal: string,
+  mealType: string,
+  isAdaptive: boolean
+): { isHealthy: boolean; reason?: string } {
+  const { nutrition } = recipe
+
+  // Get appropriate limits based on goal
+  const sugarLimit = goal === 'weight_loss'
+    ? NUTRITION_LIMITS.sugar.max_weight_loss
+    : isAdaptive
+      ? NUTRITION_LIMITS.sugar.max_adaptive
+      : NUTRITION_LIMITS.sugar.max_standard
+
+  const fatLimit = goal === 'weight_loss'
+    ? NUTRITION_LIMITS.saturatedFat.max_weight_loss
+    : isAdaptive
+      ? NUTRITION_LIMITS.saturatedFat.max_adaptive
+      : NUTRITION_LIMITS.saturatedFat.max_standard
+
+  // Check calorie limits based on meal type
+  const baseCalorieLimit = mealType === 'breakfast'
+    ? NUTRITION_LIMITS.calories.max_breakfast
+    : mealType === 'lunch'
+      ? NUTRITION_LIMITS.calories.max_lunch
+      : mealType === 'snack'
+        ? NUTRITION_LIMITS.calories.max_snack
+        : NUTRITION_LIMITS.calories.max_dinner
+
+  const calorieLimit = goal === 'weight_loss'
+    ? baseCalorieLimit * NUTRITION_LIMITS.calories.weight_loss_multiplier
+    : baseCalorieLimit
+
+  // Get minimum protein requirement
+  const proteinMin = goal === 'muscle_gain'
+    ? NUTRITION_LIMITS.protein.min_muscle_gain
+    : goal === 'weight_loss'
+      ? NUTRITION_LIMITS.protein.min_weight_loss
+      : isAdaptive
+        ? NUTRITION_LIMITS.protein.min_adaptive
+        : NUTRITION_LIMITS.protein.min_standard
+
+  // Validation checks (skip for plaisir recipes)
+  if (recipe.tags.includes('Gourmand') || recipe.tags.includes('Dessert')) {
+    return { isHealthy: true } // Plaisir recipes are allowed when user has balance
+  }
+
+  if (nutrition.calories > calorieLimit) {
+    return { isHealthy: false, reason: `Calories too high (${nutrition.calories} > ${calorieLimit})` }
+  }
+
+  // For main meals (not snacks), check protein
+  if (mealType !== 'snack' && nutrition.proteins < proteinMin) {
+    return { isHealthy: false, reason: `Protein too low (${nutrition.proteins} < ${proteinMin})` }
+  }
+
+  return { isHealthy: true }
+}
+
+// Score a recipe based on how well it matches user profile and needs
+function scoreRecipe(
+  recipe: RecipeSuggestion,
+  context: {
+    goal: string
+    dietType: string
+    isAdaptive: boolean
+    mealType: string
+    remainingCalories: number
+    remainingProteins: number
+    allergies: string[]
+    likedFoods: string[]
+    dislikedFoods: string[]
+    stressLevel: number
+    sleepHours: number
+    energyLevel: number
+  }
+): number {
+  let score = 50 // Base score
+
+  const { nutrition, tags, ingredients, title } = recipe
+  const ingredientNames = ingredients.map(i => i.name.toLowerCase())
+  const titleLower = title.toLowerCase()
+  const allTags = tags.map(t => t.toLowerCase())
+
+  // === EXCLUSION CHECKS (return -1 to exclude) ===
+
+  // Check allergies - MUST exclude
+  for (const allergy of context.allergies) {
+    const allergyLower = allergy.toLowerCase()
+    if (ingredientNames.some(i => i.includes(allergyLower)) || titleLower.includes(allergyLower)) {
+      return -1 // Exclude this recipe
+    }
+  }
+
+  // Check disliked foods - MUST exclude
+  for (const dislike of context.dislikedFoods) {
+    const dislikeLower = dislike.toLowerCase()
+    if (ingredientNames.some(i => i.includes(dislikeLower)) || titleLower.includes(dislikeLower)) {
+      return -1 // Exclude this recipe
+    }
+  }
+
+  // Check diet type compatibility
+  if (context.dietType) {
+    const dt = context.dietType.toLowerCase()
+
+    // Vegetarian check
+    if (dt === 'vegetarian' || dt === 'vegan') {
+      const meatTerms = ['poulet', 'boeuf', 'porc', 'viande', 'lard', 'bacon', 'saucisse', 'jambon', 'canard', 'agneau', 'veau', 'dinde', 'chicken', 'beef', 'pork', 'meat']
+      const fishTerms = ['poisson', 'saumon', 'thon', 'crevette', 'fruits de mer', 'fish', 'salmon', 'tuna', 'shrimp']
+
+      if (ingredientNames.some(i => meatTerms.some(m => i.includes(m))) || titleLower.match(/poulet|boeuf|viande|porc/)) {
+        return -1
+      }
+      if (dt === 'vegan') {
+        const animalTerms = ['oeuf', 'lait', 'fromage', 'beurre', 'crème', 'yaourt', 'miel', 'egg', 'milk', 'cheese', 'butter', 'cream', 'yogurt', 'honey']
+        if (ingredientNames.some(i => [...fishTerms, ...animalTerms].some(a => i.includes(a)))) {
+          return -1
+        }
+      }
+    }
+
+    // Halal check
+    if (dt === 'halal') {
+      const haramTerms = ['porc', 'lard', 'bacon', 'jambon', 'saucisse de porc', 'gélatine', 'pork', 'ham', 'gelatin']
+      if (ingredientNames.some(i => haramTerms.some(h => i.includes(h))) || titleLower.includes('porc')) {
+        return -1
+      }
+    }
+
+    // Casher check
+    if (dt === 'casher') {
+      const treifTerms = ['porc', 'lard', 'bacon', 'jambon', 'crevette', 'crabe', 'fruits de mer', 'pork', 'shellfish']
+      if (ingredientNames.some(i => treifTerms.some(t => i.includes(t)))) {
+        return -1
+      }
+      // No mixing meat and dairy
+      const hasMeat = ingredientNames.some(i => ['viande', 'poulet', 'boeuf', 'agneau'].some(m => i.includes(m)))
+      const hasDairy = ingredientNames.some(i => ['lait', 'fromage', 'crème', 'beurre'].some(d => i.includes(d)))
+      if (hasMeat && hasDairy) {
+        return -1
+      }
+    }
+  }
+
+  // === SCORING (higher is better) ===
+
+  // Liked foods bonus
+  for (const like of context.likedFoods) {
+    const likeLower = like.toLowerCase()
+    if (ingredientNames.some(i => i.includes(likeLower)) || titleLower.includes(likeLower)) {
+      score += 15
+    }
+  }
+
+  // Goal-based scoring
+  if (context.goal === 'weight_loss') {
+    // Prefer lower calorie, higher protein recipes
+    if (nutrition.calories < 400) score += 20
+    else if (nutrition.calories < 500) score += 10
+    else if (nutrition.calories > 600) score -= 15
+
+    if (nutrition.proteins > 25) score += 15
+    else if (nutrition.proteins > 20) score += 10
+
+    // Penalize high-fat recipes
+    if (nutrition.fats > 30) score -= 10
+  } else if (context.goal === 'muscle_gain') {
+    // Prefer high protein recipes
+    if (nutrition.proteins > 35) score += 25
+    else if (nutrition.proteins > 25) score += 15
+    else if (nutrition.proteins < 15) score -= 10
+
+    // Adequate calories needed
+    if (nutrition.calories > 500 && nutrition.calories < 800) score += 10
+  }
+
+  // Adaptive metabolism scoring
+  if (context.isAdaptive) {
+    // Prioritize protein even more
+    if (nutrition.proteins > 20) score += 10
+
+    // Prefer balanced meals, not too restrictive
+    if (nutrition.calories >= 350 && nutrition.calories <= 550) score += 10
+
+    // If stressed, suggest comfort foods that are still healthy
+    if (context.stressLevel >= 4) {
+      if (allTags.some(t => t.includes('réconfort') || t.includes('comfort'))) score += 10
+    }
+
+    // If tired/low energy, suggest energizing meals
+    if (context.energyLevel <= 2 || context.sleepHours < 6) {
+      if (allTags.some(t => t.includes('énergie') || t.includes('energy') || t.includes('boost'))) score += 10
+      // Complex carbs for energy
+      if (nutrition.carbs > 30 && nutrition.carbs < 60) score += 5
+    }
+  }
+
+  // Remaining macros fit
+  if (context.remainingCalories > 0) {
+    // Recipe should fit in remaining calories
+    if (nutrition.calories <= context.remainingCalories) {
+      score += 10
+    } else if (nutrition.calories > context.remainingCalories + 200) {
+      score -= 20 // Too many calories for remaining budget
+    }
+  }
+
+  if (context.remainingProteins > 0) {
+    // Bonus for helping reach protein goal
+    const proteinContribution = nutrition.proteins / context.remainingProteins
+    if (proteinContribution >= 0.3 && proteinContribution <= 0.6) {
+      score += 15 // Good protein contribution
+    }
+  }
+
+  // Meal type appropriateness
+  if (context.mealType === 'breakfast') {
+    if (allTags.some(t => t.includes('petit-déjeuner') || t.includes('breakfast'))) score += 10
+    if (nutrition.calories > 500) score -= 10
+  } else if (context.mealType === 'snack') {
+    if (allTags.some(t => t.includes('goûter') || t.includes('snack') || t.includes('collation'))) score += 10
+    if (nutrition.calories > 300) score -= 15
+    if (nutrition.calories <= 200) score += 10
+  }
+
+  // Recipe quality indicators
+  if (recipe.rating >= 4.5) score += 10
+  else if (recipe.rating >= 4.0) score += 5
+
+  // Prefer easier recipes for weekdays
+  const isWeekend = [0, 6].includes(new Date().getDay())
+  if (!isWeekend && recipe.difficulty === 'easy') score += 5
+  if (!isWeekend && recipe.difficulty === 'hard') score -= 5
+
+  return Math.max(0, Math.min(100, score))
+}
+
 // Get personalized recipe suggestions
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+
+  // Basic params
   const limit = parseInt(searchParams.get('limit') || '6')
   const mealType = searchParams.get('mealType') // breakfast, lunch, dinner, snack
   const caloricBalance = parseInt(searchParams.get('caloricBalance') || '0')
   const currentDay = parseInt(searchParams.get('currentDay') || '0') // 0-indexed day of the week (0=day1, 6=day7)
+
+  // User profile params
   const userGoal = searchParams.get('goal') || '' // weight_loss, muscle_gain, maintenance
-  const dietType = searchParams.get('dietType') || '' // vegetarian, vegan, etc.
+  const dietType = searchParams.get('dietType') || '' // vegetarian, vegan, halal, casher, etc.
+  const metabolismProfile = searchParams.get('metabolismProfile') || 'standard' // standard, adaptive
+  const allergies = searchParams.get('allergies')?.split(',').filter(Boolean) || []
+  const likedFoods = searchParams.get('likedFoods')?.split(',').filter(Boolean) || []
+  const dislikedFoods = searchParams.get('dislikedFoods')?.split(',').filter(Boolean) || []
+  const activityLevel = searchParams.get('activityLevel') || 'moderate'
+  const gender = searchParams.get('gender') || ''
+  const age = parseInt(searchParams.get('age') || '0')
+  const weight = parseFloat(searchParams.get('weight') || '0')
+
+  // Target params
+  const calorieTarget = parseInt(searchParams.get('calorieTarget') || '2100')
+  const proteinTarget = parseInt(searchParams.get('proteinTarget') || '120')
+
+  // Today's consumption (to suggest complementary meals)
+  const consumedCalories = parseInt(searchParams.get('consumedCalories') || '0')
+  const consumedProteins = parseInt(searchParams.get('consumedProteins') || '0')
+  const consumedCarbs = parseInt(searchParams.get('consumedCarbs') || '0')
+  const consumedFats = parseInt(searchParams.get('consumedFats') || '0')
+
+  // Wellness params (for adaptive profiles)
+  const stressLevel = parseInt(searchParams.get('stressLevel') || '0')
+  const sleepHours = parseFloat(searchParams.get('sleepHours') || '0')
+  const energyLevel = parseInt(searchParams.get('energyLevel') || '0')
+  const wellnessScore = parseInt(searchParams.get('wellnessScore') || '0')
+
+  // Calculate remaining macros for the day
+  const remainingCalories = Math.max(0, calorieTarget - consumedCalories)
+  const remainingProteins = Math.max(0, proteinTarget - consumedProteins)
 
   // Get current hour to determine meal type suggestion
   const hour = new Date().getHours()
@@ -850,6 +1152,7 @@ export async function GET(request: NextRequest) {
   const hasValidBalance = caloricBalance > 0 && caloricBalance <= 3500
   const canHavePlaisir = isPlaisirDay && hasValidBalance
   const showPlaisirRecipes = canHavePlaisir && (suggestedMealType === 'snack' || suggestedMealType === 'dinner')
+  const isAdaptive = metabolismProfile === 'adaptive'
 
   let recipes: RecipeSuggestion[] = []
   let personalized = false
@@ -1003,23 +1306,96 @@ export async function GET(request: NextRequest) {
     recipes = [...recipes, ...fallbackForMealType.slice(0, needed)]
   }
 
-  // 5. If user has positive caloric balance on day 6-7, add 1-2 "plats plaisir" to suggestions
+  // 5. Apply comprehensive scoring and filtering based on ALL user criteria
+  const scoringContext = {
+    goal: userGoal,
+    dietType,
+    isAdaptive,
+    mealType: suggestedMealType,
+    remainingCalories,
+    remainingProteins,
+    allergies,
+    likedFoods,
+    dislikedFoods,
+    stressLevel,
+    sleepHours,
+    energyLevel,
+  }
+
+  // Score and filter all recipes
+  const scoredRecipes = recipes
+    .map(recipe => ({
+      recipe,
+      score: scoreRecipe(recipe, scoringContext),
+    }))
+    .filter(({ score }) => score >= 0) // Remove excluded recipes (score = -1)
+    .sort((a, b) => b.score - a.score) // Sort by score descending
+    .map(({ recipe }) => recipe)
+
+  recipes = scoredRecipes
+
+  // 6. If user has positive caloric balance on day 5-7, add 1-2 "plats plaisir" to suggestions
   // Replace last 1-2 healthy recipes with treat recipes
   if (showPlaisirRecipes && recipes.length >= 2) {
-    // Shuffle plaisir recipes and pick 1-2 based on how much balance user has
-    const shuffledPlaisir = [...plaisirRecipes].sort(() => Math.random() - 0.5)
-    const plaisirCount = caloricBalance >= 400 ? 2 : 1
-    const selectedPlaisir = shuffledPlaisir.slice(0, plaisirCount)
+    // Filter plaisir recipes by diet type too
+    let eligiblePlaisir = plaisirRecipes
 
-    // Replace last recipe(s) with plaisir recipes
-    recipes = [...recipes.slice(0, limit - plaisirCount), ...selectedPlaisir]
+    // For halal/casher, filter out pork-based plaisir
+    if (dietType === 'halal' || dietType === 'casher') {
+      eligiblePlaisir = eligiblePlaisir.filter(r => {
+        const ingredients = r.ingredients.map(i => i.name.toLowerCase())
+        return !ingredients.some(i => i.includes('porc') || i.includes('lard') || i.includes('bacon'))
+      })
+    }
+
+    // For vegetarian/vegan, filter plaisir recipes
+    if (dietType === 'vegetarian' || dietType === 'vegan') {
+      eligiblePlaisir = eligiblePlaisir.filter(r => {
+        const title = r.title.toLowerCase()
+        const ingredients = r.ingredients.map(i => i.name.toLowerCase())
+        const hasMeat = ingredients.some(i => ['viande', 'poulet', 'boeuf', 'porc', 'bacon'].some(m => i.includes(m)))
+        return !hasMeat && !title.includes('burger') // Exclude meat burgers
+      })
+    }
+
+    // Shuffle and pick based on caloric balance
+    const shuffledPlaisir = [...eligiblePlaisir].sort(() => Math.random() - 0.5)
+    const plaisirCount = caloricBalance >= 400 ? 2 : 1
+    const selectedPlaisir = shuffledPlaisir.slice(0, Math.min(plaisirCount, shuffledPlaisir.length))
+
+    if (selectedPlaisir.length > 0) {
+      // Replace last recipe(s) with plaisir recipes
+      recipes = [...recipes.slice(0, limit - selectedPlaisir.length), ...selectedPlaisir]
+    }
   }
+
+  // Determine personalization level based on available data
+  const hasProfileData = !!userGoal || !!dietType || allergies.length > 0 || likedFoods.length > 0
+  const hasNutritionData = consumedCalories > 0
+  const hasWellnessData = stressLevel > 0 || sleepHours > 0 || energyLevel > 0
+
+  const personalizationLevel = hasProfileData && hasNutritionData && hasWellnessData
+    ? 'full' // All data available
+    : hasProfileData && (hasNutritionData || hasWellnessData)
+      ? 'high' // Profile + some tracking data
+      : hasProfileData
+        ? 'medium' // Only profile data
+        : 'basic' // No personalization data
 
   return NextResponse.json({
     recipes: recipes.slice(0, limit),
     suggestedMealType,
-    personalized,
+    personalized: personalizationLevel !== 'basic',
+    personalizationLevel,
     canHavePlaisir,
     caloricBalance,
+    // Additional context for the client
+    context: {
+      remainingCalories,
+      remainingProteins,
+      isAdaptive,
+      dietType: dietType || null,
+      goal: userGoal || null,
+    },
   })
 }

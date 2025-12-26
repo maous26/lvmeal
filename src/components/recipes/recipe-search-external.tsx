@@ -105,7 +105,7 @@ export function RecipeSearchExternal({ onSelectRecipe }: RecipeSearchExternalPro
 
       if (!response.ok) {
         if (response.status === 503) {
-          throw new Error('Service IA non configuré')
+          throw new Error('Service LymIA non configure')
         }
         throw new Error('Erreur lors de la suggestion')
       }
@@ -127,7 +127,7 @@ export function RecipeSearchExternal({ onSelectRecipe }: RecipeSearchExternalPro
           instructions: data.recipe.instructions,
           nutrition: data.recipe.nutrition,
           sourceUrl: null,
-          sourceName: 'Présence IA',
+          sourceName: 'Presence LymIA',
           isEnriched: true,
         }
         onSelectRecipe(suggestedRecipe)
@@ -149,7 +149,7 @@ export function RecipeSearchExternal({ onSelectRecipe }: RecipeSearchExternalPro
           <h2 className="font-semibold text-[var(--text-primary)]">Suggestion intelligente</h2>
         </div>
         <p className="text-sm text-[var(--text-secondary)] mb-3">
-          L'IA vous suggère une recette adaptée à votre profil et votre solde calorique restant.
+          LymIA vous suggere une recette adaptee a votre profil et votre solde calorique restant.
         </p>
 
         {/* Meal Type Selector */}

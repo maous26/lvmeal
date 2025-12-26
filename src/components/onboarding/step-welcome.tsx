@@ -25,7 +25,7 @@ const features = [
   {
     icon: Heart,
     title: 'Conseils adaptés',
-    description: 'Un coach IA à votre écoute',
+    description: 'LymIA, votre coach a votre ecoute',
   },
   {
     icon: Sparkles,

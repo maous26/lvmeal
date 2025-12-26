@@ -15,6 +15,7 @@ interface UserState {
   addWeightEntry: (entry: WeightEntry) => void
   setOnboarded: (value: boolean) => void
   calculateNeeds: () => NutritionalNeeds | null
+  migrateFromLocalStorage: () => void
 }
 
 // Harris-Benedict BMR calculation
@@ -94,19 +95,55 @@ export const useUserStore = create<UserState>()(
           profile: { ...profile, nutritionalNeeds: needs || undefined },
           isOnboarded: profile.onboardingCompleted || false,
         })
+        // Also sync to legacy localStorage for backward compatibility
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('userProfile', JSON.stringify({ ...profile, nutritionalNeeds: needs || undefined }))
+        }
       },
 
       updateProfile: (updates) => {
         const currentProfile = get().profile || {}
         const newProfile = { ...currentProfile, ...updates }
         const needs = calculateNutritionalNeeds(newProfile)
+        const finalProfile = { ...newProfile, nutritionalNeeds: needs || undefined }
         set({
-          profile: { ...newProfile, nutritionalNeeds: needs || undefined },
+          profile: finalProfile,
         })
+        // Also sync to legacy localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('userProfile', JSON.stringify(finalProfile))
+        }
       },
 
       clearProfile: () => {
         set({ profile: null, isOnboarded: false, weightHistory: [] })
+        // Also clear legacy localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('userProfile')
+        }
+      },
+
+      // Migration function to sync legacy localStorage to store
+      migrateFromLocalStorage: () => {
+        if (typeof window === 'undefined') return
+
+        const { profile } = get()
+        // Only migrate if store is empty but localStorage has data
+        if (!profile) {
+          const legacyProfile = localStorage.getItem('userProfile')
+          if (legacyProfile) {
+            try {
+              const parsed = JSON.parse(legacyProfile) as Partial<UserProfile>
+              const needs = calculateNutritionalNeeds(parsed)
+              set({
+                profile: { ...parsed, nutritionalNeeds: needs || parsed.nutritionalNeeds },
+                isOnboarded: parsed.onboardingCompleted || false,
+              })
+            } catch {
+              // Invalid JSON, ignore
+            }
+          }
+        }
       },
 
       addWeightEntry: (entry) => {

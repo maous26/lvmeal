@@ -116,10 +116,10 @@ export function AIMealGenerator({
                 <Sparkles className="w-10 h-10 text-amber-500" />
               </div>
               <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
-                Générer une recette IA
+                Generer une recette LymIA
               </h3>
               <p className="text-sm text-[var(--text-secondary)] max-w-xs mx-auto">
-                Décrivez ce que vous avez envie de manger et l'IA créera une recette sur mesure
+                Decrivez ce que vous avez envie de manger et LymIA creera une recette sur mesure
               </p>
             </div>
 
@@ -201,7 +201,7 @@ export function AIMealGenerator({
               <span className="font-semibold text-[var(--text-primary)]">Création en cours...</span>
             </div>
             <p className="text-sm text-[var(--text-tertiary)] max-w-xs mx-auto">
-              L'IA prépare une recette personnalisée pour votre {mealTypeLabels[mealType]}
+              LymIA prepare une recette personnalisee pour votre {mealTypeLabels[mealType]}
             </p>
           </motion.div>
         )}
