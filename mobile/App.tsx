@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 
-import TabNavigator from './src/navigation/TabNavigator'
+import { RootNavigator } from './src/navigation'
 import { colors } from './src/constants/theme'
 
 // Keep splash screen visible while loading fonts
@@ -52,7 +52,7 @@ export default function App() {
       <SafeAreaProvider>
         <NavigationContainer>
           <StatusBar style="dark" backgroundColor={colors.bg.primary} />
-          <TabNavigator />
+          <RootNavigator />
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>

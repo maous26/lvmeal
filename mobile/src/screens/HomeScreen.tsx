@@ -1,52 +1,117 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  TouchableOpacity,
+  Pressable,
+  Alert,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Droplets, Plus, Flame, Dumbbell, Apple } from 'lucide-react-native'
+import { Plus, Flame, Dumbbell, CalendarRange, Sparkles } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, CircularProgress, ProgressBar, Button } from '../components/ui'
-import { colors, spacing, typography, radius, shadows } from '../constants/theme'
+import {
+  GamificationPanel,
+  WellnessWidget,
+  SportWidget,
+  LymIA,
+  CaloricBalance,
+  HydrationWidget,
+  MealSuggestions,
+} from '../components/dashboard'
+import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
+import { useGamificationStore } from '../stores/gamification-store'
+import { useCaloricBankStore } from '../stores/caloric-bank-store'
 import { getGreeting, formatNumber } from '../lib/utils'
 import type { MealType } from '../types'
 
 const mealConfig: Record<MealType, { label: string; icon: string; color: string }> = {
-  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning },
-  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary },
+  breakfast: { label: 'Petit-dejeuner', icon: '☀️', color: colors.warning },
+  lunch: { label: 'Dejeuner', icon: '🍽️', color: colors.accent.primary },
   snack: { label: 'Collation', icon: '🍎', color: colors.success },
-  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary },
+  dinner: { label: 'Diner', icon: '🌙', color: colors.secondary.primary },
 }
+
+// Mock data for Solde Plaisir (7 days) - will be replaced by caloric-bank-store data
+const mockDailyBalances = [
+  { day: 'Jeu', date: '25/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Ven', date: '26/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Sam', date: '27/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Dim', date: '28/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Lun', date: '29/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Mar', date: '30/12', consumed: 0, target: 2100, balance: 0 },
+  { day: 'Mer', date: '31/12', consumed: 0, target: 2100, balance: 0 },
+]
 
 export default function HomeScreen() {
   const navigation = useNavigation()
   const { profile, nutritionGoals } = useUserStore()
-  const { getTodayData, updateWaterIntake, getMealsByType, currentDate } = useMealsStore()
+  const { getTodayData, getMealsByType, currentDate } = useMealsStore()
+  const { checkAndUpdateStreak } = useGamificationStore()
+  const {
+    weekStartDate,
+    initializeWeek,
+    getCurrentDayIndex,
+    getDaysUntilNewWeek,
+    isFirstTimeSetup: checkIsFirstTimeSetup,
+    confirmStartDay,
+  } = useCaloricBankStore()
+
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setIsHydrated(true)
+    initializeWeek()
+    checkAndUpdateStreak()
+  }, [initializeWeek, checkAndUpdateStreak])
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
   const goals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
 
   const greeting = getGreeting()
-  const userName = profile?.name?.split(' ')[0] || 'Utilisateur'
+  const userName = profile?.firstName || profile?.name?.split(' ')[0] || 'Utilisateur'
 
-  const handleAddWater = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    updateWaterIntake(0.25)
-  }
+  // Caloric bank data
+  const currentDayIndex = isHydrated ? getCurrentDayIndex() : 0
+  const daysUntilNewWeek = isHydrated ? getDaysUntilNewWeek() : 7
+  const isFirstTimeSetup = isHydrated ? checkIsFirstTimeSetup() : false
 
   const handleMealPress = (type: MealType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     // @ts-ignore - Navigation typing
     navigation.navigate('Meals', { screen: 'MealDetail', params: { type } })
+  }
+
+  const handleNavigateToAchievements = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('Profile', { screen: 'Achievements' })
+  }
+
+  const handleNavigateToWellness = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('Progress', { screen: 'Wellness' })
+  }
+
+  const handleNavigateToSport = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('Progress', { screen: 'Sport' })
+  }
+
+  const handleNavigateToPlan = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('WeeklyPlan')
+  }
+
+  const handleNavigateToAddMeal = (type: MealType = 'lunch') => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('AddMeal', { type })
   }
 
   return (
@@ -62,6 +127,16 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>{greeting},</Text>
             <Text style={styles.userName}>{userName}</Text>
           </View>
+        </View>
+
+        {/* Gamification Panel (compact) */}
+        <View style={styles.section}>
+          <GamificationPanel compact onViewAll={handleNavigateToAchievements} />
+        </View>
+
+        {/* LymIA - Coach proactif */}
+        <View style={styles.section}>
+          <LymIA />
         </View>
 
         {/* Main Calories Card */}
@@ -98,23 +173,55 @@ export default function HomeScreen() {
               <View style={styles.calorieStat}>
                 <Flame size={16} color="#FFFFFF" />
                 <Text style={styles.calorieStatText}>
-                  {formatNumber(totals.calories)} consommées
+                  {formatNumber(totals.calories)} consommees
                 </Text>
               </View>
               <View style={styles.calorieStat}>
                 <Dumbbell size={16} color="#FFFFFF" />
-                <Text style={styles.calorieStatText}>0 brûlées</Text>
+                <Text style={styles.calorieStatText}>0 brulees</Text>
               </View>
             </View>
           </LinearGradient>
         </Card>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={handleNavigateToAddMeal}
+            style={styles.actionButton}
+          >
+            <Plus size={20} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Ajouter un repas</Text>
+          </Button>
+          <Pressable
+            style={styles.planButton}
+            onPress={handleNavigateToPlan}
+          >
+            <View style={styles.planButtonContent}>
+              <CalendarRange size={20} color="#10B981" />
+              <Sparkles size={12} color="#F59E0B" style={styles.planSparkle} />
+            </View>
+            <Text style={styles.planButtonText}>Proposition 7j</Text>
+          </Pressable>
+        </View>
+
+        {/* Hydration Widget */}
+        <HydrationWidget
+          onPress={() => {
+            // @ts-ignore - Navigation typing
+            navigation.navigate('Progress', { screen: 'Wellness' })
+          }}
+        />
 
         {/* Macros */}
         <Text style={styles.sectionTitle}>Macronutriments</Text>
         <Card style={styles.macrosCard}>
           <View style={styles.macrosRow}>
             <MacroItem
-              label="Protéines"
+              label="Proteines"
               value={totals.proteins}
               max={goals.proteins}
               unit="g"
@@ -137,38 +244,6 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        {/* Water Intake */}
-        <Text style={styles.sectionTitle}>Hydratation</Text>
-        <Card style={styles.waterCard}>
-          <View style={styles.waterContent}>
-            <View style={styles.waterInfo}>
-              <View style={styles.waterIcon}>
-                <Droplets size={24} color={colors.nutrients.water} />
-              </View>
-              <View>
-                <Text style={styles.waterValue}>
-                  {todayData.waterIntake.toFixed(1)}L
-                </Text>
-                <Text style={styles.waterGoal}>/ 2.5L</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.waterButton}
-              onPress={handleAddWater}
-              activeOpacity={0.8}
-            >
-              <Plus size={20} color="#FFFFFF" />
-              <Text style={styles.waterButtonText}>250ml</Text>
-            </TouchableOpacity>
-          </View>
-          <ProgressBar
-            value={todayData.waterIntake}
-            max={2.5}
-            color={colors.nutrients.water}
-            style={styles.waterProgress}
-          />
-        </Card>
-
         {/* Meals Overview */}
         <Text style={styles.sectionTitle}>Repas du jour</Text>
         <View style={styles.mealsGrid}>
@@ -189,12 +264,58 @@ export default function HomeScreen() {
                 <Text style={styles.mealIcon}>{config.icon}</Text>
                 <Text style={styles.mealLabel}>{config.label}</Text>
                 <Text style={[styles.mealCalories, { color: config.color }]}>
-                  {totalCalories > 0 ? `${totalCalories} kcal` : 'Non renseigné'}
+                  {totalCalories > 0 ? `${totalCalories} kcal` : 'Non renseigne'}
                 </Text>
               </Card>
             )
           })}
         </View>
+
+        {/* Meal Suggestions - right after meals */}
+        <View style={styles.section}>
+          <MealSuggestions
+            onSuggestionPress={(suggestion) => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              Alert.alert(
+                suggestion.name,
+                `${suggestion.calories} kcal · ${suggestion.prepTime} min\n\nPour ajouter cette recette, utilisez le bouton "Ajouter un repas".`,
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  {
+                    text: 'Ajouter un repas',
+                    onPress: () => handleNavigateToAddMeal(),
+                  },
+                ]
+              )
+            }}
+            onViewAll={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              handleNavigateToAddMeal()
+            }}
+          />
+        </View>
+
+        {/* Wellness & Sport Widgets */}
+        <Text style={styles.sectionTitle}>Bien-etre & Sport</Text>
+        <View style={styles.widgetsGrid}>
+          <WellnessWidget onPress={handleNavigateToWellness} />
+          <SportWidget onPress={handleNavigateToSport} />
+        </View>
+
+        {/* Caloric Balance (Banque calorique) */}
+        <Text style={styles.sectionTitle}>Solde Plaisir</Text>
+        <CaloricBalance
+          dailyBalances={mockDailyBalances}
+          currentDay={currentDayIndex}
+          daysUntilNewWeek={daysUntilNewWeek}
+          weekStartDate={weekStartDate ?? undefined}
+          dailyTarget={goals.calories}
+          isFirstTimeSetup={isFirstTimeSetup}
+          onConfirmStart={confirmStartDay}
+        />
+
+        {/* Spacer for bottom nav */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -252,10 +373,19 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.text.primary,
   },
+  section: {
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+  },
   mainCard: {
     padding: 0,
     overflow: 'hidden',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   caloriesGradient: {
     padding: spacing.lg,
@@ -295,11 +425,47 @@ const styles = StyleSheet.create({
     ...typography.small,
     color: '#FFFFFF',
   },
-  sectionTitle: {
+  quickActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  actionButtonText: {
     ...typography.bodyMedium,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
+    color: '#FFFFFF',
+  },
+  planButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: radius.lg,
+  },
+  planButtonContent: {
+    position: 'relative',
+  },
+  planSparkle: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+  },
+  planButtonText: {
+    ...typography.bodyMedium,
+    color: '#10B981',
+    fontWeight: '600',
   },
   macrosCard: {
     marginBottom: spacing.default,
@@ -331,56 +497,11 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     marginTop: spacing.xs,
   },
-  waterCard: {
-    marginBottom: spacing.default,
-  },
-  waterContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  waterInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  waterIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: `${colors.nutrients.water}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  waterValue: {
-    ...typography.h4,
-    color: colors.text.primary,
-  },
-  waterGoal: {
-    ...typography.small,
-    color: colors.text.tertiary,
-  },
-  waterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.nutrients.water,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
-  },
-  waterButtonText: {
-    ...typography.smallMedium,
-    color: '#FFFFFF',
-  },
-  waterProgress: {
-    marginTop: spacing.xs,
-  },
   mealsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
+    marginBottom: spacing.default,
   },
   mealCard: {
     width: '48%',
@@ -398,5 +519,12 @@ const styles = StyleSheet.create({
   },
   mealCalories: {
     ...typography.caption,
+  },
+  widgetsGrid: {
+    gap: spacing.md,
+    marginBottom: spacing.default,
+  },
+  bottomSpacer: {
+    height: spacing.xl,
   },
 })

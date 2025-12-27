@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
   FlatList,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react-native'
+import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, X } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
+import { Alert } from 'react-native'
 
 import { Card, Button, ProgressBar } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
@@ -31,7 +32,10 @@ const mealOrder: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 export default function MealsScreen() {
   const navigation = useNavigation()
   const { nutritionGoals } = useUserStore()
-  const { currentDate, setCurrentDate, getTodayData, getMealsByType } = useMealsStore()
+  const { currentDate, setCurrentDate, getTodayData, getMealsByType, removeItemFromMeal } = useMealsStore()
+
+  // Track expanded meal cards
+  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set())
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -46,8 +50,40 @@ export default function MealsScreen() {
 
   const handleAddMeal = (type: MealType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    // @ts-ignore - Navigation typing
-    navigation.navigate('AddMeal', { type })
+    // @ts-ignore - Navigation typing - Navigate to root AddMeal screen
+    navigation.getParent()?.navigate('AddMeal', { type })
+  }
+
+  const handleRemoveItem = (mealId: string, itemId: string, itemName: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    Alert.alert(
+      'Supprimer l\'aliment',
+      `Retirer "${itemName}" de ce repas ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            removeItemFromMeal(mealId, itemId)
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          },
+        },
+      ]
+    )
+  }
+
+  const toggleMealExpanded = (mealType: MealType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setExpandedMeals(prev => {
+      const next = new Set(prev)
+      if (next.has(mealType)) {
+        next.delete(mealType)
+      } else {
+        next.add(mealType)
+      }
+      return next
+    })
   }
 
   return (
@@ -150,25 +186,52 @@ export default function MealsScreen() {
 
               {hasMeals && (
                 <View style={styles.mealContent}>
-                  {meals.map((meal) => (
-                    <View key={meal.id} style={styles.mealItemsList}>
-                      {meal.items.slice(0, 3).map((item) => (
-                        <View key={item.id} style={styles.foodItem}>
-                          <Text style={styles.foodName} numberOfLines={1}>
-                            {item.food.name}
-                          </Text>
-                          <Text style={styles.foodCalories}>
-                            {Math.round(item.food.nutrition.calories * item.quantity)} kcal
-                          </Text>
-                        </View>
-                      ))}
-                      {meal.items.length > 3 && (
-                        <Text style={styles.moreItems}>
-                          +{meal.items.length - 3} autres
-                        </Text>
-                      )}
-                    </View>
-                  ))}
+                  {meals.map((meal) => {
+                    const isExpanded = expandedMeals.has(type)
+                    const itemsToShow = isExpanded ? meal.items : meal.items.slice(0, 3)
+                    const hasMoreItems = meal.items.length > 3
+
+                    return (
+                      <View key={meal.id} style={styles.mealItemsList}>
+                        {itemsToShow.map((item) => (
+                          <View key={item.id} style={styles.foodItem}>
+                            <View style={styles.foodItemInfo}>
+                              <Text style={styles.foodName} numberOfLines={1}>
+                                {item.food.name}
+                              </Text>
+                              <Text style={styles.foodCalories}>
+                                {Math.round(item.food.nutrition.calories * item.quantity)} kcal
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.deleteItemButton}
+                              onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
+                            >
+                              <X size={16} color={colors.error} />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                        {hasMoreItems && !isExpanded && (
+                          <TouchableOpacity
+                            style={styles.showMoreButton}
+                            onPress={() => toggleMealExpanded(type)}
+                          >
+                            <Text style={styles.showMoreText}>
+                              Voir {meal.items.length - 3} autres aliments
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        {hasMoreItems && isExpanded && (
+                          <TouchableOpacity
+                            style={styles.showMoreButton}
+                            onPress={() => toggleMealExpanded(type)}
+                          >
+                            <Text style={styles.showMoreText}>Voir moins</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )
+                  })}
                   <TouchableOpacity
                     style={styles.addMoreButton}
                     onPress={() => handleAddMeal(type)}
@@ -303,7 +366,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    marginVertical: 2,
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.sm,
+  },
+  foodItemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   foodName: {
     ...typography.small,
@@ -314,6 +388,23 @@ const styles = StyleSheet.create({
   foodCalories: {
     ...typography.smallMedium,
     color: colors.text.tertiary,
+  },
+  deleteItemButton: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.sm,
+    backgroundColor: `${colors.error}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  showMoreButton: {
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  showMoreText: {
+    ...typography.caption,
+    color: colors.accent.primary,
+    fontWeight: '500',
   },
   moreItems: {
     ...typography.caption,

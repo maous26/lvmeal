@@ -1,98 +1,163 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { UserProfile, NutritionGoals, GoalType, ActivityLevel } from '../types'
-import { calculateBMR, calculateTDEE, calculateAge } from '../lib/utils'
+import type { UserProfile, NutritionalNeeds, WeightEntry } from '../types'
+
+interface NutritionGoals {
+  calories: number
+  proteins: number
+  carbs: number
+  fats: number
+}
 
 interface UserState {
-  profile: UserProfile | null
-  nutritionGoals: NutritionGoals | null
+  profile: Partial<UserProfile> | null
   isLoading: boolean
+  isOnboarded: boolean
+  weightHistory: WeightEntry[]
+  nutritionGoals: NutritionGoals | null
 
   // Actions
   setProfile: (profile: Partial<UserProfile>) => void
   updateProfile: (updates: Partial<UserProfile>) => void
-  calculateGoals: () => void
+  clearProfile: () => void
   resetStore: () => void
+  addWeightEntry: (entry: WeightEntry) => void
+  setOnboarded: (value: boolean) => void
+  calculateNeeds: () => NutritionalNeeds | null
 }
 
-const defaultGoals: NutritionGoals = {
-  calories: 2000,
-  proteins: 100,
-  carbs: 250,
-  fats: 67,
-  fiber: 30,
-  water: 2.5,
+// Harris-Benedict BMR calculation
+function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNeeds | null {
+  const { weight, height, age, gender, activityLevel, goal } = profile
+
+  if (!weight || !height || !age) return null
+
+  // Calculate BMR
+  let bmr: number
+  if (gender === 'female') {
+    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+  } else {
+    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+  }
+
+  // Activity multiplier
+  const activityMultipliers: Record<string, number> = {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    athlete: 1.9,
+  }
+  const tdee = bmr * (activityMultipliers[activityLevel || 'moderate'] || 1.55)
+
+  // Goal adjustment
+  let calories: number
+  switch (goal) {
+    case 'weight_loss':
+      calories = tdee - 400
+      break
+    case 'muscle_gain':
+      calories = tdee + 300
+      break
+    default:
+      calories = tdee
+  }
+  calories = Math.round(calories)
+
+  // Macro distribution
+  const proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
+  const proteins = Math.round(weight * proteinPerKg)
+  const fats = Math.round((calories * 0.25) / 9)
+  const carbs = Math.round((calories - (proteins * 4) - (fats * 9)) / 4)
+
+  return {
+    calories,
+    proteins,
+    carbs,
+    fats,
+    fiber: 30,
+    water: 2.5,
+    calcium: 1000,
+    iron: gender === 'female' ? 18 : 8,
+    vitaminD: 600,
+    vitaminC: 90,
+    vitaminB12: 2.4,
+    zinc: 11,
+    magnesium: 400,
+    potassium: 3500,
+    omega3: 1.6,
+  }
 }
 
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       profile: null,
-      nutritionGoals: defaultGoals,
       isLoading: false,
+      isOnboarded: false,
+      weightHistory: [],
+      nutritionGoals: null,
 
       setProfile: (profile) => {
-        set({ profile: profile as UserProfile })
-        get().calculateGoals()
+        const needs = calculateNutritionalNeeds(profile)
+        const goals = needs ? {
+          calories: needs.calories,
+          proteins: needs.proteins,
+          carbs: needs.carbs,
+          fats: needs.fats,
+        } : null
+        set({
+          profile: { ...profile, nutritionalNeeds: needs || undefined },
+          isOnboarded: profile.onboardingCompleted || false,
+          nutritionGoals: goals,
+        })
       },
 
       updateProfile: (updates) => {
-        const current = get().profile
-        if (current) {
-          set({ profile: { ...current, ...updates } })
-          get().calculateGoals()
-        }
+        const currentProfile = get().profile || {}
+        const newProfile = { ...currentProfile, ...updates }
+        const needs = calculateNutritionalNeeds(newProfile)
+        const finalProfile = { ...newProfile, nutritionalNeeds: needs || undefined }
+        set({
+          profile: finalProfile,
+        })
       },
 
-      calculateGoals: () => {
-        const { profile } = get()
-        if (!profile) return
-
-        const age = profile.birthDate ? calculateAge(profile.birthDate) : 30
-        const bmr = calculateBMR(profile.weight, profile.height, age, profile.gender)
-        const tdee = calculateTDEE(bmr, profile.activityLevel)
-
-        // Adjust based on goal
-        let calorieTarget = tdee
-        const goalAdjustments: Record<GoalType, number> = {
-          lose: -500,
-          maintain: 0,
-          gain: 300,
-          muscle: 300,
-        }
-        calorieTarget += goalAdjustments[profile.goal] || 0
-
-        // Calculate macros
-        const proteinMultiplier = profile.goal === 'muscle' ? 2.2 : 1.8
-        const proteins = Math.round(profile.weight * proteinMultiplier)
-        const fats = Math.round((calorieTarget * 0.25) / 9)
-        const carbCalories = calorieTarget - (proteins * 4) - (fats * 9)
-        const carbs = Math.round(carbCalories / 4)
-
-        set({
-          nutritionGoals: {
-            calories: Math.max(1200, Math.round(calorieTarget)),
-            proteins,
-            carbs: Math.max(50, carbs),
-            fats,
-            fiber: 30,
-            water: 2.5,
-          },
-        })
+      clearProfile: () => {
+        set({ profile: null, isOnboarded: false, weightHistory: [], nutritionGoals: null })
       },
 
       resetStore: () => {
-        set({
-          profile: null,
-          nutritionGoals: defaultGoals,
-          isLoading: false,
-        })
+        set({ profile: null, isOnboarded: false, weightHistory: [], nutritionGoals: null })
+      },
+
+      addWeightEntry: (entry) => {
+        set((state) => ({
+          weightHistory: [...state.weightHistory, entry],
+          profile: state.profile ? { ...state.profile, weight: entry.weight } : null,
+        }))
+      },
+
+      setOnboarded: (value) => {
+        set({ isOnboarded: value })
+      },
+
+      calculateNeeds: () => {
+        const { profile } = get()
+        if (!profile) return null
+        return calculateNutritionalNeeds(profile)
       },
     }),
     {
-      name: 'presence-user-storage',
+      name: 'presence-user',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        profile: state.profile,
+        isOnboarded: state.isOnboarded,
+        weightHistory: state.weightHistory,
+        nutritionGoals: state.nutritionGoals,
+      }),
     }
   )
 )

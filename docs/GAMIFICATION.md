@@ -59,26 +59,26 @@ Le système de gamification de PRESENCE est conçu pour encourager les utilisate
 
 | Niveau | XP requis | Titre | XP pour niveau suivant |
 |:------:|----------:|-------|----------------------:|
-| 1 | 0 | Curieux | 100 |
-| 2 | 100 | Motivé | 150 |
-| 3 | 250 | Engagé | 250 |
-| 4 | 500 | Régulier | 350 |
-| 5 | 850 | Assidu | 450 |
-| 6 | 1 300 | Équilibré | 600 |
-| 7 | 1 900 | Consciencieux | 800 |
-| 8 | 2 700 | Épanoui | 1 000 |
-| 9 | 3 700 | Inspiré | 1 300 |
-| 10 | 5 000 | Coach | 1 500 |
-| 11 | 6 500 | Mentor | 2 000 |
-| 12 | 8 500 | Guide | 2 500 |
-| 13 | 11 000 | Ambassadeur | 3 000 |
-| 14 | 14 000 | Expert Bien-être | 4 000 |
-| 15 | 18 000 | Maître Équilibre | 5 000 |
-| 16 | 23 000 | Gourou Nutrition | 6 000 |
-| 17 | 29 000 | Sage | 7 000 |
-| 18 | 36 000 | Éclairé | 9 000 |
-| 19 | 45 000 | Zen Master | 10 000 |
-| 20 | 55 000 | Légende Vivante | - |
+| 1 | 0 | Débutant | 100 |
+| 2 | 100 | Apprenti | 150 |
+| 3 | 250 | Initié | 250 |
+| 4 | 500 | Pratiquant | 350 |
+| 5 | 850 | Amateur | 450 |
+| 6 | 1 300 | Confirmé | 600 |
+| 7 | 1 900 | Expérimenté | 800 |
+| 8 | 2 700 | Avancé | 1 000 |
+| 9 | 3 700 | Expert | 1 300 |
+| 10 | 5 000 | Maître | 1 500 |
+| 11 | 6 500 | Grand Maître | 2 000 |
+| 12 | 8 500 | Virtuose | 2 500 |
+| 13 | 11 000 | Champion | 3 000 |
+| 14 | 14 000 | Légende | 4 000 |
+| 15 | 18 000 | Titan | 5 000 |
+| 16 | 23 000 | Olympien | 6 000 |
+| 17 | 29 000 | Demi-dieu | 7 000 |
+| 18 | 36 000 | Immortel | 9 000 |
+| 19 | 45 000 | Transcendant | 10 000 |
+| 20 | 55 000 | Divin | - |
 
 ---
 

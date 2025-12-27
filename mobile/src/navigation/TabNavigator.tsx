@@ -6,14 +6,14 @@ import * as Haptics from 'expo-haptics'
 import {
   Home,
   Utensils,
-  ChefHat,
+  // ChefHat, // Disabled - Recipes tab removed
   TrendingUp,
   User,
 } from 'lucide-react-native'
 
 import HomeScreen from '../screens/HomeScreen'
 import MealsScreen from '../screens/MealsScreen'
-import RecipesScreen from '../screens/RecipesScreen'
+// import RecipesScreen from '../screens/RecipesScreen' // Disabled - Recipes tab removed
 import ProgressScreen from '../screens/ProgressScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 
@@ -80,6 +80,7 @@ export default function TabNavigator() {
           ),
         }}
       />
+      {/* Recipes tab disabled - functionality moved to AddMealScreen favorites
       <Tab.Screen
         name="Recipes"
         component={RecipesScreen}
@@ -90,6 +91,7 @@ export default function TabNavigator() {
           ),
         }}
       />
+      */}
       <Tab.Screen
         name="Progress"
         component={ProgressScreen}

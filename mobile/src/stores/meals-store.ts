@@ -7,6 +7,8 @@ import { getDateKey, generateId } from '../lib/utils'
 interface MealsState {
   dailyData: Record<string, DailyData>
   currentDate: string
+  recentFoods: FoodItem[]
+  favoriteFoods: FoodItem[]
 
   // Actions
   setCurrentDate: (date: string) => void
@@ -16,17 +18,23 @@ interface MealsState {
   addItemToMeal: (mealId: string, item: MealItem) => void
   removeItemFromMeal: (mealId: string, itemId: string) => void
   updateWaterIntake: (amount: number) => void
+  addToRecent: (food: FoodItem) => void
+  addToFavorites: (food: FoodItem) => void
+  removeFromFavorites: (foodId: string) => void
 
   // Getters
   getTodayData: () => DailyData
   getMealsByType: (date: string, type: MealType) => Meal[]
+  getMealsForDate: (date: string) => Meal[]
   getDailyTotals: (date?: string) => NutritionInfo
+  getDailyNutrition: (date?: string) => NutritionInfo
+  getHydration: (date?: string) => number
 }
 
 const createEmptyDailyData = (date: string): DailyData => ({
   date,
   meals: [],
-  waterIntake: 0,
+  hydration: 0,
   totalNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
 })
 
@@ -59,6 +67,8 @@ export const useMealsStore = create<MealsState>()(
     (set, get) => ({
       dailyData: {},
       currentDate: getDateKey(),
+      recentFoods: [],
+      favoriteFoods: [],
 
       setCurrentDate: (date) => set({ currentDate: date }),
 
@@ -66,12 +76,18 @@ export const useMealsStore = create<MealsState>()(
         const { currentDate, dailyData } = get()
         const dayData = dailyData[currentDate] || createEmptyDailyData(currentDate)
 
+        const now = new Date().toISOString()
         const newMeal: Meal = {
           id: generateId(),
           type,
+          date: currentDate,
+          time: now.split('T')[1].substring(0, 5),
           items,
           totalNutrition: calculateMealNutrition(items),
-          createdAt: new Date().toISOString(),
+          source: 'manual',
+          isPlanned: false,
+          createdAt: now,
+          updatedAt: now,
         }
 
         const updatedMeals = [...dayData.meals, newMeal]
@@ -93,9 +109,9 @@ export const useMealsStore = create<MealsState>()(
         const dayData = dailyData[currentDate]
         if (!dayData) return
 
-        const updatedMeals = dayData.meals.map((meal) =>
+        const updatedMeals = dayData.meals.map((meal: Meal) =>
           meal.id === mealId
-            ? { ...meal, items, totalNutrition: calculateMealNutrition(items) }
+            ? { ...meal, items, totalNutrition: calculateMealNutrition(items), updatedAt: new Date().toISOString() }
             : meal
         )
 
@@ -117,7 +133,7 @@ export const useMealsStore = create<MealsState>()(
         const dayData = dailyData[targetDate]
         if (!dayData) return
 
-        const updatedMeals = dayData.meals.filter((meal) => meal.id !== mealId)
+        const updatedMeals = dayData.meals.filter((meal: Meal) => meal.id !== mealId)
 
         set({
           dailyData: {
@@ -136,13 +152,14 @@ export const useMealsStore = create<MealsState>()(
         const dayData = dailyData[currentDate]
         if (!dayData) return
 
-        const updatedMeals = dayData.meals.map((meal) => {
+        const updatedMeals = dayData.meals.map((meal: Meal) => {
           if (meal.id === mealId) {
             const newItems = [...meal.items, item]
             return {
               ...meal,
               items: newItems,
               totalNutrition: calculateMealNutrition(newItems),
+              updatedAt: new Date().toISOString(),
             }
           }
           return meal
@@ -166,14 +183,15 @@ export const useMealsStore = create<MealsState>()(
         if (!dayData) return
 
         const updatedMeals = dayData.meals
-          .map((meal) => {
+          .map((meal: Meal) => {
             if (meal.id === mealId) {
-              const newItems = meal.items.filter((item) => item.id !== itemId)
+              const newItems = meal.items.filter((item: MealItem) => item.id !== itemId)
               if (newItems.length === 0) return null
               return {
                 ...meal,
                 items: newItems,
                 totalNutrition: calculateMealNutrition(newItems),
+                updatedAt: new Date().toISOString(),
               }
             }
             return meal
@@ -201,10 +219,29 @@ export const useMealsStore = create<MealsState>()(
             ...dailyData,
             [currentDate]: {
               ...dayData,
-              waterIntake: Math.max(0, dayData.waterIntake + amount),
+              hydration: Math.max(0, dayData.hydration + amount),
             },
           },
         })
+      },
+
+      addToRecent: (food) => {
+        const { recentFoods } = get()
+        // Remove if already exists, then add to front
+        const filtered = recentFoods.filter(f => f.id !== food.id)
+        const updated = [food, ...filtered].slice(0, 20) // Keep max 20
+        set({ recentFoods: updated })
+      },
+
+      addToFavorites: (food) => {
+        const { favoriteFoods } = get()
+        if (favoriteFoods.some(f => f.id === food.id)) return
+        set({ favoriteFoods: [...favoriteFoods, food] })
+      },
+
+      removeFromFavorites: (foodId) => {
+        const { favoriteFoods } = get()
+        set({ favoriteFoods: favoriteFoods.filter(f => f.id !== foodId) })
       },
 
       getTodayData: () => {
@@ -225,6 +262,29 @@ export const useMealsStore = create<MealsState>()(
         const dayData = dailyData[targetDate]
         if (!dayData) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
         return dayData.totalNutrition
+      },
+
+      getMealsForDate: (date) => {
+        const { dailyData } = get()
+        const dayData = dailyData[date]
+        if (!dayData) return []
+        return dayData.meals
+      },
+
+      getDailyNutrition: (date) => {
+        const targetDate = date || get().currentDate
+        const { dailyData } = get()
+        const dayData = dailyData[targetDate]
+        if (!dayData) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+        return dayData.totalNutrition
+      },
+
+      getHydration: (date) => {
+        const targetDate = date || get().currentDate
+        const { dailyData } = get()
+        const dayData = dailyData[targetDate]
+        if (!dayData) return 0
+        return dayData.hydration
       },
     }),
     {

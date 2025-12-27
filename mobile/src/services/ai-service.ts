@@ -1,0 +1,743 @@
+/**
+ * AI Service for Mobile - OpenAI Integration
+ *
+ * Features:
+ * - Food photo analysis (GPT-4 Vision)
+ * - Voice/text food description analysis
+ * - Recipe generation
+ * - Recipe translation (German to French)
+ * - Meal suggestions
+ */
+
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import {
+  FOOD_ANALYSIS_PROMPT,
+  FOOD_DESCRIPTION_PROMPT,
+  RECIPE_GENERATION_PROMPT,
+  RECIPE_TRANSLATION_PROMPT,
+  MEAL_PLANNER_SYSTEM_PROMPT,
+  MEAL_TYPE_GUIDELINES,
+} from '../lib/ai/prompts'
+import { generateUserProfileContext, generateRemainingNutritionContext } from '../lib/ai/user-context'
+import { getThemedPrompt } from '../lib/ai/themes'
+import type { UserProfile, NutritionInfo, FoodItem } from '../types'
+
+// ============= TYPES =============
+
+export interface AnalyzedFood {
+  name: string
+  estimatedWeight: number
+  confidence: number
+  nutrition: {
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+    fiber?: number
+  }
+}
+
+export interface FoodAnalysisResult {
+  success: boolean
+  foods: AnalyzedFood[]
+  totalNutrition: NutritionInfo
+  description?: string
+  error?: string
+}
+
+export interface AIRecipe {
+  title: string
+  description: string
+  ingredients: { name: string; amount: string; calories: number }[]
+  instructions: string[]
+  nutrition: NutritionInfo
+  prepTime: number
+  servings: number
+  imageUrl?: string | null
+}
+
+export interface AIRecipeResult {
+  success: boolean
+  recipe?: AIRecipe
+  error?: string
+}
+
+export interface TranslatedRecipe {
+  titleFr: string
+  descriptionFr: string
+  ingredientsFr: { name: string; amount: number; unit: string; calories?: number }[]
+  instructionsFr: string[]
+  nutrition: NutritionInfo
+}
+
+export interface MealSuggestion {
+  title: string
+  description: string
+  nutrition: NutritionInfo
+  prepTime: number
+  difficulty: 'easy' | 'medium' | 'hard'
+  ingredients: string[]
+}
+
+// ============= CONFIG =============
+
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
+const API_KEY_STORAGE_KEY = 'openai_api_key'
+
+// Get API key from environment (Expo public env vars)
+const ENV_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || null
+
+let cachedApiKey: string | null = null
+
+// ============= API KEY MANAGEMENT =============
+
+export async function setOpenAIApiKey(apiKey: string): Promise<void> {
+  await AsyncStorage.setItem(API_KEY_STORAGE_KEY, apiKey)
+  cachedApiKey = apiKey
+}
+
+export async function getOpenAIApiKey(): Promise<string | null> {
+  // Priority: cached > AsyncStorage > environment variable
+  if (cachedApiKey) return cachedApiKey
+
+  // Try AsyncStorage first
+  const storedKey = await AsyncStorage.getItem(API_KEY_STORAGE_KEY)
+  if (storedKey) {
+    cachedApiKey = storedKey
+    return cachedApiKey
+  }
+
+  // Fall back to environment variable
+  if (ENV_API_KEY) {
+    cachedApiKey = ENV_API_KEY
+    return cachedApiKey
+  }
+
+  return null
+}
+
+export async function hasOpenAIApiKey(): Promise<boolean> {
+  const key = await getOpenAIApiKey()
+  return key !== null && key.length > 0
+}
+
+export async function clearOpenAIApiKey(): Promise<void> {
+  await AsyncStorage.removeItem(API_KEY_STORAGE_KEY)
+  cachedApiKey = null
+}
+
+// ============= OPENAI API CALL =============
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string | Array<{ type: string; text?: string; image_url?: { url: string; detail?: string } }>
+}
+
+async function callOpenAI(
+  messages: ChatMessage[],
+  options: {
+    model?: string
+    maxTokens?: number
+    temperature?: number
+    timeout?: number
+  } = {}
+): Promise<string> {
+  const apiKey = await getOpenAIApiKey()
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured')
+  }
+
+  const { model = 'gpt-4o-mini', maxTokens = 1500, temperature = 0.7, timeout = 30000 } = options
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const response = await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_tokens: maxTokens,
+        temperature,
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.error?.message || `API Error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+
+    if (!content) {
+      throw new Error('No response from AI')
+    }
+
+    return content
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout')
+    }
+    throw error
+  }
+}
+
+function extractJSON<T = Record<string, unknown>>(text: string): T {
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) {
+    throw new Error('Could not parse AI response')
+  }
+  return JSON.parse(jsonMatch[0]) as T
+}
+
+// ============= FOOD ANALYSIS =============
+
+/**
+ * Analyze a food image using GPT-4 Vision
+ */
+export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResult> {
+  try {
+    // Ensure we have the full data URL format
+    let imageUrl = imageBase64
+    if (!imageBase64.startsWith('data:')) {
+      imageUrl = `data:image/jpeg;base64,${imageBase64}`
+    }
+
+    const response = await callOpenAI(
+      [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl,
+                detail: 'low',
+              },
+            },
+            {
+              type: 'text',
+              text: FOOD_ANALYSIS_PROMPT,
+            },
+          ],
+        },
+      ],
+      { model: 'gpt-4o-mini', maxTokens: 1024 }
+    )
+
+    const result = extractJSON(response) as { foods?: AnalyzedFood[]; description?: string }
+    const foods: AnalyzedFood[] = result.foods || []
+
+    const totalNutrition = foods.reduce(
+      (acc, food) => ({
+        calories: acc.calories + food.nutrition.calories,
+        proteins: acc.proteins + food.nutrition.proteins,
+        carbs: acc.carbs + food.nutrition.carbs,
+        fats: acc.fats + food.nutrition.fats,
+      }),
+      { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    )
+
+    return {
+      success: true,
+      foods,
+      totalNutrition,
+      description: result.description,
+    }
+  } catch (error) {
+    console.error('Food analysis error:', error)
+    return {
+      success: false,
+      foods: [],
+      totalNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+      error: error instanceof Error ? error.message : "Erreur lors de l'analyse",
+    }
+  }
+}
+
+/**
+ * Analyze food from voice/text description
+ */
+export async function analyzeFoodDescription(description: string): Promise<FoodAnalysisResult> {
+  try {
+    const response = await callOpenAI(
+      [{ role: 'user', content: FOOD_DESCRIPTION_PROMPT(description) }],
+      { model: 'gpt-4o-mini', maxTokens: 1024 }
+    )
+
+    const result = extractJSON(response) as { foods?: AnalyzedFood[]; description?: string }
+    const foods: AnalyzedFood[] = result.foods || []
+
+    const totalNutrition = foods.reduce(
+      (acc, food) => ({
+        calories: acc.calories + food.nutrition.calories,
+        proteins: acc.proteins + food.nutrition.proteins,
+        carbs: acc.carbs + food.nutrition.carbs,
+        fats: acc.fats + food.nutrition.fats,
+      }),
+      { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    )
+
+    return {
+      success: true,
+      foods,
+      totalNutrition,
+      description: result.description,
+    }
+  } catch (error) {
+    console.error('Food description analysis error:', error)
+    return {
+      success: false,
+      foods: [],
+      totalNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+      error: error instanceof Error ? error.message : "Erreur lors de l'analyse",
+    }
+  }
+}
+
+// ============= RECIPE GENERATION =============
+
+/**
+ * Generate a recipe based on user preferences
+ */
+export async function generateRecipe(params: {
+  mealType: string
+  description?: string
+  maxCalories?: number
+  dietType?: string
+  restrictions?: string[]
+}): Promise<AIRecipeResult> {
+  try {
+    const prompt = RECIPE_GENERATION_PROMPT(params)
+    const response = await callOpenAI([{ role: 'user', content: prompt }], { maxTokens: 1500 })
+
+    const recipe = extractJSON<AIRecipe>(response)
+
+    return {
+      success: true,
+      recipe,
+    }
+  } catch (error) {
+    console.error('Recipe generation error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de la generation',
+    }
+  }
+}
+
+/**
+ * Generate a personalized meal suggestion based on user profile and remaining nutrition
+ */
+export async function suggestMeal(params: {
+  mealType: string
+  userProfile: UserProfile
+  consumed: NutritionInfo
+  theme?: string
+}): Promise<AIRecipeResult> {
+  try {
+    const { mealType, userProfile, consumed, theme } = params
+
+    const userContext = generateUserProfileContext(userProfile)
+    const nutritionContext = generateRemainingNutritionContext(
+      userProfile.nutritionalNeeds || { calories: 2000, proteins: 100, carbs: 250, fats: 70, fiber: 30, water: 2 },
+      consumed
+    )
+    const mealGuidelines = MEAL_TYPE_GUIDELINES[mealType] || ''
+    const themePrompt = theme || getThemedPrompt()
+
+    const prompt = `${MEAL_PLANNER_SYSTEM_PROMPT}
+
+${userContext}
+
+${nutritionContext}
+
+${mealGuidelines}
+
+${themePrompt}
+
+Genere une recette pour ce ${mealType} qui respecte toutes ces contraintes.
+
+Reponds UNIQUEMENT en JSON:
+{
+  "title": "Nom de la recette",
+  "description": "Description courte et appetissante",
+  "ingredients": [
+    { "name": "ingredient", "amount": "quantite", "calories": 50 }
+  ],
+  "instructions": ["etape 1", "etape 2"],
+  "nutrition": {
+    "calories": 450,
+    "proteins": 25,
+    "carbs": 40,
+    "fats": 15
+  },
+  "prepTime": 30,
+  "servings": 2
+}`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], { maxTokens: 1500 })
+    const recipe = extractJSON<AIRecipe>(response)
+
+    // Generate image in background (don't wait, but update when ready)
+    // For now, generate synchronously to show image in modal
+    try {
+      const imageUrl = await generateRecipeImage(recipe.title)
+      if (imageUrl) {
+        recipe.imageUrl = imageUrl
+      }
+    } catch (imgError) {
+      console.log('Image generation skipped:', imgError)
+    }
+
+    return {
+      success: true,
+      recipe,
+    }
+  } catch (error) {
+    console.error('Meal suggestion error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de la suggestion',
+    }
+  }
+}
+
+// ============= IMAGE GENERATION =============
+
+const DALLE_API_URL = 'https://api.openai.com/v1/images/generations'
+
+/**
+ * Generate a food image using DALL-E 3
+ */
+export async function generateRecipeImage(recipeTitle: string): Promise<string | null> {
+  try {
+    const apiKey = await getOpenAIApiKey()
+    if (!apiKey) {
+      console.log('No API key for image generation')
+      return null
+    }
+
+    const prompt = `Professional food photography of "${recipeTitle}".
+Appetizing plated dish, elegant presentation on a white ceramic plate,
+soft natural lighting from the side, shallow depth of field,
+garnished beautifully, restaurant quality, top-down angle,
+clean minimalist background, high resolution, photorealistic.
+Style: Modern French cuisine photography, Michelin star presentation.`
+
+    const response = await fetch(DALLE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'dall-e-3',
+        prompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        style: 'natural',
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      console.error('DALL-E error:', error)
+      return null
+    }
+
+    const data = await response.json()
+    return data.data?.[0]?.url || null
+  } catch (error) {
+    console.error('Image generation error:', error)
+    return null
+  }
+}
+
+// ============= RECIPE TRANSLATION =============
+
+/**
+ * Translate a German recipe to French and enrich with nutrition data
+ */
+export async function translateRecipe(recipe: {
+  title: string
+  description?: string
+  ingredients: { name: string; amount: number; unit: string }[]
+  instructions: string[]
+}): Promise<{ success: boolean; translated?: TranslatedRecipe; error?: string }> {
+  try {
+    const prompt = RECIPE_TRANSLATION_PROMPT(recipe)
+    const response = await callOpenAI([{ role: 'user', content: prompt }], { maxTokens: 2000 })
+    const translated = extractJSON<TranslatedRecipe>(response)
+
+    return {
+      success: true,
+      translated,
+    }
+  } catch (error) {
+    console.error('Recipe translation error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de la traduction',
+    }
+  }
+}
+
+/**
+ * Batch translate multiple recipes
+ */
+export async function translateRecipesBatch(
+  recipes: Array<{
+    id: string
+    title: string
+    description?: string
+    ingredients: { name: string; amount: number; unit: string }[]
+    instructions: string[]
+  }>
+): Promise<Map<string, TranslatedRecipe>> {
+  const results = new Map<string, TranslatedRecipe>()
+
+  // Process in parallel with limit of 3
+  const batchSize = 3
+  for (let i = 0; i < recipes.length; i += batchSize) {
+    const batch = recipes.slice(i, i + batchSize)
+    const promises = batch.map(async recipe => {
+      const result = await translateRecipe(recipe)
+      if (result.success && result.translated) {
+        results.set(recipe.id, result.translated)
+      }
+    })
+    await Promise.all(promises)
+  }
+
+  return results
+}
+
+// ============= SHOPPING LIST =============
+
+/**
+ * Generate a shopping list from meal plan
+ */
+export async function generateShoppingList(params: {
+  meals: Array<{ title: string; ingredients: string[] }>
+  budget?: number
+  servings?: number
+}): Promise<{
+  success: boolean
+  list?: {
+    categories: Array<{
+      name: string
+      items: Array<{ name: string; quantity: string; estimatedPrice: number }>
+      subtotal: number
+    }>
+    total: number
+    tips: string[]
+  }
+  error?: string
+}> {
+  try {
+    const { meals, budget, servings = 2 } = params
+
+    const prompt = `Tu es un assistant cuisine expert du marche francais.
+Genere une liste de courses organisee par rayon de supermarche.
+
+REPAS PREVUS:
+${meals.map(m => `- ${m.title}: ${m.ingredients.join(', ')}`).join('\n')}
+
+Nombre de portions par repas: ${servings}
+${budget ? `Budget maximum: ${budget}EUR` : ''}
+
+REGLES:
+- Regrouper les ingredients similaires
+- Estimer les quantites reelles a acheter
+- Prix basés sur les supermarches francais (Carrefour, Leclerc, etc.)
+- Proposer 2-3 astuces economie
+
+Reponds UNIQUEMENT en JSON:
+{
+  "categories": [
+    {
+      "name": "Fruits et Legumes",
+      "items": [
+        { "name": "Tomates", "quantity": "500g", "estimatedPrice": 2.50 }
+      ],
+      "subtotal": 5.00
+    }
+  ],
+  "total": 35.00,
+  "tips": ["Astuce 1", "Astuce 2"]
+}`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], {
+      model: 'gpt-4o',
+      maxTokens: 2000,
+    })
+
+    const list = extractJSON(response) as {
+      categories: Array<{
+        name: string
+        items: Array<{ name: string; quantity: string; estimatedPrice: number }>
+        subtotal: number
+      }>
+      total: number
+      tips: string[]
+    }
+
+    return {
+      success: true,
+      list,
+    }
+  } catch (error) {
+    console.error('Shopping list generation error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de la generation',
+    }
+  }
+}
+
+// ============= WEEKLY PLANNER =============
+
+/**
+ * Generate a meal for a specific day/type in weekly plan
+ */
+export async function generatePlanMeal(params: {
+  day: number // 0-6 (Sunday-Saturday)
+  mealType: string
+  userProfile: UserProfile
+  targetCalories: number
+  existingMeals: string[] // titles of meals already in the plan to avoid repetition
+  isCheatMeal?: boolean
+}): Promise<AIRecipeResult> {
+  try {
+    const { day, mealType, userProfile, targetCalories, existingMeals, isCheatMeal } = params
+
+    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+
+    // Build user profile context
+    const dietContext: string[] = []
+    if (userProfile.dietType && userProfile.dietType !== 'omnivore') {
+      dietContext.push(`Regime alimentaire: ${userProfile.dietType}`)
+    }
+    if (userProfile.allergies?.length) {
+      dietContext.push(`Allergies/intolerance: ${userProfile.allergies.join(', ')}`)
+    }
+
+    // Meal type specific constraints
+    const mealConstraints: Record<string, { description: string; minCal: number; maxCal: number }> = {
+      breakfast: {
+        description: 'Petit-dejeuner equilibre et fait maison',
+        minCal: 250,
+        maxCal: 500
+      },
+      lunch: {
+        description: 'Dejeuner complet avec proteines, feculents et legumes',
+        minCal: 400,
+        maxCal: 700
+      },
+      snack: {
+        description: 'Collation legere (fruit, yaourt, noix)',
+        minCal: 100,
+        maxCal: 200
+      },
+      dinner: {
+        description: 'Diner leger mais rassasiant',
+        minCal: 350,
+        maxCal: 600
+      },
+    }
+
+    const constraint = mealConstraints[mealType] || mealConstraints.lunch
+
+    // Clamp target calories to realistic range
+    const clampedCalories = Math.max(constraint.minCal, Math.min(constraint.maxCal, targetCalories))
+
+    // Avoid repetition - only show last 5 meals
+    const recentMeals = existingMeals.slice(-5)
+
+    const prompt = `Tu es un chef cuisinier francais. Cree une recette FAIT MAISON.
+
+REGLES STRICTES:
+- Recette cuisinee a la maison avec ingredients frais
+- PAS de plats industriels, pre-emballes, surgeles ou fast-food
+- PAS de soupes en boite, conserves preparees, ou plats a rechauffer
+- Calories totales: exactement ${clampedCalories} kcal (+-50 kcal)
+${dietContext.length > 0 ? `- ${dietContext.join('\n- ')}` : ''}
+
+Type: ${constraint.description}
+Jour: ${dayNames[day]}
+${isCheatMeal ? 'NOTE: Repas plaisir du week-end - peut etre plus gourmand mais toujours fait maison!' : ''}
+${recentMeals.length > 0 ? `Eviter (deja dans le plan): ${recentMeals.join(', ')}` : ''}
+
+Reponds UNIQUEMENT en JSON valide:
+{
+  "title": "Nom du plat",
+  "description": "Description courte",
+  "ingredients": [
+    {"name": "ingredient", "amount": "quantite avec unite", "calories": nombre}
+  ],
+  "instructions": ["etape 1", "etape 2"],
+  "nutrition": {"calories": ${clampedCalories}, "proteins": nombre, "carbs": nombre, "fats": nombre},
+  "prepTime": nombre_minutes,
+  "servings": 1
+}`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], {
+      maxTokens: 1200,
+      timeout: 45000,
+    })
+
+    const recipe = extractJSON<AIRecipe>(response)
+
+    // Validate and fix calories if way off
+    if (recipe && recipe.nutrition) {
+      const diff = Math.abs(recipe.nutrition.calories - clampedCalories)
+      if (diff > clampedCalories * 0.5) {
+        // Calories are way off, use target instead
+        recipe.nutrition.calories = clampedCalories
+      }
+    }
+
+    return {
+      success: true,
+      recipe,
+    }
+  } catch (error) {
+    console.error('Plan meal generation error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur lors de la generation',
+    }
+  }
+}
+
+export default {
+  // API Key
+  setOpenAIApiKey,
+  getOpenAIApiKey,
+  hasOpenAIApiKey,
+  clearOpenAIApiKey,
+  // Food Analysis
+  analyzeFood,
+  analyzeFoodDescription,
+  // Recipe
+  generateRecipe,
+  suggestMeal,
+  translateRecipe,
+  translateRecipesBatch,
+  generateRecipeImage,
+  // Planning
+  generateShoppingList,
+  generatePlanMeal,
+}

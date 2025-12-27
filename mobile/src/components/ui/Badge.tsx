@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, StyleSheet, ViewStyle } from 'react-native'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 
-type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'error'
+export type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'outline'
 type BadgeSize = 'sm' | 'default'
 
 interface BadgeProps {
@@ -18,7 +18,7 @@ export function Badge({
   size = 'default',
   style,
 }: BadgeProps) {
-  const variantStyles: Record<BadgeVariant, { bg: string; text: string }> = {
+  const variantStyles: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
     default: {
       bg: colors.accent.light,
       text: colors.accent.primary,
@@ -39,6 +39,15 @@ export function Badge({
       bg: `${colors.error}20`,
       text: colors.error,
     },
+    info: {
+      bg: 'rgba(59, 130, 246, 0.15)',
+      text: '#3B82F6',
+    },
+    outline: {
+      bg: 'transparent',
+      text: colors.text.secondary,
+      border: colors.border.default,
+    },
   }
 
   const sizeStyles: Record<BadgeSize, ViewStyle> = {
@@ -52,11 +61,14 @@ export function Badge({
     },
   }
 
+  const currentVariant = variantStyles[variant]
+
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: variantStyles[variant].bg },
+        { backgroundColor: currentVariant.bg },
+        currentVariant.border ? { borderWidth: 1, borderColor: currentVariant.border } : null,
         sizeStyles[size],
         style,
       ]}
@@ -65,7 +77,7 @@ export function Badge({
         style={[
           styles.text,
           size === 'sm' ? typography.caption : typography.small,
-          { color: variantStyles[variant].text },
+          { color: currentVariant.text },
         ]}
       >
         {children}

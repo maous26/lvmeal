@@ -1,10 +1,5 @@
 import React from 'react'
 import { View, StyleSheet, ViewStyle } from 'react-native'
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated'
 import { colors, radius } from '../../constants/theme'
 
 interface ProgressBarProps {
@@ -12,8 +7,7 @@ interface ProgressBarProps {
   max: number
   color?: string
   backgroundColor?: string
-  size?: 'sm' | 'default' | 'lg'
-  animated?: boolean
+  size?: 'sm' | 'md' | 'default' | 'lg'
   showOverflow?: boolean
   style?: ViewStyle
 }
@@ -24,7 +18,6 @@ export function ProgressBar({
   color = colors.accent.primary,
   backgroundColor = colors.bg.tertiary,
   size = 'default',
-  animated = true,
   showOverflow = false,
   style,
 }: ProgressBarProps) {
@@ -33,19 +26,10 @@ export function ProgressBar({
 
   const heights = {
     sm: 4,
+    md: 6,
     default: 8,
     lg: 12,
   }
-
-  const animatedStyle = useAnimatedStyle(() => {
-    const width = animated
-      ? withSpring(percentage, { damping: 15, stiffness: 100 })
-      : withTiming(percentage, { duration: 300 })
-
-    return {
-      width: `${Math.min(width, 100)}%`,
-    }
-  }, [percentage, animated])
 
   return (
     <View
@@ -55,11 +39,11 @@ export function ProgressBar({
         style,
       ]}
     >
-      <Animated.View
+      <View
         style={[
           styles.fill,
-          animatedStyle,
           {
+            width: `${Math.min(percentage, 100)}%`,
             backgroundColor: isOverflow ? colors.warning : color,
             borderRadius: radius.full,
           },

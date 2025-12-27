@@ -29,23 +29,30 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { formatNumber } from '../lib/utils'
 
-const goalLabels = {
+const goalLabels: Record<string, string> = {
+  weight_loss: 'Perdre du poids',
   lose: 'Perdre du poids',
   maintain: 'Maintenir',
+  maintenance: 'Maintenir',
   gain: 'Prendre du poids',
+  muscle_gain: 'Prise de muscle',
   muscle: 'Prise de muscle',
+  health: 'Améliorer ma santé',
+  energy: 'Plus d\'énergie',
 }
 
-const activityLabels = {
+const activityLabels: Record<string, string> = {
   sedentary: 'Sédentaire',
   light: 'Légèrement actif',
   moderate: 'Modérément actif',
   active: 'Actif',
   very_active: 'Très actif',
+  athlete: 'Athlète',
 }
 
-const dietLabels = {
+const dietLabels: Record<string, string> = {
   none: 'Sans restriction',
+  omnivore: 'Omnivore',
   vegetarian: 'Végétarien',
   vegan: 'Vegan',
   pescatarian: 'Pescatarien',
@@ -207,7 +214,7 @@ export default function ProfileScreen() {
             <View style={styles.goalInfo}>
               <Text style={styles.goalLabel}>Régime alimentaire</Text>
               <Text style={styles.goalValue}>
-                {dietLabels[profile?.diet || 'none']}
+                {dietLabels[profile?.dietType || 'omnivore']}
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />

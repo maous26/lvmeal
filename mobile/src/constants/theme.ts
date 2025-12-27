@@ -22,6 +22,7 @@ export const colors = {
   // Accent - Bleu Océan VIF
   accent: {
     primary: '#0077B6',
+    secondary: '#6366F1', // Indigo secondary accent
     hover: '#005F8F',
     light: '#E0F4FF',
     muted: '#90CDF4',
@@ -54,6 +55,7 @@ export const colors = {
   border: {
     light: '#E2E8F0',
     default: '#CBD5E1',
+    medium: '#94A3B8',
     focus: '#0077B6',
   },
 }

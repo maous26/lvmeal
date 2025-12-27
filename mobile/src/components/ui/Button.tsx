@@ -10,7 +10,7 @@ import {
 import * as Haptics from 'expo-haptics'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 
-type ButtonVariant = 'default' | 'secondary' | 'outline' | 'ghost' | 'danger'
+export type ButtonVariant = 'default' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 type ButtonSize = 'sm' | 'default' | 'lg'
 
 interface ButtonProps {
@@ -45,6 +45,10 @@ export function Button({
 
   const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
     default: {
+      container: { backgroundColor: colors.accent.primary },
+      text: { color: '#FFFFFF' },
+    },
+    primary: {
       container: { backgroundColor: colors.accent.primary },
       text: { color: '#FFFFFF' },
     },
