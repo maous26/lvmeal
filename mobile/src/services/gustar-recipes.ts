@@ -126,13 +126,22 @@ class GustarRecipesService {
     }
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
       const response = await fetch(`${BASE_URL}/search_api?${searchParams}`, {
         method: 'GET',
         headers: this.getHeaders(),
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`)
+        // Log as warning, not error, to avoid red console display
+        console.warn(`Gustar API returned ${response.status}`)
+        // Return empty result instead of throwing
+        return { recipes: [], total: 0, hasMore: false }
       }
 
       const data = await response.json()
@@ -140,8 +149,9 @@ class GustarRecipesService {
       // Transform response to our format
       return this.transformSearchResponse(data)
     } catch (error) {
-      console.error('Error searching recipes:', error)
-      throw error
+      // Silently handle errors and return empty results
+      console.warn('Gustar search unavailable:', error instanceof Error ? error.message : 'Unknown error')
+      return { recipes: [], total: 0, hasMore: false }
     }
   }
 

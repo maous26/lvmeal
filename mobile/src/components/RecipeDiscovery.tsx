@@ -48,10 +48,10 @@ import type { Recipe, MealType } from '../types'
 // API Key for Gustar.io
 const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
 
-// Popular search terms for auto-fetch
+// Popular search terms for auto-fetch (German terms for Gustar API)
 const POPULAR_SEARCHES = [
-  'poulet', 'salade', 'pasta', 'saumon', 'legumes',
-  'soupe', 'riz', 'boeuf', 'vegetarien', 'dessert'
+  'huhn', 'salat', 'nudeln', 'lachs', 'gemuse',
+  'suppe', 'reis', 'rindfleisch', 'kuchen', 'kartoffel'
 ]
 
 // Filter options

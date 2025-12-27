@@ -13,12 +13,13 @@ import type { MealType, Recipe } from '../../types'
 // API Key for Gustar.io
 const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
 
-// Search terms based on meal type for personalized suggestions
+// Search terms based on meal type for personalized suggestions (German terms for Gustar API)
+// Using common German food terms that work with the API
 const MEAL_TYPE_SEARCHES: Record<MealType, string[]> = {
-  breakfast: ['fruhstuck', 'pancakes', 'eier', 'smoothie', 'muesli'],
-  lunch: ['salat', 'suppe', 'bowl', 'sandwich', 'pasta'],
-  snack: ['snack', 'energie', 'riegel', 'obst', 'joghurt'],
-  dinner: ['abendessen', 'huhn', 'fisch', 'gemuse', 'reis'],
+  breakfast: ['haferflocken', 'pfannkuchen', 'ei', 'brot', 'joghurt'],
+  lunch: ['salat', 'suppe', 'nudeln', 'reis', 'kartoffel'],
+  snack: ['kuchen', 'keks', 'obst', 'nuss', 'riegel'],
+  dinner: ['huhn', 'fisch', 'fleisch', 'gemuse', 'auflauf'],
 }
 
 interface MealSuggestionsProps {
