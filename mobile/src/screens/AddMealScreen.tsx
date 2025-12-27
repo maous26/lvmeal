@@ -33,6 +33,7 @@ import {
   Star,
   Apple,
   Heart,
+  Globe,
   Trash2,
   ChefHat,
   Wand2,
@@ -144,13 +145,13 @@ function transformGustarToRecipe(gustar: GustarRecipe): Recipe {
 }
 
 // Input methods with large icons like web
-// Note: "Decouvrir" removed - accessible via "Voir tout" in MealSuggestions on HomeScreen
 const inputMethods = [
   { id: 'search', label: 'Rechercher', icon: Search, color: colors.accent.primary, bgColor: '#EBF5FF' },
   { id: 'photo', label: 'Photo', icon: Camera, color: '#E11D48', bgColor: '#FFF1F2' },
   { id: 'voice', label: 'Vocal', icon: Mic, color: '#8B5CF6', bgColor: '#F3E8FF' },
   { id: 'barcode', label: 'Code-barres', icon: Barcode, color: colors.success, bgColor: '#ECFDF5' },
   { id: 'ai-recipe', label: 'Recette IA', icon: Sparkles, color: '#F59E0B', bgColor: '#FFFBEB' },
+  { id: 'discover-recipes', label: 'Decouvrir', icon: Globe, color: '#06B6D4', bgColor: '#ECFEFF' },
   { id: 'favorites', label: 'Mes favoris', icon: Heart, color: '#EC4899', bgColor: '#FDF2F8' },
 ]
 
@@ -514,6 +515,9 @@ export default function AddMealScreen() {
         break
       case 'ai-recipe':
         setShowAIRecipeModal(true)
+        break
+      case 'discover-recipes':
+        setShowDiscoverModal(true)
         break
       case 'favorites':
         setActiveMethod('favorites')

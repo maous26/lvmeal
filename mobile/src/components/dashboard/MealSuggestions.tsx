@@ -8,7 +8,7 @@ import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../../services/gustar-recipes'
-import { translateGustarRecipesFast, hasOpenAIApiKey } from '../../services/ai-service'
+import { enrichRecipesBatch, hasOpenAIApiKey, type RecipeToEnrich, type EnrichedRecipe } from '../../services/ai-service'
 import type { MealType, Recipe } from '../../types'
 
 // API Key for Gustar.io
@@ -278,7 +278,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
 
   const [gustarSuggestions, setGustarSuggestions] = useState<SuggestedMeal[]>([])
   const [isLoadingGustar, setIsLoadingGustar] = useState(false)
-  const [translations, setTranslations] = useState<Map<string, { titleFr: string; descriptionFr: string }>>(new Map())
+  const [enrichedRecipes, setEnrichedRecipes] = useState<Map<string, EnrichedRecipe>>(new Map())
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -288,34 +288,49 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const remainingProteins = Math.max(0, goals.proteins - totals.proteins)
   const currentMealType = getCurrentMealType()
 
-  // Translate Gustar recipes
-  const translateSuggestions = useCallback(async (suggestions: SuggestedMeal[]) => {
+  // Enrich Gustar recipes with full French content
+  const enrichSuggestions = useCallback(async (suggestions: SuggestedMeal[], recipes: GustarRecipe[]) => {
     const hasKey = await hasOpenAIApiKey()
     if (!hasKey || suggestions.length === 0) return
 
     try {
-      const toTranslate = suggestions.filter(s => s.isGustar && !translations.has(s.id))
-      if (toTranslate.length === 0) return
+      const toEnrich = suggestions.filter(s => s.isGustar && !enrichedRecipes.has(s.id))
+      if (toEnrich.length === 0) return
 
-      const translationMap = await translateGustarRecipesFast(
-        toTranslate.map(s => ({
+      // Convert to RecipeToEnrich format
+      const recipesToEnrich: RecipeToEnrich[] = toEnrich.map(s => {
+        const originalRecipe = recipes.find(r => r.id === s.id)
+        return {
           id: s.id,
           title: s.name,
           description: s.reason,
-        }))
-      )
+          ingredients: originalRecipe?.ingredients || [],
+          instructions: originalRecipe?.instructions || [],
+          servings: originalRecipe?.servings || 2,
+          nutrition: {
+            calories: s.calories,
+            proteins: s.proteins,
+            carbs: s.carbs,
+            fats: s.fats,
+          },
+        }
+      })
 
-      setTranslations(prev => {
+      console.log(`MealSuggestions: Enriching ${recipesToEnrich.length} recipes...`)
+      const enrichedMap = await enrichRecipesBatch(recipesToEnrich)
+
+      setEnrichedRecipes(prev => {
         const newMap = new Map(prev)
-        translationMap.forEach((value, key) => {
+        enrichedMap.forEach((value, key) => {
           newMap.set(key, value)
         })
         return newMap
       })
+      console.log(`MealSuggestions: Enriched ${enrichedMap.size} recipes`)
     } catch (error) {
-      console.warn('Translation failed:', error)
+      console.warn('Enrichment failed:', error)
     }
-  }, [translations])
+  }, [enrichedRecipes])
 
   // Initialize Gustar API and fetch personalized suggestions
   useEffect(() => {
@@ -362,8 +377,8 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
 
         setGustarSuggestions(transformed)
 
-        // Translate in background
-        translateSuggestions(transformed)
+        // Enrich in background with full French content
+        enrichSuggestions(transformed, response.recipes)
       } catch (error) {
         console.warn('Failed to fetch Gustar suggestions:', error)
       } finally {
@@ -372,7 +387,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     }
 
     fetchGustarSuggestions()
-  }, [currentMealType, profile?.dietType, remainingCalories, translateSuggestions])
+  }, [currentMealType, profile?.dietType, remainingCalories, enrichSuggestions])
 
   // Get top-rated AI recipes for current meal type
   const topRatedAIRecipes = useMemo(() =>
@@ -447,7 +462,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   )
 
   // Combine all sources: AI recipes first, then favorites, Gustar, then defaults
-  // Apply translations to Gustar recipes
+  // Apply enriched French content to Gustar recipes
   const suggestions = useMemo(() => {
     const combined: SuggestedMeal[] = []
 
@@ -459,20 +474,24 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
       combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
     }
 
-    // 3. Gustar recipes (with translations applied)
+    // 3. Gustar recipes (with enriched French content applied)
     if (combined.length < 3 && gustarSuggestions.length > 0) {
-      const translatedGustar = gustarSuggestions.map(suggestion => {
-        const translation = translations.get(suggestion.id)
-        if (translation) {
+      const enrichedGustar = gustarSuggestions.map(suggestion => {
+        const enriched = enrichedRecipes.get(suggestion.id)
+        if (enriched) {
           return {
             ...suggestion,
-            name: translation.titleFr,
-            reason: translation.descriptionFr || suggestion.reason,
+            name: enriched.titleFr,
+            reason: enriched.descriptionFr || suggestion.reason,
+            calories: enriched.nutrition.calories,
+            proteins: enriched.nutrition.proteins,
+            carbs: enriched.nutrition.carbs,
+            fats: enriched.nutrition.fats,
           }
         }
         return suggestion
       })
-      combined.push(...translatedGustar.slice(0, 3 - combined.length))
+      combined.push(...enrichedGustar.slice(0, 3 - combined.length))
     }
 
     // 4. Fill with defaults
@@ -482,7 +501,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     }
 
     return combined
-  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions, translations])
+  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions, enrichedRecipes])
 
   const handlePress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)

@@ -43,7 +43,7 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
 import { useUserStore } from '../stores/user-store'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../services/gustar-recipes'
-import { translateGustarRecipesFast, hasOpenAIApiKey } from '../services/ai-service'
+import { enrichRecipesBatch, hasOpenAIApiKey, type RecipeToEnrich, type EnrichedRecipe } from '../services/ai-service'
 import type { Recipe, MealType } from '../types'
 
 // API Key for Gustar.io
@@ -334,7 +334,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [gustarRecipesList, setGustarRecipesList] = useState<Recipe[]>([])
-  const [translations, setTranslations] = useState<Map<string, { titleFr: string; descriptionFr: string }>>(new Map())
+  const [enrichedRecipes, setEnrichedRecipes] = useState<Map<string, EnrichedRecipe>>(new Map())
 
   // Filters
   const [selectedMealType, setSelectedMealType] = useState('')
@@ -410,51 +410,67 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
     initAndFetch()
   }, [profile?.dietType])
 
-  // Translate recipes when list changes
-  const translateRecipes = useCallback(async (recipes: Recipe[]) => {
+  // Enrich recipes with full French content (ingredients, instructions, nutrition)
+  const enrichRecipesFromGustar = useCallback(async (recipes: Recipe[]) => {
     // Check if API key is available
     const hasKey = await hasOpenAIApiKey()
     if (!hasKey) {
-      console.log('RecipeDiscovery: No OpenAI key, skipping translation')
+      console.log('RecipeDiscovery: No OpenAI key, skipping enrichment')
       return
     }
     if (recipes.length === 0) return
 
     setIsTranslating(true)
     try {
-      // Only translate recipes not already translated
-      const toTranslate = recipes.filter(r => !translations.has(r.id))
-      if (toTranslate.length === 0) {
-        console.log('RecipeDiscovery: All recipes already translated')
+      // Only enrich recipes not already enriched
+      const toEnrich = recipes.filter(r => !enrichedRecipes.has(r.id))
+      if (toEnrich.length === 0) {
+        console.log('RecipeDiscovery: All recipes already enriched')
         setIsTranslating(false)
         return
       }
 
-      console.log(`RecipeDiscovery: Translating ${toTranslate.length} recipes...`)
-      const translationMap = await translateGustarRecipesFast(
-        toTranslate.map(r => ({
-          id: r.id,
-          title: r.title,
-          description: r.description,
-        }))
-      )
+      console.log(`RecipeDiscovery: Enriching ${toEnrich.length} recipes...`)
 
-      console.log(`RecipeDiscovery: Got ${translationMap.size} translations`)
+      // Convert to RecipeToEnrich format
+      const recipesToEnrich: RecipeToEnrich[] = toEnrich.map(r => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        ingredients: r.ingredients.map(ing => ({
+          name: ing.name,
+          amount: ing.amount,
+          unit: ing.unit,
+        })),
+        instructions: r.instructions,
+        servings: r.servings,
+        nutrition: r.nutritionPerServing || null,
+      }))
 
-      // Merge with existing translations
-      setTranslations(prev => {
+      // Enrich in batches of 3
+      const allEnriched = new Map<string, EnrichedRecipe>()
+      for (let i = 0; i < recipesToEnrich.length; i += 3) {
+        const batch = recipesToEnrich.slice(i, i + 3)
+        const enrichedBatch = await enrichRecipesBatch(batch)
+        enrichedBatch.forEach((value, key) => allEnriched.set(key, value))
+      }
+
+      console.log(`RecipeDiscovery: Got ${allEnriched.size} enriched recipes`)
+
+      // Merge with existing enriched recipes
+      setEnrichedRecipes(prev => {
         const newMap = new Map(prev)
-        translationMap.forEach((value, key) => {
+        allEnriched.forEach((value, key) => {
           newMap.set(key, value)
         })
         return newMap
       })
     } catch (error) {
-      console.warn('Translation failed:', error)
+      console.warn('Enrichment failed:', error)
     } finally {
       setIsTranslating(false)
     }
-  }, [translations])
+  }, [enrichedRecipes])
 
   const fetchPopularRecipes = async () => {
     // Ensure API is initialized
@@ -507,8 +523,8 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
         setGustarRecipesList(FALLBACK_RECIPES)
       } else {
         setGustarRecipesList(uniqueRecipes)
-        // Translate recipes in background (only for Gustar recipes, not fallbacks)
-        translateRecipes(uniqueRecipes)
+        // Enrich recipes in background (only for Gustar recipes, not fallbacks)
+        enrichRecipesFromGustar(uniqueRecipes)
       }
     } catch (error) {
       console.warn('Failed to fetch popular recipes:', error)
@@ -535,8 +551,8 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
       const transformed = response.recipes.map(transformGustarToRecipe)
       setGustarRecipesList(transformed)
 
-      // Translate search results in background
-      translateRecipes(transformed)
+      // Enrich search results in background
+      enrichRecipesFromGustar(transformed)
     } catch (error) {
       console.warn('Search failed:', error)
     } finally {
@@ -674,22 +690,45 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
     )
   }
 
-  // Render Gustar recipe card with translation
+  // Render Gustar recipe card with enriched French content
   const renderGustarRecipeCard = (recipe: Recipe) => {
     const difficulty = getDifficulty(recipe.difficulty)
-    const translation = translations.get(recipe.id)
-    const displayTitle = translation?.titleFr || recipe.title
-    const displayDescription = translation?.descriptionFr || recipe.description
+    const enriched = enrichedRecipes.get(recipe.id)
+
+    // Use enriched data if available
+    const displayTitle = enriched?.titleFr || recipe.title
+    const displayDescription = enriched?.descriptionFr || recipe.description
+
+    // Build enriched recipe for detail view
+    const enrichedRecipeForDetail: Recipe = enriched ? {
+      ...recipe,
+      title: enriched.titleFr,
+      description: enriched.descriptionFr,
+      ingredients: enriched.ingredientsFr.map((ing, idx) => ({
+        id: `${recipe.id}-ing-${idx}`,
+        name: ing.name,
+        amount: ing.amount,
+        unit: ing.unit,
+      })),
+      instructions: enriched.instructionsFr,
+      nutritionPerServing: enriched.nutrition,
+      nutrition: {
+        calories: enriched.nutrition.calories * recipe.servings,
+        proteins: enriched.nutrition.proteins * recipe.servings,
+        carbs: enriched.nutrition.carbs * recipe.servings,
+        fats: enriched.nutrition.fats * recipe.servings,
+      },
+    } : {
+      ...recipe,
+      title: displayTitle,
+      description: displayDescription,
+    }
 
     return (
       <Card
         key={recipe.id}
         style={styles.recipeCard}
-        onPress={() => handleRecipePress({
-          ...recipe,
-          title: displayTitle,
-          description: displayDescription,
-        })}
+        onPress={() => handleRecipePress(enrichedRecipeForDetail)}
         padding="none"
       >
         <View style={styles.recipeCardRow}>
@@ -709,6 +748,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
               <Globe size={10} color="#FFFFFF" />
               <Text style={styles.sourceBadgeText}>{recipe.source || 'Web'}</Text>
             </View>
+            {enriched && (
+              <View style={styles.frenchBadge}>
+                <Text style={styles.frenchBadgeText}>FR</Text>
+              </View>
+            )}
           </View>
 
           {/* Content */}
@@ -723,11 +767,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
               )}
               <View style={styles.metaItem}>
                 <Flame size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{recipe.nutritionPerServing?.calories || 0} kcal</Text>
+                <Text style={styles.metaText}>{enriched?.nutrition.calories || recipe.nutritionPerServing?.calories || 0} kcal</Text>
               </View>
               <View style={styles.metaItem}>
                 <Dumbbell size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{recipe.nutritionPerServing?.proteins || 0}g</Text>
+                <Text style={styles.metaText}>{enriched?.nutrition.proteins || recipe.nutritionPerServing?.proteins || 0}g</Text>
               </View>
             </View>
             <View style={styles.recipeFooter}>
@@ -1194,6 +1238,21 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: '#FFFFFF',
     fontSize: 8,
+  },
+  frenchBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  frenchBadgeText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '700',
   },
   recipeContent: {
     flex: 1,

@@ -594,6 +594,217 @@ Réponds UNIQUEMENT avec un JSON valide (sans markdown):
   return results
 }
 
+// ============= RECIPE ENRICHMENT =============
+
+export interface RecipeToEnrich {
+  id: string
+  title: string
+  description?: string
+  ingredients: Array<{ name: string; amount: number; unit: string }>
+  instructions?: string[]
+  servings: number
+  nutrition?: {
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+  } | null
+}
+
+export interface EnrichedRecipe {
+  id: string
+  titleFr: string
+  descriptionFr: string
+  ingredientsFr: Array<{ name: string; amount: number; unit: string }>
+  instructionsFr: string[]
+  nutrition: {
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+  }
+}
+
+/**
+ * Enrich a single Gustar recipe with full French translation and nutrition
+ * Rewrites the recipe completely in French with proper instructions
+ */
+export async function enrichRecipe(recipe: RecipeToEnrich): Promise<EnrichedRecipe | null> {
+  try {
+    const needsNutrition = !recipe.nutrition ||
+      recipe.nutrition.calories === 0 ||
+      recipe.nutrition.proteins === 0
+
+    const ingredientsList = recipe.ingredients
+      .map(ing => `${ing.amount} ${ing.unit} ${ing.name}`)
+      .join('\n')
+
+    const instructionsList = recipe.instructions?.length
+      ? recipe.instructions.join('\n')
+      : 'Aucune instruction fournie'
+
+    const prompt = `Tu es un expert en nutrition et en traduction culinaire.
+
+Voici une recette en allemand à enrichir et traduire complètement en français:
+
+**Titre:** ${recipe.title}
+**Description:** ${recipe.description || 'Aucune description'}
+**Portions:** ${recipe.servings}
+**Ingrédients:**
+${ingredientsList}
+**Instructions:**
+${instructionsList}
+
+${needsNutrition ? 'Les données nutritionnelles sont manquantes ou incomplètes.' : `Données nutritionnelles existantes: ${JSON.stringify(recipe.nutrition)}`}
+
+Réponds UNIQUEMENT avec un JSON valide (sans markdown, sans \`\`\`) contenant:
+{
+  "titleFr": "Titre traduit en français (naturel et appétissant)",
+  "descriptionFr": "Description traduite en français (2-3 phrases, donne envie)",
+  "ingredientsFr": [
+    { "name": "nom de l'ingrédient en français", "amount": quantité, "unit": "unité en français" },
+    ...
+  ],
+  "instructionsFr": [
+    "Étape 1 en français...",
+    "Étape 2 en français...",
+    ...
+  ],
+  "nutrition": {
+    "calories": <nombre estimé de kcal par portion>,
+    "proteins": <grammes de protéines par portion>,
+    "carbs": <grammes de glucides par portion>,
+    "fats": <grammes de lipides par portion>
+  }
+}
+
+Instructions importantes:
+- Traduis TOUS les ingrédients en français avec les bonnes unités (g, ml, c. à soupe, etc.)
+- ${recipe.instructions?.length ? 'Traduis les instructions en français, étape par étape, de façon claire et détaillée.' : 'Génère des instructions de préparation logiques et détaillées en français basées sur le titre et les ingrédients (4-8 étapes).'}
+- ${needsNutrition ? 'Estime les valeurs nutritionnelles par portion.' : 'Garde les valeurs nutritionnelles si correctes.'}
+
+Réponds UNIQUEMENT avec le JSON, rien d'autre.`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], {
+      maxTokens: 1500,
+      temperature: 0.7,
+      timeout: 30000,
+    })
+
+    // Parse the JSON response
+    const cleanJson = response
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim()
+    const enrichedData = JSON.parse(cleanJson)
+
+    return {
+      id: recipe.id,
+      titleFr: enrichedData.titleFr,
+      descriptionFr: enrichedData.descriptionFr,
+      ingredientsFr: enrichedData.ingredientsFr || recipe.ingredients,
+      instructionsFr: enrichedData.instructionsFr || [],
+      nutrition: enrichedData.nutrition,
+    }
+  } catch (error) {
+    console.warn('Recipe enrichment error:', error instanceof Error ? error.message : 'Unknown')
+    return null
+  }
+}
+
+/**
+ * Batch enrich multiple Gustar recipes (max 3 at a time)
+ * Returns a Map of recipe id -> enriched data
+ */
+export async function enrichRecipesBatch(
+  recipes: RecipeToEnrich[]
+): Promise<Map<string, EnrichedRecipe>> {
+  const results = new Map<string, EnrichedRecipe>()
+
+  if (recipes.length === 0) return results
+
+  // Limit batch size to 3 for complete enrichment
+  const batch = recipes.slice(0, 3)
+
+  try {
+    const recipesInfo = batch.map((r, i) => {
+      const needsNutrition = !r.nutrition || r.nutrition.calories === 0
+      const ingredientsList = r.ingredients
+        .map(ing => `${ing.amount} ${ing.unit} ${ing.name}`)
+        .join(', ')
+      const instructionsList = r.instructions?.length
+        ? r.instructions.join(' | ')
+        : 'Aucune'
+
+      return `
+[Recette ${i + 1}]
+ID: ${r.id}
+Titre: ${r.title}
+Description: ${r.description || 'Aucune'}
+Portions: ${r.servings}
+Ingrédients: ${ingredientsList}
+Instructions: ${instructionsList}
+Nutrition existante: ${needsNutrition ? 'MANQUANTE' : JSON.stringify(r.nutrition)}`
+    }).join('\n\n')
+
+    const prompt = `Tu es un expert en nutrition et traduction culinaire.
+
+Voici ${batch.length} recettes en allemand à enrichir et traduire COMPLÈTEMENT en français:
+
+${recipesInfo}
+
+Réponds UNIQUEMENT avec un JSON valide (sans markdown) contenant un tableau:
+[
+  {
+    "id": "id_de_la_recette",
+    "titleFr": "Titre en français",
+    "descriptionFr": "Description appétissante en français (2-3 phrases)",
+    "ingredientsFr": [
+      { "name": "ingrédient en français", "amount": quantité, "unit": "unité" },
+      ...
+    ],
+    "instructionsFr": [
+      "Étape 1...",
+      "Étape 2...",
+      ...
+    ],
+    "nutrition": { "calories": X, "proteins": X, "carbs": X, "fats": X }
+  },
+  ...
+]
+
+Pour chaque recette:
+- Traduis le titre et la description en français
+- Traduis TOUS les ingrédients en français avec les bonnes unités
+- Traduis ou génère 4-8 étapes de préparation claires et détaillées en français
+- Estime ou corrige les valeurs nutritionnelles par portion
+
+Important: Réponds UNIQUEMENT avec le JSON, rien d'autre.`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], {
+      maxTokens: 4000,
+      temperature: 0.7,
+      timeout: 45000,
+    })
+
+    const cleanJson = response
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim()
+    const enrichedRecipes = JSON.parse(cleanJson) as EnrichedRecipe[]
+
+    for (const enriched of enrichedRecipes) {
+      results.set(enriched.id, enriched)
+    }
+
+    console.log(`Enriched ${results.size}/${batch.length} recipes successfully`)
+  } catch (error) {
+    console.warn('Batch enrichment error:', error instanceof Error ? error.message : 'Unknown')
+  }
+
+  return results
+}
+
 // ============= SHOPPING LIST =============
 
 /**
