@@ -59,6 +59,7 @@ import { translateRecipe, suggestMeal, type AIRecipe } from '../services/ai-serv
 import BarcodeScanner from '../components/BarcodeScanner'
 import PhotoFoodScanner from '../components/PhotoFoodScanner'
 import VoiceFoodInput from '../components/VoiceFoodInput'
+import RecipeDiscovery from '../components/RecipeDiscovery'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -1630,7 +1631,7 @@ export default function AddMealScreen() {
           </SafeAreaView>
         </Modal>
 
-        {/* Discover Modal */}
+        {/* Discover Modal - Now using RecipeDiscovery component */}
         <Modal visible={showDiscoverModal} animationType="slide" presentationStyle="pageSheet">
           <SafeAreaView style={styles.recipeModalContainer}>
             {/* Modal Header */}
@@ -1642,157 +1643,13 @@ export default function AddMealScreen() {
               <View style={{ width: 40 }} />
             </View>
 
-            <ScrollView style={styles.recipeModalScroll} showsVerticalScrollIndicator={false}>
-              {/* Search Input */}
-              <View style={styles.discoverSearchRow}>
-                <View style={[styles.discoverSearchInput, { flex: 1 }]}>
-                  <Search size={18} color={colors.text.tertiary} />
-                  <TextInput
-                    style={styles.discoverSearchText}
-                    placeholder="Rechercher (poulet, pasta, salade...)"
-                    placeholderTextColor={colors.text.muted}
-                    value={discoverSearchQuery}
-                    onChangeText={setDiscoverSearchQuery}
-                    onSubmitEditing={handleDiscoverSearch}
-                    returnKeyType="search"
-                  />
-                </View>
-                <TouchableOpacity
-                  style={styles.discoverSearchButton}
-                  onPress={handleDiscoverSearch}
-                  disabled={isDiscoverLoading || !discoverSearchQuery.trim()}
-                >
-                  {isDiscoverLoading ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.discoverSearchButtonText}>Chercher</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Diet Filters */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.dietScroll}
-                contentContainerStyle={styles.dietContent}
-              >
-                {dietFilters.map((diet) => (
-                  <TouchableOpacity
-                    key={diet.id}
-                    style={[styles.dietChip, selectedDiet === diet.id && styles.dietChipActive]}
-                    onPress={() => {
-                      setSelectedDiet(diet.id)
-                      if (discoverSearchQuery.trim()) {
-                        handleDiscoverSearch()
-                      }
-                    }}
-                  >
-                    <Text style={styles.dietEmoji}>{diet.emoji}</Text>
-                    <Text style={[styles.dietLabel, selectedDiet === diet.id && styles.dietLabelActive]}>
-                      {diet.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              {/* Results */}
-              {discoverSearchInfo && (
-                <View style={styles.resultsHeader}>
-                  <Text style={styles.resultsCount}>
-                    {discoverSearchInfo.total} recette{discoverSearchInfo.total > 1 ? 's' : ''} trouvee{discoverSearchInfo.total > 1 ? 's' : ''}
-                  </Text>
-                  {isEnriching && (
-                    <View style={styles.enrichingBadge}>
-                      <Sparkles size={12} color={colors.accent.primary} />
-                      <Text style={styles.enrichingText}>Traduction...</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* Recipe List */}
-              {discoverRecipes.length > 0 && (
-                <View style={styles.discoverRecipesList}>
-                  {discoverRecipes.map((recipe) => {
-                    const difficulty = getDifficulty(recipe.difficulty)
-                    return (
-                      <Card key={recipe.id} style={styles.discoverCard} onPress={() => handleRecipePress(recipe)} padding="none">
-                        <View style={styles.discoverCardRow}>
-                          {/* Image */}
-                          <View style={styles.discoverImageContainer}>
-                            {recipe.imageUrl ? (
-                              <Image source={{ uri: recipe.imageUrl }} style={styles.discoverImage} resizeMode="cover" />
-                            ) : (
-                              <LinearGradient
-                                colors={[`${colors.accent.primary}30`, `${colors.secondary.primary}30`]}
-                                style={styles.discoverImagePlaceholder}
-                              >
-                                <ChefHat size={32} color={colors.accent.primary} />
-                              </LinearGradient>
-                            )}
-                            <View style={styles.sourceBadge}>
-                              <Globe size={10} color="#FFFFFF" />
-                              <Text style={styles.sourceBadgeText}>{recipe.source || 'Web'}</Text>
-                            </View>
-                          </View>
-
-                          {/* Content */}
-                          <View style={styles.discoverContent}>
-                            <Text style={styles.discoverTitle} numberOfLines={2}>
-                              {recipe.title}
-                            </Text>
-                            <View style={styles.discoverMeta}>
-                              {(recipe.totalTime ?? 0) > 0 && (
-                                <View style={styles.metaItem}>
-                                  <Clock size={12} color={colors.text.tertiary} />
-                                  <Text style={styles.metaText}>{recipe.totalTime} min</Text>
-                                </View>
-                              )}
-                              <View style={styles.metaItem}>
-                                <Flame size={12} color={colors.text.tertiary} />
-                                <Text style={styles.metaText}>{recipe.nutritionPerServing?.calories || 0} kcal</Text>
-                              </View>
-                              <View style={styles.metaItem}>
-                                <Dumbbell size={12} color={colors.text.tertiary} />
-                                <Text style={styles.metaText}>{recipe.nutritionPerServing?.proteins || 0}g</Text>
-                              </View>
-                            </View>
-                            <View style={styles.discoverFooter}>
-                              <Badge variant="outline" size="sm" style={{ borderColor: difficulty.color }}>
-                                <Text style={{ color: difficulty.color, fontSize: 10 }}>{difficulty.label}</Text>
-                              </Badge>
-                              <Text style={styles.servingsText}>{recipe.servings} pers.</Text>
-                            </View>
-                          </View>
-                        </View>
-                      </Card>
-                    )
-                  })}
-                </View>
-              )}
-
-              {/* Empty/Initial States */}
-              {!isDiscoverLoading && discoverRecipes.length === 0 && !discoverSearchQuery && (
-                <View style={styles.discoverInitialState}>
-                  <View style={styles.initialIconContainer}>
-                    <Search size={24} color={colors.accent.primary} />
-                  </View>
-                  <Text style={styles.initialText}>Recherchez des recettes</Text>
-                  <Text style={styles.initialSubtext}>Trouvez l'inspiration parmi des milliers de recettes</Text>
-                </View>
-              )}
-
-              {!isDiscoverLoading && discoverRecipes.length === 0 && discoverSearchQuery && discoverSearchInfo?.total === 0 && (
-                <View style={styles.emptyState}>
-                  <ChefHat size={40} color={colors.text.muted} />
-                  <Text style={styles.emptyStateText}>Aucune recette trouvee</Text>
-                  <Text style={styles.emptyStateSubtext}>Essayez avec d'autres mots-cles</Text>
-                </View>
-              )}
-
-              <View style={{ height: spacing['3xl'] }} />
-            </ScrollView>
+            {/* Recipe Discovery Component with auto-fetch and filters */}
+            <RecipeDiscovery
+              onRecipePress={(recipe) => {
+                handleRecipePress(recipe)
+              }}
+              onClose={() => setShowDiscoverModal(false)}
+            />
           </SafeAreaView>
         </Modal>
 

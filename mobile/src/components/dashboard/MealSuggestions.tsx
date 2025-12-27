@@ -1,20 +1,32 @@
-import React, { useMemo } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
-import { Clock, Flame, ChevronRight, Sparkles, Timer, Star } from 'lucide-react-native'
+import React, { useMemo, useEffect, useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
+import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, Globe } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { Card } from '../ui/Card'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
+import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../../services/gustar-recipes'
 import type { MealType, Recipe } from '../../types'
+
+// API Key for Gustar.io
+const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
+
+// Search terms based on meal type for personalized suggestions
+const MEAL_TYPE_SEARCHES: Record<MealType, string[]> = {
+  breakfast: ['fruhstuck', 'pancakes', 'eier', 'smoothie', 'muesli'],
+  lunch: ['salat', 'suppe', 'bowl', 'sandwich', 'pasta'],
+  snack: ['snack', 'energie', 'riegel', 'obst', 'joghurt'],
+  dinner: ['abendessen', 'huhn', 'fisch', 'gemuse', 'reis'],
+}
 
 interface MealSuggestionsProps {
   onSuggestionPress?: (recipe: SuggestedMeal) => void
   onViewAll?: () => void
 }
 
-interface SuggestedMeal {
+export interface SuggestedMeal {
   id: string
   name: string
   calories: number
@@ -29,7 +41,9 @@ interface SuggestedMeal {
   tags: string[]
   imageUrl?: string
   isAI?: boolean
+  isGustar?: boolean
   rating?: number
+  source?: string
 }
 
 // Get current meal type based on time
@@ -258,7 +272,10 @@ const generateSuggestions = (
 export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestionsProps) {
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
-  const { getTopRatedAIRecipes } = useRecipesStore()
+  const { getTopRatedAIRecipes, favoriteRecipes } = useRecipesStore()
+
+  const [gustarSuggestions, setGustarSuggestions] = useState<SuggestedMeal[]>([])
+  const [isLoadingGustar, setIsLoadingGustar] = useState(false)
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -268,11 +285,101 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const remainingProteins = Math.max(0, goals.proteins - totals.proteins)
   const currentMealType = getCurrentMealType()
 
+  // Initialize Gustar API and fetch personalized suggestions
+  useEffect(() => {
+    const fetchGustarSuggestions = async () => {
+      if (!GUSTAR_API_KEY) return
+
+      try {
+        gustarRecipes.init(GUSTAR_API_KEY)
+        setIsLoadingGustar(true)
+
+        // Get search terms for current meal type
+        const searchTerms = MEAL_TYPE_SEARCHES[currentMealType]
+        const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+
+        const response = await gustarRecipes.searchRecipes({
+          query: randomTerm,
+          diet: profile?.dietType as DietaryPreference | undefined,
+          limit: 3,
+        })
+
+        // Transform to SuggestedMeal format
+        const transformed: SuggestedMeal[] = response.recipes
+          .filter(recipe => {
+            // Filter by calories if we have remaining budget
+            const cals = recipe.nutrition?.calories || 0
+            return cals <= remainingCalories + 200
+          })
+          .slice(0, 2)
+          .map(recipe => ({
+            id: recipe.id,
+            name: recipe.title,
+            calories: recipe.nutrition?.calories || 0,
+            proteins: recipe.nutrition?.proteins || 0,
+            carbs: recipe.nutrition?.carbs || 0,
+            fats: recipe.nutrition?.fats || 0,
+            prepTime: recipe.prepTime || 20,
+            category: 'Gustar',
+            mealType: currentMealType,
+            emoji: '🌍',
+            reason: 'Recommande pour vous',
+            tags: ['Web', recipe.dietary?.[0] || 'Populaire'].filter(Boolean),
+            imageUrl: recipe.image,
+            isGustar: true,
+            rating: 4.5,
+            source: 'Gustar.io',
+          }))
+
+        setGustarSuggestions(transformed)
+      } catch (error) {
+        console.warn('Failed to fetch Gustar suggestions:', error)
+      } finally {
+        setIsLoadingGustar(false)
+      }
+    }
+
+    fetchGustarSuggestions()
+  }, [currentMealType, profile?.dietType, remainingCalories])
+
   // Get top-rated AI recipes for current meal type
   const topRatedAIRecipes = useMemo(() =>
     getTopRatedAIRecipes(currentMealType, 3),
     [currentMealType, getTopRatedAIRecipes]
   )
+
+  // Get favorite recipes matching current meal type (based on calories)
+  const favoriteSuggestions: SuggestedMeal[] = useMemo(() => {
+    return favoriteRecipes
+      .filter(recipe => {
+        const cals = recipe.nutritionPerServing?.calories || recipe.nutrition?.calories || 0
+        // Match by calorie range for meal type
+        switch (currentMealType) {
+          case 'breakfast': return cals >= 200 && cals <= 500
+          case 'lunch': return cals >= 400 && cals <= 800
+          case 'snack': return cals >= 50 && cals <= 300
+          case 'dinner': return cals >= 350 && cals <= 700
+          default: return true
+        }
+      })
+      .slice(0, 1)
+      .map(recipe => ({
+        id: recipe.id,
+        name: recipe.title,
+        calories: recipe.nutritionPerServing?.calories || recipe.nutrition?.calories || 0,
+        proteins: recipe.nutritionPerServing?.proteins || recipe.nutrition?.proteins || 0,
+        carbs: recipe.nutritionPerServing?.carbs || recipe.nutrition?.carbs || 0,
+        fats: recipe.nutritionPerServing?.fats || recipe.nutrition?.fats || 0,
+        prepTime: recipe.prepTime || 0,
+        category: 'Favori',
+        mealType: currentMealType,
+        emoji: '❤️',
+        reason: 'Un de vos favoris',
+        tags: ['Favori', `${recipe.rating || 5}★`],
+        imageUrl: recipe.imageUrl,
+        rating: recipe.rating || 5,
+      }))
+  }, [favoriteRecipes, currentMealType])
 
   // Convert AI recipes to SuggestedMeal format
   const aiSuggestions: SuggestedMeal[] = useMemo(() =>
@@ -307,15 +414,31 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     [remainingCalories, remainingProteins, currentMealType, profile?.dietType]
   )
 
-  // Combine: AI recipes first, then fill with defaults
+  // Combine all sources: AI recipes first, then favorites, Gustar, then defaults
   const suggestions = useMemo(() => {
-    const combined = [...aiSuggestions]
+    const combined: SuggestedMeal[] = []
+
+    // 1. Top-rated AI recipes (priority)
+    combined.push(...aiSuggestions.slice(0, 2))
+
+    // 2. Favorite recipes if any
+    if (combined.length < 3 && favoriteSuggestions.length > 0) {
+      combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
+    }
+
+    // 3. Gustar recipes
+    if (combined.length < 3 && gustarSuggestions.length > 0) {
+      combined.push(...gustarSuggestions.slice(0, 3 - combined.length))
+    }
+
+    // 4. Fill with defaults
     const remaining = 3 - combined.length
     if (remaining > 0) {
       combined.push(...defaultSuggestions.slice(0, remaining))
     }
+
     return combined
-  }, [aiSuggestions, defaultSuggestions])
+  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions])
 
   const handlePress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -378,6 +501,11 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
               {suggestion.isAI && (
                 <View style={styles.aibadge}>
                   <Sparkles size={10} color="#FFFFFF" />
+                </View>
+              )}
+              {suggestion.isGustar && (
+                <View style={styles.gustarbadge}>
+                  <Globe size={10} color="#FFFFFF" />
                 </View>
               )}
               {suggestion.rating && suggestion.rating > 0 && (
@@ -516,6 +644,17 @@ const styles = StyleSheet.create({
     top: 4,
     left: 4,
     backgroundColor: '#8B5CF6',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gustarbadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: '#06B6D4',
     borderRadius: 10,
     width: 20,
     height: 20,
