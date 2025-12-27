@@ -149,7 +149,7 @@ async function searchFoodDatabases(
     const result = await searchFoods({
       query,
       limit,
-      source: 'ciqual', // Skip OFF to avoid timeouts during plan generation
+      source: 'generic', // Use CIQUAL only - skip OFF to avoid timeouts during plan generation
     })
 
     return result.products.map(food => ({

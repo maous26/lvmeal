@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react'
+import React, { useMemo, useEffect, useState, useCallback } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, Globe } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
@@ -8,6 +8,7 @@ import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../../services/gustar-recipes'
+import { translateGustarRecipesFast, hasOpenAIApiKey } from '../../services/ai-service'
 import type { MealType, Recipe } from '../../types'
 
 // API Key for Gustar.io
@@ -277,6 +278,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
 
   const [gustarSuggestions, setGustarSuggestions] = useState<SuggestedMeal[]>([])
   const [isLoadingGustar, setIsLoadingGustar] = useState(false)
+  const [translations, setTranslations] = useState<Map<string, { titleFr: string; descriptionFr: string }>>(new Map())
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -285,6 +287,35 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const remainingCalories = Math.max(0, goals.calories - totals.calories)
   const remainingProteins = Math.max(0, goals.proteins - totals.proteins)
   const currentMealType = getCurrentMealType()
+
+  // Translate Gustar recipes
+  const translateSuggestions = useCallback(async (suggestions: SuggestedMeal[]) => {
+    const hasKey = await hasOpenAIApiKey()
+    if (!hasKey || suggestions.length === 0) return
+
+    try {
+      const toTranslate = suggestions.filter(s => s.isGustar && !translations.has(s.id))
+      if (toTranslate.length === 0) return
+
+      const translationMap = await translateGustarRecipesFast(
+        toTranslate.map(s => ({
+          id: s.id,
+          title: s.name,
+          description: s.reason,
+        }))
+      )
+
+      setTranslations(prev => {
+        const newMap = new Map(prev)
+        translationMap.forEach((value, key) => {
+          newMap.set(key, value)
+        })
+        return newMap
+      })
+    } catch (error) {
+      console.warn('Translation failed:', error)
+    }
+  }, [translations])
 
   // Initialize Gustar API and fetch personalized suggestions
   useEffect(() => {
@@ -302,16 +333,13 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
         const response = await gustarRecipes.searchRecipes({
           query: randomTerm,
           diet: profile?.dietType as DietaryPreference | undefined,
-          limit: 3,
+          limit: 5,
         })
 
-        // Transform to SuggestedMeal format
+        console.log(`MealSuggestions: Got ${response.recipes.length} recipes for "${randomTerm}"`)
+
+        // Transform to SuggestedMeal format (relaxed calorie filter)
         const transformed: SuggestedMeal[] = response.recipes
-          .filter(recipe => {
-            // Filter by calories if we have remaining budget
-            const cals = recipe.nutrition?.calories || 0
-            return cals <= remainingCalories + 200
-          })
           .slice(0, 2)
           .map(recipe => ({
             id: recipe.id,
@@ -333,6 +361,9 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
           }))
 
         setGustarSuggestions(transformed)
+
+        // Translate in background
+        translateSuggestions(transformed)
       } catch (error) {
         console.warn('Failed to fetch Gustar suggestions:', error)
       } finally {
@@ -341,7 +372,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     }
 
     fetchGustarSuggestions()
-  }, [currentMealType, profile?.dietType, remainingCalories])
+  }, [currentMealType, profile?.dietType, remainingCalories, translateSuggestions])
 
   // Get top-rated AI recipes for current meal type
   const topRatedAIRecipes = useMemo(() =>
@@ -416,6 +447,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   )
 
   // Combine all sources: AI recipes first, then favorites, Gustar, then defaults
+  // Apply translations to Gustar recipes
   const suggestions = useMemo(() => {
     const combined: SuggestedMeal[] = []
 
@@ -427,9 +459,20 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
       combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
     }
 
-    // 3. Gustar recipes
+    // 3. Gustar recipes (with translations applied)
     if (combined.length < 3 && gustarSuggestions.length > 0) {
-      combined.push(...gustarSuggestions.slice(0, 3 - combined.length))
+      const translatedGustar = gustarSuggestions.map(suggestion => {
+        const translation = translations.get(suggestion.id)
+        if (translation) {
+          return {
+            ...suggestion,
+            name: translation.titleFr,
+            reason: translation.descriptionFr || suggestion.reason,
+          }
+        }
+        return suggestion
+      })
+      combined.push(...translatedGustar.slice(0, 3 - combined.length))
     }
 
     // 4. Fill with defaults
@@ -439,7 +482,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     }
 
     return combined
-  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions])
+  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions, translations])
 
   const handlePress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)

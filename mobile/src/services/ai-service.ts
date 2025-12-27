@@ -524,6 +524,76 @@ export async function translateRecipesBatch(
   return results
 }
 
+/**
+ * Fast batch translation for Gustar recipes (titles and descriptions only)
+ * Optimized for quick display - translates multiple recipes in a single API call
+ */
+export async function translateGustarRecipesFast(
+  recipes: Array<{
+    id: string
+    title: string
+    description?: string
+  }>
+): Promise<Map<string, { titleFr: string; descriptionFr: string }>> {
+  const results = new Map<string, { titleFr: string; descriptionFr: string }>()
+
+  if (recipes.length === 0) return results
+
+  try {
+    const recipesInfo = recipes
+      .map(
+        (r, i) =>
+          `[${i + 1}] ID: ${r.id}
+Titre: ${r.title}
+Description: ${r.description || 'Non disponible'}`
+      )
+      .join('\n\n')
+
+    const prompt = `Tu es un expert en traduction culinaire allemand-français.
+Traduis ces ${recipes.length} titres et descriptions de recettes allemandes en français.
+
+${recipesInfo}
+
+RÈGLES:
+- Titres: naturels, appétissants, typiquement français
+- Descriptions: courtes (1-2 phrases max), appétissantes
+- Si pas de description originale, invente-en une courte et appétissante
+
+Réponds UNIQUEMENT avec un JSON valide (sans markdown):
+[
+  {
+    "id": "id_original",
+    "titleFr": "Titre traduit",
+    "descriptionFr": "Description traduite"
+  }
+]`
+
+    const response = await callOpenAI([{ role: 'user', content: prompt }], {
+      maxTokens: 2000,
+      temperature: 0.7,
+      timeout: 20000,
+    })
+
+    // Parse response
+    const cleanJson = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const translations = JSON.parse(cleanJson) as Array<{
+      id: string
+      titleFr: string
+      descriptionFr: string
+    }>
+
+    // Map results
+    for (const t of translations) {
+      results.set(t.id, { titleFr: t.titleFr, descriptionFr: t.descriptionFr })
+    }
+  } catch (error) {
+    console.warn('Fast translation error:', error instanceof Error ? error.message : 'Unknown')
+    // Return empty map - recipes will display in German
+  }
+
+  return results
+}
+
 // ============= SHOPPING LIST =============
 
 /**
@@ -736,6 +806,7 @@ export default {
   suggestMeal,
   translateRecipe,
   translateRecipesBatch,
+  translateGustarRecipesFast,
   generateRecipeImage,
   // Planning
   generateShoppingList,

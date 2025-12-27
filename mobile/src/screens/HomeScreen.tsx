@@ -109,9 +109,9 @@ export default function HomeScreen() {
     navigation.navigate('WeeklyPlan')
   }
 
-  const handleNavigateToAddMeal = (type: MealType = 'lunch') => {
+  const handleNavigateToAddMeal = (type: MealType = 'lunch', openDiscover: boolean = false) => {
     // @ts-ignore - Navigation typing
-    navigation.navigate('AddMeal', { type })
+    navigation.navigate('AddMeal', { type, openDiscover })
   }
 
   return (
@@ -290,7 +290,7 @@ export default function HomeScreen() {
             }}
             onViewAll={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              handleNavigateToAddMeal()
+              handleNavigateToAddMeal('lunch', true)
             }}
           />
         </View>

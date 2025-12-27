@@ -14,7 +14,8 @@
 const RAPIDAPI_HOST = 'gustar-io-deutsche-rezepte.p.rapidapi.com'
 const BASE_URL = `https://${RAPIDAPI_HOST}`
 
-// Dietary preferences supported by the API
+// Dietary preferences supported by the Gustar API
+// Note: "omnivore" is NOT supported - only these specific diets
 export type DietaryPreference =
   | 'vegetarian'
   | 'vegan'
@@ -25,6 +26,24 @@ export type DietaryPreference =
   | 'lowcarb'
   | 'dairyfree'
   | 'lowfodmap'
+
+// List of valid diet values for API validation
+const VALID_DIETS: DietaryPreference[] = [
+  'vegetarian',
+  'vegan',
+  'glutenfree',
+  'pescatarian',
+  'paleo',
+  'keto',
+  'lowcarb',
+  'dairyfree',
+  'lowfodmap',
+]
+
+// Check if a diet value is valid for the API
+function isValidDiet(diet: string | undefined): diet is DietaryPreference {
+  return diet !== undefined && VALID_DIETS.includes(diet as DietaryPreference)
+}
 
 export interface GustarRecipe {
   id: string
@@ -92,15 +111,29 @@ class GustarRecipesService {
   }
 
   /**
-   * Get headers for API requests
+   * Get headers for API requests (GET)
    */
   private getHeaders(): HeadersInit {
     if (!this.apiKey) {
       throw new Error('Gustar API key not configured. Call init() first.')
     }
+    // Don't include Content-Type for GET requests - can cause 400 errors
     return {
-      'x-rapidapi-host': RAPIDAPI_HOST,
-      'x-rapidapi-key': this.apiKey,
+      'X-RapidAPI-Host': RAPIDAPI_HOST,
+      'X-RapidAPI-Key': this.apiKey,
+    }
+  }
+
+  /**
+   * Get headers for API requests (POST)
+   */
+  private getPostHeaders(): HeadersInit {
+    if (!this.apiKey) {
+      throw new Error('Gustar API key not configured. Call init() first.')
+    }
+    return {
+      'X-RapidAPI-Host': RAPIDAPI_HOST,
+      'X-RapidAPI-Key': this.apiKey,
       'Content-Type': 'application/json',
     }
   }
@@ -117,7 +150,9 @@ class GustarRecipesService {
       offset: offset.toString(),
     })
 
-    if (diet) {
+    // Only add diet parameter if it's a valid Gustar API value
+    // "omnivore" and other non-standard values will be ignored
+    if (isValidDiet(diet)) {
       searchParams.append('diet', diet)
     }
 
@@ -129,22 +164,30 @@ class GustarRecipesService {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
 
-      const response = await fetch(`${BASE_URL}/search_api?${searchParams}`, {
+      const url = `${BASE_URL}/search_api?${searchParams}`
+      const headers = this.getHeaders()
+
+      console.log('Gustar API request:', url)
+      console.log('Gustar API key configured:', this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'NONE')
+
+      const response = await fetch(url, {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers,
         signal: controller.signal,
       })
 
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        // Log as warning, not error, to avoid red console display
-        console.warn(`Gustar API returned ${response.status}`)
+        // Log more details for debugging
+        const errorText = await response.text().catch(() => 'Unable to read error')
+        console.warn(`Gustar API returned ${response.status}: ${errorText}`)
         // Return empty result instead of throwing
         return { recipes: [], total: 0, hasMore: false }
       }
 
       const data = await response.json()
+      console.log('Gustar API success! Raw response length:', Array.isArray(data) ? data.length : 'not array')
 
       // Transform response to our format
       return this.transformSearchResponse(data)
@@ -184,7 +227,7 @@ class GustarRecipesService {
     try {
       const response = await fetch(`${BASE_URL}/dietClassifier`, {
         method: 'POST',
-        headers: this.getHeaders(),
+        headers: this.getPostHeaders(),
         body: JSON.stringify({ ingredients }),
       })
 
@@ -204,22 +247,17 @@ class GustarRecipesService {
    * Transform API search response to our format
    */
   private transformSearchResponse(apiResponse: unknown): SearchRecipesResponse {
-    // The actual API response structure may vary
-    // This is a placeholder transformation
-    const data = apiResponse as {
-      results?: unknown[]
-      total?: number
-      hasMore?: boolean
-    }
+    // API returns array directly, not wrapped in object
+    const recipesArray = Array.isArray(apiResponse) ? apiResponse : []
 
-    const recipes: GustarRecipe[] = (data.results || []).map((item: unknown) =>
+    const recipes: GustarRecipe[] = recipesArray.map((item: unknown) =>
       this.transformRecipe(item)
     )
 
     return {
       recipes,
-      total: data.total || recipes.length,
-      hasMore: data.hasMore || false,
+      total: recipes.length,
+      hasMore: recipes.length >= 10, // Assume more if we got a full page
     }
   }
 
@@ -229,21 +267,33 @@ class GustarRecipesService {
   private transformRecipe(apiRecipe: unknown): GustarRecipe {
     const recipe = apiRecipe as Record<string, unknown>
 
+    // Extract image from image_urls array
+    const imageUrls = recipe.image_urls as string[] | undefined
+    const image = imageUrls && imageUrls.length > 0 ? imageUrls[0] : undefined
+
+    // totalTime is in seconds, convert to minutes
+    const totalTimeSeconds = recipe.totalTime as number | undefined
+    const prepTime = totalTimeSeconds ? Math.round(totalTimeSeconds / 60) : undefined
+
+    // Map difficulty from string
+    const difficultyStr = recipe.difficulty as string | undefined
+    const difficulty = difficultyStr === 'easy' ? 'easy' : difficultyStr === 'hard' ? 'hard' : 'medium'
+
     return {
-      id: String(recipe.id || recipe._id || Math.random().toString(36)),
+      id: String(recipe.id || recipe._id || recipe.source || Math.random().toString(36)),
       title: String(recipe.title || recipe.name || 'Untitled'),
-      description: recipe.description as string | undefined,
-      image: recipe.image as string | undefined,
-      prepTime: recipe.prepTime as number | undefined,
-      cookTime: recipe.cookTime as number | undefined,
-      servings: recipe.servings as number | undefined,
-      difficulty: recipe.difficulty as 'easy' | 'medium' | 'hard' | undefined,
+      description: recipe.keywords as string | undefined,
+      image,
+      prepTime,
+      cookTime: undefined,
+      servings: recipe.portions as number | undefined,
+      difficulty: difficultyStr ? difficulty : undefined,
       ingredients: this.transformIngredients(recipe.ingredients),
       instructions: this.transformInstructions(recipe.instructions || recipe.steps),
       nutrition: recipe.nutrition ? this.transformNutritionResponse(recipe.nutrition) : undefined,
       dietary: recipe.dietary as DietaryPreference[] | undefined,
-      sourceUrl: recipe.sourceUrl as string | undefined,
-      sourceName: recipe.sourceName as string | undefined,
+      sourceUrl: recipe.source as string | undefined,
+      sourceName: recipe.source_url as string | undefined,
     }
   }
 

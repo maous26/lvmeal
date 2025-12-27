@@ -43,6 +43,7 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
 import { useUserStore } from '../stores/user-store'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../services/gustar-recipes'
+import { translateGustarRecipesFast, hasOpenAIApiKey } from '../services/ai-service'
 import type { Recipe, MealType } from '../types'
 
 // API Key for Gustar.io
@@ -52,6 +53,177 @@ const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
 const POPULAR_SEARCHES = [
   'huhn', 'salat', 'nudeln', 'lachs', 'gemuse',
   'suppe', 'reis', 'rindfleisch', 'kuchen', 'kartoffel'
+]
+
+// Fallback recipes in French when API is unavailable
+const FALLBACK_RECIPES: Recipe[] = [
+  {
+    id: 'fallback-1',
+    title: 'Poulet roti aux herbes',
+    description: 'Un classique francais savoureux et facile a preparer',
+    servings: 4,
+    prepTime: 15,
+    cookTime: 45,
+    totalTime: 60,
+    difficulty: 'easy',
+    category: 'plat',
+    ingredients: [
+      { id: 'f1-1', name: 'Poulet entier', amount: 1.5, unit: 'kg' },
+      { id: 'f1-2', name: 'Herbes de Provence', amount: 2, unit: 'c. a soupe' },
+      { id: 'f1-3', name: 'Ail', amount: 4, unit: 'gousses' },
+      { id: 'f1-4', name: 'Huile d\'olive', amount: 3, unit: 'c. a soupe' },
+    ],
+    instructions: ['Prechauffer le four a 200C', 'Badigeonner le poulet d\'huile et d\'herbes', 'Enfourner 45 minutes'],
+    nutrition: { calories: 1200, proteins: 100, carbs: 5, fats: 80 },
+    nutritionPerServing: { calories: 300, proteins: 25, carbs: 1, fats: 20 },
+    tags: ['Classique', 'Famille'],
+    dietTypes: [],
+    allergens: [],
+    rating: 4.7,
+    ratingCount: 234,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'fallback-2',
+    title: 'Salade Nicoise',
+    description: 'Une salade mediterraneenne complete et rafraichissante',
+    servings: 2,
+    prepTime: 20,
+    cookTime: 10,
+    totalTime: 30,
+    difficulty: 'easy',
+    category: 'salade',
+    ingredients: [
+      { id: 'f2-1', name: 'Thon', amount: 200, unit: 'g' },
+      { id: 'f2-2', name: 'Oeufs', amount: 2, unit: 'pieces' },
+      { id: 'f2-3', name: 'Tomates', amount: 2, unit: 'pieces' },
+      { id: 'f2-4', name: 'Haricots verts', amount: 150, unit: 'g' },
+    ],
+    instructions: ['Cuire les oeufs durs', 'Preparer les legumes', 'Assembler la salade'],
+    nutrition: { calories: 600, proteins: 50, carbs: 20, fats: 35 },
+    nutritionPerServing: { calories: 300, proteins: 25, carbs: 10, fats: 18 },
+    tags: ['Mediterraneen', 'Leger'],
+    dietTypes: ['pescatarian'],
+    allergens: ['oeufs', 'poisson'],
+    rating: 4.5,
+    ratingCount: 189,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'fallback-3',
+    title: 'Risotto aux champignons',
+    description: 'Cremeux et reconfortant, un delice italien',
+    servings: 4,
+    prepTime: 10,
+    cookTime: 25,
+    totalTime: 35,
+    difficulty: 'medium',
+    category: 'plat',
+    ingredients: [
+      { id: 'f3-1', name: 'Riz arborio', amount: 300, unit: 'g' },
+      { id: 'f3-2', name: 'Champignons', amount: 250, unit: 'g' },
+      { id: 'f3-3', name: 'Parmesan', amount: 80, unit: 'g' },
+      { id: 'f3-4', name: 'Bouillon', amount: 1, unit: 'L' },
+    ],
+    instructions: ['Faire revenir les champignons', 'Ajouter le riz et mouiller progressivement', 'Terminer avec le parmesan'],
+    nutrition: { calories: 1600, proteins: 40, carbs: 240, fats: 50 },
+    nutritionPerServing: { calories: 400, proteins: 10, carbs: 60, fats: 12 },
+    tags: ['Italien', 'Vegetarien'],
+    dietTypes: ['vegetarian'],
+    allergens: ['lait'],
+    rating: 4.6,
+    ratingCount: 156,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'fallback-4',
+    title: 'Saumon grille citron-aneth',
+    description: 'Poisson frais avec une touche d\'agrumes',
+    servings: 2,
+    prepTime: 10,
+    cookTime: 15,
+    totalTime: 25,
+    difficulty: 'easy',
+    category: 'poisson',
+    ingredients: [
+      { id: 'f4-1', name: 'Paves de saumon', amount: 300, unit: 'g' },
+      { id: 'f4-2', name: 'Citron', amount: 1, unit: 'piece' },
+      { id: 'f4-3', name: 'Aneth frais', amount: 1, unit: 'bouquet' },
+    ],
+    instructions: ['Mariner le saumon avec citron et aneth', 'Griller 12-15 minutes'],
+    nutrition: { calories: 500, proteins: 45, carbs: 5, fats: 32 },
+    nutritionPerServing: { calories: 250, proteins: 22, carbs: 2, fats: 16 },
+    tags: ['Omega-3', 'Rapide'],
+    dietTypes: ['pescatarian'],
+    allergens: ['poisson'],
+    rating: 4.8,
+    ratingCount: 203,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'fallback-5',
+    title: 'Buddha bowl veggie',
+    description: 'Bowl equilibre et colore plein de vitamines',
+    servings: 1,
+    prepTime: 15,
+    cookTime: 20,
+    totalTime: 35,
+    difficulty: 'easy',
+    category: 'bowl',
+    ingredients: [
+      { id: 'f5-1', name: 'Quinoa', amount: 80, unit: 'g' },
+      { id: 'f5-2', name: 'Pois chiches', amount: 100, unit: 'g' },
+      { id: 'f5-3', name: 'Avocat', amount: 0.5, unit: 'piece' },
+      { id: 'f5-4', name: 'Legumes varies', amount: 150, unit: 'g' },
+    ],
+    instructions: ['Cuire le quinoa', 'Rotir les pois chiches', 'Assembler le bowl'],
+    nutrition: { calories: 450, proteins: 18, carbs: 55, fats: 18 },
+    nutritionPerServing: { calories: 450, proteins: 18, carbs: 55, fats: 18 },
+    tags: ['Vegan', 'Healthy'],
+    dietTypes: ['vegan', 'vegetarian'],
+    allergens: [],
+    rating: 4.4,
+    ratingCount: 178,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'fallback-6',
+    title: 'Pates carbonara authentiques',
+    description: 'La vraie recette italienne sans creme',
+    servings: 2,
+    prepTime: 10,
+    cookTime: 15,
+    totalTime: 25,
+    difficulty: 'medium',
+    category: 'pates',
+    ingredients: [
+      { id: 'f6-1', name: 'Spaghetti', amount: 200, unit: 'g' },
+      { id: 'f6-2', name: 'Guanciale', amount: 100, unit: 'g' },
+      { id: 'f6-3', name: 'Oeufs', amount: 3, unit: 'pieces' },
+      { id: 'f6-4', name: 'Pecorino', amount: 60, unit: 'g' },
+    ],
+    instructions: ['Cuire les pates al dente', 'Faire revenir le guanciale', 'Melanger avec les oeufs battus hors du feu'],
+    nutrition: { calories: 1100, proteins: 45, carbs: 100, fats: 55 },
+    nutritionPerServing: { calories: 550, proteins: 22, carbs: 50, fats: 28 },
+    tags: ['Italien', 'Classique'],
+    dietTypes: [],
+    allergens: ['gluten', 'oeufs', 'lait'],
+    rating: 4.9,
+    ratingCount: 312,
+    isFavorite: false,
+    source: 'LymIA',
+    createdAt: new Date().toISOString(),
+  },
 ]
 
 // Filter options
@@ -158,9 +330,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
   // State
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [gustarRecipesList, setGustarRecipesList] = useState<Recipe[]>([])
+  const [translations, setTranslations] = useState<Map<string, { titleFr: string; descriptionFr: string }>>(new Map())
 
   // Filters
   const [selectedMealType, setSelectedMealType] = useState('')
@@ -169,26 +343,141 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
   const [sortBy, setSortBy] = useState('rating')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Initialize Gustar API
+  // Initialize Gustar API and fetch recipes on mount
   useEffect(() => {
-    if (GUSTAR_API_KEY) {
-      gustarRecipes.init(GUSTAR_API_KEY)
-    }
-  }, [])
+    const initAndFetch = async () => {
+      // Initialize API
+      if (GUSTAR_API_KEY) {
+        gustarRecipes.init(GUSTAR_API_KEY)
+      }
 
-  // Auto-fetch popular recipes on mount
-  useEffect(() => {
-    fetchPopularRecipes()
-  }, [])
+      // Fetch recipes
+      setIsLoading(true)
+      try {
+        // Ensure API is configured
+        if (!gustarRecipes.isConfigured()) {
+          console.log('Gustar API not configured, using fallbacks')
+          setGustarRecipesList(FALLBACK_RECIPES)
+          setIsLoading(false)
+          return
+        }
+
+        // Pick random popular searches
+        const randomSearches = POPULAR_SEARCHES
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+
+        console.log('RecipeDiscovery: Fetching recipes for:', randomSearches)
+        const allRecipes: Recipe[] = []
+
+        for (const searchQuery of randomSearches) {
+          try {
+            const response = await gustarRecipes.searchRecipes({
+              query: searchQuery,
+              diet: profile?.dietType as DietaryPreference | undefined,
+              limit: 5,
+            })
+
+            console.log(`RecipeDiscovery: Got ${response.recipes.length} recipes for "${searchQuery}"`)
+            const transformed = response.recipes.map(transformGustarToRecipe)
+            allRecipes.push(...transformed)
+          } catch (error) {
+            console.warn(`Failed to fetch recipes for "${searchQuery}":`, error)
+          }
+        }
+
+        // Remove duplicates by id
+        const uniqueRecipes = allRecipes.filter(
+          (recipe, index, self) => index === self.findIndex(r => r.id === recipe.id)
+        )
+
+        console.log('RecipeDiscovery: Total unique recipes:', uniqueRecipes.length)
+
+        // Use fallback recipes if API returned nothing
+        if (uniqueRecipes.length === 0) {
+          console.log('Using fallback recipes (API unavailable)')
+          setGustarRecipesList(FALLBACK_RECIPES)
+        } else {
+          setGustarRecipesList(uniqueRecipes)
+        }
+      } catch (error) {
+        console.warn('Failed to fetch popular recipes:', error)
+        setGustarRecipesList(FALLBACK_RECIPES)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    initAndFetch()
+  }, [profile?.dietType])
+
+  // Translate recipes when list changes
+  const translateRecipes = useCallback(async (recipes: Recipe[]) => {
+    // Check if API key is available
+    const hasKey = await hasOpenAIApiKey()
+    if (!hasKey) {
+      console.log('RecipeDiscovery: No OpenAI key, skipping translation')
+      return
+    }
+    if (recipes.length === 0) return
+
+    setIsTranslating(true)
+    try {
+      // Only translate recipes not already translated
+      const toTranslate = recipes.filter(r => !translations.has(r.id))
+      if (toTranslate.length === 0) {
+        console.log('RecipeDiscovery: All recipes already translated')
+        setIsTranslating(false)
+        return
+      }
+
+      console.log(`RecipeDiscovery: Translating ${toTranslate.length} recipes...`)
+      const translationMap = await translateGustarRecipesFast(
+        toTranslate.map(r => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+        }))
+      )
+
+      console.log(`RecipeDiscovery: Got ${translationMap.size} translations`)
+
+      // Merge with existing translations
+      setTranslations(prev => {
+        const newMap = new Map(prev)
+        translationMap.forEach((value, key) => {
+          newMap.set(key, value)
+        })
+        return newMap
+      })
+    } catch (error) {
+      console.warn('Translation failed:', error)
+    } finally {
+      setIsTranslating(false)
+    }
+  }, [translations])
 
   const fetchPopularRecipes = async () => {
+    // Ensure API is initialized
+    if (GUSTAR_API_KEY && !gustarRecipes.isConfigured()) {
+      gustarRecipes.init(GUSTAR_API_KEY)
+    }
+
     setIsLoading(true)
     try {
+      // Ensure API is configured
+      if (!gustarRecipes.isConfigured()) {
+        console.log('Gustar API not configured, using fallbacks')
+        setGustarRecipesList(FALLBACK_RECIPES)
+        setIsLoading(false)
+        return
+      }
+
       // Pick random popular searches
       const randomSearches = POPULAR_SEARCHES
         .sort(() => Math.random() - 0.5)
         .slice(0, 3)
 
+      console.log('Fetching recipes for:', randomSearches)
       const allRecipes: Recipe[] = []
 
       for (const query of randomSearches) {
@@ -199,6 +488,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
             limit: 5,
           })
 
+          console.log(`Got ${response.recipes.length} recipes for "${query}"`)
           const transformed = response.recipes.map(transformGustarToRecipe)
           allRecipes.push(...transformed)
         } catch (error) {
@@ -211,9 +501,19 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
         (recipe, index, self) => index === self.findIndex(r => r.id === recipe.id)
       )
 
-      setGustarRecipesList(uniqueRecipes)
+      // Use fallback recipes if API returned nothing
+      if (uniqueRecipes.length === 0) {
+        console.log('Using fallback recipes (API unavailable)')
+        setGustarRecipesList(FALLBACK_RECIPES)
+      } else {
+        setGustarRecipesList(uniqueRecipes)
+        // Translate recipes in background (only for Gustar recipes, not fallbacks)
+        translateRecipes(uniqueRecipes)
+      }
     } catch (error) {
       console.warn('Failed to fetch popular recipes:', error)
+      // Use fallback recipes on error
+      setGustarRecipesList(FALLBACK_RECIPES)
     } finally {
       setIsLoading(false)
     }
@@ -234,6 +534,9 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
 
       const transformed = response.recipes.map(transformGustarToRecipe)
       setGustarRecipesList(transformed)
+
+      // Translate search results in background
+      translateRecipes(transformed)
     } catch (error) {
       console.warn('Search failed:', error)
     } finally {
@@ -371,14 +674,22 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
     )
   }
 
-  // Render Gustar recipe card
+  // Render Gustar recipe card with translation
   const renderGustarRecipeCard = (recipe: Recipe) => {
     const difficulty = getDifficulty(recipe.difficulty)
+    const translation = translations.get(recipe.id)
+    const displayTitle = translation?.titleFr || recipe.title
+    const displayDescription = translation?.descriptionFr || recipe.description
+
     return (
       <Card
         key={recipe.id}
         style={styles.recipeCard}
-        onPress={() => handleRecipePress(recipe)}
+        onPress={() => handleRecipePress({
+          ...recipe,
+          title: displayTitle,
+          description: displayDescription,
+        })}
         padding="none"
       >
         <View style={styles.recipeCardRow}>
@@ -402,7 +713,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
 
           {/* Content */}
           <View style={styles.recipeContent}>
-            <Text style={styles.recipeTitle} numberOfLines={2}>{recipe.title}</Text>
+            <Text style={styles.recipeTitle} numberOfLines={2}>{displayTitle}</Text>
             <View style={styles.recipeMeta}>
               {(recipe.totalTime ?? 0) > 0 && (
                 <View style={styles.metaItem}>
@@ -585,8 +896,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
                 <Globe size={16} color="#06B6D4" />
               </View>
               <Text style={styles.sectionTitle}>
-                {searchQuery ? 'Resultats de recherche' : 'Decouvrir des recettes'}
+                {searchQuery ? 'Resultats de recherche' : 'Selectionnees pour vous'}
               </Text>
+              {isTranslating && (
+                <ActivityIndicator size="small" color="#06B6D4" style={{ marginLeft: 8 }} />
+              )}
             </View>
             {filteredRecipes.length > 0 && (
               <Badge variant="default" size="sm">
