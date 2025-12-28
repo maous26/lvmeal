@@ -18,6 +18,16 @@ export type ReligiousDiet = 'halal' | 'casher' | null
 
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner'
 
+export type CookingLevel = 'beginner' | 'intermediate' | 'advanced'
+
+export interface CookingPreferences {
+  level: CookingLevel
+  weekdayTime: number // minutes available per meal on weekdays
+  weekendTime: number // minutes available per meal on weekends
+  batchCooking: boolean // willing to meal prep
+  quickMealsOnly: boolean // prefers <20min recipes
+}
+
 export type MealSource = 'manual' | 'photo' | 'voice' | 'barcode' | 'ai' | 'recipe' | 'plan'
 
 // =============================================================================
@@ -110,6 +120,7 @@ export interface UserProfile {
   nutritionalStrategy?: NutritionalStrategy // For adaptive metabolism
   sportTrackingEnabled?: boolean
   sportProgram?: WeeklyProgram | null
+  cookingPreferences?: CookingPreferences
   onboardingCompleted?: boolean
   createdAt?: string
   updatedAt?: string

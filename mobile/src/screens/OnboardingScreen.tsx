@@ -7,6 +7,7 @@ import {
   StepGoal,
   StepActivity,
   StepDiet,
+  StepCooking,
   StepLifestyle,
   StepMetabolism,
   StepAnalysis,
@@ -15,20 +16,21 @@ import { useUserStore } from '../stores/user-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
-type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'metabolism' | 'lifestyle' | 'analysis'
+type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'lifestyle' | 'analysis'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string }> = {
   welcome: { title: '', subtitle: '' },
-  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Etape 1 sur 7' },
-  activity: { title: "Votre niveau d'activite", subtitle: 'Etape 2 sur 7' },
-  goal: { title: 'Quel est votre objectif ?', subtitle: 'Etape 3 sur 7' },
-  diet: { title: 'Vos preferences alimentaires', subtitle: 'Etape 4 sur 7' },
-  metabolism: { title: 'Mieux te connaitre', subtitle: 'Etape 5 sur 7' },
-  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Etape 6 sur 7' },
-  analysis: { title: 'Ton programme personnalise', subtitle: 'Etape 7 sur 7' },
+  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Etape 1 sur 8' },
+  activity: { title: "Votre niveau d'activite", subtitle: 'Etape 2 sur 8' },
+  goal: { title: 'Quel est votre objectif ?', subtitle: 'Etape 3 sur 8' },
+  diet: { title: 'Vos preferences alimentaires', subtitle: 'Etape 4 sur 8' },
+  cooking: { title: 'En cuisine', subtitle: 'Etape 5 sur 8' },
+  metabolism: { title: 'Mieux te connaitre', subtitle: 'Etape 6 sur 8' },
+  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Etape 7 sur 8' },
+  analysis: { title: 'Ton programme personnalise', subtitle: 'Etape 8 sur 8' },
 }
 
-const steps: OnboardingStep[] = ['welcome', 'basic-info', 'activity', 'goal', 'diet', 'metabolism', 'lifestyle', 'analysis']
+const steps: OnboardingStep[] = ['welcome', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
@@ -155,6 +157,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return !!profile.goal
       case 'diet':
         return !!profile.dietType
+      case 'cooking':
+        // Can always proceed - defaults are fine
+        return true
       case 'metabolism':
         // Can always proceed - questions are optional diagnostic
         return true
@@ -234,6 +239,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return <StepGoal data={profile} onChange={setProfile} />
       case 'diet':
         return <StepDiet data={profile} onChange={setProfile} />
+      case 'cooking':
+        return <StepCooking data={profile} onChange={setProfile} />
       case 'metabolism':
         return <StepMetabolism data={profile} onChange={setProfile} />
       case 'lifestyle':

@@ -1,23 +1,24 @@
 import React from 'react'
-import { StyleSheet, View, Platform } from 'react-native'
+import { StyleSheet, View, Platform, Text } from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import {
   Home,
   Utensils,
-  // ChefHat, // Disabled - Recipes tab removed
+  Bot,
   TrendingUp,
   User,
 } from 'lucide-react-native'
 
 import HomeScreen from '../screens/HomeScreen'
 import MealsScreen from '../screens/MealsScreen'
-// import RecipesScreen from '../screens/RecipesScreen' // Disabled - Recipes tab removed
+import CoachScreen from '../screens/CoachScreen'
 import ProgressScreen from '../screens/ProgressScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 
 import { colors, shadows } from '../constants/theme'
+import { useCoachStore } from '../stores/coach-store'
 
 const Tab = createBottomTabNavigator()
 
@@ -25,18 +26,26 @@ const TabIcon = ({
   Icon,
   focused,
   color,
+  badge,
 }: {
   Icon: typeof Home
   focused: boolean
   color: string
+  badge?: number
 }) => (
   <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
     <Icon size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+    {badge !== undefined && badge > 0 && (
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+      </View>
+    )}
   </View>
 )
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
+  const unreadCount = useCoachStore((state) => state.unreadCount)
 
   return (
     <Tab.Navigator
@@ -80,18 +89,16 @@ export default function TabNavigator() {
           ),
         }}
       />
-      {/* Recipes tab disabled - functionality moved to AddMealScreen favorites
       <Tab.Screen
-        name="Recipes"
-        component={RecipesScreen}
+        name="Coach"
+        component={CoachScreen}
         options={{
-          tabBarLabel: 'Recettes',
+          tabBarLabel: 'Coach',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={ChefHat} focused={focused} color={color} />
+            <TabIcon Icon={Bot} focused={focused} color={color} badge={unreadCount} />
           ),
         }}
       />
-      */}
       <Tab.Screen
         name="Progress"
         component={ProgressScreen}
@@ -135,5 +142,22 @@ const styles = StyleSheet.create({
   iconContainerActive: {
     backgroundColor: colors.accent.light,
     borderRadius: 12,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
 })
