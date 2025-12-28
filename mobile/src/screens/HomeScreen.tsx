@@ -18,7 +18,7 @@ import {
   GamificationPanel,
   WellnessWidget,
   SportWidget,
-  LymIA,
+  LymIAWidget,
   CaloricBalance,
   HydrationWidget,
   MealSuggestions,
@@ -135,9 +135,9 @@ export default function HomeScreen() {
         </View>
 
         {/* LymIA - Coach proactif */}
-        <View style={styles.section}>
-          <LymIA />
-        </View>
+        <Card>
+          <LymIAWidget />
+        </Card>
 
         {/* Main Calories Card */}
         <Card style={styles.mainCard}>
