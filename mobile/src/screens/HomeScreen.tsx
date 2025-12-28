@@ -87,7 +87,7 @@ export default function HomeScreen() {
 
   const handleNavigateToRecipes = () => {
     // @ts-ignore - Navigation typing
-    navigation.navigate('Discover')
+    navigation.navigate('AddMeal', { type: 'lunch', openDiscover: true })
   }
 
   return (
