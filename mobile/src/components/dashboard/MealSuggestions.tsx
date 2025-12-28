@@ -495,12 +495,6 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
             </Text>
           </View>
         </View>
-        {onViewAll && (
-          <TouchableOpacity onPress={onViewAll} style={styles.viewAllButton}>
-            <Text style={styles.viewAllText}>Voir tout</Text>
-            <ChevronRight size={16} color={colors.accent.primary} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Suggestions Carousel */}
@@ -631,15 +625,6 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.caption,
     color: colors.text.tertiary,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  viewAllText: {
-    ...typography.smallMedium,
-    color: colors.accent.primary,
   },
   carouselContent: {
     paddingRight: spacing.default,
