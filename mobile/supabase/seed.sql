@@ -79,7 +79,53 @@ INSERT INTO knowledge_base (content, category, source, source_title, metadata) V
 
 -- Nutri-Score
 ('Le Nutri-Score classe les aliments de A (meilleur) a E selon leur qualite nutritionnelle. Il prend en compte: energie, sucres, graisses saturees, sel (negatifs) et fibres, proteines, fruits/legumes (positifs). Privilegier A et B, limiter D et E.',
-'guidelines', 'anses', 'ANSES - Nutri-Score', '{"topic": "nutriscore", "confidence": 0.95}');
+'guidelines', 'anses', 'ANSES - Nutri-Score', '{"topic": "nutriscore", "confidence": 0.95}'),
+
+-- ============= RELANCE METABOLIQUE (Programme complet) =============
+
+-- Phase 1: Decouverte
+('Programme de relance metabolique - Phase 1 Decouverte (2 semaines): Objectif stabiliser les apports et etablir une base. Maintenir les calories au niveau du metabolisme de base estime. Marche quotidienne 20-30 min. Sommeil prioritaire 7-8h. Hydratation 2L/jour. Pas de restriction, pas de cardio intensif. Suivi quotidien du bien-etre.',
+'metabolism', 'expert', 'LymIA - Relance Phase 1', '{"topic": "metabolic_boost_phase1", "program": "metabolic_boost", "phase": 1, "duration_weeks": 2, "confidence": 0.90}'),
+
+-- Phase 2: Walking program
+('Programme de relance metabolique - Phase 2 Marche Active (3 semaines): Augmentation progressive de l''activite sans stress metabolique. Marche 30-45 min/jour avec variations d''intensite. Introduction de seances de mobilite 2x/semaine. Augmentation calorique de 100 kcal/semaine si energie stable. Focus sur les proteines 1.6-2g/kg.',
+'metabolism', 'expert', 'LymIA - Relance Phase 2', '{"topic": "metabolic_boost_phase2", "program": "metabolic_boost", "phase": 2, "duration_weeks": 3, "confidence": 0.90}'),
+
+-- Phase 3: Resistance intro
+('Programme de relance metabolique - Phase 3 Introduction Resistance (4 semaines): Construction de masse maigre pour relancer le metabolisme. 2-3 seances de renforcement musculaire/semaine. Exercices au poids du corps puis poids legers. Progression lente et securisee. Proteines maintenues hautes. Recuperation prioritaire entre seances.',
+'metabolism', 'expert', 'LymIA - Relance Phase 3', '{"topic": "metabolic_boost_phase3", "program": "metabolic_boost", "phase": 3, "duration_weeks": 4, "confidence": 0.90}'),
+
+-- Phase 4: Programme complet
+('Programme de relance metabolique - Phase 4 Programme Complet (ongoing): Metabolisme relance, maintien des acquis. 3-4 seances sport/semaine mix cardio/muscu. Calories ajustees selon objectif (maintenance ou deficit doux). NEAT optimise au quotidien. Gestion du stress et sommeil maintenus.',
+'metabolism', 'expert', 'LymIA - Relance Phase 4', '{"topic": "metabolic_boost_phase4", "program": "metabolic_boost", "phase": 4, "duration_weeks": 0, "confidence": 0.90}'),
+
+-- Signaux d'un metabolisme ralenti
+('Signes d''un metabolisme ralenti: fatigue persistante malgre un repos suffisant, frilosite frequente, difficulte a perdre du poids malgre deficit calorique, fringales intenses surtout sucrees, plateau prolonge (>4 semaines), cheveux/ongles fragiles, cycles menstruels irreguliers. Ces signes indiquent souvent une adaptation metabolique.',
+'metabolism', 'expert', 'LymIA - Signes metabolisme lent', '{"topic": "slow_metabolism_signs", "confidence": 0.90}'),
+
+-- NEAT et relance
+('Le NEAT (Non-Exercise Activity Thermogenesis) est crucial dans la relance metabolique. Il represente jusqu''a 15% des depenses energetiques. Strategies pour l''augmenter: bureau debout, appels telephoniques en marchant, parking loin, escaliers, pauses actives toutes les heures, taches menageres, jardinage.',
+'metabolism', 'expert', 'LymIA - NEAT et relance', '{"topic": "neat_metabolic_boost", "confidence": 0.90}'),
+
+-- Alimentation relance metabolique
+('Alimentation en phase de relance: priorite aux proteines (20-30g par repas), glucides complexes pour l''energie stable, lipides de qualite pour les hormones (omega-3, olive), fibres pour la satiete. Eviter: deficit trop agressif, suppression de groupes alimentaires, jeuner prolonge.',
+'metabolism', 'expert', 'LymIA - Alimentation relance', '{"topic": "diet_metabolic_boost", "confidence": 0.90}'),
+
+-- Sommeil et metabolisme
+('Le sommeil est fondamental pour la relance metabolique. Pendant le sommeil: production de GH (hormone de croissance), regulation de la leptine et ghréline, recuperation musculaire. Objectif 7-9h. Rituels: meme heure de coucher, chambre fraiche 18-20°C, obscurite totale, pas d''ecrans 1h avant.',
+'wellness', 'inserm', 'INSERM - Sommeil metabolisme', '{"topic": "sleep_metabolic_boost", "confidence": 0.90}'),
+
+-- Stress cortisol et metabolisme
+('Le cortisol chroniquement eleve freine la relance metabolique: stockage abdominal, catabolisme musculaire, resistance a l''insuline. Solutions: respiration 4-7-8 (inspirer 4s, tenir 7s, expirer 8s), marche en nature, yoga, limiter le cafe apres 14h, activites plaisir quotidiennes.',
+'wellness', 'has', 'HAS - Cortisol metabolisme', '{"topic": "stress_metabolic_boost", "confidence": 0.90}'),
+
+-- Progression et patience
+('La relance metabolique prend du temps: minimum 8-12 semaines pour voir des resultats. Indicateurs de progres: energie accrue, meilleure qualite de sommeil, humeur stabilisee, force augmentee, faim regulee. Le poids peut rester stable ou augmenter legerement au debut (masse musculaire) - c''est normal et positif.',
+'metabolism', 'expert', 'LymIA - Patience relance', '{"topic": "patience_metabolic_boost", "confidence": 0.85}'),
+
+-- Exercices specifiques relance
+('Exercices recommandes pour la relance metabolique: squats (cuisses/fessiers), fentes (equilibre/force), pompes (haut du corps), planche (gainage), rowing (dos), hip thrust (fessiers). Commencer au poids du corps, 2-3 series de 10-15 reps, repos 60-90s. Progression: ajouter poids quand 15 reps faciles.',
+'sport', 'expert', 'LymIA - Exercices relance', '{"topic": "exercises_metabolic_boost", "confidence": 0.90}');
 
 -- Note: Les embeddings seront generes via le script d'ingestion
 -- qui appellera l'API OpenAI pour chaque entree
