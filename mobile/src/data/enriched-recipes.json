@@ -1,0 +1,1858 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2025-12-27T22:24:15.879Z",
+  "totalRecipes": 20,
+  "recipes": [
+    {
+      "id": "https://www.brigitte.de/rezepte/piccata-vom-huhn-10539978.html",
+      "titleFr": "Piccata de Poulet aux Champignons",
+      "descriptionFr": "Découvrez cette délicieuse Piccata de Poulet aux Champignons, un plat savoureux qui allie tendreté du poulet et la richesse des champignons, le tout rehaussé par une sauce onctueuse. Parfait pour un dîner en semaine, ce plat est simple à réaliser et saura ravir vos convives.",
+      "ingredientsFr": [
+        {
+          "name": "Parmesan",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Persil",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Ail",
+          "amount": 1,
+          "unit": "gousse"
+        },
+        {
+          "name": "Filet de poulet",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "Champignons",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de volaille",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Petits pois",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Farfalle",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Jambon",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Sauce tomate",
+          "amount": 60,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole d'eau bouillante salée, faites cuire les farfalles selon les instructions du paquet, puis égouttez-les et réservez.",
+        "Étape 2: Dans une poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'ail émincé et faites-le revenir jusqu'à ce qu'il soit doré.",
+        "Étape 3: Ajoutez le filet de poulet dans la poêle, assaisonnez de sel et de poivre, et faites cuire environ 5-6 minutes de chaque côté jusqu'à ce qu'il soit bien doré et cuit à cœur.",
+        "Étape 4: Incorporez les champignons coupés en tranches dans la poêle et laissez-les cuire jusqu'à ce qu'ils soient tendres, environ 3-4 minutes.",
+        "Étape 5: Versez le bouillon de volaille dans la poêle, ajoutez les petits pois et le jambon coupé en dés. Laissez mijoter pendant 5 minutes pour que les saveurs se mélangent.",
+        "Étape 6: Ajoutez la sauce tomate et le parmesan râpé, mélangez bien et laissez cuire encore 2 minutes.",
+        "Étape 7: Incorporez les farfalles dans la poêle, mélangez délicatement pour enrober les pâtes de sauce.",
+        "Étape 8: Servez chaud, garni de persil frais haché."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 35,
+        "carbs": 60,
+        "fats": 15
+      },
+      "imageUrl": "https://image.brigitte.de/10539976/t/K5/v5/w1440/r1/-/piccatavomhuhn-670ebef9802f2b74838ff0b2d1bcf628-piccatavomhuhn-.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/piccata-vom-huhn-10539978.html",
+      "originalTitle": "Piccata vom Huhn",
+      "enrichedAt": "2025-12-27T22:22:40.327Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/tandoori-huhn-10946806.html",
+      "titleFr": "Poulet Tandoori aux Épices",
+      "descriptionFr": "Découvrez le délice du poulet tandoori, mariné dans un mélange d'épices parfumées et de yaourt crémeux. Ce plat savoureux vous transportera directement en Inde avec ses saveurs envoûtantes et son parfum irrésistible. Parfait pour un dîner convivial ou un repas en famille.",
+      "ingredientsFr": [
+        {
+          "name": "cuisses de poulet",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "beurre",
+          "amount": 40,
+          "unit": "grammes"
+        },
+        {
+          "name": "oignons rouges",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "coriandre fraîche",
+          "amount": 5,
+          "unit": "brins"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "racine de gingembre",
+          "amount": 35,
+          "unit": "grammes"
+        },
+        {
+          "name": "citron bio",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "yaourt nature",
+          "amount": 200,
+          "unit": "grammes"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "cuillère à café"
+        },
+        {
+          "name": "garam masala",
+          "amount": 1,
+          "unit": "cuillère à café"
+        },
+        {
+          "name": "cumin",
+          "amount": 1,
+          "unit": "cuillère à café"
+        },
+        {
+          "name": "coriandre en poudre",
+          "amount": 1,
+          "unit": "cuillère à café"
+        },
+        {
+          "name": "curcuma",
+          "amount": 1,
+          "unit": "cuillère à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, mélangez le yaourt, le jus de citron, l'ail écrasé, le gingembre râpé et toutes les épices (sel, garam masala, cumin, coriandre en poudre et curcuma).",
+        "Étape 2: Ajoutez les cuisses de poulet dans le bol et enrobez-les bien de marinade. Couvrez et laissez mariner au réfrigérateur pendant au moins 2 heures, idéalement toute la nuit.",
+        "Étape 3: Préchauffez votre four à 200°C (thermostat 6-7). Pendant ce temps, émincez les oignons rouges.",
+        "Étape 4: Dans une poêle, faites fondre le beurre à feu moyen et ajoutez les oignons émincés. Faites-les revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 5: Disposez les cuisses de poulet marinées sur une plaque de cuisson. Ajoutez les oignons cuits autour du poulet et enfournez pendant 35 à 40 minutes, jusqu'à ce que le poulet soit bien cuit et doré.",
+        "Étape 6: Pendant la cuisson, hachez finement la coriandre fraîche.",
+        "Étape 7: Une fois le poulet cuit, sortez-le du four et laissez-le reposer quelques minutes avant de le servir.",
+        "Étape 8: Servez le poulet tandoori chaud, garni de coriandre fraîche, accompagné de pain naan ou de riz basmati."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 30,
+        "carbs": 10,
+        "fats": 25
+      },
+      "imageUrl": "https://image.brigitte.de/10946816/t/T8/v3/w1440/r1/-/tandoori-huhn.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/tandoori-huhn-10946806.html",
+      "originalTitle": "Tandoori-Huhn",
+      "enrichedAt": "2025-12-27T22:22:41.708Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/chilenisches-huhn-10539966.html",
+      "titleFr": "Poulet chilien aux crevettes",
+      "descriptionFr": "Ce plat savoureux allie la tendreté du poulet à la délicatesse des crevettes, le tout rehaussé par des légumes colorés. Parfait pour un dîner convivial, il ravira les papilles de vos convives et apportera une touche d'exotisme à votre table.",
+      "ingredientsFr": [
+        {
+          "name": "poitrine de poulet",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "crevettes",
+          "amount": 350,
+          "unit": "grammes"
+        },
+        {
+          "name": "poivron",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "oignon",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "pomme de terre",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "bouillon de poulet",
+          "amount": 1,
+          "unit": "litre"
+        }
+      ],
+      "instructionsFr": [
+        "Etape 1: Dans une grande casserole, faites chauffer un peu d'huile d'olive à feu moyen. Ajoutez les oignons émincés et faites-les revenir jusqu'à ce qu'ils deviennent translucides.",
+        "Etape 2: Pendant ce temps, coupez les poivrons en dés et ajoutez-les à la casserole. Laissez cuire pendant environ 5 minutes, en remuant régulièrement.",
+        "Etape 3: Ajoutez les pommes de terre coupées en cubes et le bouillon de poulet. Portez à ébullition, puis réduisez le feu et laissez mijoter pendant 15 minutes, ou jusqu'à ce que les pommes de terre soient tendres.",
+        "Etape 4: Pendant que les légumes cuisent, faites cuire les poitrines de poulet dans une poêle à part, jusqu'à ce qu'elles soient dorées et bien cuites. Assaisonnez avec du sel et du poivre.",
+        "Etape 5: Une fois le poulet cuit, incorporez les crevettes dans la casserole avec les légumes et le bouillon. Laissez mijoter encore 5 minutes, jusqu'à ce que les crevettes soient bien chaudes.",
+        "Etape 6: Coupez le poulet cuit en morceaux et ajoutez-le à la casserole. Mélangez délicatement pour bien enrober tous les ingrédients.",
+        "Etape 7: Servez chaud, décoré de quelques herbes fraîches si désiré."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 35,
+        "carbs": 40,
+        "fats": 15
+      },
+      "imageUrl": "https://image.brigitte.de/11481460/t/Cf/v3/w1440/r1/-/chilenisches-huhn-bild.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/chilenisches-huhn-10539966.html",
+      "originalTitle": "Chilenisches Huhn",
+      "enrichedAt": "2025-12-27T22:22:35.875Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/huhn-mit-mandelsosse-10536184.html",
+      "titleFr": "Poulet à la sauce aux amandes",
+      "descriptionFr": "Découvrez un plat savoureux qui allie la tendreté du poulet à une sauce onctueuse aux amandes, subtilement parfumée au safran et à la muscade. Idéal pour un dîner en famille ou entre amis, ce plat réconfortant ravira les papilles de vos convives.",
+      "ingredientsFr": [
+        {
+          "name": "poulet",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "farine",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "vin blanc",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "fond de volaille",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "muscade",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "safran",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "feuille de laurier",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "amandes",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "jaunes d'œufs",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "citron bio",
+          "amount": 1,
+          "unit": "unité"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1 : Dans une grande poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez le poulet coupé en morceaux et faites-le dorer de tous les côtés pendant environ 10 minutes.",
+        "Étape 2 : Pendant que le poulet cuit, émincez l'oignon et hachez les gousses d'ail. Ajoutez l'oignon et l'ail dans la poêle avec le poulet et faites revenir jusqu'à ce qu'ils soient tendres.",
+        "Étape 3 : Saupoudrez le mélange de poulet avec la farine et remuez bien pour enrober les morceaux. Cela va aider à épaissir la sauce.",
+        "Étape 4 : Ajoutez le vin blanc et le fond de volaille dans la poêle. Incorporez le safran, la muscade, la feuille de laurier, le sel et le poivre. Laissez mijoter pendant 20 minutes à feu doux.",
+        "Étape 5 : Pendant ce temps, faites légèrement griller les amandes dans une poêle à sec jusqu'à ce qu'elles soient dorées. Réservez.",
+        "Étape 6 : Une fois le poulet cuit, retirez la feuille de laurier. Dans un bol, battez les jaunes d'œufs avec le jus du citron. Incorporez ce mélange dans la sauce en remuant rapidement pour éviter que les jaunes ne coagulent.",
+        "Étape 7 : Ajoutez les amandes grillées à la sauce, mélangez bien et laissez chauffer encore quelques minutes sans faire bouillir.",
+        "Étape 8 : Servez chaud, accompagné de riz ou de légumes de saison."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 35,
+        "carbs": 12,
+        "fats": 30
+      },
+      "imageUrl": "https://image.brigitte.de/11798490/t/Vn/v3/w1440/r1/-/huhn-mit-mandelsosse.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/huhn-mit-mandelsosse-10536184.html",
+      "originalTitle": "Huhn mit Mandelsoße",
+      "enrichedAt": "2025-12-27T22:22:57.019Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/tagine-vom-huhn",
+      "titleFr": "Tagine de Poulet aux Fruits Secs",
+      "descriptionFr": "Ce tagine de poulet est un véritable voyage au cœur des saveurs orientales. Avec ses fruits secs, ses épices délicates et sa viande tendre, ce plat réchauffe les cœurs et éveille les papilles. Parfait pour un repas convivial en famille ou entre amis, il saura séduire tous les amateurs de cuisine.",
+      "ingredientsFr": [
+        {
+          "name": "Poularde",
+          "amount": 1500,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Raisins secs",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Échalotes",
+          "amount": 8,
+          "unit": "pieces"
+        },
+        {
+          "name": "Oignons",
+          "amount": 2,
+          "unit": "pieces"
+        },
+        {
+          "name": "Carottes",
+          "amount": 2,
+          "unit": "pieces"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Beurre",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Fil de safran",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Miel",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Pruneaux",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Noix",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Orange bio",
+          "amount": 1,
+          "unit": "piece"
+        },
+        {
+          "name": "Raisins rouges",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Raisins verts",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Menthe",
+          "amount": 0.5,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande cocotte, faites chauffer l'huile d'olive et le beurre à feu moyen.",
+        "Étape 2: Ajoutez les échalotes et les oignons émincés, faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 3: Incorporez la poularde coupée en morceaux. Faites dorer la viande de tous les côtés.",
+        "Étape 4: Ajoutez les carottes coupées en rondelles, les raisins secs, les pruneaux, le miel, le sel, le poivre et le safran. Mélangez bien.",
+        "Étape 5: Ajoutez environ 500 ml d'eau pour couvrir les ingrédients. Laissez mijoter à feu doux pendant environ 1 heure.",
+        "Étape 6: Pendant ce temps, préparez l'orange en enlevant la peau et en la découpant en morceaux. Réservez.",
+        "Étape 7: Ajoutez les raisins rouges et verts, les morceaux d'orange et les noix dans la cocotte. Laissez cuire encore 15 minutes.",
+        "Étape 8: Juste avant de servir, incorporez la menthe fraîche ciselée pour apporter une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 650,
+        "proteins": 45,
+        "carbs": 50,
+        "fats": 30
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2012/2/Tagine-vom-Huhn-4f33d15eee895.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/tagine-vom-huhn",
+      "originalTitle": "Tagine vom Huhn",
+      "enrichedAt": "2025-12-27T22:22:57.434Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/moehreneintopf-mit-huhn",
+      "titleFr": "Potée de carottes au poulet",
+      "descriptionFr": "La potée de carottes au poulet est un plat réconfortant et savoureux qui ravira toute la famille. Avec ses ingrédients frais et parfumés, elle allie simplicité et goût, parfaite pour les jours d'hiver. Préparez-vous à savourer une délicieuse harmonie de saveurs dans chaque bouchée.",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Poulet entier prêt à cuire",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Feuilles de laurier",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Étoile de badiane",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Baies de genévrier",
+          "amount": 1,
+          "unit": "cuillère à café"
+        },
+        {
+          "name": "Gingembre frais",
+          "amount": 3,
+          "unit": "centimètres"
+        },
+        {
+          "name": "Carottes",
+          "amount": 500,
+          "unit": "grammes"
+        },
+        {
+          "name": "Poireau",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Céleri branche",
+          "amount": 1,
+          "unit": "tige"
+        },
+        {
+          "name": "Feuilles de persil",
+          "amount": 2,
+          "unit": "brins"
+        },
+        {
+          "name": "Sel",
+          "amount": "au goût",
+          "unit": ""
+        },
+        {
+          "name": "Poivre",
+          "amount": "au goût",
+          "unit": ""
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites chauffer un peu d'huile à feu moyen. Ajoutez les oignons pelés et émincés et faites-les revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajoutez le poulet entier dans la casserole et faites-le dorer légèrement sur toutes ses faces.",
+        "Étape 3: Incorporez les feuilles de laurier, l'étoile de badiane, les baies de genévrier et le gingembre pelé et coupé en fines tranches. Mélangez bien.",
+        "Étape 4: Épluchez et coupez les carottes en rondelles, puis ajoutez-les dans la casserole. Coupez le poireau et le céleri en morceaux et ajoutez-les également.",
+        "Étape 5: Recouvrez le tout d'eau, portez à ébullition, puis réduisez le feu et laissez mijoter pendant environ 45 minutes, jusqu'à ce que le poulet soit bien cuit.",
+        "Étape 6: Lorsque le poulet est cuit, retirez-le de la casserole et laissez-le refroidir légèrement. Désossez-le et coupez la chair en morceaux.",
+        "Étape 7: Remettez les morceaux de poulet dans la casserole, ajoutez les feuilles de persil et rectifiez l'assaisonnement avec du sel et du poivre selon votre goût.",
+        "Étape 8: Servez chaud, accompagné de pain frais ou de pommes de terre."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 30,
+        "carbs": 25,
+        "fats": 15
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-12598784.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/moehreneintopf-mit-huhn",
+      "originalTitle": "Möhreneintopf mit Huhn",
+      "enrichedAt": "2025-12-27T22:22:55.225Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/huhn-ueber-dampf",
+      "titleFr": "Poulet à la vapeur aux herbes",
+      "descriptionFr": "Ce plat léger et savoureux met en valeur le poulet tendre cuit à la vapeur, rehaussé par la fraîcheur du lauch et des herbes aromatiques. Parfait pour un repas sain, il séduira toute la famille avec ses saveurs délicates et son harmonie de textures.",
+      "ingredientsFr": [
+        {
+          "name": "poireau",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "cerfeuil",
+          "amount": 0.5,
+          "unit": "botte"
+        },
+        {
+          "name": "blanc de poulet",
+          "amount": 750,
+          "unit": "g"
+        },
+        {
+          "name": "fromage frais",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "feuilles de menthe",
+          "amount": 10,
+          "unit": "unités"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez le poireau en fines rondelles et rincez-le soigneusement sous l'eau froide pour enlever toute impureté.",
+        "Étape 2: Dans un plat allant à la vapeur, disposez les rondelles de poireau en une couche uniforme.",
+        "Étape 3: Assaisonnez les blancs de poulet avec du sel et du poivre, puis placez-les sur le lit de poireau.",
+        "Étape 4: Couvrez le plat et faites cuire à la vapeur pendant environ 20 minutes, ou jusqu'à ce que le poulet soit bien cuit et tendre.",
+        "Étape 5: Pendant ce temps, mélangez le fromage frais avec les feuilles de menthe finement hachées et le cerfeuil. Réservez au frais.",
+        "Étape 6: Une fois le poulet cuit, retirez-le du plat et laissez-le reposer quelques minutes avant de le couper en tranches.",
+        "Étape 7: Servez les tranches de poulet sur un lit de poireau, accompagnées du mélange de fromage frais aux herbes.",
+        "Étape 8: Décorez avec quelques feuilles de menthe supplémentaires pour une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 38,
+        "carbs": 8,
+        "fats": 15
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Huhn-ueber-Dampf-4bb0e1225d6e2.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/huhn-ueber-dampf",
+      "originalTitle": "Huhn über Dampf",
+      "enrichedAt": "2025-12-27T22:23:09.085Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/gemuesesuppe-mit-huhn",
+      "titleFr": "Soupe de Légumes au Poulet",
+      "descriptionFr": "Cette soupe réconfortante allie le tendre poulet aux légumes frais pour un plat savoureux et nutritif. Idéale pour les jours frais, elle réchauffe le corps et l'esprit tout en étant simple à préparer.",
+      "ingredientsFr": [
+        {
+          "name": "Chou-fleur",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Carotte",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Huile",
+          "amount": 5,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Filet de poulet",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Feuille de laurier",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Bouillon de volaille en granulés",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Petits pois surgelés",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Muscade",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez et découpez le chou-fleur en petits fleurets. Épluchez la carotte et coupez-la en rondelles. Émincez l'oignon.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile à feu moyen. Ajoutez l'oignon émincé et faites-le revenir jusqu'à ce qu'il devienne translucide.",
+        "Étape 3: Ajoutez le poulet coupé en dés dans la casserole et faites-le dorer légèrement de tous les côtés.",
+        "Étape 4: Incorporez le chou-fleur, les rondelles de carotte et la feuille de laurier. Remuez bien le tout.",
+        "Étape 5: Ajoutez environ 1 litre d'eau et le bouillon de volaille en granulés. Portez à ébullition, puis réduisez le feu et laissez mijoter pendant environ 15 minutes.",
+        "Étape 6: Ajoutez les petits pois surgelés et laissez cuire encore 5 minutes. Assaisonnez avec une pincée de muscade, du sel et du poivre selon votre goût.",
+        "Étape 7: Retirez la feuille de laurier et servez la soupe chaude, accompagnée de pain frais si désiré."
+      ],
+      "nutrition": {
+        "calories": 250,
+        "proteins": 30,
+        "carbs": 20,
+        "fats": 5
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Gemuesesuppe-mit-Huhn-4bb0f38f27af5.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/gemuesesuppe-mit-huhn",
+      "originalTitle": "Gemüsesuppe mit Huhn",
+      "enrichedAt": "2025-12-27T22:23:09.268Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/vitaminsalat-mit-huhn",
+      "titleFr": "Salade Vitamine au Poulet",
+      "descriptionFr": "Cette salade colorée et croquante allie la douceur du poulet grillé à la fraîcheur des légumes. Parfaite pour un déjeuner léger ou un dîner estival, elle regorge de vitamines et de saveurs qui raviront vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "Blanc de poulet",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Huile de colza",
+          "amount": 8,
+          "unit": "cuillères à soupe"
+        },
+        {
+          "name": "Chicorée",
+          "amount": 1,
+          "unit": "bouquet"
+        },
+        {
+          "name": "Radicchio",
+          "amount": 1,
+          "unit": "tête"
+        },
+        {
+          "name": "Oignons nouveaux",
+          "amount": 4,
+          "unit": "pièce"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Piment",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Vinaigre de vin",
+          "amount": 2,
+          "unit": "cuillères à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Endive",
+          "amount": 1,
+          "unit": "tête"
+        },
+        {
+          "name": "Radis",
+          "amount": 5,
+          "unit": "pièce"
+        },
+        {
+          "name": "Ciboulette",
+          "amount": 1,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Commencez par cuire les blancs de poulet dans une poêle avec un peu d'huile de colza, assaisonnez avec du sel et du poivre, jusqu'à ce qu'ils soient bien dorés et cuits à cœur (environ 6-7 minutes de chaque côté).",
+        "Étape 2: Pendant que le poulet cuit, lavez et coupez le chicorée, le radicchio et l'endive en morceaux. Disposez-les dans un grand saladier.",
+        "Étape 3: Émincez les oignons nouveaux et l'oignon, puis ajoutez-les au saladier avec les légumes.",
+        "Étape 4: Coupez le piment en petits dés et incorporez-le aux légumes pour apporter une touche de piquant.",
+        "Étape 5: Une fois le poulet cuit, laissez-le refroidir légèrement avant de le couper en dés ou en tranches et ajoutez-le à la salade.",
+        "Étape 6: Dans un petit bol, mélangez le vinaigre de vin avec le reste de l'huile de colza, puis assaisonnez avec du sel et du poivre selon vos goûts.",
+        "Étape 7: Versez la vinaigrette sur la salade et mélangez délicatement pour bien enrober tous les ingrédients.",
+        "Étape 8: Enfin, ajoutez les radis coupés en rondelles et la ciboulette finement ciselée pour garnir le tout avant de servir."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 30,
+        "carbs": 15,
+        "fats": 20
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Vitaminsalat-mit-Huhn-4bb0ec4fe6c0d.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/vitaminsalat-mit-huhn",
+      "originalTitle": "Vitaminsalat mit Huhn",
+      "enrichedAt": "2025-12-27T22:23:11.671Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/nudelauflauf-mit-huhn",
+      "titleFr": "Gratin de Pâtes au Poulet",
+      "descriptionFr": "Découvrez ce savoureux gratin de pâtes au poulet, réconfortant et crémeux, parfait pour un repas en famille. Les pâtes Strozzapreti se marient délicieusement avec le poulet tendre et les asperges croquantes, le tout relevé d'une touche de fromage. Un plat qui ravira petits et grands !",
+      "ingredientsFr": [
+        {
+          "name": "Pâtes Strozzapreti",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Filet de poulet",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de volaille",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre blanc",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Asperges en conserve",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Mélange d'herbes (surgelées)",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Fromage à pâte dure",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (thermostat 6).",
+        "Étape 2: Faites cuire les pâtes Strozzapreti dans une grande casserole d'eau bouillante salée pendant environ 8 minutes, jusqu'à ce qu'elles soient al dente. Égouttez-les et réservez.",
+        "Étape 3: Dans une poêle, faites chauffer un peu d'huile d'olive et faites cuire le filet de poulet coupé en dés jusqu'à ce qu'il soit doré et bien cuit. Assaisonnez avec du sel, du poivre et le jus de citron.",
+        "Étape 4: Dans un grand saladier, mélangez les pâtes, le poulet cuit, les asperges coupées, la crème fraîche et le mélange d'herbes. Mélangez bien pour bien enrober tous les ingrédients.",
+        "Étape 5: Versez le tout dans un plat à gratin et râpez le fromage à pâte dure par-dessus.",
+        "Étape 6: Enfournez pendant 20-25 minutes, jusqu'à ce que le dessus soit doré et croustillant.",
+        "Étape 7: Laissez reposer quelques minutes avant de servir, puis dégustez chaud."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 40,
+        "carbs": 60,
+        "fats": 20
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2009/10/Nudelauflauf-mit-Huhn-4acd0902b4ad4.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/nudelauflauf-mit-huhn",
+      "originalTitle": "Nudelauflauf mit Huhn",
+      "enrichedAt": "2025-12-27T22:23:24.619Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/huhn-weisswein",
+      "titleFr": "Poulet au Vin Blanc",
+      "descriptionFr": "Le poulet au vin blanc est un plat savoureux qui réunit des ingrédients simples pour créer une expérience culinaire raffinée. Avec ses arômes de vin, d'herbes et d'olives, ce plat réconfortant ravira vos convives et égayera vos repas. Parfait pour un dîner en famille ou entre amis, il est à la fois facile à préparer et délicieux.",
+      "ingredientsFr": [
+        {
+          "name": "huile d'olive",
+          "amount": 90,
+          "unit": "ml"
+        },
+        {
+          "name": "poulet fermier",
+          "amount": 1200,
+          "unit": "g"
+        },
+        {
+          "name": "oignons",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "carottes",
+          "amount": 3,
+          "unit": "pièce"
+        },
+        {
+          "name": "échalotes",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "farine",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "bouillon de volaille",
+          "amount": 125,
+          "unit": "ml"
+        },
+        {
+          "name": "vin blanc",
+          "amount": 125,
+          "unit": "ml"
+        },
+        {
+          "name": "feuille de laurier",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "thym",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "olives vertes dénoyautées",
+          "amount": 12,
+          "unit": "pièce"
+        },
+        {
+          "name": "petits oignons blancs",
+          "amount": 10,
+          "unit": "pièce"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande cocotte, faites chauffer l'huile d'olive à feu moyen. Ajoutez le poulet découpé en morceaux et faites-le dorer de tous les côtés pendant environ 10 minutes.",
+        "Étape 2: Pendant que le poulet dore, émincez les oignons, les carottes et les échalotes. Écrasez la gousse d'ail.",
+        "Étape 3: Une fois le poulet bien doré, retirez-le de la cocotte et réservez. Dans la même cocotte, ajoutez les oignons, les carottes, les échalotes et l'ail. Faites revenir le tout pendant 5 minutes jusqu'à ce que les légumes soient tendres.",
+        "Étape 4: Saupoudrez les légumes de farine et mélangez bien pour enrober. Ajoutez le bouillon de volaille et le vin blanc, en grattant le fond de la cocotte pour récupérer les sucs de cuisson.",
+        "Étape 5: Remettez le poulet dans la cocotte, ajoutez la feuille de laurier et le thym. Couvrez et laissez mijoter à feu doux pendant environ 30 minutes.",
+        "Étape 6: Ajoutez les olives vertes et les petits oignons blancs dans la cocotte. Poursuivez la cuisson encore 10 minutes à découvert pour épaissir la sauce.",
+        "Étape 7: Rectifiez l'assaisonnement en sel et poivre selon votre goût. Servez chaud, accompagné de pommes de terre ou de riz."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 40,
+        "carbs": 20,
+        "fats": 25
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2007/10/Huhn-in-Weisswein-471dfa75e76fe.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/huhn-weisswein",
+      "originalTitle": "Huhn in Weißwein",
+      "enrichedAt": "2025-12-27T22:23:25.537Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/huehner-gemuesesuppe",
+      "titleFr": "Soupe de Poulet aux Légumes",
+      "descriptionFr": "Réconfortante et nourrissante, cette soupe de poulet aux légumes est idéale pour les journées fraîches. Avec des morceaux tendres de poulet et une variété de légumes croquants, elle saura ravir vos papilles tout en apportant chaleur et bien-être.",
+      "ingredientsFr": [
+        {
+          "name": "filet de poulet",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "huile végétale",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "carottes",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "pommes de terre (fermes)",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "côtes de céleri",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "bouillon de poulet",
+          "amount": 1200,
+          "unit": "ml"
+        },
+        {
+          "name": "muscade en poudre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "feuilles de persil",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites chauffer l'huile végétale à feu moyen. Ajoutez l'oignon haché et faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 2: Coupez le filet de poulet en dés et ajoutez-le à la casserole. Faites cuire jusqu'à ce qu'il soit doré de tous les côtés.",
+        "Étape 3: Épluchez et coupez les carottes et les pommes de terre en petits morceaux. Ajoutez-les ainsi que le céleri coupé dans la casserole.",
+        "Étape 4: Versez le bouillon de poulet dans la casserole et portez à ébullition. Réduisez ensuite le feu et laissez mijoter pendant environ 20 minutes.",
+        "Étape 5: Assaisonnez avec du sel, du poivre et une pincée de muscade. Laissez mijoter encore 5 minutes pour bien mélanger les saveurs.",
+        "Étape 6: Vérifiez la cuisson des légumes; ils doivent être tendres mais encore croquants. Ajustez l'assaisonnement si nécessaire.",
+        "Étape 7: Servez chaud, garni de feuilles de persil frais pour une touche de couleur et de saveur."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 30,
+        "carbs": 40,
+        "fats": 10
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-12341675.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/huehner-gemuesesuppe",
+      "originalTitle": "Hühner-Gemüsesuppe",
+      "enrichedAt": "2025-12-27T22:23:22.495Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/ingwer-huhn",
+      "titleFr": "Poulet au Gingembre",
+      "descriptionFr": "Découvrez ce délicieux poulet au gingembre, une recette savoureuse qui allie tendreté et fraîcheur. Avec ses notes d'agrumes et d'épices, ce plat est idéal pour un dîner en famille ou entre amis.",
+      "ingredientsFr": [
+        {
+          "name": "filet de poulet",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "citron non traité",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "sauce soja claire",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "gingembre frais",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "huile de pépins",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "liant pour sauce clair",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "coriandre fraîche",
+          "amount": 0.5,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Commencez par couper le filet de poulet en morceaux de taille uniforme pour une cuisson homogène.",
+        "Étape 2: Émincez l'oignon et râpez le gingembre frais. Pressez le jus du citron en réservant le zeste.",
+        "Étape 3: Dans un grand bol, mélangez le poulet avec la sauce soja, le gingembre, l'oignon, le jus et le zeste de citron. Laissez mariner pendant 30 minutes pour bien imprégner les saveurs.",
+        "Étape 4: Chauffez l'huile de pépins dans une poêle à feu moyen. Ajoutez le poulet mariné et faites-le dorer de tous les côtés.",
+        "Étape 5: Une fois le poulet bien doré, incorporez le liant pour sauce en remuant constamment pour éviter les grumeaux, puis laissez mijoter pendant 5 minutes.",
+        "Étape 6: Ajoutez la coriandre fraîche hachée en fin de cuisson pour une touche de fraîcheur.",
+        "Étape 7: Servez chaud accompagné de riz ou de légumes sautés pour un repas équilibré."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 30,
+        "carbs": 10,
+        "fats": 18
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Ingwer-Huhn-4bb104ca70da7.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/ingwer-huhn",
+      "originalTitle": "Ingwer-Huhn",
+      "enrichedAt": "2025-12-27T22:23:39.160Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/couscous-mit-huhn",
+      "titleFr": "Couscous au Poulet",
+      "descriptionFr": "Découvrez ce savoureux couscous au poulet, un plat réconfortant et coloré qui ravira vos papilles. Les légumes frais et le poulet tendre se marient parfaitement avec le couscous léger, créant une harmonie de saveurs et de textures. Idéal pour un repas en famille ou entre amis !",
+      "ingredientsFr": [
+        {
+          "name": "Couscous",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Navet blanc",
+          "amount": 3,
+          "unit": "pièces"
+        },
+        {
+          "name": "Courgette",
+          "amount": 3,
+          "unit": "pièces"
+        },
+        {
+          "name": "Pomme de terre",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Carotte",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Poulet",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Tomate",
+          "amount": 5,
+          "unit": "pièces"
+        },
+        {
+          "name": "Coriandre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Persil",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Paprika",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'oignon finement haché et faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 2: Pendant ce temps, coupez le poulet en morceaux et ajoutez-le à la casserole. Faites cuire jusqu'à ce qu'il soit doré de tous les côtés.",
+        "Étape 3: Épluchez et coupez les navets, les pommes de terre et les carottes en dés. Ajoutez-les dans la casserole avec le poulet.",
+        "Étape 4: Incorporez les courgettes et les tomates coupées en dés, puis assaisonnez avec le coriandre, le persil et le paprika. Mélangez bien le tout.",
+        "Étape 5: Ajoutez environ 600 ml d'eau dans la casserole et portez à ébullition. Réduisez ensuite le feu et laissez mijoter pendant 25 minutes.",
+        "Étape 6: Pendant ce temps, préparez le couscous en suivant les instructions sur l'emballage. En général, ajoutez le couscous dans un saladier, versez de l'eau bouillante et couvrez pendant 5 minutes.",
+        "Étape 7: Une fois les légumes et le poulet cuits, servez le mélange sur un lit de couscous. Mélangez délicatement pour bien enrober le couscous de la sauce.",
+        "Étape 8: Décorez avec un peu de persil frais haché avant de servir."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 30,
+        "carbs": 55,
+        "fats": 15
+      },
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2006/3/Couscous-mit-Huhn-couscous-mit-huhn.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 2,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/couscous-mit-huhn",
+      "originalTitle": "Couscous mit Huhn",
+      "enrichedAt": "2025-12-27T22:23:41.479Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/huehner-kartoffelsuppe-0",
+      "titleFr": "Soupe de Poulet aux Pommes de Terre",
+      "descriptionFr": "Cette délicieuse soupe de poulet aux pommes de terre est un plat réconfortant parfait pour les journées fraîches. Avec ses arômes de thym et de laurier, elle ravira vos papilles tout en étant nourrissante et savoureuse.",
+      "ingredientsFr": [
+        {
+          "name": "poulet pour la soupe",
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "name": "brin de thym",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "feuilles de laurier",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "grains de poivre",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "légumes pour le bouillon",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "pommes de terre",
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "name": "ciboulette",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "crème aigre",
+          "amount": 200,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, placez le poulet et couvrez-le d'eau. Ajoutez le thym, les feuilles de laurier, les grains de poivre et le sel. Portez à ébullition.",
+        "Étape 2: Réduisez le feu et laissez mijoter pendant environ 1 heure, jusqu'à ce que le poulet soit tendre. Retirez le poulet de la casserole et laissez refroidir.",
+        "Étape 3: Pendant que le poulet refroidit, ajoutez les légumes pour le bouillon (carottes, céleri, poireau) et l'oignon coupé en dés dans le bouillon. Laissez mijoter pendant 15 minutes.",
+        "Étape 4: Épluchez et coupez les pommes de terre en cubes. Ajoutez-les au bouillon et laissez cuire pendant 20 minutes, jusqu'à ce qu'elles soient tendres.",
+        "Étape 5: Pendant ce temps, désossez le poulet et coupez la chair en morceaux. Ajoutez le poulet coupé au bouillon.",
+        "Étape 6: Rectifiez l'assaisonnement si nécessaire et incorporez la crème aigre pour une texture crémeuse.",
+        "Étape 7: Avant de servir, ajoutez la ciboulette finement ciselée pour une touche de fraîcheur.",
+        "Étape 8: Servez chaud dans des bols et savourez cette soupe réconfortante."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 25,
+        "carbs": 40,
+        "fats": 10
+      },
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/huehner-kartoffelsuppe-217263.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/huehner-kartoffelsuppe-0",
+      "originalTitle": "Hühner-Kartoffelsuppe",
+      "enrichedAt": "2025-12-27T22:23:38.314Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/huehner-spinatsuppe-0",
+      "titleFr": "Soupe de Poulet aux Épinards",
+      "descriptionFr": "Cette délicieuse soupe de poulet aux épinards est un plat réconfortant, idéal pour les soirées fraîches. Avec sa texture crémeuse et ses saveurs délicates, elle saura ravir vos papilles tout en étant riche en nutriments.",
+      "ingredientsFr": [
+        {
+          "name": "Épinards frais",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de volaille",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "Filet de poulet",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Citron",
+          "amount": 0.5,
+          "unit": "unité"
+        },
+        {
+          "name": "Persil frais",
+          "amount": 0.5,
+          "unit": "botte"
+        },
+        {
+          "name": "Beurre",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites fondre le beurre à feu moyen. Ajoutez le filet de poulet découpé en morceaux et faites-le dorer pendant 5 à 7 minutes.",
+        "Étape 2: Une fois le poulet doré, ajoutez le bouillon de volaille et portez à ébullition. Réduisez ensuite le feu et laissez mijoter pendant 10 minutes.",
+        "Étape 3: Pendant ce temps, lavez les épinards et ajoutez-les à la casserole. Laissez cuire pendant environ 5 minutes, jusqu'à ce qu'ils soient tendres.",
+        "Étape 4: Pressez le jus de la moitié de citron dans la soupe et assaisonnez avec du sel et du poivre selon votre goût.",
+        "Étape 5: Hachez finement le persil et incorporez-le à la soupe juste avant de servir pour une touche de fraîcheur.",
+        "Étape 6: Servez la soupe chaude dans des bols, avec un quartier de citron sur le côté pour ceux qui aiment un peu plus d'acidité."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 30,
+        "carbs": 6,
+        "fats": 20
+      },
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/huehner-spinatsuppe-426038.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/huehner-spinatsuppe-0",
+      "originalTitle": "Hühner-Spinatsuppe",
+      "enrichedAt": "2025-12-27T22:23:51.707Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/huehner-spargelsuppe-0",
+      "titleFr": "Soupe de Poulet aux Asperges",
+      "descriptionFr": "Cette délicieuse soupe de poulet aux asperges est un plat réconfortant qui ravira vos papilles. Riche en saveurs et en nutriments, elle combine des légumes frais et un bouillon savoureux, parfait pour les soirées fraîches. Servez-la avec une touche de crème pour un résultat encore plus onctueux !",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Poireau",
+          "amount": 1,
+          "unit": "tige"
+        },
+        {
+          "name": "Carottes",
+          "amount": 5,
+          "unit": "pièces"
+        },
+        {
+          "name": "Céleri-rave",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Champignons",
+          "amount": 1,
+          "unit": "poignée"
+        },
+        {
+          "name": "Poulet entier",
+          "amount": 1400,
+          "unit": "g"
+        },
+        {
+          "name": "Grains de poivre blanc",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Clous de girofle",
+          "amount": 3,
+          "unit": "pièces"
+        },
+        {
+          "name": "Feuilles de laurier",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Brins de persil",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Oeufs",
+          "amount": 3,
+          "unit": "pièces"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Beurre",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Asperges blanches",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Persil",
+          "amount": 1,
+          "unit": "brin"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites fondre le beurre à feu moyen. Ajoutez l'oignon et le poireau émincés et faites revenir jusqu'à ce qu'ils soient tendres.",
+        "Étape 2: Ajoutez les carottes coupées en rondelles, le céleri-rave coupé en dés et les champignons tranchés. Faites revenir le tout pendant quelques minutes.",
+        "Étape 3: Ajoutez le poulet entier dans la casserole, puis couvrez d'eau. Ajoutez les grains de poivre, les clous de girofle, les feuilles de laurier et le persil. Portez à ébullition.",
+        "Étape 4: Réduisez le feu et laissez mijoter pendant environ 1 heure, jusqu'à ce que le poulet soit bien cuit. Retirez le poulet et laissez-le refroidir légèrement avant de le désosser et de le couper en morceaux.",
+        "Étape 5: Pendant ce temps, ajoutez les asperges coupées en morceaux et les carottes restantes dans le bouillon. Laissez cuire 10 minutes supplémentaires.",
+        "Étape 6: Dans un bol, battez les œufs avec la crème fraîche, puis incorporez ce mélange dans la soupe en remuant bien pour éviter que les œufs ne coagulent.",
+        "Étape 7: Ajoutez les morceaux de poulet dans la soupe, puis assaisonnez avec du sel et du poivre selon votre goût.",
+        "Étape 8: Servez la soupe chaude, garnie d'un brin de persil frais."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 30,
+        "carbs": 20,
+        "fats": 15
+      },
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/huehner-spargelsuppe-448818.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/huehner-spargelsuppe-0",
+      "originalTitle": "Hühner-Spargelsuppe",
+      "enrichedAt": "2025-12-27T22:23:57.807Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/huehner-nudelsuppe-0",
+      "titleFr": "Soupe de Nouilles au Poulet",
+      "descriptionFr": "Cette délicieuse soupe de nouilles au poulet est un plat réconfortant, parfait pour les journées fraîches. Avec ses saveurs délicates de poulet et de champignons, elle saura ravir les papilles de toute la famille. Facile à préparer, elle est idéale pour un repas rapide et nourrissant.",
+      "ingredientsFr": [
+        {
+          "name": "filet de poulet",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "oignons nouveaux",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "champignons",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile de cacahuète",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "vin de riz",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "bouillon de volaille",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "nouilles de riz (Vermicelles)",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "sauce soja claire",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites chauffer l'huile de cacahuète à feu moyen. Ajoutez le filet de poulet coupé en morceaux et faites-le dorer pendant environ 5 minutes.",
+        "Étape 2: Pendant que le poulet cuit, émincez les oignons nouveaux et coupez les champignons en tranches. Ajoutez-les dans la casserole et faites revenir le tout pendant 3 à 4 minutes jusqu'à ce que les légumes soient tendres.",
+        "Étape 3: Ajoutez le vin de riz dans la casserole et laissez mijoter pendant 2 minutes pour permettre à l'alcool de s'évaporer.",
+        "Étape 4: Versez le bouillon de volaille dans la casserole, portez à ébullition, puis réduisez le feu et laissez mijoter pendant 10 minutes.",
+        "Étape 5: Pendant ce temps, faites cuire les nouilles de riz selon les instructions du paquet. Une fois cuites, égouttez-les et réservez.",
+        "Étape 6: Après 10 minutes de mijotage, incorporez les nouilles de riz dans la soupe. Ajoutez la sauce soja, le sel et le poivre, puis mélangez bien.",
+        "Étape 7: Laissez mijoter encore 2 à 3 minutes pour bien mélanger les saveurs.",
+        "Étape 8: Servez chaud, garni de quelques oignons nouveaux émincés pour une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 30,
+        "carbs": 50,
+        "fats": 10
+      },
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/huehner-nudelsuppe-436396.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/huehner-nudelsuppe-0",
+      "originalTitle": "Hühner-Nudelsuppe",
+      "enrichedAt": "2025-12-27T22:23:58.819Z"
+    },
+    {
+      "id": "https://www.lecker.de/anis-huhn-17323.html",
+      "titleFr": "Poulet à l'Anis",
+      "descriptionFr": "Savourez ce plat exotique qui marie délicatement le poulet tendre avec des saveurs d'anis et de légumes croquants. Ce poulet à l'anis est parfait pour un dîner en famille ou entre amis, offrant une expérience gustative unique et réconfortante.",
+      "ingredientsFr": [
+        {
+          "name": "riz basmati",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "filet de poulet",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "échalotes",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "poivrons verts",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "champignons",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "piment",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "sauce soja",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sucre",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "graines d'anis",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "fécule de maïs",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "ciboulette",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "persil",
+          "amount": 1,
+          "unit": "unité"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez le riz basmati sous l'eau froide jusqu'à ce que l'eau soit claire, puis faites-le cuire selon les instructions du paquet. Réservez au chaud.",
+        "Étape 2: Émincez les échalotes, les poivrons et les champignons. Coupez le filet de poulet en morceaux de taille uniforme.",
+        "Étape 3: Dans une grande poêle, chauffez l'huile à feu moyen. Ajoutez les échalotes et faites revenir jusqu'à ce qu'elles soient translucides.",
+        "Étape 4: Ajoutez les morceaux de poulet dans la poêle et faites-les dorer de tous les côtés. Incorporez les poivrons et les champignons, puis poursuivez la cuisson pendant 5 minutes.",
+        "Étape 5: Dans un petit bol, mélangez la sauce soja, le sucre, le sel, les graines d'anis, le piment émincé et la fécule de maïs. Ajoutez ce mélange à la poêle et remuez bien pour enrober tous les ingrédients.",
+        "Étape 6: Laissez mijoter à feu doux pendant environ 5 à 7 minutes, jusqu'à ce que la sauce épaississe légèrement.",
+        "Étape 7: Incorporez la ciboulette ciselée et mélangez bien. Servez chaud sur un lit de riz basmati.",
+        "Étape 8: Décorez avec des feuilles de persil avant de déguster."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 30,
+        "carbs": 55,
+        "fats": 15
+      },
+      "imageUrl": "https://images.lecker.de/,id=284649b2,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/anis-huhn-17323.html",
+      "originalTitle": "Anis-Huhn",
+      "enrichedAt": "2025-12-27T22:24:14.514Z"
+    },
+    {
+      "id": "https://www.lecker.de/curry-huhn-15315.html",
+      "titleFr": "Curry de Poulet Exotique",
+      "descriptionFr": "Ce curry de poulet est un plat réconfortant et plein de saveurs exotiques. Facile à préparer, il ravira vos papilles avec ses épices envoûtantes et sa texture crémeuse. Parfait pour un dîner convivial ou une soirée entre amis !",
+      "ingredientsFr": [
+        {
+          "name": "blanc de poulet",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "oignons nouveaux",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "poivron rouge",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "ananas",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "cube de bouillon",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "ail",
+          "amount": 2,
+          "unit": "gousses"
+        },
+        {
+          "name": "piment",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "jalapeño",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "curcuma",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "fenugrec",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "sel marin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "persil",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "origan",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "basilic",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "clou de girofle",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, faites chauffer un peu d'huile d'olive à feu moyen. Ajoutez les oignons et les oignons nouveaux, puis faites-les revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Coupez le blanc de poulet en cubes et ajoutez-le à la poêle. Faites cuire jusqu'à ce qu'il soit doré de tous les côtés.",
+        "Étape 3: Ajoutez les poivrons rouges coupés en dés, l'ail émincé, le piment et le jalapeño. Faites sauter pendant environ 5 minutes.",
+        "Étape 4: Incorporez le lait de coco, le cube de bouillon, le sucre, le curcuma, le cumin, le fenugrec, le poivre et le sel marin. Remuez bien pour mélanger tous les ingrédients.",
+        "Étape 5: Ajoutez l'ananas coupé en morceaux et laissez mijoter à feu doux pendant environ 15 minutes, jusqu'à ce que le poulet soit bien cuit.",
+        "Étape 6: En fin de cuisson, ajoutez le persil, l'origan, le basilic et le clou de girofle. Mélangez et laissez cuire encore 2 minutes.",
+        "Étape 7: Servez chaud avec du riz basmati ou des nouilles asiatiques. Garnissez de feuilles de coriandre fraîche si vous le souhaitez."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 40,
+        "carbs": 35,
+        "fats": 30
+      },
+      "imageUrl": "https://images.lecker.de/,id=Curry-Huhn-rezepte-ugcugc_rec_standard_535989.jpg,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/curry-huhn-15315.html",
+      "originalTitle": "Curry Huhn",
+      "enrichedAt": "2025-12-27T22:24:14.876Z"
+    }
+  ]
+}

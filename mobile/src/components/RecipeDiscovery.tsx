@@ -38,22 +38,17 @@ import {
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { Card, Badge } from './ui'
+import { Badge } from './ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
-import { useUserStore } from '../stores/user-store'
-import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../services/gustar-recipes'
-import { enrichRecipesBatch, hasOpenAIApiKey, type RecipeToEnrich, type EnrichedRecipe } from '../services/ai-service'
-import type { Recipe, MealType } from '../types'
+import {
+  loadStaticRecipes,
+  searchStaticRecipes,
+  staticToRecipe,
+} from '../services/static-recipes'
+import type { Recipe } from '../types'
 
-// API Key for Gustar.io
-const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
-
-// Popular search terms for auto-fetch (German terms for Gustar API)
-const POPULAR_SEARCHES = [
-  'huhn', 'salat', 'nudeln', 'lachs', 'gemuse',
-  'suppe', 'reis', 'rindfleisch', 'kuchen', 'kartoffel'
-]
+// Note: Recipes are now loaded from static JSON (pre-enriched in French)
 
 // Fallback recipes in French when API is unavailable
 const FALLBACK_RECIPES: Recipe[] = [
@@ -271,52 +266,7 @@ function getDifficulty(difficulty?: string) {
   return difficultyLabels[difficulty || 'medium'] || difficultyLabels.medium
 }
 
-// Transform Gustar recipe to our Recipe type
-function transformGustarToRecipe(gustar: GustarRecipe): Recipe {
-  const totalTime = (gustar.prepTime || 0) + (gustar.cookTime || 0)
-  const servings = gustar.servings || 2
-
-  return {
-    id: gustar.id,
-    title: gustar.title,
-    description: gustar.description,
-    imageUrl: gustar.image,
-    servings,
-    prepTime: gustar.prepTime || 15,
-    cookTime: gustar.cookTime || 20,
-    totalTime: totalTime || 35,
-    difficulty: gustar.difficulty || 'medium',
-    category: gustar.dietary?.[0] || 'general',
-    ingredients: gustar.ingredients.map((ing, index) => ({
-      id: `${gustar.id}-ing-${index}`,
-      name: ing.name,
-      amount: ing.amount,
-      unit: ing.unit,
-    })),
-    instructions: gustar.instructions,
-    nutrition: {
-      calories: (gustar.nutrition?.calories || 0) * servings,
-      proteins: (gustar.nutrition?.proteins || 0) * servings,
-      carbs: (gustar.nutrition?.carbs || 0) * servings,
-      fats: (gustar.nutrition?.fats || 0) * servings,
-    },
-    nutritionPerServing: {
-      calories: gustar.nutrition?.calories || 0,
-      proteins: gustar.nutrition?.proteins || 0,
-      carbs: gustar.nutrition?.carbs || 0,
-      fats: gustar.nutrition?.fats || 0,
-    },
-    tags: gustar.dietary || [],
-    dietTypes: gustar.dietary || [],
-    allergens: [],
-    rating: 4.5,
-    ratingCount: Math.floor(Math.random() * 100) + 20,
-    isFavorite: false,
-    sourceUrl: gustar.sourceUrl,
-    source: gustar.sourceName || 'Gustar.io',
-    createdAt: new Date().toISOString(),
-  }
-}
+// Note: transformGustarToRecipe removed - now using staticToRecipe from static-recipes service
 
 interface RecipeDiscoveryProps {
   onRecipePress: (recipe: Recipe) => void
@@ -324,17 +274,14 @@ interface RecipeDiscoveryProps {
 }
 
 export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps) {
-  const { profile } = useUserStore()
-  const { getTopRatedAIRecipes, aiRecipes, favoriteRecipes } = useRecipesStore()
+  const { getTopRatedAIRecipes } = useRecipesStore()
 
   // State
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
-  const [isTranslating, setIsTranslating] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [gustarRecipesList, setGustarRecipesList] = useState<Recipe[]>([])
-  const [enrichedRecipes, setEnrichedRecipes] = useState<Map<string, EnrichedRecipe>>(new Map())
 
   // Filters
   const [selectedMealType, setSelectedMealType] = useState('')
@@ -343,192 +290,60 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
   const [sortBy, setSortBy] = useState('rating')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Initialize Gustar API and fetch recipes on mount
+  // Load static recipes on mount (PRODUCTION: French-only, no German)
   useEffect(() => {
     const initAndFetch = async () => {
-      // Initialize API
-      if (GUSTAR_API_KEY) {
-        gustarRecipes.init(GUSTAR_API_KEY)
-      }
-
-      // Fetch recipes
       setIsLoading(true)
       try {
-        // Ensure API is configured
-        if (!gustarRecipes.isConfigured()) {
-          console.log('Gustar API not configured, using fallbacks')
-          setGustarRecipesList(FALLBACK_RECIPES)
-          setIsLoading(false)
-          return
-        }
+        // Load pre-enriched static recipes (French, with full details)
+        const staticRecipes = await loadStaticRecipes()
 
-        // Pick random popular searches
-        const randomSearches = POPULAR_SEARCHES
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3)
+        if (staticRecipes.length > 0) {
+          // Use static recipes - already in French with ingredients and instructions
+          console.log(`RecipeDiscovery: Loaded ${staticRecipes.length} static recipes (French)`)
 
-        console.log('RecipeDiscovery: Fetching recipes for:', randomSearches)
-        const allRecipes: Recipe[] = []
+          // Shuffle and take 15 random recipes for display
+          const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
+          const selected = shuffled.slice(0, 15)
 
-        for (const searchQuery of randomSearches) {
-          try {
-            const response = await gustarRecipes.searchRecipes({
-              query: searchQuery,
-              diet: profile?.dietType as DietaryPreference | undefined,
-              limit: 5,
-            })
-
-            console.log(`RecipeDiscovery: Got ${response.recipes.length} recipes for "${searchQuery}"`)
-            const transformed = response.recipes.map(transformGustarToRecipe)
-            allRecipes.push(...transformed)
-          } catch (error) {
-            console.warn(`Failed to fetch recipes for "${searchQuery}":`, error)
-          }
-        }
-
-        // Remove duplicates by id
-        const uniqueRecipes = allRecipes.filter(
-          (recipe, index, self) => index === self.findIndex(r => r.id === recipe.id)
-        )
-
-        console.log('RecipeDiscovery: Total unique recipes:', uniqueRecipes.length)
-
-        // Use fallback recipes if API returned nothing
-        if (uniqueRecipes.length === 0) {
-          console.log('Using fallback recipes (API unavailable)')
-          setGustarRecipesList(FALLBACK_RECIPES)
+          // Convert to Recipe type
+          const recipes = selected.map(staticToRecipe)
+          setGustarRecipesList(recipes)
         } else {
-          setGustarRecipesList(uniqueRecipes)
+          // Fallback to hardcoded French recipes
+          console.log('RecipeDiscovery: No static recipes, using fallbacks')
+          setGustarRecipesList(FALLBACK_RECIPES)
         }
       } catch (error) {
-        console.warn('Failed to fetch popular recipes:', error)
+        console.warn('Failed to load static recipes:', error)
         setGustarRecipesList(FALLBACK_RECIPES)
       } finally {
         setIsLoading(false)
       }
     }
     initAndFetch()
-  }, [profile?.dietType])
+  }, [])
 
-  // Enrich recipes with full French content (ingredients, instructions, nutrition)
-  const enrichRecipesFromGustar = useCallback(async (recipes: Recipe[]) => {
-    // Check if API key is available
-    const hasKey = await hasOpenAIApiKey()
-    if (!hasKey) {
-      console.log('RecipeDiscovery: No OpenAI key, skipping enrichment')
-      return
-    }
-    if (recipes.length === 0) return
-
-    setIsTranslating(true)
-    try {
-      // Only enrich recipes not already enriched
-      const toEnrich = recipes.filter(r => !enrichedRecipes.has(r.id))
-      if (toEnrich.length === 0) {
-        console.log('RecipeDiscovery: All recipes already enriched')
-        setIsTranslating(false)
-        return
-      }
-
-      console.log(`RecipeDiscovery: Enriching ${toEnrich.length} recipes...`)
-
-      // Convert to RecipeToEnrich format
-      const recipesToEnrich: RecipeToEnrich[] = toEnrich.map(r => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        ingredients: r.ingredients.map(ing => ({
-          name: ing.name,
-          amount: ing.amount,
-          unit: ing.unit,
-        })),
-        instructions: r.instructions,
-        servings: r.servings,
-        nutrition: r.nutritionPerServing || null,
-      }))
-
-      // Enrich in batches of 3
-      const allEnriched = new Map<string, EnrichedRecipe>()
-      for (let i = 0; i < recipesToEnrich.length; i += 3) {
-        const batch = recipesToEnrich.slice(i, i + 3)
-        const enrichedBatch = await enrichRecipesBatch(batch)
-        enrichedBatch.forEach((value, key) => allEnriched.set(key, value))
-      }
-
-      console.log(`RecipeDiscovery: Got ${allEnriched.size} enriched recipes`)
-
-      // Merge with existing enriched recipes
-      setEnrichedRecipes(prev => {
-        const newMap = new Map(prev)
-        allEnriched.forEach((value, key) => {
-          newMap.set(key, value)
-        })
-        return newMap
-      })
-    } catch (error) {
-      console.warn('Enrichment failed:', error)
-    } finally {
-      setIsTranslating(false)
-    }
-  }, [enrichedRecipes])
+  // Note: Static recipes are already enriched in French, no background enrichment needed
 
   const fetchPopularRecipes = async () => {
-    // Ensure API is initialized
-    if (GUSTAR_API_KEY && !gustarRecipes.isConfigured()) {
-      gustarRecipes.init(GUSTAR_API_KEY)
-    }
-
     setIsLoading(true)
     try {
-      // Ensure API is configured
-      if (!gustarRecipes.isConfigured()) {
-        console.log('Gustar API not configured, using fallbacks')
-        setGustarRecipesList(FALLBACK_RECIPES)
-        setIsLoading(false)
-        return
-      }
+      // Load static recipes (already in French)
+      const staticRecipes = await loadStaticRecipes()
 
-      // Pick random popular searches
-      const randomSearches = POPULAR_SEARCHES
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-
-      console.log('Fetching recipes for:', randomSearches)
-      const allRecipes: Recipe[] = []
-
-      for (const query of randomSearches) {
-        try {
-          const response = await gustarRecipes.searchRecipes({
-            query,
-            diet: profile?.dietType as DietaryPreference | undefined,
-            limit: 5,
-          })
-
-          console.log(`Got ${response.recipes.length} recipes for "${query}"`)
-          const transformed = response.recipes.map(transformGustarToRecipe)
-          allRecipes.push(...transformed)
-        } catch (error) {
-          console.warn(`Failed to fetch recipes for "${query}":`, error)
-        }
-      }
-
-      // Remove duplicates by id
-      const uniqueRecipes = allRecipes.filter(
-        (recipe, index, self) => index === self.findIndex(r => r.id === recipe.id)
-      )
-
-      // Use fallback recipes if API returned nothing
-      if (uniqueRecipes.length === 0) {
-        console.log('Using fallback recipes (API unavailable)')
-        setGustarRecipesList(FALLBACK_RECIPES)
+      if (staticRecipes.length > 0) {
+        // Shuffle and take 15 random recipes
+        const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
+        const selected = shuffled.slice(0, 15)
+        const recipes = selected.map(staticToRecipe)
+        setGustarRecipesList(recipes)
+        console.log(`Refresh: Loaded ${recipes.length} static recipes`)
       } else {
-        setGustarRecipesList(uniqueRecipes)
-        // Enrich recipes in background (only for Gustar recipes, not fallbacks)
-        enrichRecipesFromGustar(uniqueRecipes)
+        setGustarRecipesList(FALLBACK_RECIPES)
       }
     } catch (error) {
-      console.warn('Failed to fetch popular recipes:', error)
-      // Use fallback recipes on error
+      console.warn('Failed to load recipes:', error)
       setGustarRecipesList(FALLBACK_RECIPES)
     } finally {
       setIsLoading(false)
@@ -542,19 +357,22 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
 
     try {
-      const response = await gustarRecipes.searchRecipes({
-        query: searchQuery,
-        diet: selectedDiet as DietaryPreference | undefined,
-        limit: 20,
-      })
+      // Search in static recipes (French)
+      const results = searchStaticRecipes(searchQuery)
 
-      const transformed = response.recipes.map(transformGustarToRecipe)
-      setGustarRecipesList(transformed)
-
-      // Enrich search results in background
-      enrichRecipesFromGustar(transformed)
+      if (results.length > 0) {
+        // Found matches in static recipes
+        const recipes = results.slice(0, 15).map(staticToRecipe)
+        setGustarRecipesList(recipes)
+        console.log(`Search: Found ${recipes.length} static recipes for "${searchQuery}"`)
+      } else {
+        // No results - show empty
+        setGustarRecipesList([])
+        console.log(`Search: No results for "${searchQuery}"`)
+      }
     } catch (error) {
       console.warn('Search failed:', error)
+      setGustarRecipesList([])
     } finally {
       setIsSearching(false)
     }
@@ -690,46 +508,19 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
     )
   }
 
-  // Render Gustar recipe card with enriched French content
-  const renderGustarRecipeCard = (recipe: Recipe) => {
+  // Render recipe card (static recipes are already in French with full details)
+  const renderRecipeCard = (recipe: Recipe) => {
     const difficulty = getDifficulty(recipe.difficulty)
-    const enriched = enrichedRecipes.get(recipe.id)
-
-    // Use enriched data if available
-    const displayTitle = enriched?.titleFr || recipe.title
-    const displayDescription = enriched?.descriptionFr || recipe.description
-
-    // Build enriched recipe for detail view
-    const enrichedRecipeForDetail: Recipe = enriched ? {
-      ...recipe,
-      title: enriched.titleFr,
-      description: enriched.descriptionFr,
-      ingredients: enriched.ingredientsFr.map((ing, idx) => ({
-        id: `${recipe.id}-ing-${idx}`,
-        name: ing.name,
-        amount: ing.amount,
-        unit: ing.unit,
-      })),
-      instructions: enriched.instructionsFr,
-      nutritionPerServing: enriched.nutrition,
-      nutrition: {
-        calories: enriched.nutrition.calories * recipe.servings,
-        proteins: enriched.nutrition.proteins * recipe.servings,
-        carbs: enriched.nutrition.carbs * recipe.servings,
-        fats: enriched.nutrition.fats * recipe.servings,
-      },
-    } : {
-      ...recipe,
-      title: displayTitle,
-      description: displayDescription,
-    }
 
     return (
-      <Card
+      <TouchableOpacity
         key={recipe.id}
-        style={styles.recipeCard}
-        onPress={() => handleRecipePress(enrichedRecipeForDetail)}
-        padding="none"
+        style={styles.recipeCardTouchable}
+        onPress={() => {
+          console.log('Recipe pressed:', recipe.title)
+          handleRecipePress(recipe)
+        }}
+        activeOpacity={0.7}
       >
         <View style={styles.recipeCardRow}>
           {/* Image */}
@@ -744,20 +535,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
                 <ChefHat size={32} color={colors.accent.primary} />
               </LinearGradient>
             )}
-            <View style={styles.sourceBadge}>
-              <Globe size={10} color="#FFFFFF" />
-              <Text style={styles.sourceBadgeText}>{recipe.source || 'Web'}</Text>
-            </View>
-            {enriched && (
-              <View style={styles.frenchBadge}>
-                <Text style={styles.frenchBadgeText}>FR</Text>
-              </View>
-            )}
           </View>
 
           {/* Content */}
           <View style={styles.recipeContent}>
-            <Text style={styles.recipeTitle} numberOfLines={2}>{displayTitle}</Text>
+            <Text style={styles.recipeTitle} numberOfLines={2}>{recipe.title}</Text>
             <View style={styles.recipeMeta}>
               {(recipe.totalTime ?? 0) > 0 && (
                 <View style={styles.metaItem}>
@@ -767,11 +549,11 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
               )}
               <View style={styles.metaItem}>
                 <Flame size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{enriched?.nutrition.calories || recipe.nutritionPerServing?.calories || 0} kcal</Text>
+                <Text style={styles.metaText}>{recipe.nutritionPerServing?.calories || 0} kcal</Text>
               </View>
               <View style={styles.metaItem}>
                 <Dumbbell size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{enriched?.nutrition.proteins || recipe.nutritionPerServing?.proteins || 0}g</Text>
+                <Text style={styles.metaText}>{recipe.nutritionPerServing?.proteins || 0}g</Text>
               </View>
             </View>
             <View style={styles.recipeFooter}>
@@ -787,7 +569,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
             </View>
           </View>
         </View>
-      </Card>
+      </TouchableOpacity>
     )
   }
 
@@ -942,9 +724,6 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
               <Text style={styles.sectionTitle}>
                 {searchQuery ? 'Resultats de recherche' : 'Selectionnees pour vous'}
               </Text>
-              {isTranslating && (
-                <ActivityIndicator size="small" color="#06B6D4" style={{ marginLeft: 8 }} />
-              )}
             </View>
             {filteredRecipes.length > 0 && (
               <Badge variant="default" size="sm">
@@ -960,7 +739,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
             </View>
           ) : filteredRecipes.length > 0 ? (
             <View style={styles.recipesGrid}>
-              {filteredRecipes.map(renderGustarRecipeCard)}
+              {filteredRecipes.map(renderRecipeCard)}
             </View>
           ) : (
             <View style={styles.emptyState}>
@@ -1201,6 +980,14 @@ const styles = StyleSheet.create({
   recipeCard: {
     marginBottom: spacing.sm,
   },
+  recipeCardTouchable: {
+    marginBottom: spacing.sm,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    overflow: 'hidden',
+  },
   recipeCardRow: {
     flexDirection: 'row',
   },
@@ -1221,38 +1008,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopLeftRadius: radius.lg,
     borderBottomLeftRadius: radius.lg,
-  },
-  sourceBadge: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 6,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  sourceBadgeText: {
-    ...typography.caption,
-    color: '#FFFFFF',
-    fontSize: 8,
-  },
-  frenchBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#3B82F6',
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  frenchBadgeText: {
-    ...typography.caption,
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '700',
   },
   recipeContent: {
     flex: 1,

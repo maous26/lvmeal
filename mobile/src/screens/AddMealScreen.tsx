@@ -263,6 +263,8 @@ export default function AddMealScreen() {
   const [showRecipeDetailModal, setShowRecipeDetailModal] = useState(false)
   const [userRating, setUserRating] = useState(0)
   const [userComment, setUserComment] = useState('')
+  const [showAddToMealSelector, setShowAddToMealSelector] = useState(false)
+  const [addToMealType, setAddToMealType] = useState<MealType>(type as MealType)
 
   // Quantity modal state
   const [quantityModal, setQuantityModal] = useState<QuantityModalState>({
@@ -711,7 +713,13 @@ export default function AddMealScreen() {
       setUserComment('')
     }
 
-    setShowRecipeDetailModal(true)
+    // Close discover modal first, then open recipe detail modal
+    // This fixes modal stacking issue where recipe detail appeared behind discover modal
+    setShowDiscoverModal(false)
+    // Small delay to allow modal to close before opening the new one
+    setTimeout(() => {
+      setShowRecipeDetailModal(true)
+    }, 100)
   }
 
   // Rating handlers
@@ -732,6 +740,55 @@ export default function AddMealScreen() {
     rateAIRecipe(selectedRecipe.id, userRating, userComment)
 
     Alert.alert('Merci!', 'Votre note a ete enregistree. Cette recette apparaitra dans vos suggestions.')
+  }
+
+  // Add recipe to meal
+  const handleAddRecipeToMeal = () => {
+    if (!selectedRecipe) return
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+    // Get nutrition per serving (prioritize nutritionPerServing, fallback to dividing total by servings)
+    const servings = selectedRecipe.servings || 1
+    const perServingNutrition = selectedRecipe.nutritionPerServing || {
+      calories: (selectedRecipe.nutrition?.calories || 0) / servings,
+      proteins: (selectedRecipe.nutrition?.proteins || 0) / servings,
+      carbs: (selectedRecipe.nutrition?.carbs || 0) / servings,
+      fats: (selectedRecipe.nutrition?.fats || 0) / servings,
+    }
+
+    // Convert recipe to FoodItem for the meal (1 portion)
+    const recipeAsFood: FoodItem = {
+      id: `recipe-${selectedRecipe.id}`,
+      name: `${selectedRecipe.title} (1 portion)`,
+      brand: selectedRecipe.source || 'Recette',
+      servingSize: 1,
+      servingUnit: 'portion',
+      nutrition: {
+        calories: Math.round(perServingNutrition.calories),
+        proteins: Math.round(perServingNutrition.proteins),
+        carbs: Math.round(perServingNutrition.carbs),
+        fats: Math.round(perServingNutrition.fats),
+      },
+      source: 'recipe',
+      imageUrl: selectedRecipe.imageUrl,
+    }
+
+    // Create MealItem
+    const mealItem: MealItem = {
+      id: generateId(),
+      food: recipeAsFood,
+      quantity: 1, // 1 portion
+    }
+
+    // Add to meal
+    addMeal(addToMealType, [mealItem])
+    addXP(20, 'Recette ajoutee au repas')
+
+    // Close modal and navigate back
+    setShowRecipeDetailModal(false)
+    setShowAddToMealSelector(false)
+    navigation.goBack()
   }
 
   // Toggle recipe favorite
@@ -1824,13 +1881,57 @@ export default function AddMealScreen() {
                     )}
                   </View>
 
+                  {/* Add to Meal Section */}
+                  <View style={styles.addToMealSection}>
+                    <Text style={styles.addToMealTitle}>Ajouter au repas</Text>
+
+                    {/* Meal Type Selector */}
+                    <View style={styles.mealTypeSelectorRow}>
+                      {mealTypeOptions.map((meal) => (
+                        <TouchableOpacity
+                          key={meal.id}
+                          style={[
+                            styles.mealTypeOption,
+                            addToMealType === meal.id && styles.mealTypeOptionActive
+                          ]}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                            setAddToMealType(meal.id)
+                          }}
+                        >
+                          <Text style={styles.mealTypeEmoji}>{meal.icon}</Text>
+                          <Text style={[
+                            styles.mealTypeLabel,
+                            addToMealType === meal.id && styles.mealTypeLabelActive
+                          ]}>
+                            {meal.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Add to Meal Button */}
+                    <Button
+                      variant="default"
+                      size="lg"
+                      fullWidth
+                      onPress={handleAddRecipeToMeal}
+                      style={{ marginTop: spacing.md }}
+                    >
+                      <Plus size={18} color="#FFFFFF" />
+                      <Text style={styles.buttonText}>
+                        Ajouter au {mealConfig[addToMealType]?.label || 'repas'}
+                      </Text>
+                    </Button>
+                  </View>
+
                   {/* Add to favorites button */}
                   <Button
                     variant={isRecipeFavorite(selectedRecipe.id) ? 'outline' : 'primary'}
                     size="lg"
                     fullWidth
                     onPress={() => handleToggleRecipeFavorite(selectedRecipe)}
-                    style={{ marginTop: spacing.lg }}
+                    style={{ marginTop: spacing.md }}
                   >
                     <Heart
                       size={18}
@@ -2943,5 +3044,40 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     borderWidth: 1,
     borderColor: colors.border.light,
+  },
+  // Add to Meal Section styles
+  addToMealSection: {
+    marginTop: spacing.xl,
+    padding: spacing.md,
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.lg,
+  },
+  addToMealTitle: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  mealTypeSelectorRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  mealTypeOption: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    backgroundColor: colors.bg.tertiary,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  mealTypeOptionActive: {
+    backgroundColor: `${colors.accent.primary}15`,
+    borderColor: colors.accent.primary,
+  },
+  mealTypeLabelActive: {
+    color: colors.accent.primary,
+    fontWeight: '600',
   },
 })

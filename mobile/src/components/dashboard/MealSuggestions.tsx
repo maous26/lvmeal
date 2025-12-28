@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useCallback } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, Globe } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
@@ -7,8 +7,9 @@ import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
+import { useGustarStore, type EnrichedGustarRecipe } from '../../stores/gustar-store'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../../services/gustar-recipes'
-import { enrichRecipesBatch, hasOpenAIApiKey, type RecipeToEnrich, type EnrichedRecipe } from '../../services/ai-service'
+import { queueRecipesForEnrichment } from '../../services/gustar-enrichment'
 import type { MealType, Recipe } from '../../types'
 
 // API Key for Gustar.io
@@ -275,10 +276,12 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
   const { getTopRatedAIRecipes, favoriteRecipes } = useRecipesStore()
+  // Use persisted store for enriched recipes
+  const enrichedRecipes = useGustarStore((state) => state.enrichedRecipes)
 
   const [gustarSuggestions, setGustarSuggestions] = useState<SuggestedMeal[]>([])
+  const [gustarRawRecipes, setGustarRawRecipes] = useState<GustarRecipe[]>([])
   const [isLoadingGustar, setIsLoadingGustar] = useState(false)
-  const [enrichedRecipes, setEnrichedRecipes] = useState<Map<string, EnrichedRecipe>>(new Map())
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -287,50 +290,6 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const remainingCalories = Math.max(0, goals.calories - totals.calories)
   const remainingProteins = Math.max(0, goals.proteins - totals.proteins)
   const currentMealType = getCurrentMealType()
-
-  // Enrich Gustar recipes with full French content
-  const enrichSuggestions = useCallback(async (suggestions: SuggestedMeal[], recipes: GustarRecipe[]) => {
-    const hasKey = await hasOpenAIApiKey()
-    if (!hasKey || suggestions.length === 0) return
-
-    try {
-      const toEnrich = suggestions.filter(s => s.isGustar && !enrichedRecipes.has(s.id))
-      if (toEnrich.length === 0) return
-
-      // Convert to RecipeToEnrich format
-      const recipesToEnrich: RecipeToEnrich[] = toEnrich.map(s => {
-        const originalRecipe = recipes.find(r => r.id === s.id)
-        return {
-          id: s.id,
-          title: s.name,
-          description: s.reason,
-          ingredients: originalRecipe?.ingredients || [],
-          instructions: originalRecipe?.instructions || [],
-          servings: originalRecipe?.servings || 2,
-          nutrition: {
-            calories: s.calories,
-            proteins: s.proteins,
-            carbs: s.carbs,
-            fats: s.fats,
-          },
-        }
-      })
-
-      console.log(`MealSuggestions: Enriching ${recipesToEnrich.length} recipes...`)
-      const enrichedMap = await enrichRecipesBatch(recipesToEnrich)
-
-      setEnrichedRecipes(prev => {
-        const newMap = new Map(prev)
-        enrichedMap.forEach((value, key) => {
-          newMap.set(key, value)
-        })
-        return newMap
-      })
-      console.log(`MealSuggestions: Enriched ${enrichedMap.size} recipes`)
-    } catch (error) {
-      console.warn('Enrichment failed:', error)
-    }
-  }, [enrichedRecipes])
 
   // Initialize Gustar API and fetch personalized suggestions
   useEffect(() => {
@@ -352,6 +311,9 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
         })
 
         console.log(`MealSuggestions: Got ${response.recipes.length} recipes for "${randomTerm}"`)
+
+        // Store raw recipes for enrichment
+        setGustarRawRecipes(response.recipes.slice(0, 2))
 
         // Transform to SuggestedMeal format (relaxed calorie filter)
         const transformed: SuggestedMeal[] = response.recipes
@@ -376,9 +338,6 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
           }))
 
         setGustarSuggestions(transformed)
-
-        // Enrich in background with full French content
-        enrichSuggestions(transformed, response.recipes)
       } catch (error) {
         console.warn('Failed to fetch Gustar suggestions:', error)
       } finally {
@@ -387,7 +346,14 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     }
 
     fetchGustarSuggestions()
-  }, [currentMealType, profile?.dietType, remainingCalories, enrichSuggestions])
+  }, [currentMealType, profile?.dietType, remainingCalories])
+
+  // Queue Gustar recipes for background enrichment
+  useEffect(() => {
+    if (gustarRawRecipes.length > 0) {
+      queueRecipesForEnrichment(gustarRawRecipes)
+    }
+  }, [gustarRawRecipes])
 
   // Get top-rated AI recipes for current meal type
   const topRatedAIRecipes = useMemo(() =>
@@ -462,7 +428,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   )
 
   // Combine all sources: AI recipes first, then favorites, Gustar, then defaults
-  // Apply enriched French content to Gustar recipes
+  // Apply enriched French content from persisted store to Gustar recipes
   const suggestions = useMemo(() => {
     const combined: SuggestedMeal[] = []
 
@@ -474,10 +440,10 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
       combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
     }
 
-    // 3. Gustar recipes (with enriched French content applied)
+    // 3. Gustar recipes (with enriched French content from persisted store)
     if (combined.length < 3 && gustarSuggestions.length > 0) {
       const enrichedGustar = gustarSuggestions.map(suggestion => {
-        const enriched = enrichedRecipes.get(suggestion.id)
+        const enriched = enrichedRecipes[suggestion.id] as EnrichedGustarRecipe | undefined
         if (enriched) {
           return {
             ...suggestion,
