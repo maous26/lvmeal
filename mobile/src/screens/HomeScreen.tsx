@@ -19,6 +19,7 @@ import {
   HydrationWidget,
   MetabolicBoostWidget,
   MealSuggestions,
+  SportInitiationWidget,
 } from '../components/dashboard'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -88,6 +89,11 @@ export default function HomeScreen() {
   const handleNavigateToRecipes = () => {
     // @ts-ignore - Navigation typing
     navigation.navigate('AddMeal', { type: 'lunch', openDiscover: true })
+  }
+
+  const handleNavigateToSportInitiation = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('SportInitiation')
   }
 
   return (
@@ -253,10 +259,13 @@ export default function HomeScreen() {
           onViewAll={handleNavigateToRecipes}
         />
 
-        {/* 7. Hydration - Compact widget */}
+        {/* 7. Sport Initiation - For sedentary users in the program */}
+        <SportInitiationWidget onPress={handleNavigateToSportInitiation} />
+
+        {/* 8. Hydration - Compact widget */}
         <HydrationWidget onPress={handleNavigateToWellness} />
 
-        {/* 8. LymIA Coach - Proactive tips */}
+        {/* 9. LymIA Coach - Proactive tips */}
         <View style={styles.section}>
           <Card>
             <LymIAWidget />

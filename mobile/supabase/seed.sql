@@ -125,7 +125,61 @@ INSERT INTO knowledge_base (content, category, source, source_title, metadata) V
 
 -- Exercices specifiques relance
 ('Exercices recommandes pour la relance metabolique: squats (cuisses/fessiers), fentes (equilibre/force), pompes (haut du corps), planche (gainage), rowing (dos), hip thrust (fessiers). Commencer au poids du corps, 2-3 series de 10-15 reps, repos 60-90s. Progression: ajouter poids quand 15 reps faciles.',
-'sport', 'expert', 'LymIA - Exercices relance', '{"topic": "exercises_metabolic_boost", "confidence": 0.90}');
+'sport', 'expert', 'LymIA - Exercices relance', '{"topic": "exercises_metabolic_boost", "confidence": 0.90}'),
+
+-- ============= INITIATION SPORTIVE (Programme pour sedentaires) =============
+
+-- Introduction au programme
+('Le programme d''initiation sportive est concu pour les personnes sedentaires souhaitant reprendre une activite physique en douceur. Objectif: creer une habitude durable sans risque de blessure ou decouragement. 4 phases progressives sur 12+ semaines. Adapte au niveau de condition physique et aux contraintes de chacun.',
+'sport', 'expert', 'LymIA - Initiation sportive', '{"topic": "sport_initiation_intro", "program": "sport_initiation", "confidence": 0.95}'),
+
+-- Phase 1: Activation (2 semaines)
+('Programme initiation sportive - Phase 1 Activation (2 semaines): Objectif reprendre le mouvement sans forcer. 10-15 min de marche quotidienne. Etirements doux 5 min le matin ou soir. Focus sur la regularite, pas l''intensite. Objectif: 5 jours actifs sur 7. Celebration des petites victoires. Ecoute du corps prioritaire.',
+'sport', 'expert', 'LymIA - Initiation Phase 1', '{"topic": "sport_init_phase1", "program": "sport_initiation", "phase": 1, "duration_weeks": 2, "confidence": 0.90}'),
+
+-- Exercices Phase 1
+('Exercices Phase 1 Activation: Marche tranquille 10-15 min (rue, parc, tapis). Etirements: cou (rotations douces), epaules (cercles), hanches (rotations bassin), mollets (contre mur). Respiration profonde 5 respirations matin et soir. Optionnel: quelques squats contre mur si envie.',
+'sport', 'expert', 'LymIA - Exercices Initiation Phase 1', '{"topic": "sport_init_exercises_phase1", "program": "sport_initiation", "phase": 1, "confidence": 0.90}'),
+
+-- Phase 2: Mouvement (3 semaines)
+('Programme initiation sportive - Phase 2 Mouvement (3 semaines): Augmentation progressive de l''activite. Marche 20-30 min quotidienne avec variations de rythme. Introduction de 2 seances de mobilite/semaine de 15 min. Premiers exercices au poids du corps (squats, pompes contre mur). Objectif: 45 min d''activite totale/jour.',
+'sport', 'expert', 'LymIA - Initiation Phase 2', '{"topic": "sport_init_phase2", "program": "sport_initiation", "phase": 2, "duration_weeks": 3, "confidence": 0.90}'),
+
+-- Exercices Phase 2
+('Exercices Phase 2 Mouvement: Marche 20-30 min avec 2-3 accelerations de 1 min. Squats au mur (dos contre mur, descendre en position assise) 3x10. Pompes contre mur 3x10. Fentes avant alternees 2x8 par jambe. Planche sur genoux 3x20 secondes. Etirements 10 min apres chaque seance.',
+'sport', 'expert', 'LymIA - Exercices Initiation Phase 2', '{"topic": "sport_init_exercises_phase2", "program": "sport_initiation", "phase": 2, "confidence": 0.90}'),
+
+-- Phase 3: Renforcement (4 semaines)
+('Programme initiation sportive - Phase 3 Renforcement (4 semaines): Construction de la force et endurance. 3 seances de renforcement musculaire/semaine de 20-30 min. Marche maintenue ou introduction jogging leger. Exercices au poids du corps avec progression. Introduction d''activites plaisir (velo, natation, danse).',
+'sport', 'expert', 'LymIA - Initiation Phase 3', '{"topic": "sport_init_phase3", "program": "sport_initiation", "phase": 3, "duration_weeks": 4, "confidence": 0.90}'),
+
+-- Exercices Phase 3
+('Exercices Phase 3 Renforcement: Squats classiques 3x12. Pompes (genoux ou classiques selon niveau) 3x10. Fentes marchees 3x10 par jambe. Planche 3x30 secondes. Mountain climbers 3x15. Pont fessier 3x15. Superman (dos) 3x12. Optionnel: course/marche alternee 1 min/1 min pendant 15 min.',
+'sport', 'expert', 'LymIA - Exercices Initiation Phase 3', '{"topic": "sport_init_exercises_phase3", "program": "sport_initiation", "phase": 3, "confidence": 0.90}'),
+
+-- Phase 4: Autonomie (ongoing)
+('Programme initiation sportive - Phase 4 Autonomie (ongoing): Maintien des acquis et personnalisation. 3-4 seances sport/semaine selon preferences. Mix cardio et renforcement. Exploration de nouvelles activites. Objectifs personnels (5km, premier cours collectif, etc.). Le sport devient un plaisir, plus une contrainte.',
+'sport', 'expert', 'LymIA - Initiation Phase 4', '{"topic": "sport_init_phase4", "program": "sport_initiation", "phase": 4, "duration_weeks": 0, "confidence": 0.90}'),
+
+-- Conseils pour sedentaires
+('Conseils pour reprendre le sport apres sedentarite: commencer tres doucement (mieux vaut trop peu que trop), ecouter son corps (douleur = stop), privilegier la regularite a l''intensite, choisir des activites plaisantes, ne pas se comparer aux autres, celebrer chaque seance completee, accepter les jours sans.',
+'sport', 'expert', 'LymIA - Conseils sedentaires', '{"topic": "sedentary_advice", "program": "sport_initiation", "confidence": 0.90}'),
+
+-- Gestion des obstacles
+('Obstacles courants et solutions pour reprendre le sport: "Pas le temps" = 10 min suffisent, fractionner dans la journee. "Trop fatigue" = l''exercice doux donne de l''energie. "J''ai mal" = adapter les exercices, consulter si persistant. "Pas motive" = trouver un partenaire, varier les activites, rappeler les benefices.',
+'sport', 'expert', 'LymIA - Obstacles sport', '{"topic": "sport_obstacles", "program": "sport_initiation", "confidence": 0.90}'),
+
+-- Benefices progressifs
+('Benefices attendus du programme initiation sportive: Semaine 1-2: meilleur sommeil, regain d''energie. Semaine 3-4: humeur stabilisee, moins de stress. Semaine 5-8: force accrue, endurance amelioree. Semaine 9+: habitude installee, transformation visible, confiance en soi renforcee.',
+'sport', 'expert', 'LymIA - Benefices initiation', '{"topic": "sport_init_benefits", "program": "sport_initiation", "confidence": 0.90}'),
+
+-- Nutrition et sport pour debutants
+('Nutrition pour accompagner la reprise sportive: hydratation avant/pendant/apres (eau plate). Collation legere 1-2h avant si faim (banane, biscuits secs). Apres l''effort: proteines + glucides dans l''heure (yaourt + fruit, oeuf + pain). Eviter l''exercice a jeun au debut.',
+'sport', 'expert', 'LymIA - Nutrition initiation sport', '{"topic": "nutrition_sport_beginners", "program": "sport_initiation", "confidence": 0.90}'),
+
+-- Adaptation selon profil
+('Adaptation du programme selon le profil: Surpoids = privilegier exercices sans impact (marche, velo, piscine), proteger les articulations. Douleurs articulaires = mobilite douce, renforcement musculaire cible. Fatigue chronique = seances courtes, recuperation prioritaire. Stress eleve = yoga, marche nature, respiration.',
+'sport', 'expert', 'LymIA - Adaptation profil sport', '{"topic": "sport_profile_adaptation", "program": "sport_initiation", "confidence": 0.90}');
 
 -- Note: Les embeddings seront generes via le script d'ingestion
 -- qui appellera l'API OpenAI pour chaque entree

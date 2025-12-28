@@ -21,12 +21,15 @@ import {
   ChevronRight,
   Award,
   Flame,
+  Dumbbell,
+  Zap,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, Button } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
+import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { formatNumber } from '../lib/utils'
 
 const goalLabels: Record<string, string> = {
@@ -63,7 +66,14 @@ const dietLabels: Record<string, string> = {
 }
 
 export default function ProfileScreen() {
-  const { profile, nutritionGoals, resetStore } = useUserStore()
+  const { profile, nutritionGoals, resetStore, setProfile } = useUserStore()
+  const {
+    isEnrolled: isSportInitiationEnrolled,
+    enroll: enrollSportInitiation,
+    unenroll: unenrollSportInitiation,
+    currentPhase,
+    currentWeek,
+  } = useSportInitiationStore()
 
   const userName = profile?.name || 'Utilisateur'
   const userInitials = userName
@@ -113,6 +123,47 @@ export default function ProfileScreen() {
         },
       ]
     )
+  }
+
+  const handleToggleSportInitiation = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (isSportInitiationEnrolled) {
+      Alert.alert(
+        'Quitter le programme',
+        'Êtes-vous sûr de vouloir quitter le programme d\'initiation sportive ? Votre progression sera conservée.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Quitter',
+            style: 'destructive',
+            onPress: () => {
+              unenrollSportInitiation()
+              setProfile({ ...profile, sportInitiationActive: false })
+            },
+          },
+        ]
+      )
+    } else {
+      Alert.alert(
+        'Rejoindre le programme',
+        'Le programme d\'initiation sportive vous accompagne pour reprendre le sport en douceur sur 12 semaines.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Commencer',
+            onPress: () => {
+              enrollSportInitiation({
+                fitnessLevel: 'sedentary',
+                hasHealthConditions: false,
+                preferredActivities: ['walking', 'stretching'],
+                availableMinutesPerDay: 15,
+              })
+              setProfile({ ...profile, sportInitiationActive: true })
+            },
+          },
+        ]
+      )
+    }
   }
 
   return (
@@ -248,6 +299,33 @@ export default function ProfileScreen() {
               {nutritionGoals?.fats || 67}g
             </Text>
           </View>
+        </Card>
+
+        {/* Programs */}
+        <Text style={styles.sectionTitle}>Programmes</Text>
+        <Card padding="none">
+          <TouchableOpacity
+            style={styles.programItem}
+            onPress={handleToggleSportInitiation}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
+              <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
+            </View>
+            <View style={styles.programInfo}>
+              <Text style={styles.programLabel}>Initiation Sportive</Text>
+              <Text style={styles.programDescription}>
+                {isSportInitiationEnrolled
+                  ? `Phase ${currentPhase} - Semaine ${currentWeek}`
+                  : 'Programme pour reprendre le sport'}
+              </Text>
+            </View>
+            <View style={[styles.programToggle, isSportInitiationEnrolled && styles.programToggleActive]}>
+              <Text style={[styles.programToggleText, isSportInitiationEnrolled && styles.programToggleTextActive]}>
+                {isSportInitiationEnrolled ? 'Actif' : 'Inactif'}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </Card>
 
         {/* Settings */}
@@ -474,5 +552,52 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     textAlign: 'center',
     marginTop: spacing.lg,
+  },
+  // Programs
+  programItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.default,
+  },
+  programIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  programIconActive: {
+    backgroundColor: colors.success,
+  },
+  programInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  programLabel: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+  },
+  programDescription: {
+    ...typography.small,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
+  programToggle: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    backgroundColor: colors.bg.tertiary,
+  },
+  programToggleActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  programToggleText: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+    fontWeight: '500',
+  },
+  programToggleTextActive: {
+    color: colors.success,
   },
 })

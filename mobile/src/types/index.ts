@@ -120,6 +120,8 @@ export interface UserProfile {
   nutritionalStrategy?: NutritionalStrategy // For adaptive metabolism
   sportTrackingEnabled?: boolean
   sportProgram?: WeeklyProgram | null
+  wantsSportInitiation?: boolean // For sedentary users - sport initiation program
+  sportInitiationActive?: boolean // Whether the program is currently active
   cookingPreferences?: CookingPreferences
   onboardingCompleted?: boolean
   createdAt?: string
