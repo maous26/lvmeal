@@ -230,10 +230,24 @@ export default function HomeScreen() {
         {/* 6. Meal Suggestions - AI-powered recommendations */}
         <MealSuggestions
           onSuggestionPress={(suggestion) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
             // @ts-ignore - Navigation typing
-            navigation.navigate('Meals', {
-              screen: 'MealDetail',
-              params: { type: suggestion.mealType, suggestion },
+            navigation.navigate('RecipeDetail', {
+              suggestion: {
+                id: suggestion.id,
+                name: suggestion.name,
+                calories: suggestion.calories,
+                proteins: suggestion.proteins,
+                carbs: suggestion.carbs,
+                fats: suggestion.fats,
+                prepTime: suggestion.prepTime,
+                mealType: suggestion.mealType,
+                imageUrl: suggestion.imageUrl,
+                isAI: suggestion.isAI,
+                isGustar: suggestion.isGustar,
+                source: suggestion.source,
+              },
+              mealType: suggestion.mealType,
             })
           }}
           onViewAll={handleNavigateToRecipes}
