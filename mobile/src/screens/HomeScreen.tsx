@@ -17,14 +17,15 @@ import {
   GamificationPanel,
   LymIAWidget,
   HydrationWidget,
-  MetabolicBoostWidget,
   MealSuggestions,
-  SportInitiationWidget,
+  CaloricBalance,
+  ProgramsSection,
 } from '../components/dashboard'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useCaloricBankStore } from '../stores/caloric-bank-store'
 import { getGreeting, formatNumber } from '../lib/utils'
 import type { MealType } from '../types'
 
@@ -40,13 +41,23 @@ export default function HomeScreen() {
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData, getMealsByType, currentDate } = useMealsStore()
   const { checkAndUpdateStreak } = useGamificationStore()
+  const {
+    dailyBalances,
+    weekStartDate,
+    getCurrentDayIndex,
+    getDaysUntilNewWeek,
+    isFirstTimeSetup,
+    confirmStartDay,
+    initializeWeek,
+  } = useCaloricBankStore()
 
   const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
     setIsHydrated(true)
     checkAndUpdateStreak()
-  }, [checkAndUpdateStreak])
+    initializeWeek()
+  }, [checkAndUpdateStreak, initializeWeek])
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -259,23 +270,41 @@ export default function HomeScreen() {
           onViewAll={handleNavigateToRecipes}
         />
 
-        {/* 7. Sport Initiation - For sedentary users in the program */}
-        <SportInitiationWidget onPress={handleNavigateToSportInitiation} />
-
-        {/* 8. Hydration - Compact widget */}
+        {/* 7. Hydration - Compact widget */}
         <HydrationWidget onPress={handleNavigateToWellness} />
 
-        {/* 9. LymIA Coach - Proactive tips */}
+        {/* 8. Programs Section - Sport, Metabolic, Wellness (grouped) */}
+        <ProgramsSection
+          onSportPress={handleNavigateToSportInitiation}
+          onMetabolicPress={handleNavigateToMetabolicBoost}
+          onWellnessPress={handleNavigateToWellness}
+        />
+
+        {/* 9. Caloric Balance - Solde Plaisir */}
+        <CaloricBalance
+          dailyBalances={dailyBalances.map(b => ({
+            day: new Date(b.date).toLocaleDateString('fr-FR', { weekday: 'short' }),
+            date: new Date(b.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+            consumed: b.consumedCalories,
+            target: b.targetCalories,
+            balance: b.balance,
+          }))}
+          currentDay={getCurrentDayIndex()}
+          daysUntilNewWeek={getDaysUntilNewWeek()}
+          weekStartDate={weekStartDate || undefined}
+          dailyTarget={goals.calories}
+          isFirstTimeSetup={isFirstTimeSetup()}
+          onConfirmStart={confirmStartDay}
+        />
+
+        {/* 10. LymIA Coach - Proactive tips */}
         <View style={styles.section}>
           <Card>
             <LymIAWidget />
           </Card>
         </View>
 
-        {/* 9. Metabolic Boost - For adaptive metabolism users only */}
-        <MetabolicBoostWidget onPress={handleNavigateToMetabolicBoost} />
-
-        {/* 10. Gamification - Motivation at the bottom */}
+        {/* 11. Gamification - Motivation at the bottom */}
         <View style={styles.section}>
           <GamificationPanel compact onViewAll={handleNavigateToAchievements} />
         </View>

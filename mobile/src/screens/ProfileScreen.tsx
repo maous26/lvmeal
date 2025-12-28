@@ -138,7 +138,9 @@ export default function ProfileScreen() {
             style: 'destructive',
             onPress: () => {
               unenrollSportInitiation()
-              setProfile({ ...profile, sportInitiationActive: false })
+              if (profile) {
+                setProfile({ ...profile, sportInitiationActive: false })
+              }
             },
           },
         ]
@@ -158,7 +160,9 @@ export default function ProfileScreen() {
                 preferredActivities: ['walking', 'stretching'],
                 availableMinutesPerDay: 15,
               })
-              setProfile({ ...profile, sportInitiationActive: true })
+              if (profile) {
+                setProfile({ ...profile, sportInitiationActive: true })
+              }
             },
           },
         ]

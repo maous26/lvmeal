@@ -1,35 +1,54 @@
 /**
- * SportInitiationWidget - Widget pour la homepage
+ * SportInitiationWidget - Widget compact pour le dashboard
  *
- * Affiche un resume du programme d'initiation sportive
- * pour les utilisateurs sedentaires inscrits au programme.
+ * Affiche la progression du programme d'initiation sportive
+ * pour les utilisateurs sedentaires inscrits ou invite ceux qui ne le sont pas
  */
 
 import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import {
   Dumbbell,
   ChevronRight,
+  Footprints,
+  Clock,
+  TrendingUp,
   Flame,
-  Target,
-  Sparkles,
+  Heart,
+  Trophy,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { Card, ProgressBar } from '../ui'
+import { Card } from '../ui/Card'
+import { Badge } from '../ui/Badge'
+import { ProgressBar } from '../ui/ProgressBar'
 import { colors, spacing, typography, radius } from '../../constants/theme'
 import {
   useSportInitiationStore,
   SPORT_PHASE_CONFIGS,
   type SportPhase,
 } from '../../stores/sport-initiation-store'
+import { useUserStore } from '../../stores/user-store'
 
-const phaseEmojis: Record<SportPhase, string> = {
-  activation: '🌱',
-  movement: '🚶',
-  strengthening: '💪',
-  autonomy: '🏆',
+const phaseLabels: Record<SportPhase, string> = {
+  activation: 'Activation',
+  movement: 'Mouvement',
+  strengthening: 'Renforcement',
+  autonomy: 'Autonomie',
+}
+
+const phaseColors: Record<SportPhase, string> = {
+  activation: colors.success,
+  movement: colors.warning,
+  strengthening: colors.accent.primary,
+  autonomy: colors.secondary.primary,
+}
+
+const phaseIcons: Record<SportPhase, React.ReactNode> = {
+  activation: <Heart size={16} color="#FFFFFF" />,
+  movement: <Footprints size={16} color="#FFFFFF" />,
+  strengthening: <Dumbbell size={16} color="#FFFFFF" />,
+  autonomy: <Trophy size={16} color="#FFFFFF" />,
 }
 
 interface SportInitiationWidgetProps {
@@ -37,237 +56,327 @@ interface SportInitiationWidgetProps {
 }
 
 export function SportInitiationWidget({ onPress }: SportInitiationWidgetProps) {
+  const { profile } = useUserStore()
   const {
     isEnrolled,
     currentPhase,
     currentWeek,
     currentStreak,
-    getCurrentPhaseConfig,
     getPhaseProgress,
     getWeeklyProgress,
     getTodayLog,
   } = useSportInitiationStore()
 
-  // Don't show if not enrolled
-  if (!isEnrolled) {
-    return null
-  }
-
-  const phaseConfig = getCurrentPhaseConfig()
-  const phaseProgress = getPhaseProgress()
-  const weeklyProgress = getWeeklyProgress()
-  const todayLog = getTodayLog()
+  // Only show for sedentary users
+  const isSedentary = profile?.activityLevel === 'sedentary'
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     onPress?.()
   }
 
-  // Check if today's workout is done
-  const workoutDone = todayLog?.workoutCompleted
+  // Not enrolled yet - show invitation for sedentary users
+  if (isSedentary && !isEnrolled) {
+    return (
+      <Pressable onPress={handlePress}>
+        <Card style={styles.card}>
+          <View style={styles.inviteContent}>
+            <View style={styles.inviteLeft}>
+              <View style={styles.iconContainerSuccess}>
+                <Dumbbell size={20} color={colors.success} />
+              </View>
+              <View style={styles.inviteText}>
+                <Text style={styles.inviteTitle}>Initiation Sportive</Text>
+                <Text style={styles.inviteSubtitle}>
+                  9 semaines pour devenir actif progressivement
+                </Text>
+              </View>
+            </View>
+            <View style={styles.joinBadge}>
+              <Text style={styles.joinBadgeText}>Rejoindre</Text>
+            </View>
+          </View>
+        </Card>
+      </Pressable>
+    )
+  }
+
+  // Not sedentary or not enrolled - don't show
+  if (!isSedentary || !isEnrolled) {
+    return null
+  }
+
+  // Enrolled - show progress
+  const phaseConfig = SPORT_PHASE_CONFIGS[currentPhase]
+  const phaseProgress = getPhaseProgress()
+  const weeklyProgress = getWeeklyProgress()
+  const todayLog = getTodayLog()
+
+  const todaySteps = todayLog?.steps || 0
+  const stepsGoal = phaseConfig.dailyTargets.steps
+  const stepsPercent = Math.min((todaySteps / stepsGoal) * 100, 100)
+
+  // Calculate global progress percentage
+  const totalWeeks = 9 // 2 + 3 + 4 = 9 weeks for the program
+  const weeksInPhase: Record<SportPhase, number> = {
+    activation: 0,
+    movement: 2,
+    strengthening: 5,
+    autonomy: 9,
+  }
+  const completedWeeks = weeksInPhase[currentPhase] + (currentWeek - 1)
+  const progressPercent = currentPhase === 'autonomy'
+    ? 100
+    : Math.round((completedWeeks / totalWeeks) * 100)
 
   return (
     <Pressable onPress={handlePress}>
-      <Card style={styles.container}>
-        <LinearGradient
-          colors={[colors.success, `${colors.success}DD`]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.titleRow}>
-              <Text style={styles.emoji}>{phaseEmojis[currentPhase]}</Text>
-              <View style={styles.titleContainer}>
-                <Text style={styles.title}>Initiation Sportive</Text>
-                <Text style={styles.subtitle}>
-                  Phase {phaseConfig.name} - Sem. {currentWeek}
-                </Text>
+      <Card style={styles.card}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <View
+              style={[
+                styles.phaseIcon,
+                { backgroundColor: phaseColors[currentPhase] },
+              ]}
+            >
+              {phaseIcons[currentPhase]}
+            </View>
+            <View>
+              <Text style={styles.title}>Initiation Sportive</Text>
+              <View style={styles.headerMeta}>
+                <Badge
+                  variant="outline"
+                  size="sm"
+                  style={{
+                    ...styles.phaseBadge,
+                    borderColor: `${phaseColors[currentPhase]}40`,
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.phaseBadgeText,
+                      { color: phaseColors[currentPhase] },
+                    ]}
+                  >
+                    {phaseLabels[currentPhase]}
+                  </Text>
+                </Badge>
+                <Text style={styles.weekText}>Sem. {currentWeek}</Text>
               </View>
             </View>
-            <View style={styles.streakBadge}>
-              <Flame size={14} color="#FFFFFF" />
-              <Text style={styles.streakText}>{currentStreak}j</Text>
-            </View>
           </View>
+          <ChevronRight size={16} color={colors.text.tertiary} />
+        </View>
 
-          {/* Progress */}
-          {phaseProgress.total > 0 && (
-            <View style={styles.progressSection}>
-              <ProgressBar
-                value={phaseProgress.current}
-                max={phaseProgress.total}
-                color="#FFFFFF"
-                backgroundColor="rgba(255,255,255,0.3)"
-                size="sm"
+        {/* Progress bar */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressLabel}>Progression globale</Text>
+            <Text style={styles.progressValue}>{progressPercent}%</Text>
+          </View>
+          <ProgressBar
+            value={progressPercent}
+            max={100}
+            color={phaseColors[currentPhase]}
+            size="sm"
+          />
+        </View>
+
+        {/* Today's progress */}
+        <View style={styles.todaySection}>
+          <View style={styles.todayItem}>
+            <Footprints size={14} color={colors.text.tertiary} />
+            <Text style={styles.todayText}>
+              {todaySteps.toLocaleString()} / {stepsGoal.toLocaleString()} pas
+            </Text>
+            <View style={styles.todayProgress}>
+              <View
+                style={[
+                  styles.todayProgressFill,
+                  {
+                    width: `${stepsPercent}%`,
+                    backgroundColor: stepsPercent >= 100 ? colors.success : colors.accent.primary,
+                  },
+                ]}
               />
-              <Text style={styles.progressText}>
-                {phaseProgress.current}/{phaseProgress.total} semaines
-              </Text>
-            </View>
-          )}
-
-          {/* Today's Status */}
-          <View style={styles.todaySection}>
-            {workoutDone ? (
-              <View style={styles.todayDone}>
-                <Sparkles size={16} color="#FFFFFF" />
-                <Text style={styles.todayText}>Seance du jour terminee!</Text>
-              </View>
-            ) : (
-              <View style={styles.todayPending}>
-                <Target size={16} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.todayTextPending}>
-                  Objectif: {phaseConfig.dailyTargets.activeMinutes} min d'activite
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Quick Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{weeklyProgress.steps.current}</Text>
-              <Text style={styles.statLabel}>pas/j</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{weeklyProgress.workouts.current}</Text>
-              <Text style={styles.statLabel}>seances</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={styles.statValue}>{weeklyProgress.activeMinutes.current}</Text>
-              <Text style={styles.statLabel}>min</Text>
             </View>
           </View>
+        </View>
 
-          {/* CTA */}
-          <View style={styles.cta}>
-            <Text style={styles.ctaText}>Voir mon programme</Text>
-            <ChevronRight size={18} color="#FFFFFF" />
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Flame size={14} color={colors.warning} />
+            <Text style={styles.statValue}>{currentStreak}j</Text>
+            <Text style={styles.statLabel}>Serie</Text>
           </View>
-        </LinearGradient>
+          <View style={styles.statItem}>
+            <TrendingUp size={14} color={colors.success} />
+            <Text style={styles.statValue}>{progressPercent}%</Text>
+            <Text style={styles.statLabel}>Avancement</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Clock size={14} color={colors.accent.primary} />
+            <Text style={styles.statValue}>{weeklyProgress.activeMinutes.current}</Text>
+            <Text style={styles.statLabel}>min actives</Text>
+          </View>
+        </View>
       </Card>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 0,
-    overflow: 'hidden',
+  card: {
+    padding: spacing.default,
     marginBottom: spacing.md,
   },
-  gradient: {
-    padding: spacing.default,
-    borderRadius: radius.lg,
-  },
-  header: {
+  // Invite state
+  inviteContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
-  titleRow: {
+  inviteLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-  },
-  emoji: {
-    fontSize: 28,
-  },
-  titleContainer: {},
-  title: {
-    ...typography.bodySemibold,
-    color: '#FFFFFF',
-  },
-  subtitle: {
-    ...typography.small,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.full,
-  },
-  streakText: {
-    ...typography.smallMedium,
-    color: '#FFFFFF',
-  },
-  progressSection: {
-    marginTop: spacing.md,
-  },
-  progressText: {
-    ...typography.caption,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  todaySection: {
-    marginTop: spacing.md,
-  },
-  todayDone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: spacing.sm,
-    borderRadius: radius.md,
-  },
-  todayText: {
-    ...typography.smallMedium,
-    color: '#FFFFFF',
-  },
-  todayPending: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  todayTextPending: {
-    ...typography.small,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginTop: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: radius.md,
-    padding: spacing.sm,
-  },
-  stat: {
+    gap: spacing.md,
     flex: 1,
-    alignItems: 'center',
   },
-  statDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  statValue: {
-    ...typography.bodySemibold,
-    color: '#FFFFFF',
-  },
-  statLabel: {
-    ...typography.caption,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  cta: {
-    flexDirection: 'row',
+  iconContainerSuccess: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  ctaText: {
+  inviteText: {
+    flex: 1,
+  },
+  inviteTitle: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+  },
+  inviteSubtitle: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
+  joinBadge: {
+    backgroundColor: colors.success,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+  },
+  joinBadgeText: {
     ...typography.smallMedium,
     color: '#FFFFFF',
+  },
+  // Enrolled state
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  phaseIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    ...typography.smallMedium,
+    color: colors.text.primary,
+  },
+  headerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: 2,
+  },
+  phaseBadge: {
+    paddingHorizontal: spacing.xs,
+  },
+  phaseBadgeText: {
+    fontSize: 10,
+  },
+  weekText: {
+    fontSize: 10,
+    color: colors.text.muted,
+  },
+  // Progress
+  progressSection: {
+    marginBottom: spacing.md,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  progressLabel: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+  },
+  progressValue: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  // Today
+  todaySection: {
+    marginBottom: spacing.md,
+  },
+  todayItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  todayText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    flex: 1,
+  },
+  todayProgress: {
+    width: 60,
+    height: 4,
+    backgroundColor: colors.bg.tertiary,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  todayProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  // Stats
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  statValue: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  statLabel: {
+    fontSize: 9,
+    color: colors.text.muted,
   },
 })
 
