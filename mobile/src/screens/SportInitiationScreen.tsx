@@ -76,10 +76,13 @@ export function SportInitiationScreen() {
 
   const handleLogWorkout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    const isCurrentlyCompleted = todayLog?.workoutCompleted || false
     logDaily({
-      workoutCompleted: true,
-      workoutType: 'session',
-      activeMinutes: 20,
+      workoutCompleted: !isCurrentlyCompleted,
+      workoutType: isCurrentlyCompleted ? undefined : 'session',
+      activeMinutes: isCurrentlyCompleted
+        ? Math.max(0, (todayLog?.activeMinutes || 0) - 20)
+        : (todayLog?.activeMinutes || 0) + 20,
     })
   }
 
@@ -264,7 +267,7 @@ export function SportInitiationScreen() {
                 todayLog?.workoutCompleted && styles.quickActionTextDone,
               ]}
             >
-              {todayLog?.workoutCompleted ? 'Seance faite!' : 'Seance faite'}
+              {todayLog?.workoutCompleted ? 'Annuler' : 'Seance faite'}
             </Text>
           </Pressable>
 
