@@ -83,14 +83,14 @@ export default function ProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
     Alert.alert(
       'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ? Vos données locales seront conservées.',
+      'Êtes-vous sûr de vouloir vous déconnecter ? Vous retournerez à l\'écran d\'onboarding.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Déconnexion',
           style: 'destructive',
           onPress: () => {
-            // TODO: Handle logout
+            resetStore()
           },
         },
       ]

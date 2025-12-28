@@ -5,6 +5,7 @@ import TabNavigator from './TabNavigator'
 import { OnboardingScreen } from '../screens/OnboardingScreen'
 import AddMealScreen from '../screens/AddMealScreen'
 import WeeklyPlanScreen from '../screens/WeeklyPlanScreen'
+import MetabolicBoostScreen from '../screens/MetabolicBoostScreen'
 import { useUserStore } from '../stores/user-store'
 
 export type RootStackParamList = {
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   SportSession: { sessionId?: string }
   Plan: undefined
   WeeklyPlan: undefined
+  MetabolicBoost: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -60,6 +62,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="WeeklyPlan"
             component={WeeklyPlanScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="MetabolicBoost"
+            component={MetabolicBoostScreen}
             options={{
               animation: 'slide_from_right',
             }}
