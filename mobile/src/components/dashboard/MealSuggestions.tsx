@@ -1,28 +1,19 @@
 import React, { useMemo, useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
-import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, Globe } from 'lucide-react-native'
+import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, ChefHat } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
-import { Card } from '../ui/Card'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
-import { useGustarStore, type EnrichedGustarRecipe } from '../../stores/gustar-store'
-import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../../services/gustar-recipes'
-import { queueRecipesForEnrichment } from '../../services/gustar-enrichment'
-import type { MealType, Recipe } from '../../types'
-
-// API Key for Gustar.io
-const GUSTAR_API_KEY = '7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9'
-
-// Search terms based on meal type for personalized suggestions (German terms for Gustar API)
-// Using common German food terms that work with the API
-const MEAL_TYPE_SEARCHES: Record<MealType, string[]> = {
-  breakfast: ['haferflocken', 'pfannkuchen', 'ei', 'brot', 'joghurt'],
-  lunch: ['salat', 'suppe', 'nudeln', 'reis', 'kartoffel'],
-  snack: ['kuchen', 'keks', 'obst', 'nuss', 'riegel'],
-  dinner: ['huhn', 'fisch', 'fleisch', 'gemuse', 'auflauf'],
-}
+import {
+  loadStaticRecipes,
+  getStaticRecipesByMealType,
+  filterStaticRecipes,
+  staticToRecipe,
+  type StaticEnrichedRecipe,
+} from '../../services/static-recipes'
+import type { MealType } from '../../types'
 
 interface MealSuggestionsProps {
   onSuggestionPress?: (recipe: SuggestedMeal) => void
@@ -69,219 +60,45 @@ const getMealTypeLabel = (type: MealType): string => {
   return labels[type]
 }
 
-// Mock suggestions based on remaining calories and meal type
-const generateSuggestions = (
-  remainingCalories: number,
-  remainingProteins: number,
-  mealType: MealType,
-  dietType?: string
-): SuggestedMeal[] => {
-  const suggestions: SuggestedMeal[] = []
-
-  // Base suggestions per meal type
-  const mealSuggestions: Record<MealType, SuggestedMeal[]> = {
-    breakfast: [
-      {
-        id: 'b1',
-        name: 'Porridge proteines aux fruits',
-        calories: 380,
-        proteins: 18,
-        carbs: 52,
-        fats: 10,
-        prepTime: 10,
-        category: 'Cereales',
-        mealType: 'breakfast',
-        emoji: '🥣',
-        reason: 'Riche en proteines pour bien demarrer',
-        tags: ['Rapide', 'Proteines'],
-      },
-      {
-        id: 'b2',
-        name: 'Oeufs brouilles & avocat toast',
-        calories: 420,
-        proteins: 22,
-        carbs: 28,
-        fats: 24,
-        prepTime: 15,
-        category: 'Oeufs',
-        mealType: 'breakfast',
-        emoji: '🍳',
-        reason: 'Equilibre parfait proteines/lipides',
-        tags: ['Keto-friendly', 'Rassasiant'],
-      },
-      {
-        id: 'b3',
-        name: 'Smoothie bowl energetique',
-        calories: 320,
-        proteins: 12,
-        carbs: 48,
-        fats: 8,
-        prepTime: 5,
-        category: 'Smoothie',
-        mealType: 'breakfast',
-        emoji: '🫐',
-        reason: 'Vitamines et antioxydants',
-        tags: ['Express', 'Vitamines'],
-      },
-    ],
-    lunch: [
-      {
-        id: 'l1',
-        name: 'Bowl poulet quinoa legumes',
-        calories: 520,
-        proteins: 38,
-        carbs: 45,
-        fats: 18,
-        prepTime: 25,
-        category: 'Bowl',
-        mealType: 'lunch',
-        emoji: '🥗',
-        reason: 'Complet et equilibre',
-        tags: ['Proteines', 'Fibres'],
-      },
-      {
-        id: 'l2',
-        name: 'Saumon grille & riz sauvage',
-        calories: 580,
-        proteins: 42,
-        carbs: 38,
-        fats: 28,
-        prepTime: 30,
-        category: 'Poisson',
-        mealType: 'lunch',
-        emoji: '🐟',
-        reason: 'Omega-3 pour la concentration',
-        tags: ['Omega-3', 'Premium'],
-      },
-      {
-        id: 'l3',
-        name: 'Wrap poulet caesar',
-        calories: 450,
-        proteins: 32,
-        carbs: 35,
-        fats: 20,
-        prepTime: 15,
-        category: 'Wrap',
-        mealType: 'lunch',
-        emoji: '🌯',
-        reason: 'Pratique et savoureux',
-        tags: ['Rapide', 'Pratique'],
-      },
-    ],
-    snack: [
-      {
-        id: 's1',
-        name: 'Yaourt grec & granola maison',
-        calories: 220,
-        proteins: 15,
-        carbs: 22,
-        fats: 8,
-        prepTime: 2,
-        category: 'Laitier',
-        mealType: 'snack',
-        emoji: '🥛',
-        reason: 'Boost proteine mi-journee',
-        tags: ['Express', 'Proteines'],
-      },
-      {
-        id: 's2',
-        name: 'Fruits secs & amandes',
-        calories: 180,
-        proteins: 6,
-        carbs: 20,
-        fats: 10,
-        prepTime: 0,
-        category: 'Fruits secs',
-        mealType: 'snack',
-        emoji: '🥜',
-        reason: 'Energie longue duree',
-        tags: ['Sans prep', 'Energie'],
-      },
-      {
-        id: 's3',
-        name: 'Barre proteines maison',
-        calories: 200,
-        proteins: 18,
-        carbs: 15,
-        fats: 8,
-        prepTime: 0,
-        category: 'Barre',
-        mealType: 'snack',
-        emoji: '🍫',
-        reason: 'Coupe-faim efficace',
-        tags: ['Proteines', 'Sans prep'],
-      },
-    ],
-    dinner: [
-      {
-        id: 'd1',
-        name: 'Poulet roti & legumes grilles',
-        calories: 480,
-        proteins: 42,
-        carbs: 25,
-        fats: 22,
-        prepTime: 40,
-        category: 'Viande',
-        mealType: 'dinner',
-        emoji: '🍗',
-        reason: 'Leger mais rassasiant',
-        tags: ['Proteines', 'Low-carb'],
-      },
-      {
-        id: 'd2',
-        name: 'Curry de lentilles',
-        calories: 420,
-        proteins: 22,
-        carbs: 55,
-        fats: 12,
-        prepTime: 35,
-        category: 'Vegetarien',
-        mealType: 'dinner',
-        emoji: '🍛',
-        reason: 'Fibres pour la digestion',
-        tags: ['Vegetarien', 'Fibres'],
-      },
-      {
-        id: 'd3',
-        name: 'Poke bowl thon sesame',
-        calories: 450,
-        proteins: 35,
-        carbs: 42,
-        fats: 16,
-        prepTime: 20,
-        category: 'Poke',
-        mealType: 'dinner',
-        emoji: '🍣',
-        reason: 'Frais et nutritif',
-        tags: ['Omega-3', 'Rapide'],
-      },
-    ],
+// Get emoji for meal type
+const getMealTypeEmoji = (type: MealType): string => {
+  const emojis: Record<MealType, string> = {
+    breakfast: '🌅',
+    lunch: '☀️',
+    snack: '🍎',
+    dinner: '🌙',
   }
+  return emojis[type]
+}
 
-  const baseSuggestions = mealSuggestions[mealType] || []
-
-  // Filter based on remaining calories
-  return baseSuggestions
-    .filter(s => s.calories <= remainingCalories + 100)
-    .map(s => ({
-      ...s,
-      reason: remainingProteins > 30
-        ? s.proteins > 20 ? 'Riche en proteines' : s.reason
-        : s.reason
-    }))
-    .slice(0, 3)
+// Convert StaticEnrichedRecipe to SuggestedMeal format
+const staticToSuggestion = (recipe: StaticEnrichedRecipe, mealType: MealType): SuggestedMeal => {
+  return {
+    id: recipe.id,
+    name: recipe.titleFr,
+    calories: recipe.nutrition.calories,
+    proteins: recipe.nutrition.proteins,
+    carbs: recipe.nutrition.carbs,
+    fats: recipe.nutrition.fats,
+    prepTime: recipe.prepTime,
+    category: recipe.mealType || 'general',
+    mealType: recipe.mealType || mealType,
+    emoji: getMealTypeEmoji(recipe.mealType || mealType),
+    reason: recipe.descriptionFr?.substring(0, 60) + '...' || 'Recette recommandee',
+    tags: [recipe.difficulty === 'easy' ? 'Facile' : recipe.difficulty === 'hard' ? 'Difficile' : 'Moyen', `${recipe.prepTime}min`],
+    imageUrl: recipe.imageUrl,
+    rating: 4.5,
+    source: recipe.source,
+  }
 }
 
 export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestionsProps) {
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
   const { getTopRatedAIRecipes, favoriteRecipes } = useRecipesStore()
-  // Use persisted store for enriched recipes
-  const enrichedRecipes = useGustarStore((state) => state.enrichedRecipes)
 
-  const [gustarSuggestions, setGustarSuggestions] = useState<SuggestedMeal[]>([])
-  const [gustarRawRecipes, setGustarRawRecipes] = useState<GustarRecipe[]>([])
-  const [isLoadingGustar, setIsLoadingGustar] = useState(false)
+  const [staticSuggestions, setStaticSuggestions] = useState<SuggestedMeal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -291,69 +108,51 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   const remainingProteins = Math.max(0, goals.proteins - totals.proteins)
   const currentMealType = getCurrentMealType()
 
-  // Initialize Gustar API and fetch personalized suggestions
+  // Load suggestions from enriched-recipes.json based on meal type and user profile
   useEffect(() => {
-    const fetchGustarSuggestions = async () => {
-      if (!GUSTAR_API_KEY) return
-
+    const loadSuggestions = async () => {
+      setIsLoading(true)
       try {
-        gustarRecipes.init(GUSTAR_API_KEY)
-        setIsLoadingGustar(true)
+        // Load all static recipes first
+        await loadStaticRecipes()
 
-        // Get search terms for current meal type
-        const searchTerms = MEAL_TYPE_SEARCHES[currentMealType]
-        const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)]
-
-        const response = await gustarRecipes.searchRecipes({
-          query: randomTerm,
-          diet: profile?.dietType as DietaryPreference | undefined,
-          limit: 5,
+        // Filter recipes based on meal type and user's remaining calories
+        const filtered = filterStaticRecipes({
+          mealType: currentMealType,
+          maxCalories: remainingCalories > 0 ? remainingCalories + 200 : undefined,
+          minProtein: remainingProteins > 30 ? 15 : undefined,
+          limit: 10,
         })
 
-        console.log(`MealSuggestions: Got ${response.recipes.length} recipes for "${randomTerm}"`)
+        // If no recipes match the meal type, get recipes by calorie range
+        let recipesToUse = filtered
+        if (filtered.length === 0) {
+          // Fallback: get any recipes that fit calorie budget
+          recipesToUse = filterStaticRecipes({
+            maxCalories: remainingCalories > 0 ? remainingCalories + 200 : undefined,
+            limit: 10,
+          })
+        }
 
-        // Store raw recipes for enrichment
-        setGustarRawRecipes(response.recipes.slice(0, 2))
+        // Shuffle and pick 3-5 random recipes
+        const shuffled = [...recipesToUse].sort(() => Math.random() - 0.5)
+        const selected = shuffled.slice(0, 5)
 
-        // Transform to SuggestedMeal format (relaxed calorie filter)
-        const transformed: SuggestedMeal[] = response.recipes
-          .slice(0, 2)
-          .map(recipe => ({
-            id: recipe.id,
-            name: recipe.title,
-            calories: recipe.nutrition?.calories || 0,
-            proteins: recipe.nutrition?.proteins || 0,
-            carbs: recipe.nutrition?.carbs || 0,
-            fats: recipe.nutrition?.fats || 0,
-            prepTime: recipe.prepTime || 20,
-            category: 'Gustar',
-            mealType: currentMealType,
-            emoji: '🌍',
-            reason: 'Recommande pour vous',
-            tags: ['Web', recipe.dietary?.[0] || 'Populaire'].filter(Boolean),
-            imageUrl: recipe.image,
-            isGustar: true,
-            rating: 4.5,
-            source: 'Gustar.io',
-          }))
+        // Convert to SuggestedMeal format
+        const suggestions = selected.map(recipe => staticToSuggestion(recipe, currentMealType))
+        setStaticSuggestions(suggestions)
 
-        setGustarSuggestions(transformed)
+        console.log(`MealSuggestions: Loaded ${suggestions.length} suggestions for ${currentMealType}`)
       } catch (error) {
-        console.warn('Failed to fetch Gustar suggestions:', error)
+        console.warn('Failed to load static suggestions:', error)
+        setStaticSuggestions([])
       } finally {
-        setIsLoadingGustar(false)
+        setIsLoading(false)
       }
     }
 
-    fetchGustarSuggestions()
-  }, [currentMealType, profile?.dietType, remainingCalories])
-
-  // Queue Gustar recipes for background enrichment
-  useEffect(() => {
-    if (gustarRawRecipes.length > 0) {
-      queueRecipesForEnrichment(gustarRawRecipes)
-    }
-  }, [gustarRawRecipes])
+    loadSuggestions()
+  }, [currentMealType, remainingCalories, remainingProteins])
 
   // Get top-rated AI recipes for current meal type
   const topRatedAIRecipes = useMemo(() =>
@@ -416,19 +215,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     [topRatedAIRecipes]
   )
 
-  // Generate default suggestions if no AI recipes
-  const defaultSuggestions = useMemo(() =>
-    generateSuggestions(
-      remainingCalories,
-      remainingProteins,
-      currentMealType,
-      profile?.dietType
-    ),
-    [remainingCalories, remainingProteins, currentMealType, profile?.dietType]
-  )
-
-  // Combine all sources: AI recipes first, then favorites, Gustar, then defaults
-  // Apply enriched French content from persisted store to Gustar recipes
+  // Combine all sources: AI recipes first, then favorites, then static recipes from enriched-recipes.json
   const suggestions = useMemo(() => {
     const combined: SuggestedMeal[] = []
 
@@ -440,34 +227,14 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
       combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
     }
 
-    // 3. Gustar recipes (with enriched French content from persisted store)
-    if (combined.length < 3 && gustarSuggestions.length > 0) {
-      const enrichedGustar = gustarSuggestions.map(suggestion => {
-        const enriched = enrichedRecipes[suggestion.id] as EnrichedGustarRecipe | undefined
-        if (enriched) {
-          return {
-            ...suggestion,
-            name: enriched.titleFr,
-            reason: enriched.descriptionFr || suggestion.reason,
-            calories: enriched.nutrition.calories,
-            proteins: enriched.nutrition.proteins,
-            carbs: enriched.nutrition.carbs,
-            fats: enriched.nutrition.fats,
-          }
-        }
-        return suggestion
-      })
-      combined.push(...enrichedGustar.slice(0, 3 - combined.length))
-    }
-
-    // 4. Fill with defaults
+    // 3. Static recipes from enriched-recipes.json
     const remaining = 3 - combined.length
-    if (remaining > 0) {
-      combined.push(...defaultSuggestions.slice(0, remaining))
+    if (remaining > 0 && staticSuggestions.length > 0) {
+      combined.push(...staticSuggestions.slice(0, remaining))
     }
 
     return combined
-  }, [aiSuggestions, favoriteSuggestions, gustarSuggestions, defaultSuggestions, enrichedRecipes])
+  }, [aiSuggestions, favoriteSuggestions, staticSuggestions])
 
   const handlePress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -526,9 +293,9 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
                   <Sparkles size={10} color="#FFFFFF" />
                 </View>
               )}
-              {suggestion.isGustar && (
-                <View style={styles.gustarbadge}>
-                  <Globe size={10} color="#FFFFFF" />
+              {!suggestion.isAI && suggestion.source && (
+                <View style={styles.sourceBadge}>
+                  <ChefHat size={10} color="#FFFFFF" />
                 </View>
               )}
               {suggestion.rating && suggestion.rating > 0 && (
@@ -664,11 +431,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  gustarbadge: {
+  sourceBadge: {
     position: 'absolute',
     top: 4,
     left: 4,
-    backgroundColor: '#06B6D4',
+    backgroundColor: '#10B981',
     borderRadius: 10,
     width: 20,
     height: 20,
