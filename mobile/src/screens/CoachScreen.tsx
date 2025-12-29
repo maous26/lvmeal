@@ -131,16 +131,13 @@ function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
         </Pressable>
       </View>
 
-      {/* Titre avec icône catégorie */}
-      <View style={styles.titleRow}>
+      {/* Message avec icône catégorie (titre retiré car redondant) */}
+      <View style={styles.messageRow}>
         <View style={[styles.catIconContainer, { backgroundColor: catConf.bgColor }]}>
           <CatIcon size={18} color={colors.text.secondary} />
         </View>
-        <Text style={styles.itemTitle}>{item.title}</Text>
+        <Text style={styles.itemMessage}>{item.message}</Text>
       </View>
-
-      {/* Message */}
-      <Text style={styles.itemMessage}>{item.message}</Text>
 
       {/* Footer: source + time + action */}
       <View style={styles.itemFooter}>
@@ -496,11 +493,11 @@ const styles = StyleSheet.create({
   dismissButton: {
     padding: spacing.xs,
   },
-  titleRow: {
+  messageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   catIconContainer: {
     width: 32,
@@ -508,18 +505,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  itemTitle: {
-    ...typography.md,
-    fontWeight: '600',
-    color: colors.text.primary,
-    flex: 1,
+    marginTop: 2,
   },
   itemMessage: {
     ...typography.sm,
-    color: colors.text.secondary,
+    color: colors.text.primary,
     lineHeight: 20,
-    marginBottom: spacing.md,
+    flex: 1,
   },
   itemFooter: {
     flexDirection: 'row',
