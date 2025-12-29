@@ -233,9 +233,14 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Current Goals */}
-        <Text style={styles.sectionTitle}>Mes objectifs</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Mes objectifs</Text>
+          <TouchableOpacity onPress={handleEditProfile} style={styles.sectionEditButton}>
+            <Edit3 size={16} color={colors.accent.primary} />
+          </TouchableOpacity>
+        </View>
         <Card style={styles.goalsCard}>
-          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
+          <View style={styles.goalItem}>
             <View style={styles.goalIcon}>
               <Target size={20} color={colors.accent.primary} />
             </View>
@@ -245,10 +250,9 @@ export default function ProfileScreen() {
                 {goalLabels[profile?.goal || 'maintain']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
-          </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
+          <View style={styles.goalItem}>
             <View style={styles.goalIcon}>
               <Scale size={20} color={colors.secondary.primary} />
             </View>
@@ -259,10 +263,9 @@ export default function ProfileScreen() {
                 {profile?.targetWeight && ` → ${profile.targetWeight} kg`}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
-          </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
+          <View style={styles.goalItem}>
             <View style={styles.goalIcon}>
               <Activity size={20} color={colors.success} />
             </View>
@@ -272,10 +275,9 @@ export default function ProfileScreen() {
                 {activityLabels[profile?.activityLevel || 'moderate']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
-          </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity style={[styles.goalItem, { borderBottomWidth: 0 }]} onPress={handleEditProfile} activeOpacity={0.7}>
+          <View style={[styles.goalItem, { borderBottomWidth: 0 }]}>
             <View style={styles.goalIcon}>
               <Utensils size={20} color={colors.nutrients.carbs} />
             </View>
@@ -285,8 +287,7 @@ export default function ProfileScreen() {
                 {dietLabels[profile?.dietType || 'omnivore']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
-          </TouchableOpacity>
+          </View>
         </Card>
 
         {/* Daily Targets */}
@@ -500,11 +501,24 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: colors.border.light,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+  },
   sectionTitle: {
     ...typography.bodyMedium,
     color: colors.text.secondary,
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
+  },
+  sectionEditButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   goalsCard: {
     padding: 0,
