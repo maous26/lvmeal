@@ -43,13 +43,13 @@ import {
 import { NutriScoreBadge } from '../components/ui'
 import type { Recipe, MealType } from '../types'
 
-// Category configurations
+// Category configurations - Filtres pertinents et fonctionnels
 const CATEGORIES = [
-  { id: 'mealprep', label: 'Préparation repas', emoji: '🍱', color: '#10B981' },
-  { id: 'keto', label: 'Cétogène', emoji: '🥑', color: '#8B5CF6' },
+  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#F59E0B' },
+  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#EF4444' },
+  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#8B5CF6' },
   { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#22C55E' },
-  { id: 'quick', label: 'Rapide', emoji: '⚡', color: '#F59E0B' },
-  { id: 'lowcarb', label: 'Low Carb', emoji: '💪', color: '#EF4444' },
+  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#10B981' },
 ]
 
 const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
@@ -68,6 +68,7 @@ export default function RecipesScreen() {
   // State
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMealType, setSelectedMealType] = useState<MealType | ''>('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
@@ -113,30 +114,91 @@ export default function RecipesScreen() {
     })
   }
 
-  // Group recipes by categories
+  // Filter recipes by category
+  const filterByCategory = useCallback((recipes: Recipe[], category: string | null): Recipe[] => {
+    if (!category) return recipes
+    return recipes.filter(recipe => {
+      const title = recipe.title.toLowerCase()
+      const tags = recipe.tags?.map(t => t.toLowerCase()) || []
+      const dietTypes = recipe.dietTypes?.map(d => d.toLowerCase()) || []
+      const prepTime = recipe.prepTime || 0
+      const carbs = recipe.nutritionPerServing?.carbs || 0
+      const proteins = recipe.nutritionPerServing?.proteins || 0
+
+      switch (category) {
+        case 'quick':
+          // Recettes rapides: moins de 20 minutes de préparation
+          return prepTime <= 20
+        case 'vegetarian':
+          // Végétarien: tags ou dietTypes contiennent végétarien/vegan
+          return dietTypes.some(d => d.includes('vegetar') || d.includes('vegan')) ||
+                 tags.some(t => t.includes('végé') || t.includes('vegan') || t.includes('legume'))
+        case 'keto':
+          // Cétogène: faible en glucides (<20g) et riche en lipides
+          return carbs < 20
+        case 'lowcarb':
+          // Low Carb: moins de 30g de glucides
+          return carbs < 30
+        case 'mealprep':
+          // Préparation repas: recettes qui se conservent bien (>4 portions ou tags meal prep)
+          return (recipe.servings && recipe.servings >= 4) ||
+                 tags.some(t => t.includes('prep') || t.includes('batch'))
+        case 'highprotein':
+          // Riche en protéines: plus de 25g
+          return proteins >= 25
+        default:
+          return true
+      }
+    })
+  }, [])
+
+  // Helper to deduplicate recipes by ID
+  const deduplicateRecipes = (recipes: Recipe[]): Recipe[] => {
+    const seen = new Set<string>()
+    return recipes.filter(r => {
+      if (seen.has(r.id)) return false
+      seen.add(r.id)
+      return true
+    })
+  }
+
+  // Filtered recipes based on selected category
+  const filteredRecipes = useMemo(() => {
+    return filterByCategory(allRecipes, selectedCategory)
+  }, [allRecipes, selectedCategory, filterByCategory])
+
+  // Group recipes by categories (with deduplication)
   const breakfastRecipes = useMemo(() => {
-    const filtered = allRecipes.filter(r => {
+    const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 150 && cals <= 500
     })
-    return filtered.slice(0, 10)
-  }, [allRecipes])
+    return deduplicateRecipes(filtered).slice(0, 10)
+  }, [filteredRecipes])
 
   const lunchRecipes = useMemo(() => {
-    const filtered = allRecipes.filter(r => {
+    const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 400 && cals <= 800
     })
-    return filtered.slice(0, 10)
-  }, [allRecipes])
+    return deduplicateRecipes(filtered).slice(0, 10)
+  }, [filteredRecipes])
+
+  const snackRecipes = useMemo(() => {
+    const filtered = filteredRecipes.filter(r => {
+      const cals = r.nutritionPerServing?.calories || 0
+      return cals >= 50 && cals <= 300
+    })
+    return deduplicateRecipes(filtered).slice(0, 10)
+  }, [filteredRecipes])
 
   const dinnerRecipes = useMemo(() => {
-    const filtered = allRecipes.filter(r => {
+    const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 350 && cals <= 700
     })
-    return filtered.slice(0, 10)
-  }, [allRecipes])
+    return deduplicateRecipes(filtered).slice(0, 10)
+  }, [filteredRecipes])
 
   // Search results
   const searchResults = useMemo(() => {
@@ -185,8 +247,8 @@ export default function RecipesScreen() {
   // Render recipe card for horizontal carousel
   const renderRecipeCard = (recipe: Recipe, size: 'large' | 'medium' = 'large') => {
     const isFavorite = favorites.includes(recipe.id)
-    const cardWidth = size === 'large' ? 280 : 200
-    const cardHeight = size === 'large' ? 200 : 160
+    const cardWidth = size === 'large' ? 220 : 160
+    const cardHeight = size === 'large' ? 140 : 110
 
     return (
       <TouchableOpacity
@@ -204,12 +266,9 @@ export default function RecipesScreen() {
               resizeMode="cover"
             />
           ) : (
-            <LinearGradient
-              colors={['#2D2D2D', '#1A1A1A']}
-              style={styles.recipeImagePlaceholder}
-            >
-              <ChefHat size={40} color={colors.text.muted} />
-            </LinearGradient>
+            <View style={styles.recipeImagePlaceholder}>
+              <ChefHat size={32} color="#9CA3AF" />
+            </View>
           )}
 
           {/* Nutri-Score badge */}
@@ -250,26 +309,40 @@ export default function RecipesScreen() {
     )
   }
 
+  // Handle category selection
+  const handleCategoryPress = (categoryId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // Toggle: if already selected, deselect; otherwise select
+    setSelectedCategory(prev => prev === categoryId ? null : categoryId)
+  }
+
   // Render category card
-  const renderCategoryCard = (category: typeof CATEGORIES[0]) => (
-    <TouchableOpacity
-      key={category.id}
-      style={styles.categoryCard}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-        // Could filter by category
-      }}
-      activeOpacity={0.8}
-    >
-      <LinearGradient
-        colors={[category.color + '40', category.color + '20']}
-        style={styles.categoryGradient}
+  const renderCategoryCard = (category: typeof CATEGORIES[0]) => {
+    const isSelected = selectedCategory === category.id
+    return (
+      <TouchableOpacity
+        key={category.id}
+        style={[
+          styles.categoryCard,
+          isSelected && { borderWidth: 2, borderColor: category.color }
+        ]}
+        onPress={() => handleCategoryPress(category.id)}
+        activeOpacity={0.8}
       >
-        <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-        <Text style={styles.categoryLabel}>{category.label}</Text>
-      </LinearGradient>
-    </TouchableOpacity>
-  )
+        <LinearGradient
+          colors={isSelected
+            ? [category.color + '60', category.color + '40']
+            : [category.color + '40', category.color + '20']}
+          style={styles.categoryGradient}
+        >
+          <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+          <Text style={[styles.categoryLabel, isSelected && { fontWeight: '700' }]}>
+            {category.label}
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    )
+  }
 
   // Render section header
   const renderSectionHeader = (title: string, onViewAll?: () => void) => (
@@ -348,6 +421,21 @@ export default function RecipesScreen() {
                 {CATEGORIES.map(renderCategoryCard)}
               </ScrollView>
 
+              {/* Active filter indicator */}
+              {selectedCategory && (
+                <View style={styles.activeFilterContainer}>
+                  <Text style={styles.activeFilterText}>
+                    Filtre actif : {CATEGORIES.find(c => c.id === selectedCategory)?.label}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setSelectedCategory(null)}
+                    style={styles.clearFilterButton}
+                  >
+                    <Text style={styles.clearFilterText}>Effacer</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Petit-déjeuner */}
               <View style={styles.section}>
                 {renderSectionHeader('PETIT-DÉJEUNER')}
@@ -369,6 +457,18 @@ export default function RecipesScreen() {
                   contentContainerStyle={styles.horizontalScroll}
                 >
                   {lunchRecipes.map(recipe => renderRecipeCard(recipe))}
+                </ScrollView>
+              </View>
+
+              {/* Collation */}
+              <View style={styles.section}>
+                {renderSectionHeader('COLLATION')}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalScroll}
+                >
+                  {snackRecipes.map(recipe => renderRecipeCard(recipe, 'medium'))}
                 </ScrollView>
               </View>
 
@@ -410,7 +510,7 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#F8F7F4', // Blanc cassé
   },
   searchContainer: {
     flexDirection: 'row',
@@ -423,23 +523,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#2D2D2D',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   filterButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#2D2D2D',
+    backgroundColor: '#FFFFFF',
     borderRadius: radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   scrollView: {
     flex: 1,
@@ -479,7 +583,7 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     ...typography.smallMedium,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   // Sections
   section: {
@@ -494,7 +598,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.caption,
-    color: '#9CA3AF',
+    color: '#6B7280',
     fontWeight: '600',
     letterSpacing: 1,
   },
@@ -511,6 +615,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
     marginRight: spacing.md,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   recipeImageContainer: {
     position: 'relative',
@@ -523,6 +633,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#E5E5E5',
   },
   nutriscoreContainer: {
     position: 'absolute',
@@ -570,5 +681,33 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     textAlign: 'center',
     paddingVertical: spacing.xl,
+  },
+  // Active filter indicator
+  activeFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: spacing.default,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.accent.primary + '15',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.accent.primary + '30',
+  },
+  activeFilterText: {
+    ...typography.small,
+    color: colors.accent.primary,
+    fontWeight: '500',
+  },
+  clearFilterButton: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  clearFilterText: {
+    ...typography.small,
+    color: colors.accent.primary,
+    fontWeight: '600',
   },
 })

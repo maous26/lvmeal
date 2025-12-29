@@ -1,10 +1,10 @@
 /**
  * Script pour générer les embeddings OpenAI
- * Usage: node supabase/scripts/generate-embeddings.js
+ * Usage: SUPABASE_URL=xxx SUPABASE_ANON_KEY=xxx OPENAI_API_KEY=xxx node supabase/scripts/generate-embeddings.js
  */
 
-const SUPABASE_URL = 'https://ymuwxjidwnkgnrziryrm.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_ajR70WwnkVJzhIA45-d9tw_kvOO-Tml'
+const SUPABASE_URL = process.env.SUPABASE_URL || ''
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || ''
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
 
 async function generateEmbedding(text) {
@@ -29,76 +29,60 @@ async function generateEmbedding(text) {
   return data.data[0].embedding
 }
 
-async function getEntriesWithoutEmbeddings() {
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/knowledge_base?embedding=is.null&select=id,content,category`,
-    {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      },
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error(`Supabase Error: ${await response.text()}`)
+async function updateKnowledgeBase() {
+  if (!SUPABASE_URL || !SUPABASE_KEY || !OPENAI_API_KEY) {
+    console.error('Missing environment variables: SUPABASE_URL, SUPABASE_ANON_KEY, OPENAI_API_KEY')
+    process.exit(1)
   }
 
-  return response.json()
-}
+  console.log('Fetching entries without embeddings...')
 
-async function updateEmbedding(id, embedding) {
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/knowledge_base?id=eq.${id}`,
-    {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify({ embedding }),
-    }
-  )
+  // Fetch entries without embeddings
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/knowledge_base?embedding=is.null&select=id,content`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    },
+  })
 
   if (!response.ok) {
-    throw new Error(`Update Error: ${await response.text()}`)
+    throw new Error(`Supabase fetch error: ${await response.text()}`)
   }
-}
 
-async function main() {
-  console.log('=== Génération des embeddings LymIA ===\n')
+  const entries = await response.json()
+  console.log(`Found ${entries.length} entries to process`)
 
-  try {
-    const entries = await getEntriesWithoutEmbeddings()
-    console.log(`${entries.length} documents sans embedding\n`)
+  for (const entry of entries) {
+    try {
+      console.log(`Processing entry ${entry.id}...`)
+      const embedding = await generateEmbedding(entry.content)
 
-    if (entries.length === 0) {
-      console.log('Tous les documents ont déjà des embeddings!')
-      return
-    }
+      // Update entry with embedding
+      const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/knowledge_base?id=eq.${entry.id}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({ embedding }),
+      })
 
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i]
-      console.log(`[${i + 1}/${entries.length}] ${entry.category}: ${entry.content.substring(0, 50)}...`)
-
-      try {
-        const embedding = await generateEmbedding(entry.content)
-        await updateEmbedding(entry.id, embedding)
-        console.log(`  ✓ Embedding généré (${embedding.length} dimensions)`)
-      } catch (error) {
-        console.error(`  ✗ Erreur: ${error.message}`)
+      if (!updateResponse.ok) {
+        console.error(`Failed to update entry ${entry.id}:`, await updateResponse.text())
+      } else {
+        console.log(`Updated entry ${entry.id}`)
       }
 
-      // Pause pour éviter le rate limiting
+      // Rate limiting
       await new Promise(resolve => setTimeout(resolve, 200))
+    } catch (error) {
+      console.error(`Error processing entry ${entry.id}:`, error.message)
     }
-
-    console.log('\n✓ Terminé!')
-  } catch (error) {
-    console.error('Erreur:', error.message)
   }
+
+  console.log('Done!')
 }
 
-main()
+updateKnowledgeBase().catch(console.error)
