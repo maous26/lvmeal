@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native'
 import {
   User,
@@ -21,13 +22,20 @@ import {
   ChevronRight,
   Award,
   Flame,
+  Dumbbell,
+  Zap,
+  Edit3,
 } from 'lucide-react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, Button } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
+import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { formatNumber } from '../lib/utils'
+import type { RootStackParamList } from '../navigation/RootNavigator'
 
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
@@ -62,16 +70,31 @@ const dietLabels: Record<string, string> = {
   casher: 'Casher',
 }
 
-export default function ProfileScreen() {
-  const { profile, nutritionGoals, resetStore } = useUserStore()
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 
-  const userName = profile?.name || 'Utilisateur'
+export default function ProfileScreen() {
+  const navigation = useNavigation<NavigationProp>()
+  const { profile, nutritionGoals, resetStore, setProfile } = useUserStore()
+  const {
+    isEnrolled: isSportInitiationEnrolled,
+    enroll: enrollSportInitiation,
+    unenroll: unenrollSportInitiation,
+    currentPhase,
+    currentWeek,
+  } = useSportInitiationStore()
+
+  const userName = profile?.firstName || profile?.name || 'Utilisateur'
   const userInitials = userName
     .split(' ')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
+
+  const handleEditProfile = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    navigation.navigate('EditProfile')
+  }
 
   const handleSettingPress = (setting: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -83,14 +106,14 @@ export default function ProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
     Alert.alert(
       'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ? Vos données locales seront conservées.',
+      'Êtes-vous sûr de vouloir vous déconnecter ? Vous retournerez à l\'écran d\'onboarding.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Déconnexion',
           style: 'destructive',
           onPress: () => {
-            // TODO: Handle logout
+            resetStore()
           },
         },
       ]
@@ -115,6 +138,51 @@ export default function ProfileScreen() {
     )
   }
 
+  const handleToggleSportInitiation = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (isSportInitiationEnrolled) {
+      Alert.alert(
+        'Quitter le programme',
+        'Êtes-vous sûr de vouloir quitter le programme d\'initiation sportive ? Votre progression sera conservée.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Quitter',
+            style: 'destructive',
+            onPress: () => {
+              unenrollSportInitiation()
+              if (profile) {
+                setProfile({ ...profile, sportInitiationActive: false })
+              }
+            },
+          },
+        ]
+      )
+    } else {
+      Alert.alert(
+        'Rejoindre le programme',
+        'Le programme d\'initiation sportive vous accompagne pour reprendre le sport en douceur sur 12 semaines.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Commencer',
+            onPress: () => {
+              enrollSportInitiation({
+                fitnessLevel: 'sedentary',
+                hasHealthConditions: false,
+                preferredActivities: ['walking', 'stretching'],
+                availableMinutesPerDay: 15,
+              })
+              if (profile) {
+                setProfile({ ...profile, sportInitiationActive: true })
+              }
+            },
+          },
+        ]
+      )
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -137,8 +205,9 @@ export default function ProfileScreen() {
               <Text style={styles.profileName}>{userName}</Text>
               <Text style={styles.profileEmail}>{profile?.email || 'Aucun email'}</Text>
             </View>
-            <TouchableOpacity onPress={() => handleSettingPress('edit-profile')}>
-              <ChevronRight size={24} color={colors.text.tertiary} />
+            <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
+              <Edit3 size={18} color={colors.accent.primary} />
+              <Text style={styles.editButtonText}>Modifier</Text>
             </TouchableOpacity>
           </View>
 
@@ -165,7 +234,12 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Current Goals */}
-        <Text style={styles.sectionTitle}>Mes objectifs</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Mes objectifs</Text>
+          <TouchableOpacity onPress={handleEditProfile} style={styles.sectionEditButton}>
+            <Edit3 size={16} color={colors.accent.primary} />
+          </TouchableOpacity>
+        </View>
         <Card style={styles.goalsCard}>
           <View style={styles.goalItem}>
             <View style={styles.goalIcon}>
@@ -177,7 +251,6 @@ export default function ProfileScreen() {
                 {goalLabels[profile?.goal || 'maintain']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
           </View>
 
           <View style={styles.goalItem}>
@@ -191,7 +264,6 @@ export default function ProfileScreen() {
                 {profile?.targetWeight && ` → ${profile.targetWeight} kg`}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
           </View>
 
           <View style={styles.goalItem}>
@@ -204,7 +276,6 @@ export default function ProfileScreen() {
                 {activityLabels[profile?.activityLevel || 'moderate']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
           </View>
 
           <View style={[styles.goalItem, { borderBottomWidth: 0 }]}>
@@ -217,7 +288,6 @@ export default function ProfileScreen() {
                 {dietLabels[profile?.dietType || 'omnivore']}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
           </View>
         </Card>
 
@@ -248,6 +318,35 @@ export default function ProfileScreen() {
               {nutritionGoals?.fats || 67}g
             </Text>
           </View>
+        </Card>
+
+        {/* Programs */}
+        <Text style={styles.sectionTitle}>Programmes</Text>
+        <Card padding="none">
+          <TouchableOpacity
+            style={styles.programItem}
+            onPress={handleToggleSportInitiation}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
+              <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
+            </View>
+            <View style={styles.programInfo}>
+              <Text style={styles.programLabel}>Initiation Sportive</Text>
+              <Text style={styles.programDescription}>
+                {isSportInitiationEnrolled
+                  ? `Phase ${currentPhase} - Semaine ${currentWeek}`
+                  : 'Programme pour reprendre le sport'}
+              </Text>
+            </View>
+            <Switch
+              value={isSportInitiationEnrolled}
+              onValueChange={handleToggleSportInitiation}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
+              thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </TouchableOpacity>
         </Card>
 
         {/* Settings */}
@@ -368,6 +467,20 @@ const styles = StyleSheet.create({
     ...typography.small,
     color: colors.text.tertiary,
   },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.accent.light,
+    borderRadius: radius.md,
+  },
+  editButtonText: {
+    ...typography.small,
+    color: colors.accent.primary,
+    fontWeight: '600',
+  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -391,11 +504,24 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: colors.border.light,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+  },
   sectionTitle: {
     ...typography.bodyMedium,
     color: colors.text.secondary,
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
+  },
+  sectionEditButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   goalsCard: {
     padding: 0,
@@ -474,5 +600,35 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     textAlign: 'center',
     marginTop: spacing.lg,
+  },
+  // Programs
+  programItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.default,
+  },
+  programIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  programIconActive: {
+    backgroundColor: colors.success,
+  },
+  programInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  programLabel: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
+  },
+  programDescription: {
+    ...typography.small,
+    color: colors.text.tertiary,
+    marginTop: 2,
   },
 })

@@ -5,7 +5,7 @@
  * Used in production to provide instant, French-only recipes.
  */
 
-import type { Recipe } from '../types'
+import type { Recipe, NutriScoreGrade } from '../types'
 
 // Type for the pre-enriched recipe format
 export interface StaticEnrichedRecipe {
@@ -100,6 +100,63 @@ export function getStaticRecipeCount(): number {
 }
 
 /**
+ * Estimate Nutri-Score based on basic nutrition info
+ * This is a simplified estimation when full nutrition data isn't available
+ */
+function estimateNutriScoreForRecipe(nutrition: {
+  calories: number
+  proteins: number
+  carbs: number
+  fats: number
+}): NutriScoreGrade {
+  // Estimate per 100g (assume average portion ~250g)
+  const factor = 100 / 250
+  const calories100g = nutrition.calories * factor
+  const proteins100g = nutrition.proteins * factor
+  const fats100g = nutrition.fats * factor
+
+  // Simplified scoring based on main nutritional factors
+  let negativePoints = 0
+  let positivePoints = 0
+
+  // Energy points (0-10)
+  if (calories100g <= 80) negativePoints += 0
+  else if (calories100g <= 160) negativePoints += 1
+  else if (calories100g <= 240) negativePoints += 2
+  else if (calories100g <= 320) negativePoints += 3
+  else if (calories100g <= 400) negativePoints += 4
+  else if (calories100g <= 480) negativePoints += 5
+  else negativePoints += 6
+
+  // Saturated fat points (estimate 35% of total fat)
+  const satFatEstimate = fats100g * 0.35
+  if (satFatEstimate <= 1) negativePoints += 0
+  else if (satFatEstimate <= 2) negativePoints += 1
+  else if (satFatEstimate <= 3) negativePoints += 2
+  else if (satFatEstimate <= 4) negativePoints += 3
+  else if (satFatEstimate <= 5) negativePoints += 4
+  else negativePoints += 5
+
+  // Protein points (0-5)
+  if (proteins100g <= 1.6) positivePoints += 0
+  else if (proteins100g <= 3.2) positivePoints += 1
+  else if (proteins100g <= 4.8) positivePoints += 2
+  else if (proteins100g <= 6.4) positivePoints += 3
+  else if (proteins100g <= 8) positivePoints += 4
+  else positivePoints += 5
+
+  // Final score
+  const score = negativePoints - positivePoints
+
+  // Convert to grade
+  if (score <= -1) return 'a'
+  if (score <= 2) return 'b'
+  if (score <= 10) return 'c'
+  if (score <= 18) return 'd'
+  return 'e'
+}
+
+/**
  * Convert static enriched recipe to Recipe type for components
  */
 export function staticToRecipe(enriched: StaticEnrichedRecipe): Recipe {
@@ -131,12 +188,13 @@ export function staticToRecipe(enriched: StaticEnrichedRecipe): Recipe {
     tags: [],
     dietTypes: [],
     allergens: [],
-    rating: 4.5, // Default rating
+    rating: 0, // No rating by default - only show if user rated
     ratingCount: 0,
     isFavorite: false,
     source: enriched.source,
     sourceUrl: enriched.sourceUrl,
     createdAt: enriched.enrichedAt,
+    // No nutriscore for recipes - only official scores from OFF/CIQUAL products
   }
 }
 

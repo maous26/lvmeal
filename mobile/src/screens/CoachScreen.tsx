@@ -131,16 +131,13 @@ function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
         </Pressable>
       </View>
 
-      {/* Titre avec icône catégorie */}
-      <View style={styles.titleRow}>
+      {/* Message avec icône catégorie (titre retiré car redondant) */}
+      <View style={styles.messageRow}>
         <View style={[styles.catIconContainer, { backgroundColor: catConf.bgColor }]}>
           <CatIcon size={18} color={colors.text.secondary} />
         </View>
-        <Text style={styles.itemTitle}>{item.title}</Text>
+        <Text style={styles.itemMessage}>{item.message}</Text>
       </View>
-
-      {/* Message */}
-      <Text style={styles.itemMessage}>{item.message}</Text>
 
       {/* Footer: source + time + action */}
       <View style={styles.itemFooter}>
@@ -182,7 +179,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export default function CoachScreen() {
-  const { items, unreadCount, generateItems, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
+  const { items, unreadCount, generateItemsWithAI, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
   const wellnessStore = useWellnessStore()
@@ -190,8 +187,8 @@ export default function CoachScreen() {
 
   const [refreshing, setRefreshing] = React.useState(false)
 
-  // Mettre à jour le contexte et générer des items
-  const updateContext = useCallback(() => {
+  // Mettre à jour le contexte et générer des items avec AI (RAG)
+  const updateContext = useCallback(async () => {
     const todayData = getTodayData()
     const todayNutrition = todayData.totalNutrition
     const todayWellness = wellnessStore.getTodayEntry?.() || {} as Record<string, unknown>
@@ -215,19 +212,20 @@ export default function CoachScreen() {
       proteinTarget: Math.round((profile?.weight || 70) * 1.6),
       carbsConsumed: todayNutrition.carbs,
       fatsConsumed: todayNutrition.fats,
-      waterConsumed: (todayWellness.water as number) || 0,
+      waterConsumed: (todayWellness as { hydration?: number }).hydration || 0,
       waterTarget: 2000,
-      sleepHours: todayWellness.sleepHours as number | undefined,
-      sleepQuality: todayWellness.sleepQuality as number | undefined,
-      stressLevel: todayWellness.stressLevel as number | undefined,
-      energyLevel: todayWellness.energyLevel as number | undefined,
+      sleepHours: (todayWellness as { sleepHours?: number }).sleepHours,
+      sleepQuality: (todayWellness as { sleepQuality?: number }).sleepQuality,
+      stressLevel: (todayWellness as { stressLevel?: number }).stressLevel,
+      energyLevel: (todayWellness as { energyLevel?: number }).energyLevel,
       streak: currentStreak,
       level: currentLevel,
       xp: totalXP,
     })
 
-    generateItems()
-  }, [profile, nutritionGoals, getTodayData, wellnessStore, currentStreak, currentLevel, totalXP, setContext, generateItems])
+    // Use AI-powered generation with RAG (falls back to static if AI unavailable)
+    await generateItemsWithAI()
+  }, [profile, nutritionGoals, getTodayData, wellnessStore, currentStreak, currentLevel, totalXP, setContext, generateItemsWithAI])
 
   useEffect(() => {
     updateContext()
@@ -237,8 +235,7 @@ export default function CoachScreen() {
     setRefreshing(true)
     // Force la régénération
     useCoachStore.setState({ lastGeneratedAt: null })
-    updateContext()
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await updateContext()
     setRefreshing(false)
   }, [updateContext])
 
@@ -393,7 +390,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.primary,
+    borderBottomColor: colors.border.light,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -496,11 +493,11 @@ const styles = StyleSheet.create({
   dismissButton: {
     padding: spacing.xs,
   },
-  titleRow: {
+  messageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   catIconContainer: {
     width: 32,
@@ -508,18 +505,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  itemTitle: {
-    ...typography.md,
-    fontWeight: '600',
-    color: colors.text.primary,
-    flex: 1,
+    marginTop: 2,
   },
   itemMessage: {
     ...typography.sm,
-    color: colors.text.secondary,
+    color: colors.text.primary,
     lineHeight: 20,
-    marginBottom: spacing.md,
+    flex: 1,
   },
   itemFooter: {
     flexDirection: 'row',
@@ -555,7 +547,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing['3xl'],
   },
   emptyTitle: {
     ...typography.lg,

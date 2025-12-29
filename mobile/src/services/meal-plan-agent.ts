@@ -12,10 +12,20 @@
 import { gustarRecipes, type DietaryPreference } from './gustar-recipes'
 import { generatePlanMeal, generateShoppingList as generateShoppingListAI } from './ai-service'
 import { searchFoods } from './food-search'
+import { shouldEnrichRecipe } from './gustar-enrichment'
+import {
+  loadStaticRecipes,
+  filterStaticRecipes,
+  hasStaticRecipes,
+  type StaticEnrichedRecipe,
+} from './static-recipes'
 import type { UserProfile, MealType } from '../types'
 import type { PlannedMealItem, ShoppingList, ShoppingItem } from '../stores/meal-plan-store'
 
 // ============= TYPES =============
+
+export type RecipeComplexity = 'basique' | 'elabore' | 'mix'
+export type CookingLevel = 'beginner' | 'intermediate' | 'advanced'
 
 export interface WeeklyPlanPreferences {
   dailyCalories: number
@@ -27,6 +37,8 @@ export interface WeeklyPlanPreferences {
   includeCheatMeal?: boolean
   cookingTimeWeekday?: number
   cookingTimeWeekend?: number
+  complexity?: RecipeComplexity
+  cookingLevel?: CookingLevel
 }
 
 // ============= CONSTANTS =============
@@ -92,7 +104,65 @@ function calculateDailyCalorieTargets(
 // ============= FOOD SOURCES =============
 
 /**
- * Search recipes from Gustar.io API
+ * Get recipes from pre-enriched static JSON file (already in French)
+ * This is the PRIMARY source for recipes - fast and reliable
+ */
+async function getStaticEnrichedRecipes(
+  mealType: MealType,
+  maxPrepTime?: number,
+  limit: number = 5
+): Promise<PlannedMealItem[]> {
+  try {
+    // Ensure recipes are loaded
+    if (!hasStaticRecipes()) {
+      await loadStaticRecipes()
+    }
+
+    // Filter recipes by meal type and prep time
+    const filtered = filterStaticRecipes({
+      mealType,
+      maxPrepTime,
+      limit: limit * 2, // Get more to allow filtering
+    })
+
+    if (filtered.length === 0) {
+      console.log(`MealPlanAgent: No static recipes found for ${mealType}`)
+      return []
+    }
+
+    // Shuffle to get variety
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5)
+
+    console.log(`MealPlanAgent: Found ${shuffled.length} static recipes for ${mealType}`)
+
+    return shuffled.slice(0, limit).map(recipe => ({
+      id: generateId(),
+      dayIndex: 0,
+      mealType,
+      name: recipe.titleFr, // Already in French!
+      description: recipe.descriptionFr,
+      prepTime: recipe.prepTime || 30,
+      servings: recipe.servings || 2,
+      nutrition: recipe.nutrition || { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+      ingredients: recipe.ingredientsFr.map(i => ({
+        name: i.name,
+        amount: `${i.amount} ${i.unit}`.trim(),
+      })),
+      instructions: recipe.instructionsFr,
+      isValidated: false,
+      source: 'gustar' as const,
+      sourceRecipeId: recipe.id,
+      imageUrl: recipe.imageUrl,
+    }))
+  } catch (error) {
+    console.error('Static recipes error:', error)
+    return []
+  }
+}
+
+/**
+ * Search recipes from Gustar.io API (FALLBACK only - if static recipes don't have enough)
+ * Filters out unhealthy recipes (too sweet/salty) based on RAG criteria
  */
 async function searchGustarRecipes(
   query: string,
@@ -105,14 +175,32 @@ async function searchGustarRecipes(
       return []
     }
 
+    // Request more recipes than needed to account for health filtering
     const result = await gustarRecipes.searchRecipes({
       query,
       diet: mapDietToGustar(dietType),
       maxPrepTime,
-      limit,
+      limit: limit * 2, // Request double to filter out unhealthy ones
     })
 
-    return result.recipes.map(recipe => ({
+    // Filter out unhealthy recipes (too sweet, too salty, excluded categories)
+    const healthyRecipes = result.recipes.filter(recipe => {
+      // Create a minimal recipe object for health check
+      const recipeForCheck = {
+        id: recipe.id,
+        title: recipe.title,
+        ingredients: recipe.ingredients,
+        nutrition: recipe.nutrition,
+        image: recipe.image, // This indicates it's a GustarRecipe
+      }
+      return shouldEnrichRecipe(recipeForCheck as any)
+    })
+
+    if (healthyRecipes.length < result.recipes.length) {
+      console.log(`MealPlanAgent: Filtered ${result.recipes.length - healthyRecipes.length} unhealthy Gustar recipes`)
+    }
+
+    return healthyRecipes.slice(0, limit).map(recipe => ({
       id: generateId(),
       dayIndex: 0,
       mealType: 'lunch' as MealType,
@@ -139,6 +227,7 @@ async function searchGustarRecipes(
 
 /**
  * Search foods from CIQUAL database only (OFF is too slow for plan generation)
+ * Note: CIQUAL/OFF products don't have ingredients/instructions - they are single food items
  */
 async function searchFoodDatabases(
   query: string,
@@ -152,33 +241,163 @@ async function searchFoodDatabases(
       source: 'generic', // Use CIQUAL only - skip OFF to avoid timeouts during plan generation
     })
 
-    return result.products.map(food => ({
-      id: generateId(),
-      dayIndex: 0,
-      mealType: 'lunch' as MealType,
-      name: food.name,
-      description: food.brand || food.category,
-      prepTime: 10,
-      servings: 1,
-      nutrition: {
-        calories: food.nutrition.calories,
-        proteins: food.nutrition.proteins,
-        carbs: food.nutrition.carbs,
-        fats: food.nutrition.fats,
-      },
-      ingredients: [],
-      instructions: [],
-      isValidated: false,
-      source: 'gustar' as const,
-    }))
+    return result.products.map(food => {
+      // Determine actual source
+      const actualSource = food.source === 'openfoodfacts' ? 'openfoodfacts' : 'ciqual'
+
+      // Include brand in name for Open Food Facts products
+      const displayName = actualSource === 'openfoodfacts' && food.brand
+        ? `${food.name} - ${food.brand}`
+        : food.name
+
+      return {
+        id: generateId(),
+        dayIndex: 0,
+        mealType: 'lunch' as MealType,
+        name: displayName,
+        description: food.brand || food.category || 'Produit alimentaire',
+        prepTime: 5, // Quick prep for simple products
+        servings: 1,
+        nutrition: {
+          calories: food.nutrition.calories,
+          proteins: food.nutrition.proteins,
+          carbs: food.nutrition.carbs,
+          fats: food.nutrition.fats,
+        },
+        // For CIQUAL/OFF products, we don't have recipe ingredients/instructions
+        // The product itself IS the ingredient
+        ingredients: [{
+          name: food.name,
+          amount: `${food.servingSize || 100}${food.servingUnit || 'g'}`,
+          calories: food.nutrition.calories,
+        }],
+        instructions: ['Prêt à consommer ou à préparer selon vos préférences.'],
+        isValidated: false,
+        source: actualSource as 'ciqual' | 'openfoodfacts',
+      }
+    })
   } catch (error) {
     console.warn('Food database search error:', error)
     return []
   }
 }
 
+// Recettes basiques françaises (≤4 ingrédients, rapides)
+// IMPORTANT: Petit-dej français = traditionnellement SUCRÉ (tartines confiture, céréales, viennoiseries)
+// Collations = fruits, yaourts, compotes (pas de sandwichs salés)
+const BASIQUE_QUERIES: Record<MealType, string[]> = {
+  breakfast: ['tartine confiture', 'cereales lait', 'yaourt miel', 'pain beurre miel', 'brioche', 'croissant'],
+  lunch: ['pates beurre', 'riz thon', 'omelette', 'croque monsieur', 'steak puree', 'poulet riz'],
+  snack: ['pomme', 'banane', 'compote', 'yaourt fruits', 'fromage blanc miel', 'pain chocolat'],
+  dinner: ['soupe legumes', 'omelette herbes', 'salade verte', 'oeufs coque', 'poisson citron'],
+}
+
+// Recettes élaborées françaises (+5 ingrédients)
+const ELABORE_QUERIES: Record<MealType, string[]> = {
+  breakfast: ['crepes maison', 'pancakes sirop', 'bowl flocons avoine fruits', 'pain perdu', 'granola maison'],
+  lunch: ['poulet basquaise', 'boeuf bourguignon', 'blanquette veau', 'salade nicoise', 'hachis parmentier'],
+  snack: ['smoothie fruits', 'banana bread', 'gateau yaourt', 'fruits salade'],
+  dinner: ['ratatouille', 'gratin legumes', 'risotto champignons', 'curry legumes', 'tarte legumes'],
+}
+
+// ============= FRENCH BREAKFAST/SNACK FILTERS =============
+// Le petit-déjeuner français est traditionnellement SUCRÉ (tartines, céréales, viennoiseries)
+// Les collations sont des fruits, yaourts, compotes
+
+// Mots-clés qui CONFIRMENT un petit-déjeuner/collation français sucré (whitelist)
+const SWEET_BREAKFAST_KEYWORDS = [
+  // Céréales et muesli
+  'muesli', 'müsli', 'cereales', 'céréales', 'granola', 'flocons', 'porridge', 'avoine',
+  // Viennoiseries
+  'croissant', 'brioche', 'pain au chocolat', 'chocolatine', 'viennoiserie',
+  // Tartines sucrées
+  'tartine', 'confiture', 'miel', 'nutella', 'pate a tartiner', 'pâte à tartiner',
+  // Crêpes et pancakes
+  'crepe', 'crêpe', 'pancake', 'gaufre', 'pain perdu',
+  // Fruits et compotes
+  'fruit', 'compote', 'smoothie', 'jus',
+  // Produits laitiers sucrés
+  'yaourt', 'yogourt', 'fromage blanc', 'petit suisse',
+  // Pâtisseries petit-déj
+  'muffin', 'cake', 'banana bread', 'gateau', 'gâteau', 'biscuit',
+]
+
+// Mots-clés qui EXCLUENT un petit-déjeuner (plats salés non-français)
+const SAVORY_BREAKFAST_KEYWORDS = [
+  // Oeufs salés (sauf oeufs brouillés simples)
+  'omelette', 'omelett', 'œuf', 'oeuf', 'egg',
+  // Viandes et charcuteries
+  'jambon', 'bacon', 'saucisse', 'chorizo', 'ham', 'wurst', 'schinken', 'salami',
+  // Fromages salés (pas fromage blanc qui est sucré)
+  'fromage de chèvre', 'chevre', 'feta', 'cheddar', 'käse', 'cheese',
+  'au fromage', // "Petit Déjeuner au Fromage" = salé
+  // Légumes salés
+  'epinard', 'épinard', 'spinat', 'tomate', 'champignon', 'avocat',
+  'legume', 'légume', 'rucola', 'roquette',
+  // Condiments salés
+  'ketchup', 'curry', 'moutarde',
+  // Plats internationaux
+  'burger', 'américain', 'americain', 'turc', 'anglais', 'english',
+  'gröstl', 'turkish', 'american', 'vitalite', 'vitalité', 'energisant', 'énergisant',
+  // Sandwichs
+  'sandwich', 'toast salé', 'tartine salée',
+  // Soupes
+  'soupe', 'miso',
+]
+
+/**
+ * Check if a meal is suitable for French breakfast (must be SWEET)
+ * Returns true if the meal should be EXCLUDED (is savory/not French style)
+ */
+function isNotFrenchSweetBreakfast(name: string): boolean {
+  const lowerName = name.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents for matching
+
+  // First check: Is it explicitly sweet? (whitelist)
+  const isSweet = SWEET_BREAKFAST_KEYWORDS.some(keyword => {
+    const normalizedKeyword = keyword.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    return lowerName.includes(normalizedKeyword)
+  })
+
+  // If it's sweet, it's OK for French breakfast
+  if (isSweet) {
+    return false // Don't exclude
+  }
+
+  // Second check: Does it contain savory keywords? (blacklist)
+  const isSavory = SAVORY_BREAKFAST_KEYWORDS.some(keyword => {
+    const normalizedKeyword = keyword.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    return lowerName.includes(normalizedKeyword)
+  })
+
+  if (isSavory) {
+    console.log(`MealPlanAgent: Excluded non-French breakfast: ${name}`)
+    return true // Exclude
+  }
+
+  // If neither sweet nor savory keywords found, allow it (benefit of doubt)
+  return false
+}
+
+/**
+ * Get max ingredients based on complexity
+ */
+function getMaxIngredientsForComplexity(complexity: RecipeComplexity): number {
+  switch (complexity) {
+    case 'basique': return 4
+    case 'elabore': return 15
+    case 'mix': return 10
+  }
+}
+
 /**
  * Get meal suggestions from all sources
+ *
+ * STRATEGY:
+ * - Petit-déjeuner & Collation: CIQUAL/OFF uniquement (aliments simples français)
+ *   L'agent IA élaborera les repas en se basant sur le RAG (traditions françaises)
+ * - Déjeuner & Dîner: Recettes Gustar enrichies + CIQUAL comme fallback
  */
 async function getMealSuggestions(
   mealType: MealType,
@@ -186,38 +405,87 @@ async function getMealSuggestions(
   usedNames: string[],
   isWeekend: boolean
 ): Promise<PlannedMealItem[]> {
-  const queries: Record<MealType, string[]> = {
-    breakfast: ['petit déjeuner', 'oeufs', 'tartine', 'yaourt fruits', 'flocons avoine'],
-    lunch: ['poulet légumes', 'salade composée', 'poisson grillé', 'pâtes', 'riz'],
-    snack: ['fruit', 'yaourt', 'noix', 'fromage blanc'],
-    dinner: ['soupe', 'salade', 'légumes grillés', 'poisson vapeur', 'omelette'],
-  }
+  const complexity = preferences.complexity || 'mix'
 
-  const typeQueries = queries[mealType] || ['repas']
-  const randomQuery = typeQueries[Math.floor(Math.random() * typeQueries.length)]
-
-  const maxPrepTime = isWeekend
+  // Adjust prep time based on complexity and cooking level
+  let maxPrepTime = isWeekend
     ? (preferences.cookingTimeWeekend || 45)
     : (preferences.cookingTimeWeekday || 20)
 
+  // Basique recipes should be faster
+  if (complexity === 'basique') {
+    maxPrepTime = Math.min(maxPrepTime, 20)
+  }
+
+  // Adjust for cooking level
+  if (preferences.cookingLevel === 'beginner') {
+    maxPrepTime = Math.min(maxPrepTime, 25)
+  }
+
   const allSuggestions: PlannedMealItem[] = []
 
-  // 1. Try Gustar API first
-  const gustarResults = await searchGustarRecipes(
-    randomQuery,
-    preferences.dietType,
-    maxPrepTime,
-    3
-  )
-  allSuggestions.push(...gustarResults)
+  // ===== PETIT-DÉJEUNER & COLLATION: CIQUAL/OFF uniquement =====
+  // L'agent IA élaborera ces repas en se basant sur le RAG (tradition française = sucré)
+  if (mealType === 'breakfast' || mealType === 'snack') {
+    console.log(`MealPlanAgent: Using CIQUAL/OFF for ${mealType} (French tradition)`)
 
-  // 2. Try food databases (CIQUAL + OFF)
-  const foodResults = await searchFoodDatabases(randomQuery, 3)
-  allSuggestions.push(...foodResults)
+    // Use French breakfast/snack queries from RAG knowledge
+    const queries = BASIQUE_QUERIES[mealType]
+    for (const query of queries.slice(0, 3)) {
+      const foodResults = await searchFoodDatabases(query, 3)
+      allSuggestions.push(...foodResults)
+    }
 
-  // Filter out already used meals
+    console.log(`MealPlanAgent: Got ${allSuggestions.length} CIQUAL results for ${mealType}`)
+  } else {
+    // ===== DÉJEUNER & DÎNER: Recettes Gustar enrichies =====
+    // Priority 1: Static enriched recipes (already in French)
+    const staticRecipes = await getStaticEnrichedRecipes(mealType, maxPrepTime, 10)
+    allSuggestions.push(...staticRecipes)
+    console.log(`MealPlanAgent: Got ${staticRecipes.length} static recipes for ${mealType}`)
+
+    // Priority 2: CIQUAL for basique complexity
+    if (complexity === 'basique' && allSuggestions.length < 5) {
+      const queries = BASIQUE_QUERIES[mealType]
+      const randomQuery = queries[Math.floor(Math.random() * queries.length)]
+      const foodResults = await searchFoodDatabases(randomQuery, 5)
+      allSuggestions.push(...foodResults)
+    }
+
+    // Priority 3: Gustar API (fallback only)
+    if (allSuggestions.length < 3) {
+      console.log(`MealPlanAgent: Not enough recipes, trying Gustar API fallback for ${mealType}`)
+      const queries = complexity === 'basique' ? BASIQUE_QUERIES[mealType] : ELABORE_QUERIES[mealType]
+      const randomQuery = queries[Math.floor(Math.random() * queries.length)]
+      const gustarResults = await searchGustarRecipes(
+        randomQuery,
+        preferences.dietType,
+        maxPrepTime,
+        3
+      )
+      allSuggestions.push(...gustarResults)
+    }
+  }
+
+  // Filter out already used meals and apply complexity filter
+  const maxIngredients = getMaxIngredientsForComplexity(complexity)
+
   return allSuggestions
-    .filter(meal => !usedNames.includes(meal.name.toLowerCase()))
+    .filter(meal => {
+      // Filter by used names
+      if (usedNames.includes(meal.name.toLowerCase())) return false
+
+      // For basique, filter by ingredient count
+      if (complexity === 'basique' && meal.ingredients.length > maxIngredients) return false
+
+      // IMPORTANT: French tradition - breakfast and snacks should be SWEET
+      // Use comprehensive filter to exclude savory/non-French breakfast items
+      if ((mealType === 'breakfast' || mealType === 'snack') && isNotFrenchSweetBreakfast(meal.name)) {
+        return false
+      }
+
+      return true
+    })
     .map(meal => ({ ...meal, mealType }))
 }
 
@@ -279,6 +547,51 @@ async function generateMealWithAI(
   }
 }
 
+// Fallback recipes by complexity (French staples)
+const FALLBACK_BASIQUE: Record<MealType, Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>> = {
+  breakfast: [
+    { name: 'Tartines beurre confiture', description: 'Petit-dejeuner classique francais', prepTime: 5, ingredients: ['Pain', 'Beurre', 'Confiture'] },
+    { name: 'Yaourt miel', description: 'Petit-dejeuner leger', prepTime: 2, ingredients: ['Yaourt nature', 'Miel'] },
+    { name: 'Bol de cereales', description: 'Petit-dejeuner rapide', prepTime: 3, ingredients: ['Cereales', 'Lait'] },
+  ],
+  lunch: [
+    { name: 'Pates au beurre parmesan', description: 'Dejeuner express', prepTime: 15, ingredients: ['Pates', 'Beurre', 'Parmesan'] },
+    { name: 'Riz au thon', description: 'Dejeuner simple', prepTime: 15, ingredients: ['Riz', 'Thon', 'Huile olive'] },
+    { name: 'Omelette nature', description: 'Dejeuner proteines', prepTime: 10, ingredients: ['Oeufs', 'Beurre', 'Sel'] },
+    { name: 'Croque-monsieur', description: 'Classique francais', prepTime: 10, ingredients: ['Pain de mie', 'Jambon', 'Fromage'] },
+  ],
+  snack: [
+    { name: 'Pomme', description: 'Collation fruit', prepTime: 1, ingredients: ['Pomme'] },
+    { name: 'Yaourt nature', description: 'Collation lactee', prepTime: 1, ingredients: ['Yaourt'] },
+    { name: 'Fromage blanc', description: 'Collation proteinee', prepTime: 1, ingredients: ['Fromage blanc'] },
+  ],
+  dinner: [
+    { name: 'Soupe de legumes', description: 'Diner leger', prepTime: 15, ingredients: ['Legumes', 'Bouillon'] },
+    { name: 'Omelette aux herbes', description: 'Diner rapide', prepTime: 10, ingredients: ['Oeufs', 'Herbes', 'Beurre'] },
+    { name: 'Salade verte vinaigrette', description: 'Diner tres leger', prepTime: 5, ingredients: ['Salade', 'Vinaigrette'] },
+  ],
+}
+
+const FALLBACK_ELABORE: Record<MealType, Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>> = {
+  breakfast: [
+    { name: 'Oeufs brouilles aux herbes', description: 'Petit-dejeuner gourmand', prepTime: 15, ingredients: ['Oeufs', 'Beurre', 'Ciboulette', 'Creme', 'Pain', 'Sel'] },
+    { name: 'Crepes maison', description: 'Petit-dejeuner festif', prepTime: 25, ingredients: ['Farine', 'Oeufs', 'Lait', 'Sucre', 'Beurre'] },
+  ],
+  lunch: [
+    { name: 'Poulet roti aux legumes', description: 'Dejeuner complet', prepTime: 45, ingredients: ['Poulet', 'Carottes', 'Pommes de terre', 'Oignons', 'Herbes', 'Huile'] },
+    { name: 'Salade nicoise', description: 'Dejeuner mediterraneen', prepTime: 20, ingredients: ['Salade', 'Thon', 'Oeufs', 'Olives', 'Tomates', 'Haricots verts'] },
+    { name: 'Hachis parmentier', description: 'Plat traditionnel', prepTime: 40, ingredients: ['Boeuf hache', 'Pommes de terre', 'Oignons', 'Creme', 'Fromage'] },
+  ],
+  snack: [
+    { name: 'Smoothie fruits', description: 'Collation vitaminee', prepTime: 5, ingredients: ['Banane', 'Fruits rouges', 'Yaourt', 'Miel', 'Lait'] },
+  ],
+  dinner: [
+    { name: 'Ratatouille', description: 'Plat provencal', prepTime: 35, ingredients: ['Courgettes', 'Aubergines', 'Poivrons', 'Tomates', 'Oignons', 'Ail', 'Herbes'] },
+    { name: 'Gratin dauphinois', description: 'Accompagnement savoyard', prepTime: 45, ingredients: ['Pommes de terre', 'Creme', 'Lait', 'Ail', 'Muscade', 'Beurre'] },
+    { name: 'Risotto aux champignons', description: 'Diner italien', prepTime: 30, ingredients: ['Riz arborio', 'Champignons', 'Oignon', 'Vin blanc', 'Parmesan', 'Bouillon'] },
+  ],
+}
+
 /**
  * Get fallback meal when all sources fail
  */
@@ -286,16 +599,55 @@ function getFallbackMeal(
   dayIndex: number,
   mealType: MealType,
   targetCalories: number,
-  isCheatMeal: boolean
+  isCheatMeal: boolean,
+  complexity: RecipeComplexity = 'mix'
 ): PlannedMealItem {
-  const fallbacks: Record<MealType, { name: string; description: string }> = {
-    breakfast: { name: 'Tartines beurre confiture', description: 'Petit-déjeuner classique' },
-    lunch: { name: isCheatMeal ? 'Burger Gourmand' : 'Poulet grillé légumes', description: isCheatMeal ? 'Repas plaisir' : 'Déjeuner équilibré' },
-    snack: { name: 'Yaourt et fruits', description: 'Collation légère' },
-    dinner: { name: isCheatMeal ? 'Pizza Quattro Formaggi' : 'Soupe de légumes', description: isCheatMeal ? 'Pizza généreuse' : 'Dîner léger' },
+  // For cheat meals, use special recipes
+  if (isCheatMeal) {
+    const cheatFallbacks: Record<MealType, { name: string; description: string }> = {
+      breakfast: { name: 'Brunch gourmand', description: 'Repas plaisir' },
+      lunch: { name: 'Burger Gourmand', description: 'Repas plaisir' },
+      snack: { name: 'Part de gateau', description: 'Gourmandise' },
+      dinner: { name: 'Pizza Quattro Formaggi', description: 'Pizza genereuse' },
+    }
+    const cheat = cheatFallbacks[mealType]
+    const proteinRatio = mealType === 'snack' ? 0.15 : 0.25
+
+    return {
+      id: generateId(),
+      dayIndex,
+      mealType,
+      name: cheat.name,
+      description: cheat.description,
+      prepTime: 30,
+      servings: 1,
+      nutrition: {
+        calories: targetCalories,
+        proteins: Math.round(targetCalories * proteinRatio / 4),
+        carbs: Math.round(targetCalories * 0.45 / 4),
+        fats: Math.round(targetCalories * 0.30 / 9),
+      },
+      ingredients: [],
+      instructions: [],
+      isCheatMeal: true,
+      isValidated: false,
+      source: 'ai',
+    }
   }
 
-  const fallback = fallbacks[mealType]
+  // Choose fallback list based on complexity
+  let fallbackList: Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>
+  if (complexity === 'basique') {
+    fallbackList = FALLBACK_BASIQUE[mealType]
+  } else if (complexity === 'elabore') {
+    fallbackList = FALLBACK_ELABORE[mealType]
+  } else {
+    // Mix: random choice
+    fallbackList = Math.random() > 0.5 ? FALLBACK_BASIQUE[mealType] : FALLBACK_ELABORE[mealType]
+  }
+
+  // Pick random from list
+  const fallback = fallbackList[Math.floor(Math.random() * fallbackList.length)]
   const proteinRatio = mealType === 'snack' ? 0.15 : 0.25
 
   return {
@@ -304,7 +656,7 @@ function getFallbackMeal(
     mealType,
     name: fallback.name,
     description: fallback.description,
-    prepTime: mealType === 'snack' ? 5 : 25,
+    prepTime: fallback.prepTime,
     servings: 1,
     nutrition: {
       calories: targetCalories,
@@ -312,9 +664,9 @@ function getFallbackMeal(
       carbs: Math.round(targetCalories * 0.45 / 4),
       fats: Math.round(targetCalories * 0.30 / 9),
     },
-    ingredients: [],
+    ingredients: fallback.ingredients.map(name => ({ name, amount: '' })),
     instructions: [],
-    isCheatMeal,
+    isCheatMeal: false,
     isValidated: false,
     source: 'ai',
   }
@@ -324,38 +676,52 @@ function getFallbackMeal(
 
 class MealPlanAgent {
   private apiKeyConfigured = false
+  private staticRecipesLoaded = false
 
   /**
    * Initialize the agent with RapidAPI key
    */
-  init(rapidApiKey: string) {
+  async init(rapidApiKey: string) {
     gustarRecipes.init(rapidApiKey)
     this.apiKeyConfigured = true
+
+    // Pre-load static enriched recipes (already in French)
+    try {
+      await loadStaticRecipes()
+      this.staticRecipesLoaded = true
+      console.log('MealPlanAgent: Static enriched recipes loaded')
+    } catch (error) {
+      console.warn('MealPlanAgent: Failed to load static recipes:', error)
+    }
   }
 
   /**
    * Check if agent is ready
    */
   isReady(): boolean {
-    return this.apiKeyConfigured
+    return this.apiKeyConfigured || this.staticRecipesLoaded
   }
 
   /**
-   * Generate complete 7-day meal plan
+   * Generate meal plan for specified duration (1, 3, or 7 days)
    */
   async generateWeekPlan(
     preferences: WeeklyPlanPreferences,
-    onProgress?: (day: number, total: number) => void
+    onProgress?: (day: number, total: number) => void,
+    duration: 1 | 3 | 7 = 7
   ): Promise<PlannedMealItem[]> {
-    console.log('Generating weekly meal plan...')
+    console.log(`Generating ${duration}-day meal plan...`)
     console.log('Daily calorie target:', preferences.dailyCalories)
     console.log('Repas plaisir enabled:', preferences.includeCheatMeal)
+    console.log('Recipe complexity:', preferences.complexity || 'mix')
+    console.log('Cooking level:', preferences.cookingLevel || 'intermediate')
 
     const meals: PlannedMealItem[] = []
     const usedRecipeNames: string[] = []
     const mealTypes: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
-    const repasPlaisirDayIndex = 5 // Saturday
+    // Only include repas plaisir for 7-day plans on Saturday
+    const repasPlaisirDayIndex = duration === 7 ? 5 : -1
 
     const { dailyTargets } = calculateDailyCalorieTargets(
       preferences.dailyCalories,
@@ -363,16 +729,18 @@ class MealPlanAgent {
       repasPlaisirDayIndex
     )
 
-    console.log('Daily targets:', dailyTargets)
+    // Limit daily targets to requested duration
+    const limitedTargets = dailyTargets.slice(0, duration)
+    console.log(`Daily targets (${duration} days):`, limitedTargets)
 
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+    for (let dayIndex = 0; dayIndex < duration; dayIndex++) {
       const day = DAYS[dayIndex]
-      const isWeekend = dayIndex >= 5
-      const dailyCalorieTarget = dailyTargets[dayIndex]
+      const isWeekend = dayIndex >= 5 && duration === 7
+      const dailyCalorieTarget = limitedTargets[dayIndex]
       const isRepasPlaisirDay = preferences.includeCheatMeal && dayIndex === repasPlaisirDayIndex
 
       console.log(`\nGenerating ${day} (${dailyCalorieTarget} kcal)...`)
-      onProgress?.(dayIndex + 1, 7)
+      onProgress?.(dayIndex + 1, duration)
 
       const calorieDistribution: Record<MealType, number> = {
         breakfast: Math.round(dailyCalorieTarget * 0.25),
@@ -430,7 +798,7 @@ class MealPlanAgent {
 
         // 3. Ultimate fallback
         if (!meal) {
-          meal = getFallbackMeal(dayIndex, mealType, targetCalories, isRepasPlaisirMeal ?? false)
+          meal = getFallbackMeal(dayIndex, mealType, targetCalories, isRepasPlaisirMeal ?? false, preferences.complexity)
         }
 
         meal.dayIndex = dayIndex

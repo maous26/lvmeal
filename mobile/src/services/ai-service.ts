@@ -915,27 +915,31 @@ export async function generatePlanMeal(params: {
       dietContext.push(`Allergies/intolerance: ${userProfile.allergies.join(', ')}`)
     }
 
-    // Meal type specific constraints
-    const mealConstraints: Record<string, { description: string; minCal: number; maxCal: number }> = {
+    // Meal type specific constraints - based on French RAG knowledge
+    const mealConstraints: Record<string, { description: string; minCal: number; maxCal: number; examples: string }> = {
       breakfast: {
-        description: 'Petit-dejeuner equilibre et fait maison',
+        description: 'Petit-dejeuner SUCRE traditionnel francais (PAS de plats sales)',
         minCal: 250,
-        maxCal: 500
+        maxCal: 500,
+        examples: 'Tartines beurre-confiture, tartines miel, bol de cereales, yaourt nature avec miel, pain grille avec pate a tartiner, crepes maison, pancakes, bowl flocons avoine avec fruits et miel, pain perdu, croissant (week-end). INTERDIT: omelette, oeufs, jambon, fromage sale, bacon, sandwichs sales'
       },
       lunch: {
         description: 'Dejeuner complet avec proteines, feculents et legumes',
         minCal: 400,
-        maxCal: 700
+        maxCal: 700,
+        examples: 'Pates au beurre parmesan, riz au thon, omelette, croque-monsieur, poulet basquaise, boeuf bourguignon, salade nicoise, hachis parmentier'
       },
       snack: {
-        description: 'Collation legere (fruit, yaourt, noix)',
+        description: 'Collation/gouter francais SUCRE (tradition depuis 1941)',
         minCal: 100,
-        maxCal: 200
+        maxCal: 200,
+        examples: 'Yaourt nature, pomme, banane, fromage blanc, pain avec carre de chocolat, compote, smoothie fruits, banana bread, gateau yaourt. INTERDIT: sandwichs, plats sales, fromages sales'
       },
       dinner: {
-        description: 'Diner leger mais rassasiant',
+        description: 'Diner leger francais (soupe, salade, plat leger)',
         minCal: 350,
-        maxCal: 600
+        maxCal: 600,
+        examples: 'Soupe de legumes, omelette aux fines herbes, salade verte, poisson papillote, ratatouille, gratin de legumes, risotto aux champignons'
       },
     }
 
@@ -957,6 +961,7 @@ REGLES STRICTES:
 ${dietContext.length > 0 ? `- ${dietContext.join('\n- ')}` : ''}
 
 Type: ${constraint.description}
+Exemples acceptes: ${constraint.examples}
 Jour: ${dayNames[day]}
 ${isCheatMeal ? 'NOTE: Repas plaisir du week-end - peut etre plus gourmand mais toujours fait maison!' : ''}
 ${recentMeals.length > 0 ? `Eviter (deja dans le plan): ${recentMeals.join(', ')}` : ''}

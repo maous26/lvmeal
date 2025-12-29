@@ -120,6 +120,8 @@ export interface UserProfile {
   nutritionalStrategy?: NutritionalStrategy // For adaptive metabolism
   sportTrackingEnabled?: boolean
   sportProgram?: WeeklyProgram | null
+  wantsSportInitiation?: boolean // For sedentary users - sport initiation program
+  sportInitiationActive?: boolean // Whether the program is currently active
   cookingPreferences?: CookingPreferences
   onboardingCompleted?: boolean
   createdAt?: string
@@ -138,6 +140,8 @@ export interface WeightEntry {
 // FOOD & MEALS
 // =============================================================================
 
+export type NutriScoreGrade = 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown'
+
 export interface FoodItem {
   id: string
   name: string
@@ -151,6 +155,7 @@ export interface FoodItem {
   source?: 'ciqual' | 'openfoodfacts' | 'manual' | 'ai' | 'recipe' | 'photo' | 'voice' | 'barcode'
   isRecipe?: boolean
   recipeId?: string
+  nutriscore?: NutriScoreGrade
 }
 
 export interface MealItem {
@@ -231,6 +236,7 @@ export interface Recipe {
   ratingCount?: number
   isFavorite?: boolean
   createdAt?: string
+  nutriscore?: NutriScoreGrade
 }
 
 // =============================================================================
@@ -467,7 +473,7 @@ export interface CaloricBankState {
 // DEVICES
 // =============================================================================
 
-export type DeviceType = 'apple_watch' | 'fitbit' | 'garmin' | 'samsung_health' | 'google_fit'
+export type DeviceType = 'apple_watch' | 'fitbit' | 'garmin' | 'samsung_health' | 'google_fit' | 'phone'
 
 export type DeviceStatus = 'connected' | 'disconnected' | 'syncing' | 'error'
 

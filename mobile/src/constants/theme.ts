@@ -2,11 +2,11 @@
 // Direction artistique : Sobre, élégant, professionnel
 
 export const colors = {
-  // Backgrounds - Fond lumineux
+  // Backgrounds - Fond blanc cassé
   bg: {
-    primary: '#F5F7FA',
-    secondary: '#EDF1F7',
-    tertiary: '#E2E8F0',
+    primary: '#FAFAF8',
+    secondary: '#F5F5F3',
+    tertiary: '#EFEFED',
     elevated: '#FFFFFF',
     overlay: 'rgba(15, 50, 80, 0.6)',
   },
@@ -143,6 +143,27 @@ export const typography = {
     lineHeight: 26,
     fontWeight: '600' as const,
     letterSpacing: -0.2,
+  },
+  // Size-based aliases
+  lg: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '400' as const,
+  },
+  md: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400' as const,
+  },
+  sm: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400' as const,
+  },
+  xs: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400' as const,
   },
   body: {
     fontSize: 16,

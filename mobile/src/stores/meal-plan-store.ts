@@ -29,7 +29,7 @@ export interface PlannedMealItem {
   instructions: string[]
   isCheatMeal?: boolean
   isValidated: boolean
-  source: 'gustar' | 'ai' | 'manual' | 'favorite'
+  source: 'gustar' | 'ai' | 'manual' | 'favorite' | 'ciqual' | 'openfoodfacts'
   sourceRecipeId?: string // Original recipe ID if from Gustar or favorites
   imageUrl?: string
 }

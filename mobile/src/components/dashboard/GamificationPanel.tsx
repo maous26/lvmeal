@@ -1,11 +1,10 @@
 import React from 'react'
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native'
-import { ChevronRight, Zap } from 'lucide-react-native'
+import { View, Text, StyleSheet, Pressable } from 'react-native'
+import { ChevronRight, Zap, Trophy, Sparkles } from 'lucide-react-native'
 import { Card } from '../ui/Card'
-import { Badge } from '../ui/Badge'
 import { ProgressBar } from '../ui/ProgressBar'
 import { colors, radius, spacing, typography } from '../../constants/theme'
-import { useGamificationStore } from '../../stores/gamification-store'
+import { useGamificationStore, TIERS } from '../../stores/gamification-store'
 
 interface GamificationPanelProps {
   compact?: boolean
@@ -14,135 +13,171 @@ interface GamificationPanelProps {
 
 export function GamificationPanel({ compact = false, onViewAll }: GamificationPanelProps) {
   const {
-    currentLevel,
     totalXP,
     currentStreak,
-    getXPProgress,
-    getLevelTitle,
+    weeklyXP,
+    getTier,
+    getNextTier,
+    getTierProgress,
+    getWeeklyRank,
     getStreakInfo,
-    getUnlockedBadges,
-    getNextBadges,
+    getAICreditsRemaining,
   } = useGamificationStore()
 
-  const xpProgress = getXPProgress()
+  const tier = getTier()
+  const nextTier = getNextTier()
+  const tierProgress = getTierProgress()
+  const rank = getWeeklyRank()
   const streakInfo = getStreakInfo()
-  const unlockedBadges = getUnlockedBadges()
-  const nextBadges = getNextBadges()
+  const aiCredits = getAICreditsRemaining()
 
+  // Compact version for homepage
   if (compact) {
     return (
       <Card style={styles.compactCard}>
         <View style={styles.compactContent}>
-          <View style={styles.compactLeft}>
-            {/* Streak Badge */}
-            <View style={[styles.streakBadge, streakInfo.isActive && styles.streakBadgeActive]}>
-              <Text style={styles.streakEmoji}>🔥</Text>
-              <Text style={styles.streakDays}>{streakInfo.current}</Text>
-            </View>
-
-            {/* Level Badge */}
-            <View style={styles.levelBadge}>
-              <Zap size={14} color="#FFFFFF" />
-              <Text style={styles.levelText}>Nv.{currentLevel}</Text>
-            </View>
+          {/* Tier Badge */}
+          <View style={[styles.tierBadge, { backgroundColor: tier.color + '20' }]}>
+            <Text style={styles.tierIcon}>{tier.icon}</Text>
+            <Text style={[styles.tierName, { color: tier.color }]}>{tier.nameFr}</Text>
           </View>
 
+          {/* Streak */}
+          <View style={[styles.streakBadge, streakInfo.isActive && styles.streakBadgeActive]}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={styles.streakDays}>{streakInfo.current}</Text>
+          </View>
+
+          {/* Weekly XP */}
+          <View style={styles.weeklyXP}>
+            <Text style={styles.weeklyXPValue}>{weeklyXP}</Text>
+            <Text style={styles.weeklyXPLabel}>XP/sem</Text>
+          </View>
+
+          {/* View All Button */}
           <Pressable onPress={onViewAll} style={styles.viewAllButton}>
-            <Text style={styles.viewAllText}>Voir tout</Text>
+            <Text style={styles.viewAllText}>Voir</Text>
             <ChevronRight size={16} color={colors.accent.primary} />
           </Pressable>
         </View>
+
+        {/* Progress to next tier */}
+        {nextTier && (
+          <View style={styles.compactProgress}>
+            <ProgressBar
+              value={tierProgress.current}
+              max={tierProgress.needed}
+              color={nextTier.color}
+              size="sm"
+            />
+            <Text style={styles.compactProgressText}>
+              {tierProgress.needed - tierProgress.current} XP pour {nextTier.icon}
+            </Text>
+          </View>
+        )}
       </Card>
     )
   }
 
+  // Full version for progress screen
   return (
     <Card style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Progression</Text>
+        <Text style={styles.title}>Votre progression</Text>
         {onViewAll && (
           <Pressable onPress={onViewAll} style={styles.viewAllButton}>
-            <Text style={styles.viewAllText}>Tout voir</Text>
+            <Text style={styles.viewAllText}>Achievements</Text>
             <ChevronRight size={16} color={colors.accent.primary} />
           </Pressable>
         )}
       </View>
 
-      {/* Main Stats Row */}
-      <View style={styles.statsRow}>
-        {/* Streak Badge */}
-        <View style={[styles.streakBadgeLarge, streakInfo.isActive && styles.streakBadgeActive]}>
-          <Text style={styles.streakEmojiLarge}>🔥</Text>
-          <Text style={styles.streakDaysLarge}>{streakInfo.current}</Text>
-          <Text style={styles.streakLabel}>jours</Text>
-        </View>
-
-        {/* XP Progress */}
-        <View style={styles.xpContainer}>
-          <View style={styles.xpHeader}>
-            <View style={styles.levelBadge}>
-              <Zap size={14} color="#FFFFFF" />
-              <Text style={styles.levelText}>Nv.{currentLevel}</Text>
-            </View>
-            <Text style={styles.xpTotal}>{totalXP.toLocaleString('fr-FR')} XP</Text>
+      {/* Main Tier Card */}
+      <View style={[styles.tierCard, { backgroundColor: tier.color + '15', borderColor: tier.color + '30' }]}>
+        <View style={styles.tierHeader}>
+          <Text style={styles.tierIconLarge}>{tier.icon}</Text>
+          <View style={styles.tierInfo}>
+            <Text style={[styles.tierNameLarge, { color: tier.color }]}>{tier.nameFr}</Text>
+            <Text style={styles.totalXP}>{totalXP.toLocaleString('fr-FR')} XP total</Text>
           </View>
-          <ProgressBar
-            value={xpProgress.current}
-            max={xpProgress.needed}
-            color={colors.accent.primary}
-            size="md"
-          />
-          <Text style={styles.xpRemaining}>
-            {(xpProgress.needed - xpProgress.current).toLocaleString('fr-FR')} XP pour Nv.{currentLevel + 1}
-          </Text>
         </View>
-      </View>
 
-      {/* Level Title */}
-      <View style={styles.levelTitleContainer}>
-        <Text style={styles.levelTitleIcon}>⭐</Text>
-        <Text style={styles.levelTitleText}>{getLevelTitle()}</Text>
-      </View>
+        {/* Progress to next tier */}
+        {nextTier && (
+          <View style={styles.tierProgressSection}>
+            <View style={styles.tierProgressHeader}>
+              <Text style={styles.tierProgressLabel}>Prochain tier: {nextTier.icon} {nextTier.nameFr}</Text>
+              <Text style={styles.tierProgressValue}>
+                {tierProgress.current}/{tierProgress.needed} XP
+              </Text>
+            </View>
+            <ProgressBar
+              value={tierProgress.current}
+              max={tierProgress.needed}
+              color={nextTier.color}
+              size="md"
+            />
+          </View>
+        )}
 
-      {/* Badges Section */}
-      {unlockedBadges.length > 0 && (
-        <View style={styles.badgesSection}>
-          <Text style={styles.sectionTitle}>
-            Badges debloques ({unlockedBadges.length})
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
-            {unlockedBadges.slice(0, 5).map((badge) => (
-              <View key={badge.id} style={styles.badgeChip}>
-                <Text style={styles.badgeIcon}>{badge.icon}</Text>
-                <Text style={styles.badgeName}>{badge.name}</Text>
-              </View>
-            ))}
-            {unlockedBadges.length > 5 && (
-              <View style={styles.badgeMore}>
-                <Text style={styles.badgeMoreText}>+{unlockedBadges.length - 5}</Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Next Badges */}
-      {nextBadges.length > 0 && (
-        <View style={styles.nextBadgesSection}>
-          <Text style={styles.sectionTitle}>Prochains objectifs</Text>
-          {nextBadges.map((badge) => (
-            <View key={badge.id} style={styles.nextBadgeItem}>
-              <View style={styles.nextBadgeIcon}>
-                <Text style={styles.nextBadgeEmoji}>{badge.icon}</Text>
-              </View>
-              <View style={styles.nextBadgeContent}>
-                <Text style={styles.nextBadgeName}>{badge.name}</Text>
-                <Text style={styles.nextBadgeDesc}>{badge.description}</Text>
-              </View>
-              <Text style={styles.nextBadgeXP}>+{badge.xpReward} XP</Text>
+        {/* Tier Features */}
+        <View style={styles.tierFeatures}>
+          {tier.features.map((feature, idx) => (
+            <View key={idx} style={styles.featureItem}>
+              <Sparkles size={14} color={tier.color} />
+              <Text style={styles.featureText}>{feature}</Text>
             </View>
           ))}
+        </View>
+      </View>
+
+      {/* Stats Grid */}
+      <View style={styles.statsGrid}>
+        {/* Streak */}
+        <View style={[styles.statCard, streakInfo.isActive && styles.statCardActive]}>
+          <Text style={styles.statEmoji}>🔥</Text>
+          <Text style={styles.statValue}>{streakInfo.current}</Text>
+          <Text style={styles.statLabel}>Serie</Text>
+          {streakInfo.bonus > 0 && (
+            <Text style={styles.statBonus}>+{streakInfo.bonus}% XP</Text>
+          )}
+        </View>
+
+        {/* Weekly XP */}
+        <View style={styles.statCard}>
+          <Zap size={24} color={colors.accent.primary} />
+          <Text style={styles.statValue}>{weeklyXP}</Text>
+          <Text style={styles.statLabel}>XP cette sem.</Text>
+        </View>
+
+        {/* Rank */}
+        <View style={styles.statCard}>
+          <Trophy size={24} color={colors.warning} />
+          <Text style={styles.statValue}>Top {rank.percentile}%</Text>
+          <Text style={styles.statLabel}>Classement</Text>
+        </View>
+
+        {/* AI Credits */}
+        <View style={styles.statCard}>
+          <Text style={styles.statEmoji}>🤖</Text>
+          <Text style={styles.statValue}>{aiCredits === 999 ? '∞' : aiCredits}</Text>
+          <Text style={styles.statLabel}>Credits IA</Text>
+        </View>
+      </View>
+
+      {/* Next Tier Preview */}
+      {nextTier && (
+        <View style={styles.nextTierPreview}>
+          <Text style={styles.nextTierTitle}>Debloquez {nextTier.icon} {nextTier.nameFr}</Text>
+          <View style={styles.nextTierFeatures}>
+            {nextTier.features.slice(0, 2).map((feature, idx) => (
+              <View key={idx} style={styles.nextTierFeature}>
+                <Text style={styles.nextTierFeatureIcon}>✨</Text>
+                <Text style={styles.nextTierFeatureText}>{feature}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
     </Card>
@@ -159,12 +194,16 @@ const styles = StyleSheet.create({
   compactContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  compactLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.md,
+  },
+  compactProgress: {
+    marginTop: spacing.sm,
+  },
+  compactProgressText: {
+    ...typography.caption,
+    color: colors.text.muted,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -185,12 +224,25 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     marginRight: spacing.xs,
   },
-  statsRow: {
+
+  // Tier Badge (compact)
+  tierBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.default,
-    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    gap: spacing.xs,
   },
+  tierIcon: {
+    fontSize: 18,
+  },
+  tierName: {
+    ...typography.smallMedium,
+    fontWeight: '600',
+  },
+
+  // Streak Badge
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,161 +252,151 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     gap: spacing.xs,
   },
-  streakBadgeLarge: {
-    alignItems: 'center',
-    backgroundColor: colors.bg.tertiary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-  },
   streakBadgeActive: {
     backgroundColor: 'rgba(249, 115, 22, 0.15)',
   },
   streakEmoji: {
     fontSize: 16,
   },
-  streakEmojiLarge: {
-    fontSize: 28,
-  },
   streakDays: {
     ...typography.smallMedium,
     color: colors.text.primary,
+    fontWeight: '600',
   },
-  streakDaysLarge: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text.primary,
-  },
-  streakLabel: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-  },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.accent.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    gap: spacing.xs,
-  },
-  levelText: {
-    ...typography.smallMedium,
-    color: '#FFFFFF',
-  },
-  xpContainer: {
+
+  // Weekly XP (compact)
+  weeklyXP: {
     flex: 1,
-  },
-  xpHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
   },
-  xpTotal: {
-    ...typography.small,
-    color: colors.text.tertiary,
+  weeklyXPValue: {
+    ...typography.bodyMedium,
+    color: colors.accent.primary,
+    fontWeight: '700',
   },
-  xpRemaining: {
+  weeklyXPLabel: {
     ...typography.caption,
     color: colors.text.muted,
-    marginTop: spacing.xs,
   },
-  levelTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: colors.accent.light,
+
+  // Tier Card (full)
+  tierCard: {
+    padding: spacing.lg,
     borderRadius: radius.lg,
-    marginBottom: spacing.default,
-    gap: spacing.sm,
-  },
-  levelTitleIcon: {
-    fontSize: 18,
-  },
-  levelTitleText: {
-    ...typography.bodyMedium,
-    color: colors.text.primary,
-  },
-  badgesSection: {
-    marginBottom: spacing.default,
-  },
-  sectionTitle: {
-    ...typography.smallMedium,
-    color: colors.text.secondary,
-    marginBottom: spacing.sm,
-  },
-  badgesScroll: {
-    marginHorizontal: -spacing.sm,
-  },
-  badgeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: 'rgba(251, 191, 36, 0.15)',
-    borderRadius: radius.full,
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.3)',
-    marginHorizontal: spacing.xs,
-    gap: spacing.xs,
+    marginBottom: spacing.default,
   },
-  badgeIcon: {
-    fontSize: 16,
-  },
-  badgeName: {
-    ...typography.caption,
-    color: colors.text.primary,
-  },
-  badgeMore: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.bg.tertiary,
-    borderRadius: radius.full,
-    marginHorizontal: spacing.xs,
-  },
-  badgeMoreText: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-  },
-  nextBadgesSection: {
-    gap: spacing.sm,
-  },
-  nextBadgeItem: {
+  tierHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: colors.bg.tertiary,
-    borderRadius: radius.lg,
     gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  nextBadgeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    backgroundColor: colors.bg.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  tierIconLarge: {
+    fontSize: 48,
   },
-  nextBadgeEmoji: {
-    fontSize: 18,
-    opacity: 0.5,
-  },
-  nextBadgeContent: {
+  tierInfo: {
     flex: 1,
   },
-  nextBadgeName: {
+  tierNameLarge: {
+    ...typography.h3,
+    fontWeight: '700',
+  },
+  totalXP: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  tierProgressSection: {
+    marginBottom: spacing.md,
+  },
+  tierProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  tierProgressLabel: {
+    ...typography.small,
+    color: colors.text.secondary,
+  },
+  tierProgressValue: {
     ...typography.smallMedium,
     color: colors.text.primary,
   },
-  nextBadgeDesc: {
-    ...typography.caption,
-    color: colors.text.tertiary,
+  tierFeatures: {
+    gap: spacing.xs,
   },
-  nextBadgeXP: {
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  featureText: {
+    ...typography.small,
+    color: colors.text.secondary,
+  },
+
+  // Stats Grid
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.default,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: colors.bg.tertiary,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  statCardActive: {
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+  },
+  statEmoji: {
+    fontSize: 24,
+  },
+  statValue: {
+    ...typography.h4,
+    color: colors.text.primary,
+  },
+  statLabel: {
     ...typography.caption,
-    color: colors.accent.primary,
+    color: colors.text.muted,
+  },
+  statBonus: {
+    ...typography.caption,
+    color: colors.success,
     fontWeight: '600',
+  },
+
+  // Next Tier Preview
+  nextTierPreview: {
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+  },
+  nextTierTitle: {
+    ...typography.smallMedium,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  nextTierFeatures: {
+    gap: spacing.xs,
+  },
+  nextTierFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  nextTierFeatureIcon: {
+    fontSize: 14,
+  },
+  nextTierFeatureText: {
+    ...typography.caption,
+    color: colors.text.secondary,
   },
 })
 

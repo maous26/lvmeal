@@ -25,7 +25,6 @@ import {
   Search,
   Clock,
   Flame,
-  Dumbbell,
   ChefHat,
   Globe,
   Sparkles,
@@ -302,9 +301,9 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
           // Use static recipes - already in French with ingredients and instructions
           console.log(`RecipeDiscovery: Loaded ${staticRecipes.length} static recipes (French)`)
 
-          // Shuffle and take 15 random recipes for display
+          // Shuffle and take 50 random recipes for display
           const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
-          const selected = shuffled.slice(0, 15)
+          const selected = shuffled.slice(0, 50)
 
           // Convert to Recipe type
           const recipes = selected.map(staticToRecipe)
@@ -333,9 +332,9 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
       const staticRecipes = await loadStaticRecipes()
 
       if (staticRecipes.length > 0) {
-        // Shuffle and take 15 random recipes
+        // Shuffle and take 50 random recipes
         const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
-        const selected = shuffled.slice(0, 15)
+        const selected = shuffled.slice(0, 50)
         const recipes = selected.map(staticToRecipe)
         setGustarRecipesList(recipes)
         console.log(`Refresh: Loaded ${recipes.length} static recipes`)
@@ -362,7 +361,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
 
       if (results.length > 0) {
         // Found matches in static recipes
-        const recipes = results.slice(0, 15).map(staticToRecipe)
+        const recipes = results.slice(0, 50).map(staticToRecipe)
         setGustarRecipesList(recipes)
         console.log(`Search: Found ${recipes.length} static recipes for "${searchQuery}"`)
       } else {
@@ -548,24 +547,14 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
                 </View>
               )}
               <View style={styles.metaItem}>
-                <Flame size={12} color={colors.text.tertiary} />
+                <Flame size={12} color={colors.nutrients.calories} />
                 <Text style={styles.metaText}>{recipe.nutritionPerServing?.calories || 0} kcal</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Dumbbell size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{recipe.nutritionPerServing?.proteins || 0}g</Text>
               </View>
             </View>
             <View style={styles.recipeFooter}>
               <Badge variant="outline" size="sm" style={{ borderColor: difficulty.color }}>
                 <Text style={{ color: difficulty.color, fontSize: 10 }}>{difficulty.label}</Text>
               </Badge>
-              {recipe.rating && (
-                <View style={styles.ratingContainer}>
-                  <Star size={12} color="#F59E0B" fill="#F59E0B" />
-                  <Text style={styles.ratingText}>{recipe.rating.toFixed(1)}</Text>
-                </View>
-              )}
             </View>
           </View>
         </View>
