@@ -341,13 +341,14 @@ class MealPlanAgent {
   }
 
   /**
-   * Generate complete 7-day meal plan
+   * Generate meal plan for specified duration (1, 3, or 7 days)
    */
   async generateWeekPlan(
     preferences: WeeklyPlanPreferences,
-    onProgress?: (day: number, total: number) => void
+    onProgress?: (day: number, total: number) => void,
+    duration: 1 | 3 | 7 = 7
   ): Promise<PlannedMealItem[]> {
-    console.log('Generating weekly meal plan...')
+    console.log(`Generating ${duration}-day meal plan...`)
     console.log('Daily calorie target:', preferences.dailyCalories)
     console.log('Repas plaisir enabled:', preferences.includeCheatMeal)
 
@@ -355,7 +356,8 @@ class MealPlanAgent {
     const usedRecipeNames: string[] = []
     const mealTypes: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
-    const repasPlaisirDayIndex = 5 // Saturday
+    // Only include repas plaisir for 7-day plans on Saturday
+    const repasPlaisirDayIndex = duration === 7 ? 5 : -1
 
     const { dailyTargets } = calculateDailyCalorieTargets(
       preferences.dailyCalories,
@@ -363,16 +365,18 @@ class MealPlanAgent {
       repasPlaisirDayIndex
     )
 
-    console.log('Daily targets:', dailyTargets)
+    // Limit daily targets to requested duration
+    const limitedTargets = dailyTargets.slice(0, duration)
+    console.log(`Daily targets (${duration} days):`, limitedTargets)
 
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+    for (let dayIndex = 0; dayIndex < duration; dayIndex++) {
       const day = DAYS[dayIndex]
-      const isWeekend = dayIndex >= 5
-      const dailyCalorieTarget = dailyTargets[dayIndex]
+      const isWeekend = dayIndex >= 5 && duration === 7
+      const dailyCalorieTarget = limitedTargets[dayIndex]
       const isRepasPlaisirDay = preferences.includeCheatMeal && dayIndex === repasPlaisirDayIndex
 
       console.log(`\nGenerating ${day} (${dailyCalorieTarget} kcal)...`)
-      onProgress?.(dayIndex + 1, 7)
+      onProgress?.(dayIndex + 1, duration)
 
       const calorieDistribution: Record<MealType, number> = {
         breakfast: Math.round(dailyCalorieTarget * 0.25),

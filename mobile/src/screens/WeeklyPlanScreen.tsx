@@ -13,7 +13,7 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import {
   ArrowLeft,
   Sparkles,
@@ -62,10 +62,19 @@ const mealTypeLabels: Record<MealType, { label: string; icon: string }> = {
   dinner: { label: 'Diner', icon: '🌙' },
 }
 
+// Plan duration type
+type PlanDuration = 1 | 3 | 7
+
 export default function WeeklyPlanScreen() {
   const navigation = useNavigation()
+  const route = useRoute()
   const { profile, nutritionGoals } = useUserStore()
   const { addXP } = useGamificationStore()
+
+  // Get params from navigation
+  const params = route.params as { duration?: PlanDuration; calorieReduction?: boolean } | undefined
+  const planDuration: PlanDuration = params?.duration || 7
+  const calorieReduction = params?.calorieReduction || false
 
   // Use meal plan store
   const {
@@ -86,7 +95,7 @@ export default function WeeklyPlanScreen() {
   } = useMealPlanStore()
 
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState({ day: 0, total: 7 })
+  const [generationProgress, setGenerationProgress] = useState({ day: 0, total: planDuration as number })
   const [selectedDay, setSelectedDay] = useState(0)
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -135,39 +144,57 @@ export default function WeeklyPlanScreen() {
     }
 
     setIsGenerating(true)
-    setGenerationProgress({ day: 0, total: 7 })
+    setGenerationProgress({ day: 0, total: planDuration })
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    // Apply -10% reduction if enabled (for Solde Plaisir)
+    const baseCalories = nutritionGoals.calories
+    const effectiveCalories = calorieReduction
+      ? Math.round(baseCalories * 0.9)
+      : baseCalories
+
+    // Get cooking preferences from profile
+    const cookingPrefs = profile.cookingPreferences
+    const weekdayTime = cookingPrefs?.weekdayTime || 30
+    const weekendTime = cookingPrefs?.weekendTime || 45
 
     try {
       const meals = await mealPlanAgent.generateWeekPlan(
         {
-          dailyCalories: nutritionGoals.calories,
-          proteins: nutritionGoals.proteins,
-          carbs: nutritionGoals.carbs,
-          fats: nutritionGoals.fats,
+          dailyCalories: effectiveCalories,
+          proteins: Math.round(nutritionGoals.proteins * (calorieReduction ? 0.9 : 1)),
+          carbs: Math.round(nutritionGoals.carbs * (calorieReduction ? 0.9 : 1)),
+          fats: Math.round(nutritionGoals.fats * (calorieReduction ? 0.9 : 1)),
           dietType: profile.dietType,
           allergies: profile.allergies,
-          includeCheatMeal: true, // Enable repas plaisir on Saturday
-          cookingTimeWeekday: 30,
-          cookingTimeWeekend: 45,
+          includeCheatMeal: planDuration === 7, // Only for 7-day plans
+          cookingTimeWeekday: weekdayTime,
+          cookingTimeWeekend: weekendTime,
         },
         (day, total) => {
           setGenerationProgress({ day, total })
-        }
+        },
+        planDuration // Pass duration to agent
       )
+
+      // Filter meals to only include days within plan duration
+      const filteredMeals = meals.filter(m => m.dayIndex < planDuration)
 
       const newPlan = {
         id: `plan-${Date.now()}`,
-        meals,
+        meals: filteredMeals,
         generatedAt: new Date().toISOString(),
         weekStart: getWeekStart(),
+        duration: planDuration,
+        calorieReduction,
+        savedCalories: calorieReduction ? Math.round(baseCalories * 0.1 * planDuration) : 0,
       }
 
       setPlan(newPlan)
-      addXP(50, 'Plan 7 jours genere')
+      addXP(planDuration === 7 ? 50 : planDuration === 3 ? 25 : 10, `Plan ${planDuration}j genere`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (error) {
-      console.error('Error generating week plan:', error)
+      console.error('Error generating plan:', error)
       Alert.alert('Erreur', 'Impossible de generer le plan. Reessayez.')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
     } finally {
@@ -650,7 +677,10 @@ export default function WeeklyPlanScreen() {
         </TouchableOpacity>
         <View style={styles.headerTitle}>
           <Sparkles size={20} color={colors.warning} />
-          <Text style={styles.headerText}>Proposition 7 jours</Text>
+          <Text style={styles.headerText}>
+            Plan {planDuration} jour{planDuration > 1 ? 's' : ''}
+            {calorieReduction ? ' (-10%)' : ''}
+          </Text>
         </View>
         <View style={styles.headerRight} />
       </View>
@@ -670,10 +700,13 @@ export default function WeeklyPlanScreen() {
               <View style={styles.aiIconContainer}>
                 <Sparkles size={32} color={colors.warning} />
               </View>
-              <Text style={styles.generateTitle}>Plan repas personnalise</Text>
+              <Text style={styles.generateTitle}>
+                Plan repas {planDuration}j{calorieReduction ? ' economie' : ''}
+              </Text>
               <Text style={styles.generateDescription}>
-                LymIA va generer un plan de 7 jours adapte a vos objectifs nutritionnels.
-                Les recettes sont issues de Gustar.io et enrichies avec les donnees OFF/Ciqual.
+                LymIA va generer un plan de {planDuration} jour{planDuration > 1 ? 's' : ''} adapte a tes objectifs.
+                {calorieReduction ? '\n-10% de calories pour alimenter ton Solde Plaisir.' : ''}
+                {'\n'}Recettes issues de Gustar.io, OFF et Ciqual.
               </Text>
               <Button
                 variant="primary"
