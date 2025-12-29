@@ -1154,6 +1154,45 @@ function generateStaticConnectedInsights(context: UserContext): ConnectedInsight
     })
   }
 
+  // Default insight based on time of day if no other insights
+  if (insights.length === 0) {
+    const hour = new Date().getHours()
+    if (hour >= 6 && hour < 11) {
+      insights.push({
+        id: `static_morning_${Date.now()}`,
+        message: `Bien commencer → un petit-déj protéiné stabilise ton énergie toute la matinée`,
+        linkedFeatures: ['nutrition', 'sport'],
+        actionLabel: 'Voir recettes',
+        priority: 'low',
+        icon: 'tip',
+      })
+    } else if (hour >= 11 && hour < 14) {
+      insights.push({
+        id: `static_lunch_${Date.now()}`,
+        message: `Déjeuner équilibré → évite le coup de barre de 15h, privilégie les protéines`,
+        linkedFeatures: ['nutrition', 'sleep'],
+        priority: 'low',
+        icon: 'tip',
+      })
+    } else if (hour >= 14 && hour < 18) {
+      insights.push({
+        id: `static_afternoon_${Date.now()}`,
+        message: `Collation intelligente → un encas protéiné maintient ton énergie jusqu'au dîner`,
+        linkedFeatures: ['nutrition', 'sport'],
+        priority: 'low',
+        icon: 'tip',
+      })
+    } else {
+      insights.push({
+        id: `static_evening_${Date.now()}`,
+        message: `Dîner léger → facilite la digestion et améliore la qualité de ton sommeil`,
+        linkedFeatures: ['nutrition', 'sleep'],
+        priority: 'low',
+        icon: 'tip',
+      })
+    }
+  }
+
   return insights.slice(0, 3) // Max 3 insights
 }
 
