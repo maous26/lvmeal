@@ -9,10 +9,10 @@ import {
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Plus, Flame, Dumbbell, CalendarRange, Sparkles } from 'lucide-react-native'
+import { Flame, Dumbbell, CalendarRange, Sparkles } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { Card, CircularProgress, ProgressBar, Button } from '../components/ui'
+import { Card, CircularProgress, ProgressBar } from '../components/ui'
 import {
   GamificationPanel,
   HydrationWidget,
@@ -79,11 +79,6 @@ export default function HomeScreen() {
   const handleNavigateToPlan = () => {
     // @ts-ignore - Navigation typing
     navigation.navigate('WeeklyPlan')
-  }
-
-  const handleNavigateToAddMeal = () => {
-    // @ts-ignore - Navigation typing
-    navigation.navigate('AddMeal', { type: 'lunch' })
   }
 
   const handleNavigateToMetabolicBoost = () => {
@@ -165,18 +160,8 @@ export default function HomeScreen() {
           </LinearGradient>
         </Card>
 
-        {/* 4. Quick Actions */}
+        {/* 3. Quick Actions */}
         <View style={styles.quickActions}>
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            onPress={handleNavigateToAddMeal}
-            style={styles.actionButton}
-          >
-            <Plus size={20} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>Ajouter un repas</Text>
-          </Button>
           <Pressable style={styles.planButton} onPress={handleNavigateToPlan}>
             <View style={styles.planButtonContent}>
               <CalendarRange size={20} color="#10B981" />
@@ -213,8 +198,8 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        {/* 6. Meals Overview - Compact horizontal layout */}
-        <Text style={styles.sectionTitle}>Repas du jour</Text>
+        {/* 5. Meals Overview - Compact horizontal layout */}
+        <Text style={styles.sectionTitle}>Elabore ton repas</Text>
         <View style={styles.mealsRow}>
           {(Object.keys(mealConfig) as MealType[]).map((type) => {
             const config = mealConfig[type]
@@ -419,17 +404,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.md,
-  },
-  actionButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  actionButtonText: {
-    ...typography.bodyMedium,
-    color: '#FFFFFF',
   },
   planButton: {
     flex: 1,
