@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null
+
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) {
+    return null
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openaiClient
+}
 
 interface RecipeToEnrich {
   id: string
@@ -108,6 +119,14 @@ Instructions importantes:
 - ${needsNutrition ? 'Estime les valeurs nutritionnelles par portion.' : 'Garde les valeurs nutritionnelles si correctes.'}
 
 Réponds UNIQUEMENT avec le JSON, rien d'autre.`
+
+    const openai = getOpenAI()
+    if (!openai) {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      )
+    }
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -232,6 +251,14 @@ Pour chaque recette:
 - Estime ou corrige les valeurs nutritionnelles par portion
 
 Important: Réponds UNIQUEMENT avec le JSON, rien d'autre.`
+
+    const openai = getOpenAI()
+    if (!openai) {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      )
+    }
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
