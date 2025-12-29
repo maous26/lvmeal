@@ -30,6 +30,7 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useRecipesStore } from '../stores/recipes-store'
+import { loadStaticRecipes, getStaticRecipe, staticToRecipe } from '../services/static-recipes'
 import type { MealType, FoodItem, MealItem, Recipe } from '../types'
 import { generateId } from '../lib/utils'
 
@@ -84,46 +85,62 @@ export default function RecipeDetailScreen() {
   const [userComment, setUserComment] = useState('')
 
   useEffect(() => {
-    if (params.recipe) {
-      setRecipe(params.recipe)
-    } else if (params.suggestion) {
-      // Convert suggestion to a minimal recipe
-      const suggestion = params.suggestion
-      setRecipe({
-        id: suggestion.id,
-        title: suggestion.name,
-        description: '',
-        servings: 1,
-        prepTime: suggestion.prepTime || 20,
-        cookTime: 0,
-        totalTime: suggestion.prepTime || 20,
-        difficulty: 'medium',
-        category: 'general',
-        ingredients: [],
-        instructions: [],
-        nutrition: {
-          calories: suggestion.calories,
-          proteins: suggestion.proteins,
-          carbs: suggestion.carbs,
-          fats: suggestion.fats,
-        },
-        nutritionPerServing: {
-          calories: suggestion.calories,
-          proteins: suggestion.proteins,
-          carbs: suggestion.carbs,
-          fats: suggestion.fats,
-        },
-        tags: [],
-        dietTypes: [],
-        allergens: [],
-        rating: 4.5,
-        ratingCount: 0,
-        isFavorite: false,
-        imageUrl: suggestion.imageUrl,
-        source: suggestion.source || (suggestion.isAI ? 'IA' : suggestion.isGustar ? 'Gustar.io' : 'Presence'),
-      })
-      setSelectedMealType(suggestion.mealType)
+    const loadRecipeData = async () => {
+      if (params.recipe) {
+        setRecipe(params.recipe)
+      } else if (params.suggestion) {
+        const suggestion = params.suggestion
+
+        // Try to load full recipe data from enriched-recipes.json
+        await loadStaticRecipes()
+        const staticRecipe = getStaticRecipe(suggestion.id)
+
+        if (staticRecipe) {
+          // Found full recipe with ingredients and instructions
+          const fullRecipe = staticToRecipe(staticRecipe)
+          setRecipe(fullRecipe)
+          console.log(`RecipeDetail: Loaded full recipe "${fullRecipe.title}" with ${fullRecipe.ingredients.length} ingredients`)
+        } else {
+          // Fallback to minimal recipe (for AI-generated or external recipes)
+          setRecipe({
+            id: suggestion.id,
+            title: suggestion.name,
+            description: '',
+            servings: 1,
+            prepTime: suggestion.prepTime || 20,
+            cookTime: 0,
+            totalTime: suggestion.prepTime || 20,
+            difficulty: 'medium',
+            category: 'general',
+            ingredients: [],
+            instructions: [],
+            nutrition: {
+              calories: suggestion.calories,
+              proteins: suggestion.proteins,
+              carbs: suggestion.carbs,
+              fats: suggestion.fats,
+            },
+            nutritionPerServing: {
+              calories: suggestion.calories,
+              proteins: suggestion.proteins,
+              carbs: suggestion.carbs,
+              fats: suggestion.fats,
+            },
+            tags: [],
+            dietTypes: [],
+            allergens: [],
+            rating: 4.5,
+            ratingCount: 0,
+            isFavorite: false,
+            imageUrl: suggestion.imageUrl,
+            source: suggestion.source || (suggestion.isAI ? 'IA' : suggestion.isGustar ? 'Gustar.io' : 'Presence'),
+          })
+        }
+        setSelectedMealType(suggestion.mealType)
+      }
     }
+
+    loadRecipeData()
   }, [params])
 
   const isRecipeFavorite = (recipeId: string) => {
