@@ -15,12 +15,10 @@ import * as Haptics from 'expo-haptics'
 import { Card, CircularProgress, ProgressBar, Button } from '../components/ui'
 import {
   GamificationPanel,
-  LymIAWidget,
   HydrationWidget,
   MealSuggestions,
   CaloricBalance,
   ProgramsSection,
-  CoachInsights,
 } from '../components/dashboard'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -123,10 +121,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 2. Coach Insights - LymIA connects all features for the user */}
-        <CoachInsights />
-
-        {/* 3. Main Calories Card - Most important, first thing user sees */}
+        {/* 2. Main Calories Card - Most important, first thing user sees */}
         <Card style={styles.mainCard}>
           <LinearGradient
             colors={[colors.accent.primary, colors.accent.hover]}

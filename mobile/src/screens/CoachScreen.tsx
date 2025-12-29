@@ -182,7 +182,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export default function CoachScreen() {
-  const { items, unreadCount, generateItems, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
+  const { items, unreadCount, generateItemsWithAI, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
   const wellnessStore = useWellnessStore()
@@ -190,8 +190,8 @@ export default function CoachScreen() {
 
   const [refreshing, setRefreshing] = React.useState(false)
 
-  // Mettre à jour le contexte et générer des items
-  const updateContext = useCallback(() => {
+  // Mettre à jour le contexte et générer des items avec AI (RAG)
+  const updateContext = useCallback(async () => {
     const todayData = getTodayData()
     const todayNutrition = todayData.totalNutrition
     const todayWellness = wellnessStore.getTodayEntry?.() || {} as Record<string, unknown>
@@ -226,8 +226,9 @@ export default function CoachScreen() {
       xp: totalXP,
     })
 
-    generateItems()
-  }, [profile, nutritionGoals, getTodayData, wellnessStore, currentStreak, currentLevel, totalXP, setContext, generateItems])
+    // Use AI-powered generation with RAG (falls back to static if AI unavailable)
+    await generateItemsWithAI()
+  }, [profile, nutritionGoals, getTodayData, wellnessStore, currentStreak, currentLevel, totalXP, setContext, generateItemsWithAI])
 
   useEffect(() => {
     updateContext()
@@ -237,8 +238,7 @@ export default function CoachScreen() {
     setRefreshing(true)
     // Force la régénération
     useCoachStore.setState({ lastGeneratedAt: null })
-    updateContext()
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await updateContext()
     setRefreshing(false)
   }, [updateContext])
 
