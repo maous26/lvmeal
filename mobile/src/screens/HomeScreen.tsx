@@ -17,7 +17,7 @@ import {
   MacrosWidget,
   MealChipsWidget,
   QuickActionsWidget,
-  GamificationPanel,
+  RankingWidget,
   HydrationWidget,
   MealSuggestions,
   CaloricBalance,
@@ -30,6 +30,7 @@ import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
 import { getGreeting } from '../lib/utils'
 import type { MealType } from '../types'
+import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
 const mealConfig: Record<MealType, { label: string; icon: string; color: string }> = {
   breakfast: { label: 'Petit-dej', icon: '☀️', color: colors.warning },
@@ -82,7 +83,7 @@ export default function HomeScreen() {
     navigation.navigate('Profile', { screen: 'Achievements' })
   }
 
-  const handleNavigateToPlan = (options: { duration: 1 | 3 | 7; calorieReduction: boolean }) => {
+  const handleNavigateToPlan = (options: { duration: 1 | 3 | 7; calorieReduction: boolean; complexity: RecipeComplexity }) => {
     // @ts-ignore - Navigation typing
     navigation.navigate('WeeklyPlan', options)
   }
@@ -110,6 +111,11 @@ export default function HomeScreen() {
   const handleNavigateToCalendar = () => {
     // @ts-ignore - Navigation typing
     navigation.navigate('Calendar')
+  }
+
+  const handleNavigateToMeals = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('Meals')
   }
 
   return (
@@ -152,7 +158,7 @@ export default function HomeScreen() {
           fats={{ value: totals.fats, max: goals.fats }}
         />
 
-        {/* 5. Meals Overview - Professional meal chips */}
+        {/* 5. Meals Overview - Single button to Meals screen */}
         <MealChipsWidget
           meals={(Object.keys(mealConfig) as MealType[]).map((type) => {
             const meals = getMealsByType(currentDate, type)
@@ -163,6 +169,7 @@ export default function HomeScreen() {
             return { type, calories: totalCalories, mealsCount: meals.length }
           })}
           onMealPress={handleMealPress}
+          onNavigateToMeals={handleNavigateToMeals}
         />
 
         {/* 7. Meal Suggestions - AI-powered recommendations from enriched-recipes.json */}
@@ -218,9 +225,9 @@ export default function HomeScreen() {
           onConfirmStart={confirmStartDay}
         />
 
-        {/* 11. Gamification - Motivation at the bottom */}
+        {/* 11. Ranking & Gamification - Clear progression display */}
         <View style={styles.section}>
-          <GamificationPanel compact onViewAll={handleNavigateToAchievements} />
+          <RankingWidget onPress={handleNavigateToAchievements} />
         </View>
 
         {/* Spacer for bottom nav */}

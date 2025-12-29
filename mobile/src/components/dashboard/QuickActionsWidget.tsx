@@ -16,15 +16,17 @@ import {
   Pressable,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Sparkles, Percent, ChevronRight, Calendar, CalendarDays, CalendarRange } from 'lucide-react-native'
+import { Sparkles, Percent, ChevronRight, Calendar, CalendarDays, CalendarRange, ChefHat } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius, shadows } from '../../constants/theme'
 
 export type PlanDuration = 1 | 3 | 7
+export type RecipeComplexity = 'basique' | 'elabore' | 'mix'
 
 export interface PlanOptions {
   duration: PlanDuration
   calorieReduction: boolean // -10% for solde plaisir
+  complexity: RecipeComplexity // Recipe complexity level
 }
 
 interface QuickActionsWidgetProps {
@@ -38,16 +40,28 @@ const durationConfig = {
   7: { icon: CalendarRange, label: '7j', description: 'Semaine' },
 }
 
+const complexityConfig: Record<RecipeComplexity, { label: string; description: string }> = {
+  basique: { label: 'Basique', description: '≤4 ingredients, rapide' },
+  elabore: { label: 'Elabore', description: '+5 ingredients' },
+  mix: { label: 'Mix', description: 'Varie' },
+}
+
 export default function QuickActionsWidget({
   onPlanPress,
   savedCaloriesThisWeek = 0
 }: QuickActionsWidgetProps) {
   const [selectedDuration, setSelectedDuration] = useState<PlanDuration>(7)
   const [calorieReduction, setCalorieReduction] = useState(false)
+  const [complexity, setComplexity] = useState<RecipeComplexity>('mix')
 
   const handleDurationSelect = (duration: PlanDuration) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setSelectedDuration(duration)
+  }
+
+  const handleComplexitySelect = (level: RecipeComplexity) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setComplexity(level)
   }
 
   const handleToggleReduction = () => {
@@ -60,6 +74,7 @@ export default function QuickActionsWidget({
     onPlanPress({
       duration: selectedDuration,
       calorieReduction,
+      complexity,
     })
   }
 
@@ -103,6 +118,38 @@ export default function QuickActionsWidget({
             </Pressable>
           )
         })}
+      </View>
+
+      {/* Complexity Selector */}
+      <View style={styles.complexitySection}>
+        <View style={styles.complexityHeader}>
+          <ChefHat size={14} color={colors.text.secondary} />
+          <Text style={styles.complexityTitle}>Complexite des recettes</Text>
+        </View>
+        <View style={styles.complexityRow}>
+          {(['basique', 'elabore', 'mix'] as RecipeComplexity[]).map((level) => {
+            const config = complexityConfig[level]
+            const isSelected = complexity === level
+
+            return (
+              <Pressable
+                key={level}
+                style={[
+                  styles.complexityPill,
+                  isSelected && styles.complexityPillSelected,
+                ]}
+                onPress={() => handleComplexitySelect(level)}
+              >
+                <Text style={[
+                  styles.complexityLabel,
+                  isSelected && styles.complexityLabelSelected,
+                ]}>
+                  {config.label}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </View>
       </View>
 
       {/* Calorie Reduction Toggle */}
@@ -149,7 +196,7 @@ export default function QuickActionsWidget({
         onPress={handleGenerate}
       >
         <LinearGradient
-          colors={['#10B981', '#059669']}
+          colors={['#FB923C', '#F97316']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.generateGradient}
@@ -229,6 +276,46 @@ const styles = StyleSheet.create({
   },
   durationLabelSelected: {
     color: '#FFFFFF',
+  },
+  complexitySection: {
+    marginBottom: spacing.md,
+  },
+  complexityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  complexityTitle: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  complexityRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  complexityPill: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.bg.tertiary,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  complexityPillSelected: {
+    backgroundColor: colors.secondary.light,
+    borderColor: colors.secondary.primary,
+  },
+  complexityLabel: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  complexityLabelSelected: {
+    color: colors.secondary.primary,
+    fontWeight: '600',
   },
   reductionToggle: {
     flexDirection: 'row',

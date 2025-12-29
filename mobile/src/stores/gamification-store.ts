@@ -1,30 +1,49 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { BadgeCategory, BadgeDefinition, EarnedBadge, PendingReward } from '../types'
 
 // Helper to get today's date string
 function getTodayString(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-// XP rewards for different actions
+// Helper to get current week key (YYYY-WW)
+function getWeekKey(date: Date = new Date()): string {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7))
+  const yearStart = new Date(d.getFullYear(), 0, 1)
+  const weekNumber = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `${d.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`
+}
+
+// Helper to get current month key (YYYY-MM)
+function getMonthKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`
+}
+
+// =============================================================================
+// SIMPLIFIED XP SYSTEM
+// =============================================================================
+
 export const XP_REWARDS = {
-  // Daily actions
+  // Daily actions - simple and consistent
   LOG_MEAL: 10,
   LOG_BREAKFAST: 15,
-  LOG_ALL_MEALS: 50,
-  REACH_CALORIE_TARGET: 30,
-  REACH_PROTEIN_TARGET: 20,
+  LOG_ALL_MEALS: 30,        // Bonus for logging all 4 meals
+  REACH_CALORIE_TARGET: 25, // Within 10% of target
+  REACH_PROTEIN_TARGET: 15,
+  COMPLETE_HYDRATION: 10,
   LOG_HYDRATION: 5,
-  REACH_HYDRATION_TARGET: 25,
+  REACH_HYDRATION_TARGET: 10,
 
   // Weekly actions
+  FOLLOW_PLAN_DAY: 20,
   COMPLETE_WEEKLY_PLAN: 100,
-  FOLLOW_PLAN_DAY: 25,
   SAVE_SHOPPING_LIST: 15,
 
-  // Streaks
+  // Streaks - big rewards for consistency
+  DAILY_STREAK_BONUS: 5,    // +5 XP per streak day (so 7 days = +35 XP per action)
   STREAK_3_DAYS: 50,
   STREAK_7_DAYS: 150,
   STREAK_14_DAYS: 300,
@@ -32,14 +51,16 @@ export const XP_REWARDS = {
   STREAK_60_DAYS: 1500,
   STREAK_100_DAYS: 3000,
 
-  // Achievements
-  FIRST_MEAL_LOGGED: 25,
+  // Special
+  FIRST_MEAL_LOGGED: 50,
   FIRST_RECIPE_SAVED: 20,
   FIRST_WEEKLY_PLAN: 100,
-  WEIGHT_MILESTONE: 200,
   ADD_RECIPE_TO_FAVORITES: 10,
+  SPORT_SESSION: 30,
+  WEIGHT_LOGGED: 10,
+  WEIGHT_MILESTONE: 200,
 
-  // Wellness actions
+  // Wellness
   LOG_SLEEP: 10,
   GOOD_SLEEP_7H: 20,
   LOG_WELLNESS_CHECKIN: 15,
@@ -49,7 +70,7 @@ export const XP_REWARDS = {
   REACH_FIBER_TARGET: 15,
   WELLNESS_SCORE_80: 30,
 
-  // Sport actions
+  // Sport
   COMPLETE_SESSION: 30,
   COMPLETE_PHASE: 150,
   SPORT_STREAK_DAY: 15,
@@ -59,170 +80,224 @@ export const XP_REWARDS = {
   WEEKLY_PROGRAM_COMPLETED: 100,
 } as const
 
-// Level thresholds
-export const LEVEL_THRESHOLDS = [
-  0, 100, 250, 500, 850, 1300, 1900, 2700, 3700, 5000,
-  6500, 8500, 11000, 14000, 18000, 23000, 29000, 36000, 45000, 55000,
-]
+// =============================================================================
+// TIER SYSTEM - Simple progression
+// =============================================================================
 
-// Level titles
-export const LEVEL_TITLES: Record<number, string> = {
-  1: 'Curieux',
-  2: 'Motive',
-  3: 'Engage',
-  4: 'Regulier',
-  5: 'Assidu',
-  6: 'Equilibre',
-  7: 'Consciencieux',
-  8: 'Epanoui',
-  9: 'Inspire',
-  10: 'Coach',
-  11: 'Mentor',
-  12: 'Guide',
-  13: 'Ambassadeur',
-  14: 'Expert Bien-etre',
-  15: 'Maitre Equilibre',
-  16: 'Gourou Nutrition',
-  17: 'Sage',
-  18: 'Eclaire',
-  19: 'Zen Master',
-  20: 'Legende Vivante',
+export type UserTier = 'bronze' | 'silver' | 'gold' | 'diamond'
+
+export interface TierInfo {
+  id: UserTier
+  name: string
+  nameFr: string
+  icon: string
+  color: string
+  minXP: number
+  aiCredits: number      // Monthly AI credits
+  features: string[]     // Features unlocked
 }
 
-// All available badges
-export const BADGES: BadgeDefinition[] = [
-  // Streak badges
-  { id: 'streak_3', name: 'Premier Pas', description: 'Maintenir une serie de 3 jours', icon: '🔥', category: 'streak', xpReward: 50, condition: { type: 'streak', target: 3 } },
-  { id: 'streak_7', name: 'Semaine Parfaite', description: 'Maintenir une serie de 7 jours', icon: '⚡', category: 'streak', xpReward: 150, condition: { type: 'streak', target: 7 } },
-  { id: 'streak_14', name: "Force de l'Habitude", description: 'Maintenir une serie de 14 jours', icon: '💪', category: 'streak', xpReward: 300, condition: { type: 'streak', target: 14 } },
-  { id: 'streak_30', name: 'Champion du Mois', description: 'Maintenir une serie de 30 jours', icon: '🏆', category: 'streak', xpReward: 750, condition: { type: 'streak', target: 30 } },
-  { id: 'streak_60', name: 'Maitre de la Discipline', description: 'Maintenir une serie de 60 jours', icon: '👑', category: 'streak', xpReward: 1500, condition: { type: 'streak', target: 60 } },
-  { id: 'streak_100', name: 'Legende Vivante', description: 'Maintenir une serie de 100 jours', icon: '🌟', category: 'streak', xpReward: 3000, condition: { type: 'streak', target: 100 } },
+export const TIERS: Record<UserTier, TierInfo> = {
+  bronze: {
+    id: 'bronze',
+    name: 'Bronze',
+    nameFr: 'Bronze',
+    icon: '🥉',
+    color: '#CD7F32',
+    minXP: 0,
+    aiCredits: 0,
+    features: ['Suivi repas', 'Objectifs nutrition'],
+  },
+  silver: {
+    id: 'silver',
+    name: 'Silver',
+    nameFr: 'Argent',
+    icon: '🥈',
+    color: '#C0C0C0',
+    minXP: 500,
+    aiCredits: 5,
+    features: ['5 analyses photo IA/mois', 'Suggestions personnalisees'],
+  },
+  gold: {
+    id: 'gold',
+    name: 'Gold',
+    nameFr: 'Or',
+    icon: '🥇',
+    color: '#FFD700',
+    minXP: 2000,
+    aiCredits: 20,
+    features: ['20 analyses photo IA/mois', 'Plans IA illimites', 'Coach vocal'],
+  },
+  diamond: {
+    id: 'diamond',
+    name: 'Diamond',
+    nameFr: 'Diamant',
+    icon: '💎',
+    color: '#B9F2FF',
+    minXP: 5000,
+    aiCredits: -1, // Unlimited
+    features: ['IA illimitee', 'Premium gratuit 1 mois', 'Acces beta features'],
+  },
+}
 
-  // Nutrition badges
-  { id: 'first_meal', name: 'Premier Repas', description: 'Enregistrer votre premier repas', icon: '🍽️', category: 'nutrition', xpReward: 25, condition: { type: 'count', target: 1, metric: 'meals_logged' } },
-  { id: 'meals_10', name: 'Gourmet Debutant', description: 'Enregistrer 10 repas', icon: '🥗', category: 'nutrition', xpReward: 50, condition: { type: 'count', target: 10, metric: 'meals_logged' } },
-  { id: 'meals_50', name: 'Gourmet Confirme', description: 'Enregistrer 50 repas', icon: '🍳', category: 'nutrition', xpReward: 150, condition: { type: 'count', target: 50, metric: 'meals_logged' } },
-  { id: 'meals_100', name: 'Chef Etoile', description: 'Enregistrer 100 repas', icon: '👨‍🍳', category: 'nutrition', xpReward: 300, condition: { type: 'count', target: 100, metric: 'meals_logged' } },
-  { id: 'hydration_pro', name: 'Hydratation Pro', description: "Atteindre l'objectif hydratation 7 jours de suite", icon: '💧', category: 'nutrition', xpReward: 150, condition: { type: 'count', target: 7, metric: 'hydration_streak' } },
+// =============================================================================
+// ACHIEVEMENTS - Simple milestones (reduced from 44 to 12)
+// =============================================================================
 
-  // Planning badges
-  { id: 'first_plan', name: 'Planificateur', description: 'Creer votre premier plan de 7 jours', icon: '📅', category: 'planning', xpReward: 100, condition: { type: 'count', target: 1, metric: 'plans_created' } },
-  { id: 'plan_follower', name: 'Fidele au Plan', description: 'Suivre le plan pendant 7 jours consecutifs', icon: '✅', category: 'planning', xpReward: 300, condition: { type: 'count', target: 7, metric: 'plan_follow_streak' } },
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  xpReward: number
+  condition: { type: 'streak' | 'count' | 'tier'; target: number; metric?: string }
+}
 
-  // Milestone badges
-  { id: 'weight_1kg', name: 'Premier Kilo', description: 'Perdre ou prendre 1kg vers votre objectif', icon: '🎯', category: 'milestone', xpReward: 200, condition: { type: 'milestone', target: 1, metric: 'weight_progress' } },
-  { id: 'weight_5kg', name: 'Transformation', description: 'Perdre ou prendre 5kg vers votre objectif', icon: '🏅', category: 'milestone', xpReward: 500, condition: { type: 'milestone', target: 5, metric: 'weight_progress' } },
-  { id: 'goal_reached', name: 'Objectif Atteint', description: 'Atteindre votre poids cible', icon: '🏆', category: 'milestone', xpReward: 2000, condition: { type: 'milestone', target: 0, metric: 'goal_reached' } },
+export const ACHIEVEMENTS: Achievement[] = [
+  // Streaks (4)
+  { id: 'streak_7', name: 'Semaine parfaite', description: '7 jours consecutifs', icon: '🔥', xpReward: 100, condition: { type: 'streak', target: 7 } },
+  { id: 'streak_30', name: 'Mois engage', description: '30 jours consecutifs', icon: '⚡', xpReward: 500, condition: { type: 'streak', target: 30 } },
+  { id: 'streak_100', name: 'Centenaire', description: '100 jours consecutifs', icon: '🏆', xpReward: 2000, condition: { type: 'streak', target: 100 } },
 
-  // Wellness badges
-  { id: 'sleep_pro', name: 'Dormeur Pro', description: '7 nuits de 7h+ consecutives', icon: '😴', category: 'wellness', xpReward: 200, condition: { type: 'count', target: 7, metric: 'sleep_7h_streak' } },
-  { id: 'zen_master', name: 'Zen Master', description: 'Stress faible pendant 7 jours', icon: '🧘', category: 'wellness', xpReward: 250, condition: { type: 'count', target: 7, metric: 'low_stress_streak' } },
-  { id: 'wellness_balance', name: 'Equilibre Total', description: 'Score wellness >=80 pendant 7 jours', icon: '🌈', category: 'wellness', xpReward: 400, condition: { type: 'count', target: 7, metric: 'wellness_80_streak' } },
+  // Meals (3)
+  { id: 'meals_10', name: 'Regulier', description: '10 repas enregistres', icon: '🍽️', xpReward: 50, condition: { type: 'count', target: 10, metric: 'meals_logged' } },
+  { id: 'meals_100', name: 'Gourmet', description: '100 repas enregistres', icon: '👨‍🍳', xpReward: 300, condition: { type: 'count', target: 100, metric: 'meals_logged' } },
+  { id: 'meals_500', name: 'Chef', description: '500 repas enregistres', icon: '⭐', xpReward: 1000, condition: { type: 'count', target: 500, metric: 'meals_logged' } },
 
-  // Sport badges
-  { id: 'first_session', name: 'Premiere Seance', description: 'Completer ta premiere seance', icon: '🎯', category: 'sport', xpReward: 50, condition: { type: 'count', target: 1, metric: 'sessions_completed' } },
-  { id: 'sessions_10', name: 'Regulier', description: 'Completer 10 seances', icon: '💪', category: 'sport', xpReward: 200, condition: { type: 'count', target: 10, metric: 'sessions_completed' } },
-  { id: 'sport_streak_7', name: 'Semaine Active', description: "7 jours d'activite consecutifs", icon: '🔥', category: 'sport', xpReward: 200, condition: { type: 'streak', target: 7, metric: 'sport_streak' } },
-  { id: 'phase_evolution', name: 'Evolution', description: 'Completer une phase du programme', icon: '📈', category: 'sport', xpReward: 300, condition: { type: 'count', target: 1, metric: 'phases_completed' } },
+  // Goals (3)
+  { id: 'goals_7', name: 'Sur la bonne voie', description: '7 objectifs atteints', icon: '🎯', xpReward: 100, condition: { type: 'count', target: 7, metric: 'goals_reached' } },
+  { id: 'goals_30', name: 'Discipline', description: '30 objectifs atteints', icon: '💪', xpReward: 400, condition: { type: 'count', target: 30, metric: 'goals_reached' } },
+  { id: 'goals_100', name: 'Excellence', description: '100 objectifs atteints', icon: '🌟', xpReward: 1500, condition: { type: 'count', target: 100, metric: 'goals_reached' } },
 
-  // Special badges
-  { id: 'early_bird', name: 'Leve-tot', description: 'Enregistrer un petit-dejeuner avant 8h', icon: '🌅', category: 'special', xpReward: 30, condition: { type: 'special', target: 1, metric: 'early_breakfast' } },
-  { id: 'repas_plaisir', name: 'Plaisir Merite', description: 'Debloquer un repas plaisir grace a la banque calorique', icon: '🍰', category: 'special', xpReward: 100, condition: { type: 'count', target: 1, metric: 'repas_plaisir_earned' } },
+  // Tiers (3)
+  { id: 'tier_silver', name: 'Argent', description: 'Atteindre le tier Argent', icon: '🥈', xpReward: 0, condition: { type: 'tier', target: 500 } },
+  { id: 'tier_gold', name: 'Or', description: 'Atteindre le tier Or', icon: '🥇', xpReward: 0, condition: { type: 'tier', target: 2000 } },
+  { id: 'tier_diamond', name: 'Diamant', description: 'Atteindre le tier Diamant', icon: '💎', xpReward: 0, condition: { type: 'tier', target: 5000 } },
 ]
 
-interface DailyProgress {
-  date: string
-  mealsLogged: number
-  caloriesReached: boolean
-  proteinReached: boolean
-  hydrationReached: boolean
-  allMealsLogged: boolean
+// =============================================================================
+// WEEKLY RANKING
+// =============================================================================
+
+export interface WeeklyRankEntry {
+  rank: number
+  xpThisWeek: number
+  percentile: number // Top X%
 }
+
+// Simulated ranking thresholds (would be server-side in production)
+const RANKING_THRESHOLDS = {
+  top1: 1000,   // Top 1% - Diamond rewards
+  top5: 500,    // Top 5% - Gold rewards
+  top10: 300,   // Top 10% - Silver rewards
+  top25: 150,   // Top 25%
+  top50: 75,    // Top 50%
+}
+
+// =============================================================================
+// STATE INTERFACE
+// =============================================================================
 
 interface GamificationState {
+  // Core stats
   totalXP: number
-  currentLevel: number
   currentStreak: number
   longestStreak: number
   lastActiveDate: string | null
+  currentLevel: number // Legacy compatibility
+
+  // Weekly tracking
+  weeklyXP: number
+  currentWeek: string
+
+  // Monthly AI credits
+  aiCreditsUsed: number
+  currentMonth: string
+
+  // Metrics
   metricsCount: Record<string, number>
-  earnedBadges: EarnedBadge[]
-  dailyProgress: DailyProgress[]
-  pendingRewards: PendingReward[]
+
+  // Achievements
+  unlockedAchievements: string[]
 
   // Actions
   addXP: (amount: number, reason?: string) => void
   checkAndUpdateStreak: () => void
   incrementMetric: (metric: string, amount?: number) => void
   setMetric: (metric: string, value: number) => void
-  checkBadges: () => EarnedBadge[]
-  unlockBadge: (badgeId: string) => boolean
-  markBadgeNotified: (badgeId: string) => void
-  updateDailyProgress: (progress: Partial<DailyProgress>) => void
-  consumeReward: (rewardId: string) => void
-  clearPendingRewards: () => void
+  useAICredit: () => boolean
+  checkAchievements: () => void
 
   // Getters
+  getTier: () => TierInfo
+  getNextTier: () => TierInfo | null
+  getTierProgress: () => { current: number; needed: number; percentage: number }
+  getWeeklyRank: () => WeeklyRankEntry
+  getAICreditsRemaining: () => number
+  getStreakInfo: () => { current: number; longest: number; isActive: boolean; bonus: number }
+  getAchievements: () => { achievement: Achievement; unlocked: boolean }[]
   getLevel: () => number
   getLevelTitle: () => string
   getXPProgress: () => { current: number; needed: number; percentage: number }
-  getBadgesByCategory: (category: BadgeCategory) => { badge: BadgeDefinition; earned: boolean; earnedAt?: string }[]
-  getUnlockedBadges: () => BadgeDefinition[]
-  getNextBadges: () => BadgeDefinition[]
-  getStreakInfo: () => { current: number; longest: number; isActive: boolean }
+  getStats: () => {
+    totalXP: number
+    tier: TierInfo
+    streak: number
+    weeklyXP: number
+    rank: WeeklyRankEntry
+    aiCredits: number
+    achievementsUnlocked: number
+    achievementsTotal: number
+  }
 }
+
+// =============================================================================
+// STORE
+// =============================================================================
 
 export const useGamificationStore = create<GamificationState>()(
   persist(
     (set, get) => ({
       totalXP: 0,
-      currentLevel: 1,
       currentStreak: 0,
       longestStreak: 0,
       lastActiveDate: null,
+      currentLevel: 1,
+      weeklyXP: 0,
+      currentWeek: getWeekKey(),
+      aiCreditsUsed: 0,
+      currentMonth: getMonthKey(),
       metricsCount: {},
-      earnedBadges: [],
-      dailyProgress: [],
-      pendingRewards: [],
+      unlockedAchievements: [],
 
       addXP: (amount, _reason) => {
-        set((state) => {
-          const newTotalXP = state.totalXP + amount
+        const state = get()
+        const thisWeek = getWeekKey()
+        const thisMonth = getMonthKey()
 
-          let newLevel = 1
-          for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-            if (newTotalXP >= LEVEL_THRESHOLDS[i]) {
-              newLevel = i + 1
-              break
-            }
-          }
+        // Apply streak bonus
+        const streakBonus = Math.min(state.currentStreak, 30) * XP_REWARDS.DAILY_STREAK_BONUS
+        const totalAmount = amount + (amount > 0 ? Math.floor(streakBonus / 10) : 0)
 
-          const leveledUp = newLevel > state.currentLevel
-          const rewards: PendingReward[] = [
-            {
-              id: `xp-${Date.now()}`,
-              type: 'xp',
-              amount,
-              timestamp: new Date().toISOString(),
-            },
-          ]
+        const newTotalXP = state.totalXP + totalAmount
+        // Calculate level based on XP
+        let newLevel = 1
+        if (newTotalXP >= TIERS.diamond.minXP) newLevel = 4
+        else if (newTotalXP >= TIERS.gold.minXP) newLevel = 3
+        else if (newTotalXP >= TIERS.silver.minXP) newLevel = 2
 
-          if (leveledUp) {
-            rewards.push({
-              id: `level-${Date.now()}`,
-              type: 'level_up',
-              newLevel,
-              timestamp: new Date().toISOString(),
-            })
-          }
+        set((s) => ({
+          totalXP: newTotalXP,
+          currentLevel: newLevel,
+          weeklyXP: s.currentWeek === thisWeek ? s.weeklyXP + totalAmount : totalAmount,
+          currentWeek: thisWeek,
+          // Reset AI credits if new month
+          aiCreditsUsed: s.currentMonth === thisMonth ? s.aiCreditsUsed : 0,
+          currentMonth: thisMonth,
+        }))
 
-          return {
-            totalXP: newTotalXP,
-            currentLevel: newLevel,
-            pendingRewards: [...state.pendingRewards, ...rewards],
-          }
-        })
+        // Check for new achievements
+        get().checkAchievements()
       },
 
       checkAndUpdateStreak: () => {
@@ -263,8 +338,6 @@ export const useGamificationStore = create<GamificationState>()(
 
           return s
         })
-
-        get().checkBadges()
       },
 
       incrementMetric: (metric, amount = 1) => {
@@ -274,8 +347,7 @@ export const useGamificationStore = create<GamificationState>()(
             [metric]: (state.metricsCount[metric] || 0) + amount,
           },
         }))
-
-        get().checkBadges()
+        get().checkAchievements()
       },
 
       setMetric: (metric, value) => {
@@ -285,180 +357,127 @@ export const useGamificationStore = create<GamificationState>()(
             [metric]: value,
           },
         }))
-
-        get().checkBadges()
+        get().checkAchievements()
       },
 
-      checkBadges: () => {
+      useAICredit: () => {
         const state = get()
-        const newlyEarned: EarnedBadge[] = []
+        const tier = state.getTier()
+        const remaining = state.getAICreditsRemaining()
 
-        BADGES.forEach((badge) => {
-          if (state.earnedBadges.some((eb) => eb.badgeId === badge.id)) {
-            return
-          }
+        if (remaining === 0) return false
+
+        set((s) => ({ aiCreditsUsed: s.aiCreditsUsed + 1 }))
+        return true
+      },
+
+      checkAchievements: () => {
+        const state = get()
+        const newlyUnlocked: string[] = []
+
+        ACHIEVEMENTS.forEach((achievement) => {
+          if (state.unlockedAchievements.includes(achievement.id)) return
 
           let earned = false
-          const { condition } = badge
+          const { condition } = achievement
 
           switch (condition.type) {
             case 'streak':
               earned = state.currentStreak >= condition.target
               break
             case 'count':
-            case 'milestone':
-            case 'special':
               if (condition.metric) {
                 earned = (state.metricsCount[condition.metric] || 0) >= condition.target
               }
               break
+            case 'tier':
+              earned = state.totalXP >= condition.target
+              break
           }
 
           if (earned) {
-            const earnedBadge: EarnedBadge = {
-              badgeId: badge.id,
-              earnedAt: new Date().toISOString(),
-              notified: false,
-            }
-            newlyEarned.push(earnedBadge)
+            newlyUnlocked.push(achievement.id)
           }
         })
 
-        if (newlyEarned.length > 0) {
+        if (newlyUnlocked.length > 0) {
           set((s) => ({
-            earnedBadges: [...s.earnedBadges, ...newlyEarned],
-            pendingRewards: [
-              ...s.pendingRewards,
-              ...newlyEarned.map((eb) => ({
-                id: `badge-${eb.badgeId}-${Date.now()}`,
-                type: 'badge' as const,
-                badgeId: eb.badgeId,
-                timestamp: eb.earnedAt,
-              })),
-            ],
+            unlockedAchievements: [...s.unlockedAchievements, ...newlyUnlocked],
           }))
 
-          newlyEarned.forEach((eb) => {
-            const badge = BADGES.find((b) => b.id === eb.badgeId)
-            if (badge) {
-              get().addXP(badge.xpReward, `Badge: ${badge.name}`)
-            }
-          })
-        }
+          // Add XP for achievements (without recursion)
+          const xpToAdd = newlyUnlocked.reduce((sum, id) => {
+            const a = ACHIEVEMENTS.find((x) => x.id === id)
+            return sum + (a?.xpReward || 0)
+          }, 0)
 
-        return newlyEarned
-      },
-
-      unlockBadge: (badgeId) => {
-        const state = get()
-        if (state.earnedBadges.some((eb) => eb.badgeId === badgeId)) {
-          return false
-        }
-
-        const badge = BADGES.find((b) => b.id === badgeId)
-        if (!badge) return false
-
-        const earnedBadge: EarnedBadge = {
-          badgeId,
-          earnedAt: new Date().toISOString(),
-          notified: false,
-        }
-
-        set((s) => ({
-          earnedBadges: [...s.earnedBadges, earnedBadge],
-          pendingRewards: [
-            ...s.pendingRewards,
-            {
-              id: `badge-${badgeId}-${Date.now()}`,
-              type: 'badge',
-              badgeId,
-              timestamp: earnedBadge.earnedAt,
-            },
-          ],
-        }))
-
-        get().addXP(badge.xpReward, `Badge: ${badge.name}`)
-        return true
-      },
-
-      markBadgeNotified: (badgeId) => {
-        set((state) => ({
-          earnedBadges: state.earnedBadges.map((eb) =>
-            eb.badgeId === badgeId ? { ...eb, notified: true } : eb
-          ),
-        }))
-      },
-
-      updateDailyProgress: (progress) => {
-        const today = getTodayString()
-
-        set((state) => {
-          const existingIndex = state.dailyProgress.findIndex((p) => p.date === today)
-          const existingProgress = existingIndex >= 0
-            ? state.dailyProgress[existingIndex]
-            : { date: today, mealsLogged: 0, caloriesReached: false, proteinReached: false, hydrationReached: false, allMealsLogged: false }
-
-          const updatedProgress = { ...existingProgress, ...progress }
-
-          if (existingIndex >= 0) {
-            const newDailyProgress = [...state.dailyProgress]
-            newDailyProgress[existingIndex] = updatedProgress
-            return { dailyProgress: newDailyProgress }
-          } else {
-            return { dailyProgress: [...state.dailyProgress.slice(-30), updatedProgress] }
+          if (xpToAdd > 0) {
+            set((s) => ({ totalXP: s.totalXP + xpToAdd }))
           }
-        })
+        }
       },
 
-      consumeReward: (rewardId) => {
-        set((state) => ({
-          pendingRewards: state.pendingRewards.filter((r) => r.id !== rewardId),
-        }))
+      // Getters
+      getTier: () => {
+        const xp = get().totalXP
+        if (xp >= TIERS.diamond.minXP) return TIERS.diamond
+        if (xp >= TIERS.gold.minXP) return TIERS.gold
+        if (xp >= TIERS.silver.minXP) return TIERS.silver
+        return TIERS.bronze
       },
 
-      clearPendingRewards: () => {
-        set({ pendingRewards: [] })
+      getNextTier: () => {
+        const tier = get().getTier()
+        if (tier.id === 'bronze') return TIERS.silver
+        if (tier.id === 'silver') return TIERS.gold
+        if (tier.id === 'gold') return TIERS.diamond
+        return null
       },
 
-      getLevel: () => get().currentLevel,
-
-      getLevelTitle: () => LEVEL_TITLES[get().currentLevel] || 'Inconnu',
-
-      getXPProgress: () => {
+      getTierProgress: () => {
         const state = get()
-        const currentLevelXP = LEVEL_THRESHOLDS[state.currentLevel - 1] || 0
-        const nextLevelXP = LEVEL_THRESHOLDS[state.currentLevel] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1]
-        const current = state.totalXP - currentLevelXP
-        const needed = nextLevelXP - currentLevelXP
-        const percentage = needed > 0 ? Math.min(100, (current / needed) * 100) : 100
+        const tier = state.getTier()
+        const nextTier = state.getNextTier()
+
+        if (!nextTier) {
+          return { current: state.totalXP, needed: state.totalXP, percentage: 100 }
+        }
+
+        const current = state.totalXP - tier.minXP
+        const needed = nextTier.minXP - tier.minXP
+        const percentage = Math.min(100, (current / needed) * 100)
 
         return { current, needed, percentage }
       },
 
-      getBadgesByCategory: (category) => {
-        const state = get()
-        return BADGES
-          .filter((b) => b.category === category)
-          .map((badge) => {
-            const earned = state.earnedBadges.find((eb) => eb.badgeId === badge.id)
-            return {
-              badge,
-              earned: !!earned,
-              earnedAt: earned?.earnedAt,
-            }
-          })
+      getWeeklyRank: () => {
+        const weeklyXP = get().weeklyXP
+
+        let percentile = 100
+        if (weeklyXP >= RANKING_THRESHOLDS.top1) percentile = 1
+        else if (weeklyXP >= RANKING_THRESHOLDS.top5) percentile = 5
+        else if (weeklyXP >= RANKING_THRESHOLDS.top10) percentile = 10
+        else if (weeklyXP >= RANKING_THRESHOLDS.top25) percentile = 25
+        else if (weeklyXP >= RANKING_THRESHOLDS.top50) percentile = 50
+
+        // Simulated rank (would be server-side)
+        const rank = percentile === 1 ? Math.floor(Math.random() * 100) + 1
+                   : percentile === 5 ? Math.floor(Math.random() * 400) + 100
+                   : Math.floor(Math.random() * 1000) + 500
+
+        return { rank, xpThisWeek: weeklyXP, percentile }
       },
 
-      getUnlockedBadges: () => {
+      getAICreditsRemaining: () => {
         const state = get()
-        return BADGES.filter((b) => state.earnedBadges.some((eb) => eb.badgeId === b.id))
-      },
+        const tier = state.getTier()
 
-      getNextBadges: () => {
-        const state = get()
-        return BADGES
-          .filter((b) => !state.earnedBadges.some((eb) => eb.badgeId === b.id))
-          .slice(0, 3)
+        // Check if new month
+        const thisMonth = getMonthKey()
+        const used = state.currentMonth === thisMonth ? state.aiCreditsUsed : 0
+
+        if (tier.aiCredits === -1) return 999 // Unlimited
+        return Math.max(0, tier.aiCredits - used)
       },
 
       getStreakInfo: () => {
@@ -475,26 +494,86 @@ export const useGamificationStore = create<GamificationState>()(
           isActive = daysDiff <= 1
         }
 
+        // Streak bonus: +5% XP per streak day (max +150% at 30 days)
+        const bonus = Math.min(state.currentStreak, 30) * 5
+
         return {
           current: state.currentStreak,
           longest: state.longestStreak,
           isActive,
+          bonus,
+        }
+      },
+
+      getAchievements: () => {
+        const state = get()
+        return ACHIEVEMENTS.map((achievement) => ({
+          achievement,
+          unlocked: state.unlockedAchievements.includes(achievement.id),
+        }))
+      },
+
+      // Legacy compatibility methods
+      getLevel: () => {
+        const xp = get().totalXP
+        if (xp >= TIERS.diamond.minXP) return 4
+        if (xp >= TIERS.gold.minXP) return 3
+        if (xp >= TIERS.silver.minXP) return 2
+        return 1
+      },
+
+      getLevelTitle: () => {
+        return get().getTier().nameFr
+      },
+
+      getXPProgress: () => {
+        return get().getTierProgress()
+      },
+
+      getStats: () => {
+        const state = get()
+        const tier = state.getTier()
+        const rank = state.getWeeklyRank()
+        const achievements = state.getAchievements()
+
+        return {
+          totalXP: state.totalXP,
+          tier,
+          streak: state.currentStreak,
+          weeklyXP: state.weeklyXP,
+          rank,
+          aiCredits: state.getAICreditsRemaining(),
+          achievementsUnlocked: achievements.filter((a) => a.unlocked).length,
+          achievementsTotal: achievements.length,
         }
       },
     }),
     {
-      name: 'presence-gamification',
+      name: 'presence-gamification-v2',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         totalXP: state.totalXP,
-        currentLevel: state.currentLevel,
         currentStreak: state.currentStreak,
         longestStreak: state.longestStreak,
         lastActiveDate: state.lastActiveDate,
+        currentLevel: state.currentLevel,
+        weeklyXP: state.weeklyXP,
+        currentWeek: state.currentWeek,
+        aiCreditsUsed: state.aiCreditsUsed,
+        currentMonth: state.currentMonth,
         metricsCount: state.metricsCount,
-        earnedBadges: state.earnedBadges,
-        dailyProgress: state.dailyProgress,
+        unlockedAchievements: state.unlockedAchievements,
       }),
     }
   )
 )
+
+// Legacy exports for backward compatibility
+export const BADGES = ACHIEVEMENTS
+export const LEVEL_THRESHOLDS = [0, 500, 2000, 5000]
+export const LEVEL_TITLES: Record<number, string> = {
+  1: 'Bronze',
+  2: 'Argent',
+  3: 'Or',
+  4: 'Diamant',
+}

@@ -64,6 +64,7 @@ const mealTypeLabels: Record<MealType, { label: string; icon: string }> = {
 
 // Plan duration type
 type PlanDuration = 1 | 3 | 7
+type RecipeComplexity = 'basique' | 'elabore' | 'mix'
 
 export default function WeeklyPlanScreen() {
   const navigation = useNavigation()
@@ -72,9 +73,10 @@ export default function WeeklyPlanScreen() {
   const { addXP } = useGamificationStore()
 
   // Get params from navigation
-  const params = route.params as { duration?: PlanDuration; calorieReduction?: boolean } | undefined
+  const params = route.params as { duration?: PlanDuration; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
   const planDuration: PlanDuration = params?.duration || 7
   const calorieReduction = params?.calorieReduction || false
+  const complexity: RecipeComplexity = params?.complexity || 'mix'
 
   // Use meal plan store
   const {
@@ -170,6 +172,8 @@ export default function WeeklyPlanScreen() {
           includeCheatMeal: planDuration === 7, // Only for 7-day plans
           cookingTimeWeekday: weekdayTime,
           cookingTimeWeekend: weekendTime,
+          complexity, // Recipe complexity level
+          cookingLevel: profile.cookingPreferences?.level || 'intermediate',
         },
         (day, total) => {
           setGenerationProgress({ day, total })
