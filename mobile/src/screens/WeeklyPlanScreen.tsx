@@ -359,9 +359,10 @@ export default function WeeklyPlanScreen() {
                 <PartyPopper size={12} color={colors.warning} />
               </View>
             )}
-            {meal.source === 'gustar' && (
+            {/* Source badge - show for all data sources */}
+            {(meal.source === 'gustar' || meal.source === 'ciqual' || meal.source === 'openfoodfacts') && (
               <View style={styles.sourceTag}>
-                <Database size={10} color={colors.accent.primary} />
+                <Database size={10} color={meal.source === 'gustar' ? colors.accent.primary : colors.success} />
               </View>
             )}
           </View>

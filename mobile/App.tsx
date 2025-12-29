@@ -8,6 +8,7 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 
 import { RootNavigator } from './src/navigation'
 import { colors } from './src/constants/theme'
+import { clearFoodSearchCache } from './src/services/food-search'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -25,7 +26,8 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Add any initialization logic here
+        // Clear food search cache to get fresh results with nutriscore
+        await clearFoodSearchCache()
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e) {
         console.warn(e)

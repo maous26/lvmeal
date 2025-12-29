@@ -140,6 +140,8 @@ export interface WeightEntry {
 // FOOD & MEALS
 // =============================================================================
 
+export type NutriScoreGrade = 'a' | 'b' | 'c' | 'd' | 'e' | 'unknown'
+
 export interface FoodItem {
   id: string
   name: string
@@ -153,6 +155,7 @@ export interface FoodItem {
   source?: 'ciqual' | 'openfoodfacts' | 'manual' | 'ai' | 'recipe' | 'photo' | 'voice' | 'barcode'
   isRecipe?: boolean
   recipeId?: string
+  nutriscore?: NutriScoreGrade
 }
 
 export interface MealItem {
@@ -233,6 +236,7 @@ export interface Recipe {
   ratingCount?: number
   isFavorite?: boolean
   createdAt?: string
+  nutriscore?: NutriScoreGrade
 }
 
 // =============================================================================

@@ -5,14 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import {
   Home,
-  Utensils,
   Bot,
   TrendingUp,
   User,
+  BookOpen,
 } from 'lucide-react-native'
 
 import HomeScreen from '../screens/HomeScreen'
-import MealsScreen from '../screens/MealsScreen'
+import RecipesScreen from '../screens/RecipesScreen'
 import CoachScreen from '../screens/CoachScreen'
 import ProgressScreen from '../screens/ProgressScreen'
 import ProfileScreen from '../screens/ProfileScreen'
@@ -80,12 +80,12 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Meals"
-        component={MealsScreen}
+        name="Recipes"
+        component={RecipesScreen}
         options={{
-          tabBarLabel: 'Repas',
+          tabBarLabel: 'Recettes',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={Utensils} focused={focused} color={color} />
+            <TabIcon Icon={BookOpen} focused={focused} color={color} />
           ),
         }}
       />

@@ -227,6 +227,7 @@ async function searchGustarRecipes(
 
 /**
  * Search foods from CIQUAL database only (OFF is too slow for plan generation)
+ * Note: CIQUAL/OFF products don't have ingredients/instructions - they are single food items
  */
 async function searchFoodDatabases(
   query: string,
@@ -240,25 +241,41 @@ async function searchFoodDatabases(
       source: 'generic', // Use CIQUAL only - skip OFF to avoid timeouts during plan generation
     })
 
-    return result.products.map(food => ({
-      id: generateId(),
-      dayIndex: 0,
-      mealType: 'lunch' as MealType,
-      name: food.name,
-      description: food.brand || food.category,
-      prepTime: 10,
-      servings: 1,
-      nutrition: {
-        calories: food.nutrition.calories,
-        proteins: food.nutrition.proteins,
-        carbs: food.nutrition.carbs,
-        fats: food.nutrition.fats,
-      },
-      ingredients: [],
-      instructions: [],
-      isValidated: false,
-      source: 'gustar' as const,
-    }))
+    return result.products.map(food => {
+      // Determine actual source
+      const actualSource = food.source === 'openfoodfacts' ? 'openfoodfacts' : 'ciqual'
+
+      // Include brand in name for Open Food Facts products
+      const displayName = actualSource === 'openfoodfacts' && food.brand
+        ? `${food.name} - ${food.brand}`
+        : food.name
+
+      return {
+        id: generateId(),
+        dayIndex: 0,
+        mealType: 'lunch' as MealType,
+        name: displayName,
+        description: food.brand || food.category || 'Produit alimentaire',
+        prepTime: 5, // Quick prep for simple products
+        servings: 1,
+        nutrition: {
+          calories: food.nutrition.calories,
+          proteins: food.nutrition.proteins,
+          carbs: food.nutrition.carbs,
+          fats: food.nutrition.fats,
+        },
+        // For CIQUAL/OFF products, we don't have recipe ingredients/instructions
+        // The product itself IS the ingredient
+        ingredients: [{
+          name: food.name,
+          amount: `${food.servingSize || 100}${food.servingUnit || 'g'}`,
+          calories: food.nutrition.calories,
+        }],
+        instructions: ['Prêt à consommer ou à préparer selon vos préférences.'],
+        isValidated: false,
+        source: actualSource as 'ciqual' | 'openfoodfacts',
+      }
+    })
   } catch (error) {
     console.warn('Food database search error:', error)
     return []
