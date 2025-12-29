@@ -12,6 +12,7 @@ import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
+import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
 export type RootStackParamList = {
   Onboarding: undefined
@@ -42,7 +43,7 @@ export type RootStackParamList = {
   WellnessCheckin: undefined
   SportSession: { sessionId?: string }
   Plan: undefined
-  WeeklyPlan: { duration?: 1 | 3 | 7; calorieReduction?: boolean } | undefined
+  WeeklyPlan: { duration?: 1 | 3 | 7; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
   MetabolicBoost: undefined
   SportInitiation: undefined
   EditProfile: undefined

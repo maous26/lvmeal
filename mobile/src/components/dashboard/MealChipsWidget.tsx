@@ -1,11 +1,7 @@
 /**
- * MealChipsWidget - Professional meal type selector
+ * MealChipsWidget - Single button to navigate to Meals screen
  *
- * Features:
- * - Modern pill design
- * - Clear active/inactive states
- * - Calorie badges when data exists
- * - Smooth tap interactions
+ * Simplified: One button "Elabore tes repas" with summary of today's meals
  */
 
 import React from 'react'
@@ -15,7 +11,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native'
-import { Plus, Check } from 'lucide-react-native'
+import { ChevronRight, Utensils } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius, shadows } from '../../constants/theme'
 import type { MealType } from '../../types'
@@ -29,194 +25,124 @@ interface MealData {
 interface MealChipsWidgetProps {
   meals: MealData[]
   onMealPress: (type: MealType) => void
+  onNavigateToMeals?: () => void
 }
 
-const mealConfig: Record<MealType, { label: string; icon: string; time: string }> = {
-  breakfast: { label: 'Petit-dej', icon: '☀️', time: '7h-10h' },
-  lunch: { label: 'Dejeuner', icon: '🍽️', time: '12h-14h' },
-  snack: { label: 'Collation', icon: '🍎', time: '16h-17h' },
-  dinner: { label: 'Diner', icon: '🌙', time: '19h-21h' },
+const mealIcons: Record<MealType, string> = {
+  breakfast: '☀️',
+  lunch: '🍽️',
+  snack: '🍎',
+  dinner: '🌙',
 }
 
-function MealChip({
-  type,
-  calories,
-  mealsCount,
-  onPress,
-}: {
-  type: MealType
-  calories: number
-  mealsCount: number
-  onPress: () => void
-}) {
-  const config = mealConfig[type]
-  const hasData = calories > 0
+export default function MealChipsWidget({ meals, onMealPress, onNavigateToMeals }: MealChipsWidgetProps) {
+  const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0)
+  const filledMeals = meals.filter(m => m.calories > 0)
+  const filledCount = filledMeals.length
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    onPress()
+    if (onNavigateToMeals) {
+      onNavigateToMeals()
+    } else {
+      // Fallback: navigate to first unfilled meal or lunch by default
+      const unfilledMeal = meals.find(m => m.calories === 0)
+      onMealPress(unfilledMeal?.type || 'lunch')
+    }
   }
 
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.chip,
-        hasData && styles.chipFilled,
-        pressed && styles.chipPressed,
+        styles.container,
+        pressed && styles.containerPressed,
       ]}
       onPress={handlePress}
     >
-      {/* Icon */}
-      <View style={[styles.iconContainer, hasData && styles.iconContainerFilled]}>
-        <Text style={styles.icon}>{config.icon}</Text>
+      <View style={styles.iconContainer}>
+        <Utensils size={22} color={colors.accent.primary} />
       </View>
 
-      {/* Content */}
-      <View style={styles.chipContent}>
-        <Text style={[styles.chipLabel, hasData && styles.chipLabelFilled]}>
-          {config.label}
-        </Text>
-        {hasData ? (
-          <Text style={styles.chipCalories}>{calories} kcal</Text>
-        ) : (
-          <Text style={styles.chipTime}>{config.time}</Text>
-        )}
+      <View style={styles.content}>
+        <Text style={styles.title}>Elabore tes repas</Text>
+        <View style={styles.summaryRow}>
+          {filledCount > 0 ? (
+            <>
+              <View style={styles.mealsIcons}>
+                {filledMeals.slice(0, 4).map((meal) => (
+                  <Text key={meal.type} style={styles.mealIcon}>
+                    {mealIcons[meal.type]}
+                  </Text>
+                ))}
+              </View>
+              <Text style={styles.summaryText}>
+                {filledCount}/4 repas · {totalCalories} kcal
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.summaryTextEmpty}>
+              Aucun repas enregistre
+            </Text>
+          )}
+        </View>
       </View>
 
-      {/* Status indicator */}
-      <View style={[styles.statusIndicator, hasData && styles.statusIndicatorFilled]}>
-        {hasData ? (
-          <Check size={12} color="#FFFFFF" strokeWidth={3} />
-        ) : (
-          <Plus size={12} color={colors.text.muted} strokeWidth={2} />
-        )}
-      </View>
+      <ChevronRight size={20} color={colors.text.muted} />
     </Pressable>
-  )
-}
-
-export default function MealChipsWidget({ meals, onMealPress }: MealChipsWidgetProps) {
-  const getMealData = (type: MealType): MealData => {
-    return meals.find(m => m.type === type) || { type, calories: 0, mealsCount: 0 }
-  }
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tes repas du jour</Text>
-      <View style={styles.chipsContainer}>
-        <View style={styles.chipsRow}>
-          <MealChip
-            type="breakfast"
-            calories={getMealData('breakfast').calories}
-            mealsCount={getMealData('breakfast').mealsCount}
-            onPress={() => onMealPress('breakfast')}
-          />
-          <MealChip
-            type="lunch"
-            calories={getMealData('lunch').calories}
-            mealsCount={getMealData('lunch').mealsCount}
-            onPress={() => onMealPress('lunch')}
-          />
-        </View>
-        <View style={styles.chipsRow}>
-          <MealChip
-            type="snack"
-            calories={getMealData('snack').calories}
-            mealsCount={getMealData('snack').mealsCount}
-            onPress={() => onMealPress('snack')}
-          />
-          <MealChip
-            type="dinner"
-            calories={getMealData('dinner').calories}
-            mealsCount={getMealData('dinner').mealsCount}
-            onPress={() => onMealPress('dinner')}
-          />
-        </View>
-      </View>
-    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: spacing.sm,
-  },
-  title: {
-    ...typography.smallMedium,
-    color: colors.text.tertiary,
-    marginBottom: spacing.sm,
-  },
-  chipsContainer: {
-    gap: spacing.sm,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  chip: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.default,
     backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border.light,
-    gap: spacing.sm,
+    gap: spacing.md,
+    marginTop: spacing.sm,
     ...shadows.xs,
   },
-  chipFilled: {
-    backgroundColor: colors.accent.light,
-    borderColor: colors.accent.primary + '40',
-  },
-  chipPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+  containerPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
   iconContainer: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: radius.md,
-    backgroundColor: colors.bg.tertiary,
+    backgroundColor: colors.accent.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconContainerFilled: {
-    backgroundColor: colors.accent.primary + '20',
-  },
-  icon: {
-    fontSize: 18,
-  },
-  chipContent: {
+  content: {
     flex: 1,
   },
-  chipLabel: {
-    ...typography.smallMedium,
+  title: {
+    ...typography.bodyMedium,
     color: colors.text.primary,
+    marginBottom: 2,
   },
-  chipLabelFilled: {
-    color: colors.accent.primary,
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  chipTime: {
+  mealsIcons: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  mealIcon: {
+    fontSize: 14,
+  },
+  summaryText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  summaryTextEmpty: {
     ...typography.caption,
     color: colors.text.muted,
-    marginTop: 2,
-  },
-  chipCalories: {
-    ...typography.caption,
-    color: colors.accent.primary,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  statusIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: radius.full,
-    backgroundColor: colors.bg.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusIndicatorFilled: {
-    backgroundColor: colors.success,
   },
 })

@@ -5,11 +5,12 @@
  * - Runs in background without blocking UI
  * - Batches requests to reduce API calls
  * - Persists results to Zustand store
+ * - Filters out unhealthy recipes (too sweet/salty) based on RAG criteria
  */
 
 import { useGustarStore, type EnrichedGustarRecipe } from '../stores/gustar-store'
 import { enrichRecipesBatch, hasOpenAIApiKey, type RecipeToEnrich } from './ai-service'
-import type { GustarRecipe } from './gustar-recipes'
+import type { GustarRecipe, GustarNutrition } from './gustar-recipes'
 import type { Recipe } from '../types'
 
 // Enrichment queue state
@@ -19,6 +20,192 @@ let enrichmentQueue: Array<{ recipe: Recipe | GustarRecipe; resolve: (result: En
 // Batch size and delay
 const BATCH_SIZE = 3
 const BATCH_DELAY_MS = 500
+
+// ============= HEALTH FILTERS (based on RAG/OMS recommendations) =============
+
+// Maximum sugar per serving (grams) - OMS recommends limiting added sugars
+const MAX_SUGAR_SAVORY = 15 // For savory dishes
+const MAX_SUGAR_DESSERT = 25 // For desserts (more lenient)
+
+// Maximum sodium per serving (mg) - OMS recommends <2000mg/day
+const MAX_SODIUM_PER_SERVING = 600
+
+// Ingredients that indicate high sugar content (German terms from Gustar)
+const HIGH_SUGAR_INGREDIENTS = [
+  // German terms
+  'zucker', 'honig', 'sirup', 'karamell', 'schokolade', 'marmelade', 'nutella',
+  'ahornsirup', 'agavensirup', 'puderzucker', 'kandiszucker', 'rohrzucker',
+  // Sauces
+  'ketchup', 'barbecue', 'teriyaki', 'sweet chili', 'süß-sauer',
+  // French terms (for already enriched)
+  'sucre', 'miel', 'sirop', 'caramel', 'confiture', 'chocolat',
+]
+
+// Ingredients that indicate high sodium content (German terms from Gustar)
+const HIGH_SODIUM_INGREDIENTS = [
+  // German terms
+  'brühwürfel', 'bouillon', 'sojasauce', 'sojasoße', 'oliven', 'sardellen', 'anchovis',
+  'speck', 'bacon', 'schinken', 'salami', 'wurst', 'parmesan', 'feta', 'roquefort',
+  'kapern', 'essiggurken', 'senf',
+  // French terms
+  'bouillon cube', 'sauce soja', 'anchois', 'lardons', 'jambon', 'bacon',
+]
+
+// Recipe categories to exclude from daily plans (only for cheat meals)
+const EXCLUDED_CATEGORIES = [
+  // German dessert/pastry terms
+  'kuchen', 'torte', 'dessert', 'nachtisch', 'süßspeise', 'gebäck', 'plätzchen',
+  'muffin', 'brownie', 'cookie', 'mousse', 'creme', 'eis', 'sorbet',
+  // Party/heavy dishes
+  'raclette', 'fondue', 'tartiflette', 'burger', 'pizza',
+  // French terms
+  'gateau', 'tarte sucree', 'patisserie', 'confiserie',
+]
+
+/**
+ * Check if a recipe is too sweet based on ingredients and nutrition
+ */
+function isTooSweet(recipe: Recipe | GustarRecipe): boolean {
+  const title = recipe.title.toLowerCase()
+  const ingredients = getIngredientNames(recipe)
+
+  // Check nutrition if available
+  const nutrition = getNutrition(recipe)
+  if (nutrition?.sugar !== undefined && nutrition.sugar > MAX_SUGAR_SAVORY) {
+    // Allow desserts to have more sugar
+    if (!isLikelyDessert(title)) {
+      console.log(`GustarEnrichment: Filtered ${recipe.title} - too much sugar (${nutrition.sugar}g)`)
+      return true
+    } else if (nutrition.sugar > MAX_SUGAR_DESSERT) {
+      console.log(`GustarEnrichment: Filtered ${recipe.title} - dessert too sweet (${nutrition.sugar}g)`)
+      return true
+    }
+  }
+
+  // Count high-sugar ingredients
+  const sugarIngredientCount = HIGH_SUGAR_INGREDIENTS.filter(ing =>
+    ingredients.some(i => i.includes(ing)) || title.includes(ing)
+  ).length
+
+  // If 3+ high-sugar ingredients in a savory dish, it's probably too sweet
+  if (sugarIngredientCount >= 3 && !isLikelyDessert(title)) {
+    console.log(`GustarEnrichment: Filtered ${recipe.title} - too many sweet ingredients (${sugarIngredientCount})`)
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Check if a recipe is too salty based on ingredients and nutrition
+ */
+function isTooSalty(recipe: Recipe | GustarRecipe): boolean {
+  const title = recipe.title.toLowerCase()
+  const ingredients = getIngredientNames(recipe)
+
+  // Check nutrition if available
+  const nutrition = getNutrition(recipe)
+  if (nutrition?.sodium !== undefined && nutrition.sodium > MAX_SODIUM_PER_SERVING) {
+    console.log(`GustarEnrichment: Filtered ${recipe.title} - too much sodium (${nutrition.sodium}mg)`)
+    return true
+  }
+
+  // Count high-sodium ingredients
+  const saltIngredientCount = HIGH_SODIUM_INGREDIENTS.filter(ing =>
+    ingredients.some(i => i.includes(ing)) || title.includes(ing)
+  ).length
+
+  // If 3+ high-sodium ingredients, it's probably too salty
+  if (saltIngredientCount >= 3) {
+    console.log(`GustarEnrichment: Filtered ${recipe.title} - too many salty ingredients (${saltIngredientCount})`)
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Check if recipe belongs to an excluded category (party dishes, heavy desserts)
+ */
+function isExcludedCategory(recipe: Recipe | GustarRecipe): boolean {
+  const title = recipe.title.toLowerCase()
+
+  for (const category of EXCLUDED_CATEGORIES) {
+    if (title.includes(category)) {
+      console.log(`GustarEnrichment: Filtered ${recipe.title} - excluded category (${category})`)
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Check if a recipe title suggests it's a dessert
+ */
+function isLikelyDessert(title: string): boolean {
+  const dessertTerms = ['kuchen', 'torte', 'dessert', 'nachtisch', 'süß', 'mousse',
+    'pudding', 'eis', 'sorbet', 'creme', 'gateau', 'tarte', 'cake', 'brownie', 'cookie']
+  return dessertTerms.some(term => title.includes(term))
+}
+
+/**
+ * Get ingredient names as lowercase strings
+ */
+function getIngredientNames(recipe: Recipe | GustarRecipe): string[] {
+  if ('image' in recipe) {
+    // GustarRecipe
+    return (recipe as GustarRecipe).ingredients.map(i => i.name.toLowerCase())
+  } else {
+    // Recipe
+    return (recipe as Recipe).ingredients.map(i => i.name.toLowerCase())
+  }
+}
+
+/**
+ * Get nutrition from recipe if available
+ */
+function getNutrition(recipe: Recipe | GustarRecipe): GustarNutrition | null {
+  if ('image' in recipe) {
+    return (recipe as GustarRecipe).nutrition || null
+  } else {
+    const r = recipe as Recipe
+    if (r.nutritionPerServing) {
+      return {
+        calories: r.nutritionPerServing.calories,
+        proteins: r.nutritionPerServing.proteins,
+        carbs: r.nutritionPerServing.carbs,
+        fats: r.nutritionPerServing.fats,
+        sugar: (r.nutritionPerServing as { sugar?: number }).sugar,
+        sodium: (r.nutritionPerServing as { sodium?: number }).sodium,
+      }
+    }
+    return null
+  }
+}
+
+/**
+ * Check if a recipe should be enriched based on health criteria
+ * Returns true if recipe passes all health filters
+ */
+export function shouldEnrichRecipe(recipe: Recipe | GustarRecipe): boolean {
+  // Skip excluded categories (party dishes, heavy desserts)
+  if (isExcludedCategory(recipe)) {
+    return false
+  }
+
+  // Skip recipes that are too sweet
+  if (isTooSweet(recipe)) {
+    return false
+  }
+
+  // Skip recipes that are too salty
+  if (isTooSalty(recipe)) {
+    return false
+  }
+
+  return true
+}
 
 /**
  * Check if a recipe is already enriched in the store
@@ -225,12 +412,18 @@ async function processEnrichmentQueue() {
 /**
  * Queue a recipe for enrichment (non-blocking)
  * Returns immediately if already enriched, otherwise queues for background processing
+ * Skips recipes that don't pass health filters (too sweet/salty)
  */
 export function queueForEnrichment(recipe: Recipe | GustarRecipe): Promise<EnrichedGustarRecipe | null> {
   // Check if already enriched
   const cached = getEnrichedRecipe(recipe.id)
   if (cached) {
     return Promise.resolve(cached)
+  }
+
+  // Check if recipe passes health filters
+  if (!shouldEnrichRecipe(recipe)) {
+    return Promise.resolve(null)
   }
 
   // Add to queue
@@ -243,17 +436,27 @@ export function queueForEnrichment(recipe: Recipe | GustarRecipe): Promise<Enric
 
 /**
  * Queue multiple recipes for enrichment
+ * Applies health filters to skip unhealthy recipes (too sweet/salty)
  */
 export function queueRecipesForEnrichment(recipes: Array<Recipe | GustarRecipe>): void {
-  // Filter out already enriched
-  const toQueue = recipes.filter((r) => !isRecipeEnriched(r.id))
+  // Filter out already enriched AND unhealthy recipes
+  const toQueue = recipes.filter((r) => {
+    if (isRecipeEnriched(r.id)) return false
+    if (!shouldEnrichRecipe(r)) return false
+    return true
+  })
+
+  const filtered = recipes.length - toQueue.length
+  if (filtered > 0) {
+    console.log(`GustarEnrichment: Filtered ${filtered} recipes (already enriched or unhealthy)`)
+  }
 
   if (toQueue.length === 0) {
-    console.log('GustarEnrichment: All recipes already enriched')
+    console.log('GustarEnrichment: No recipes to enrich after filtering')
     return
   }
 
-  console.log(`GustarEnrichment: Queueing ${toQueue.length} recipes for enrichment`)
+  console.log(`GustarEnrichment: Queueing ${toQueue.length} healthy recipes for enrichment`)
 
   toQueue.forEach((recipe) => {
     enrichmentQueue.push({
@@ -269,6 +472,7 @@ export function queueRecipesForEnrichment(recipes: Array<Recipe | GustarRecipe>)
 /**
  * Enrich recipes synchronously (blocks until done)
  * Use sparingly - prefer queueForEnrichment for better UX
+ * Applies health filters to skip unhealthy recipes
  */
 export async function enrichRecipesSync(
   recipes: Array<Recipe | GustarRecipe>
@@ -289,8 +493,15 @@ export async function enrichRecipesSync(
     }
   })
 
-  // Filter out already enriched
-  const toEnrich = recipes.filter((r) => !result.has(r.id))
+  // Filter out already enriched AND unhealthy recipes
+  const toEnrich = recipes.filter((r) => {
+    if (result.has(r.id)) return false
+    if (!shouldEnrichRecipe(r)) {
+      console.log(`GustarEnrichment: Skipping unhealthy recipe: ${r.title}`)
+      return false
+    }
+    return true
+  })
 
   if (toEnrich.length === 0) {
     return result

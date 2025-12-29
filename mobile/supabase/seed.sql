@@ -181,5 +181,104 @@ INSERT INTO knowledge_base (content, category, source, source_title, metadata) V
 ('Adaptation du programme selon le profil: Surpoids = privilegier exercices sans impact (marche, velo, piscine), proteger les articulations. Douleurs articulaires = mobilite douce, renforcement musculaire cible. Fatigue chronique = seances courtes, recuperation prioritaire. Stress eleve = yoga, marche nature, respiration.',
 'sport', 'expert', 'LymIA - Adaptation profil sport', '{"topic": "sport_profile_adaptation", "program": "sport_initiation", "confidence": 0.90}');
 
+-- ============= HABITUDES ALIMENTAIRES FRANÇAISES =============
+
+-- Structure des repas français
+INSERT INTO knowledge_base (content, category, source, source_title, metadata) VALUES
+
+-- Petit-déjeuner français
+('Le petit-dejeuner francais traditionnel (34% des Francais) se compose de tartines beurrees avec confiture ou miel, cafe ou the, et jus de fruit. 92% des petits-dejeuners sont pris a domicile. Les viennoiseries (croissants, pains au chocolat) sont reservees au week-end ou occasions speciales. 27% des Francais optent pour cereales ou viennoiseries industrielles. Le petit-dejeuner francais est traditionnellement sucre, contrairement aux pays anglo-saxons.',
+'food_habits', 'ipsos', 'IPSOS - Petits-dejeuners francais', '{"meal_type": "breakfast", "complexity": "basique", "prep_time": 10, "confidence": 0.95}'),
+
+-- Petit-déjeuner basique - recettes simples
+('Recettes petit-dejeuner basique francais (moins de 4 ingredients): Tartines beurre-confiture (pain, beurre, confiture). Tartines miel (pain, beurre, miel). Bol de cereales (cereales, lait). Yaourt nature avec miel (yaourt, miel). Pain grille avec pate a tartiner. Cafe au lait simple. The avec tartines. Ces recettes prennent moins de 5-10 minutes.',
+'recipes_basique', 'expert', 'LymIA - Petit-dej basique', '{"meal_type": "breakfast", "complexity": "basique", "max_ingredients": 4, "prep_time": 10, "confidence": 0.90}'),
+
+-- Petit-déjeuner élaboré
+('Recettes petit-dejeuner elabore francais (plus de 4 ingredients): Oeufs brouilles aux herbes avec toast (oeufs, beurre, ciboulette, pain, sel, poivre). Bowl petit-dej complet (flocons avoine, lait, banane, miel, fruits rouges, graines). Crepes maison (farine, oeufs, lait, sucre, beurre). Pancakes aux myrtilles. Omelette jambon-fromage. Ces recettes prennent 15-25 minutes.',
+'recipes_elabore', 'expert', 'LymIA - Petit-dej elabore', '{"meal_type": "breakfast", "complexity": "elabore", "min_ingredients": 5, "prep_time": 20, "confidence": 0.90}'),
+
+-- Déjeuner français - structure
+('Le dejeuner francais traditionnel se prend a 13h (50% des Francais dejeunent a cette heure). Structure classique: entree (salade, soupe), plat principal (proteine + feculents + legumes), fromage optionnel, dessert. Aujourd''hui, beaucoup simplifient en un plat unique equilibre. Le dejeuner represente environ 35% de l''apport calorique journalier.',
+'food_habits', 'insee', 'INSEE - Temps de l''alimentation', '{"meal_type": "lunch", "confidence": 0.95}'),
+
+-- Déjeuner basique - recettes simples
+('Recettes dejeuner basique francais (moins de 4 ingredients principaux, hors sel/poivre/huile): Pates au beurre et parmesan. Riz au thon. Omelette nature. Croque-monsieur (pain, jambon, fromage). Salade composee simple (salade, tomate, thon). Steak hache-puree. Poulet roti avec riz. Saucisse-lentilles. Quiche lorraine (pate, oeufs, lardons, creme). Ces plats prennent 10-20 minutes.',
+'recipes_basique', 'expert', 'LymIA - Dejeuner basique', '{"meal_type": "lunch", "complexity": "basique", "max_ingredients": 4, "prep_time": 20, "confidence": 0.90}'),
+
+-- Déjeuner élaboré
+('Recettes dejeuner elabore francais (plus de 4 ingredients): Poulet basquaise (poulet, poivrons, tomates, oignons, ail, herbes). Boeuf bourguignon (boeuf, vin, carottes, oignons, champignons, lardons). Blanquette de veau. Gratin dauphinois complet. Salade nicoise (salade, thon, oeufs, olives, tomates, haricots verts, anchois). Hachis parmentier (viande, puree, oignons, herbes). Ces plats prennent 30-60 minutes ou plus.',
+'recipes_elabore', 'expert', 'LymIA - Dejeuner elabore', '{"meal_type": "lunch", "complexity": "elabore", "min_ingredients": 5, "prep_time": 45, "confidence": 0.90}'),
+
+-- Collation/Goûter français
+('Le gouter francais (vers 16h) est une tradition nationale servie dans les ecoles depuis 1941. Composition typique: 2 aliments parmi fruits, produits laitiers, produits cerealiers. Exemples: yaourt nature + fruit, pain + chocolat, compote + biscuit. Eviter les produits industriels trop sucres. Le gouter aide a eviter les fringales du soir.',
+'food_habits', 'expert', 'PNNS - Gouter francais', '{"meal_type": "snack", "complexity": "basique", "prep_time": 5, "confidence": 0.95}'),
+
+-- Collation basique
+('Collations basiques francaises (1-2 ingredients): Yaourt nature. Pomme ou banane. Fromage blanc. Poignee de noix (30g). Pain avec carre de chocolat. Compote. Tranche de pain d''epices. Ces collations prennent moins de 5 minutes et apportent 100-200 kcal.',
+'recipes_basique', 'expert', 'LymIA - Collation basique', '{"meal_type": "snack", "complexity": "basique", "max_ingredients": 2, "prep_time": 5, "confidence": 0.95}'),
+
+-- Dîner français - structure
+('Le diner francais est traditionnellement plus leger que le dejeuner. Structure: soupe ou salade, plat leger, laitage ou fruit. Manger leger le soir favorise un meilleur sommeil car le corps a plus de mal a digerer un repas copieux en fin de journee. Le diner represente environ 30% de l''apport calorique.',
+'food_habits', 'expert', 'Nutrition - Diner francais', '{"meal_type": "dinner", "confidence": 0.90}'),
+
+-- Dîner basique
+('Recettes diner basique francais (moins de 4 ingredients): Soupe de legumes (legumes, bouillon). Omelette aux fines herbes. Salade verte avec vinaigrette. Poisson papillote (poisson, citron, herbes). Oeufs a la coque avec mouillettes. Gaspacho. Tartine de chevre chaud sur salade. Veloute (legume au choix, creme). Ces plats prennent 10-20 minutes.',
+'recipes_basique', 'expert', 'LymIA - Diner basique', '{"meal_type": "dinner", "complexity": "basique", "max_ingredients": 4, "prep_time": 20, "confidence": 0.90}'),
+
+-- Dîner élaboré
+('Recettes diner elabore francais (plus de 4 ingredients): Ratatouille (courgettes, aubergines, poivrons, tomates, oignons, ail, herbes). Gratin de legumes. Pot-au-feu (boeuf, carottes, poireaux, navets, pommes de terre). Soupe au pistou. Tarte aux legumes. Risotto aux champignons. Curry de legumes. Ces plats prennent 30-45 minutes.',
+'recipes_elabore', 'expert', 'LymIA - Diner elabore', '{"meal_type": "dinner", "complexity": "elabore", "min_ingredients": 5, "prep_time": 40, "confidence": 0.90}'),
+
+-- Aliments de base français
+('Aliments les plus consommes en France (base du quotidien): FECULENTS: pates, riz, pommes de terre, pain. PROTEINES: poulet, boeuf hache, oeufs, thon, jambon. LEGUMES: tomates, carottes, courgettes, haricots verts, salade. PRODUITS LAITIERS: yaourt, fromage, lait, beurre, creme. FRUITS: pommes, bananes, oranges. Ces ingredients forment la base de 80% des repas francais.',
+'food_habits', 'insee', 'INSEE - Consommation alimentaire', '{"topic": "staple_foods", "confidence": 0.95}'),
+
+-- Plats préférés des Français
+('Top 10 des plats preferes des Francais: 1. Raclette (hiver, convivial). 2. Magret de canard. 3. Moules-frites. 4. Couscous (adoption). 5. Blanquette de veau. 6. Boeuf bourguignon. 7. Gratin dauphinois. 8. Steak-frites. 9. Poulet roti. 10. Tartiflette. Les plats mijotes et conviviaux dominent, souvent associes aux repas en famille.',
+'food_habits', 'statista', 'Statista - Plats preferes francais', '{"topic": "favorite_dishes", "confidence": 0.90}'),
+
+-- Plats rapides du quotidien
+('Plats rapides du quotidien francais (moins de 20 min): Pates carbonara express (pates, lardons, oeuf, parmesan). Riz cantonnais simple (riz, oeufs, petits pois, jambon). Croque-monsieur. Salade cesar rapide. Wrap poulet-crudites. Tortilla espagnole (oeufs, pommes de terre). Pates pesto. Ces plats repondent aux contraintes de temps des actifs.',
+'recipes_basique', 'expert', 'LymIA - Plats rapides quotidien', '{"complexity": "basique", "prep_time": 20, "confidence": 0.90}'),
+
+-- Évolution des habitudes
+('Evolution des habitudes alimentaires francaises: le temps de preparation des repas a diminue de 25% entre 1986 et 2010. La consommation de plats prepares augmente de 4.4%/an. 60% des Francais consomment pates, riz ou legumes frais chaque semaine. Les proteines vegetales progressent: 31% consomment des desserts vegetaux, 28% des alternatives a la viande.',
+'food_habits', 'insee', 'INSEE - Evolution alimentation', '{"topic": "food_trends", "confidence": 0.90}'),
+
+-- Critères de choix actuels
+('Criteres de choix alimentaires des Francais en 2024: 1. Prix (contexte inflation). 2. Sante/equilibre (59% prioritaire). 3. Diversite des produits (47%). 4. Saisonnalite (43%). 5. Origine locale. 36% ont augmente leur consommation de legumes frais, 23% les legumineuses. Le Nutri-Score influence de plus en plus les achats.',
+'food_habits', 'harris', 'Harris Interactive - Alimentation 2024', '{"topic": "food_criteria_2024", "confidence": 0.90}'),
+
+-- Niveau de cuisine
+('Adaptation des recettes selon le niveau de cuisine: DEBUTANT = recettes avec moins de 5 etapes, cuisson simple (poele, four basique), pas de techniques complexes. INTERMEDIAIRE = peut gerer plusieurs preparations simultanees, maitrise les bases (sauces, cuissons variees). AVANCE = recettes elaborees, techniques precises (temperatures, timing), presentations soignees.',
+'cooking_level', 'expert', 'LymIA - Niveaux cuisine', '{"topic": "cooking_levels", "confidence": 0.90}'),
+
+-- Temps de cuisine réaliste
+('Temps de cuisine realiste par profil: PRESSE (moins de 15 min) = recettes express, preparation minimale. QUOTIDIEN (15-30 min) = majorite des plats basiques, cuisson simple. WEEK-END (30-60 min) = plats elabores, mijotes. Adapter les suggestions au temps disponible declare par l''utilisateur pour garantir l''adherence au plan.',
+'cooking_time', 'expert', 'LymIA - Temps cuisine', '{"topic": "cooking_time", "confidence": 0.90}'),
+
+-- ============= CRITÈRES SANTÉ RECETTES =============
+
+-- Critères de filtrage des recettes
+('Criteres de sante pour filtrer les recettes: SUCRE = maximum 15g de sucre par portion pour un plat sale, maximum 25g pour un dessert. SODIUM = maximum 600mg par portion (OMS recommande moins de 2000mg/jour). GRAISSES SATUREES = maximum 5g par portion. Privilegier les recettes avec Nutri-Score A ou B. Eviter les plats avec plus de 30% des calories provenant du sucre ajoute.',
+'health_criteria', 'oms', 'OMS - Recommandations nutritionnelles', '{"topic": "recipe_health_filters", "max_sugar_savory": 15, "max_sugar_dessert": 25, "max_sodium": 600, "max_saturated_fat": 5, "confidence": 0.95}'),
+
+-- Ingrédients à surveiller
+('Ingredients indicateurs de recettes trop sucrees: sucre, cassonade, miel, sirop (erable, agave), caramel, chocolat au lait, confiture, pate a tartiner, fruits confits, sucre glace. Attention aux sauces: ketchup, sauce barbecue, sauce aigre-douce, teriyaki. Pour les plats sales, limiter ces ingredients ou les remplacer par des alternatives moins sucrees.',
+'health_criteria', 'expert', 'LymIA - Ingredients sucres', '{"topic": "high_sugar_ingredients", "category": "sugar_watch", "confidence": 0.90}'),
+
+-- Ingrédients salés à surveiller
+('Ingredients indicateurs de recettes trop salees: bouillon cube (souvent 5g sel/cube), sauce soja (1g sel/cuillere), olives saumurees, anchois, charcuterie (jambon, bacon, lardons), fromages affines (parmesan, roquefort, feta), cornichons, capres, moutarde. Preferer les versions allégées en sel ou reduire les quantites de moitie.',
+'health_criteria', 'expert', 'LymIA - Ingredients sales', '{"topic": "high_sodium_ingredients", "category": "sodium_watch", "confidence": 0.90}'),
+
+-- Recettes à privilégier pour enrichissement
+('Recettes prioritaires pour enrichissement Gustar (equilibrees, adaptees au quotidien francais): Plats de legumes (ratatouille, gratin courgettes, poelees). Proteines maigres (poulet, poisson blanc, tofu). Salades composees. Soupes maison. Plats uniques equilibres (bowl, buddha bowl). Omelettes aux legumes. Pates aux legumes. Eviter: gratins tres fromages, plats en sauce creme, fritures, plats sucres-sales excessifs.',
+'enrichment_priority', 'expert', 'LymIA - Recettes prioritaires enrichissement', '{"topic": "enrichment_priorities", "prefer": ["legumes", "proteines_maigres", "salades", "soupes", "bowls"], "avoid": ["gratins_fromage", "sauces_creme", "fritures", "sucre_sale"], "confidence": 0.90}'),
+
+-- Catégories à exclure de l'enrichissement
+('Categories de recettes a ne PAS enrichir (trop riches ou non adaptees): Desserts tres sucres (gateaux, tartes sucrees, mousses). Plats de fete (raclette, fondue, tartiflette). Fast-food adapte (burgers, pizzas riches). Cocktails et boissons sucrees. Confiseries. Patisseries. Ces plats peuvent etre proposes occasionnellement (repas plaisir) mais ne doivent pas etre dans le plan quotidien.',
+'enrichment_exclusion', 'expert', 'LymIA - Recettes exclues enrichissement', '{"topic": "enrichment_exclusions", "excluded_categories": ["desserts_riches", "plats_fete", "fast_food", "patisseries", "confiseries"], "confidence": 0.95}');
+
 -- Note: Les embeddings seront generes via le script d'ingestion
 -- qui appellera l'API OpenAI pour chaque entree
