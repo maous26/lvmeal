@@ -87,7 +87,7 @@ const staticToSuggestion = (recipe: StaticEnrichedRecipe, mealType: MealType): S
     reason: recipe.descriptionFr?.substring(0, 60) + '...' || 'Recette recommandee',
     tags: [recipe.difficulty === 'easy' ? 'Facile' : recipe.difficulty === 'hard' ? 'Difficile' : 'Moyen', `${recipe.prepTime}min`],
     imageUrl: recipe.imageUrl,
-    rating: 4.5,
+    // No fake rating - only AI recipes that have been actually rated show stars
     source: recipe.source,
   }
 }

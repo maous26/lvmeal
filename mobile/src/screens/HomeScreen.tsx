@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Flame, Dumbbell, CalendarRange, Sparkles } from 'lucide-react-native'
+import { Flame, Dumbbell, CalendarRange, Sparkles, Calendar } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, CircularProgress, ProgressBar } from '../components/ui'
@@ -60,7 +60,10 @@ export default function HomeScreen() {
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
-  const goals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
+  const baseGoals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
+  // Effective calories include sport bonus if enrolled in sport program
+  const effectiveCalories = baseGoals.calories + (baseGoals.sportCaloriesBonus || 0)
+  const goals = { ...baseGoals, calories: effectiveCalories }
 
   const greeting = getGreeting()
   const userName = profile?.firstName || profile?.name?.split(' ')[0] || 'Utilisateur'
@@ -101,6 +104,11 @@ export default function HomeScreen() {
     navigation.navigate('SportInitiation')
   }
 
+  const handleNavigateToCalendar = () => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate('Calendar')
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -110,10 +118,13 @@ export default function HomeScreen() {
       >
         {/* 1. Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{greeting},</Text>
             <Text style={styles.userName}>{userName}</Text>
           </View>
+          <Pressable style={styles.calendarIconButton} onPress={handleNavigateToCalendar}>
+            <Calendar size={24} color={colors.accent.primary} />
+          </Pressable>
         </View>
 
         {/* 2. Main Calories Card - Most important, first thing user sees */}
@@ -335,7 +346,19 @@ const styles = StyleSheet.create({
   },
   // Header
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: spacing.lg,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  calendarIconButton: {
+    padding: spacing.sm,
+    backgroundColor: colors.accent.light,
+    borderRadius: radius.full,
+    marginLeft: spacing.md,
   },
   greeting: {
     ...typography.body,
@@ -428,6 +451,22 @@ const styles = StyleSheet.create({
   planButtonText: {
     ...typography.smallMedium,
     color: '#10B981',
+  },
+  calendarButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.accent.light,
+    borderWidth: 1,
+    borderColor: colors.accent.primary + '30',
+    borderRadius: radius.lg,
+  },
+  calendarButtonText: {
+    ...typography.smallMedium,
+    color: colors.accent.primary,
   },
   // Macros
   macrosCard: {

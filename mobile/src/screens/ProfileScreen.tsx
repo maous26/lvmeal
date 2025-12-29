@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native'
 import {
   User,
@@ -338,11 +339,13 @@ export default function ProfileScreen() {
                   : 'Programme pour reprendre le sport'}
               </Text>
             </View>
-            <View style={[styles.programToggle, isSportInitiationEnrolled && styles.programToggleActive]}>
-              <Text style={[styles.programToggleText, isSportInitiationEnrolled && styles.programToggleTextActive]}>
-                {isSportInitiationEnrolled ? 'Actif' : 'Inactif'}
-              </Text>
-            </View>
+            <Switch
+              value={isSportInitiationEnrolled}
+              onValueChange={handleToggleSportInitiation}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
+              thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
           </TouchableOpacity>
         </Card>
 
@@ -627,22 +630,5 @@ const styles = StyleSheet.create({
     ...typography.small,
     color: colors.text.tertiary,
     marginTop: 2,
-  },
-  programToggle: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.bg.tertiary,
-  },
-  programToggleActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  programToggleText: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-    fontWeight: '500',
-  },
-  programToggleTextActive: {
-    color: colors.success,
   },
 })

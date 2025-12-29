@@ -15,6 +15,7 @@
 
 import OpenAI from 'openai'
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry } from './supabase-client'
+import { buildPhasePromptModifier, getPhaseContext, PhaseMessages } from './phase-context'
 import type {
   UserProfile,
   NutritionInfo,
@@ -371,6 +372,7 @@ Reponds en JSON:
 
 /**
  * Get personalized coaching advice
+ * Adapts messaging based on MetabolicBoost phase if enrolled
  */
 export async function getCoachingAdvice(
   context: UserContext,
@@ -391,6 +393,19 @@ export async function getCoachingAdvice(
   const proteinRatio = profile.nutritionalNeeds
     ? todayNutrition.proteins / profile.nutritionalNeeds.proteins
     : 0
+
+  // Build phase-specific context if user is in a program
+  let phaseModifier = ''
+  if (programProgress?.type === 'metabolic_boost') {
+    const phaseMap: Record<number, 'discovery' | 'walking' | 'resistance' | 'full_program'> = {
+      1: 'discovery',
+      2: 'walking',
+      3: 'resistance',
+      4: 'full_program',
+    }
+    const phase = phaseMap[programProgress.phase] || 'discovery'
+    phaseModifier = buildPhasePromptModifier(phase, programProgress.weekInPhase)
+  }
 
   const prompt = `Tu es LymIA, coach bien-etre bienveillant. Donne des conseils personnalises.
 
@@ -413,6 +428,7 @@ BIEN-ETRE:
 
 CONNAISSANCES SCIENTIFIQUES:
 ${kbContext}
+${phaseModifier}
 
 INSTRUCTIONS:
 1. Identifie 1-3 conseils PRIORITAIRES bases sur la situation
@@ -422,6 +438,7 @@ INSTRUCTIONS:
 3. Cite les sources scientifiques quand pertinent
 4. Sois bienveillant, jamais culpabilisant
 5. Si streak > 7 jours, felicite!
+${programProgress?.type === 'metabolic_boost' && programProgress.phase === 1 ? '\n6. RAPPEL: Phase 1 = AUCUNE restriction calorique. Ne JAMAIS alerter sur un surplus calorique.' : ''}
 
 Reponds en JSON:
 {
@@ -986,6 +1003,7 @@ export interface ConnectedInsight {
 /**
  * Generate connected insights that explain relationships between features
  * This makes the app feel cohesive - the coach explains WHY things are connected
+ * Adapts to MetabolicBoost phase when applicable
  */
 export async function generateConnectedInsights(
   context: UserContext
@@ -1007,6 +1025,29 @@ export async function generateConnectedInsights(
     ? todayNutrition.proteins / profile.nutritionalNeeds.proteins
     : 0
 
+  // Build phase-specific context if user is in MetabolicBoost program
+  let phaseModifier = ''
+  let phaseSpecificInstructions = ''
+  if (programProgress?.type === 'metabolic_boost') {
+    const phaseMap: Record<number, 'discovery' | 'walking' | 'resistance' | 'full_program'> = {
+      1: 'discovery',
+      2: 'walking',
+      3: 'resistance',
+      4: 'full_program',
+    }
+    const phase = phaseMap[programProgress.phase] || 'discovery'
+    phaseModifier = buildPhasePromptModifier(phase, programProgress.weekInPhase)
+
+    if (programProgress.phase === 1) {
+      phaseSpecificInstructions = `
+IMPORTANT - PHASE 1 METABOLIQUE:
+- NE JAMAIS mentionner de deficit calorique
+- NE JAMAIS culpabiliser sur les calories
+- Focus sur: sommeil, hydratation, habitudes, marche
+- Si surplus calorique: "C'est normal en phase stabilisation"`
+    }
+  }
+
   const prompt = `Tu es LymIA, le coach central de l'app. Ta mission ESSENTIELLE est de CONNECTER les différentes dimensions de la santé pour que l'utilisateur comprenne que tout est lié.
 
 CONTEXTE ACTUEL:
@@ -1024,6 +1065,8 @@ PROFIL:
 
 CONNAISSANCES SCIENTIFIQUES:
 ${kbContext}
+${phaseModifier}
+${phaseSpecificInstructions}
 
 MISSION CRUCIALE:
 Tu dois générer 2-3 messages qui CONNECTENT explicitement les features entre elles.

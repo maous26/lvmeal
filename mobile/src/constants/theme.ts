@@ -2,11 +2,11 @@
 // Direction artistique : Sobre, élégant, professionnel
 
 export const colors = {
-  // Backgrounds - Fond lumineux
+  // Backgrounds - Fond blanc cassé
   bg: {
-    primary: '#F5F7FA',
-    secondary: '#EDF1F7',
-    tertiary: '#E2E8F0',
+    primary: '#FAFAF8',
+    secondary: '#F5F5F3',
+    tertiary: '#EFEFED',
     elevated: '#FFFFFF',
     overlay: 'rgba(15, 50, 80, 0.6)',
   },

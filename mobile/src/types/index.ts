@@ -469,7 +469,7 @@ export interface CaloricBankState {
 // DEVICES
 // =============================================================================
 
-export type DeviceType = 'apple_watch' | 'fitbit' | 'garmin' | 'samsung_health' | 'google_fit'
+export type DeviceType = 'apple_watch' | 'fitbit' | 'garmin' | 'samsung_health' | 'google_fit' | 'phone'
 
 export type DeviceStatus = 'connected' | 'disconnected' | 'syncing' | 'error'
 

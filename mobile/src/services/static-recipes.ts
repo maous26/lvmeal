@@ -131,7 +131,7 @@ export function staticToRecipe(enriched: StaticEnrichedRecipe): Recipe {
     tags: [],
     dietTypes: [],
     allergens: [],
-    rating: 4.5, // Default rating
+    rating: 0, // No rating by default - only show if user rated
     ratingCount: 0,
     isFavorite: false,
     source: enriched.source,

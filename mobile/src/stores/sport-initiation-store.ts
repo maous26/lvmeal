@@ -213,6 +213,58 @@ const getWeekStart = (date: Date) => {
   return d.toISOString().split('T')[0]
 }
 
+/**
+ * Calculate extra calories burned based on sport activity
+ * Uses MET (Metabolic Equivalent of Task) values
+ */
+export function calculateSportCaloriesBurned(
+  phase: SportPhase,
+  weight: number = 70 // kg
+): number {
+  const config = SPORT_PHASE_CONFIGS[phase]
+
+  // MET values for different activities:
+  // - Walking (slow): 2.5 MET
+  // - Walking (moderate): 3.5 MET
+  // - Light exercise/stretching: 2.5 MET
+  // - Bodyweight exercises: 4.0 MET
+
+  // Daily active minutes converted to extra calories
+  // Formula: Calories = MET × weight(kg) × time(hours)
+  const activeMinutes = config.dailyTargets.activeMinutes
+  const stretchingMinutes = config.dailyTargets.stretchingMinutes
+
+  // Average MET based on phase intensity
+  const phaseMET: Record<SportPhase, number> = {
+    activation: 2.5,    // Light walking, stretching
+    movement: 3.0,      // Moderate walking, mobility
+    strengthening: 3.5, // Bodyweight exercises
+    autonomy: 4.0,      // Mixed training
+  }
+
+  const met = phaseMET[phase]
+  const totalMinutes = activeMinutes + stretchingMinutes
+
+  // Calories burned = MET × weight × hours
+  // We subtract 1 MET to account for baseline metabolism already in TDEE
+  const extraCalories = (met - 1) * weight * (totalMinutes / 60)
+
+  return Math.round(extraCalories)
+}
+
+/**
+ * Get the recommended calorie adjustment for sport program
+ * This should be ADDED to the user's daily calorie goal
+ */
+export function getSportCalorieAdjustment(
+  isEnrolled: boolean,
+  phase: SportPhase,
+  weight: number = 70
+): number {
+  if (!isEnrolled) return 0
+  return calculateSportCaloriesBurned(phase, weight)
+}
+
 export const useSportInitiationStore = create<SportInitiationState>()(
   persist(
     (set, get) => ({
@@ -249,6 +301,14 @@ export const useSportInitiationStore = create<SportInitiationState>()(
           preferredActivities: profile?.preferredActivities || [],
           availableMinutesPerDay: profile?.availableMinutesPerDay || 30,
         })
+
+        // Update calorie bonus in user store
+        // Import dynamically to avoid circular dependency
+        const { useUserStore } = require('./user-store')
+        const userState = useUserStore.getState()
+        const weight = userState.profile?.weight || 70
+        const bonus = calculateSportCaloriesBurned('activation', weight)
+        userState.updateSportCalorieBonus(bonus)
       },
 
       unenroll: () => {
@@ -259,6 +319,10 @@ export const useSportInitiationStore = create<SportInitiationState>()(
           currentWeek: 1,
           phaseStartDate: null,
         })
+
+        // Remove calorie bonus
+        const { useUserStore } = require('./user-store')
+        useUserStore.getState().updateSportCalorieBonus(0)
       },
 
       logDaily: (log) => {
@@ -347,12 +411,20 @@ export const useSportInitiationStore = create<SportInitiationState>()(
         const currentIndex = phases.indexOf(currentPhase)
 
         if (currentIndex < phases.length - 1) {
+          const nextPhase = phases[currentIndex + 1]
           set({
-            currentPhase: phases[currentIndex + 1],
+            currentPhase: nextPhase,
             currentWeek: 1,
             phaseStartDate: new Date().toISOString(),
             totalWeeksCompleted: totalWeeksCompleted + currentWeek - 1,
           })
+
+          // Update calorie bonus for new phase (more intense = more calories)
+          const { useUserStore } = require('./user-store')
+          const userState = useUserStore.getState()
+          const weight = userState.profile?.weight || 70
+          const bonus = calculateSportCaloriesBurned(nextPhase, weight)
+          userState.updateSportCalorieBonus(bonus)
         }
       },
 

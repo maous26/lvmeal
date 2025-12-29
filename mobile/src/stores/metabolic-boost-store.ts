@@ -12,6 +12,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LymIABrain, type UserContext, type ProgramAdaptation } from '../services/lymia-brain'
+import { PhaseMessages } from '../services/phase-context'
 import type { UserProfile } from '../types'
 
 export type MetabolicPhase = 'discovery' | 'walking' | 'resistance' | 'full_program'
@@ -124,6 +125,17 @@ export interface WeekSummary {
   insights: string[]
 }
 
+export interface PhaseTransitionNotification {
+  id: string
+  fromPhase: MetabolicPhase
+  toPhase: MetabolicPhase
+  title: string
+  message: string
+  tips: string[]
+  createdAt: string
+  isRead: boolean
+}
+
 export interface MetabolicBoostState {
   // Program state
   isEnrolled: boolean
@@ -145,6 +157,9 @@ export interface MetabolicBoostState {
   lastDeviceSync: string | null
   deviceStepsToday: number
 
+  // Phase transition notifications
+  phaseTransitionNotifications: PhaseTransitionNotification[]
+
   // Actions
   enroll: () => void
   unenroll: () => void
@@ -157,6 +172,9 @@ export interface MetabolicBoostState {
   getCurrentPhaseConfig: () => PhaseConfig
   getProgressPercentage: () => number
   syncDeviceSteps: (steps: number) => void
+  // Phase transition
+  getUnreadTransitionNotification: () => PhaseTransitionNotification | null
+  markTransitionNotificationRead: (id: string) => void
   // NEW: LymIA Brain powered evaluation
   evaluateProgressionWithAI: (userProfile: UserProfile) => Promise<ProgramAdaptation>
 }
@@ -186,6 +204,7 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
       longestStreak: 0,
       lastDeviceSync: null,
       deviceStepsToday: 0,
+      phaseTransitionNotifications: [],
 
       enroll: () => {
         const now = getDateString()
@@ -351,7 +370,7 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
       },
 
       progressToNextPhase: () => {
-        const { currentPhase, checkPhaseProgression, weekSummaries, currentWeek, calculateWeekSummary, totalWeeksCompleted } = get()
+        const { currentPhase, checkPhaseProgression, weekSummaries, currentWeek, calculateWeekSummary, totalWeeksCompleted, phaseTransitionNotifications } = get()
         const { canProgress } = checkPhaseProgression()
 
         if (!canProgress) return false
@@ -365,12 +384,26 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
         const currentIndex = phases.indexOf(currentPhase)
         const nextPhase = phases[currentIndex + 1] || 'full_program'
 
+        // Create phase transition notification
+        const transitionMessage = PhaseMessages.getPhaseTransitionMessage(currentPhase, nextPhase)
+        const notification: PhaseTransitionNotification = {
+          id: `transition_${Date.now()}`,
+          fromPhase: currentPhase,
+          toPhase: nextPhase,
+          title: transitionMessage.title,
+          message: transitionMessage.message,
+          tips: transitionMessage.tips,
+          createdAt: new Date().toISOString(),
+          isRead: false,
+        }
+
         set({
           currentPhase: nextPhase,
           currentWeek: 1,
           phaseStartDate: getDateString(),
           weekSummaries: updatedSummaries,
           totalWeeksCompleted: totalWeeksCompleted + PHASE_CONFIGS[currentPhase].durationWeeks,
+          phaseTransitionNotifications: [...phaseTransitionNotifications, notification],
         })
 
         return true
@@ -409,6 +442,22 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
           updatedLogs[existingIndex] = { ...updatedLogs[existingIndex], steps }
           set({ dailyLogs: updatedLogs })
         }
+      },
+
+      // Get unread phase transition notification (returns most recent)
+      getUnreadTransitionNotification: () => {
+        const { phaseTransitionNotifications } = get()
+        return phaseTransitionNotifications.find(n => !n.isRead) || null
+      },
+
+      // Mark transition notification as read
+      markTransitionNotificationRead: (id: string) => {
+        const { phaseTransitionNotifications } = get()
+        set({
+          phaseTransitionNotifications: phaseTransitionNotifications.map(n =>
+            n.id === id ? { ...n, isRead: true } : n
+          ),
+        })
       },
 
       // NEW: Evaluate progression using LymIA Brain

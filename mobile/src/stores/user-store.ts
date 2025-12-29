@@ -9,6 +9,8 @@ interface NutritionGoals {
   proteins: number
   carbs: number
   fats: number
+  // Sport program calorie adjustment
+  sportCaloriesBonus?: number
 }
 
 interface UserState {
@@ -29,6 +31,9 @@ interface UserState {
   calculateNeeds: () => NutritionalNeeds | null
   // NEW: RAG-powered personalized calculation
   calculatePersonalizedNeeds: (weeklyNutrition?: NutritionInfo, wellnessData?: UserContext['wellnessData']) => Promise<NutritionGoals | null>
+  // Sport program calorie adjustment
+  updateSportCalorieBonus: (bonus: number) => void
+  getEffectiveCalories: () => number
 }
 
 // Harris-Benedict BMR calculation
@@ -197,6 +202,26 @@ export const useUserStore = create<UserState>()(
             fats: needs.fats,
           } : null
         }
+      },
+
+      // Update sport calorie bonus when enrolling/unenrolling from sport program
+      updateSportCalorieBonus: (bonus: number) => {
+        const currentGoals = get().nutritionGoals
+        if (!currentGoals) return
+
+        set({
+          nutritionGoals: {
+            ...currentGoals,
+            sportCaloriesBonus: bonus > 0 ? bonus : undefined,
+          },
+        })
+      },
+
+      // Get effective daily calories (base + sport bonus)
+      getEffectiveCalories: () => {
+        const goals = get().nutritionGoals
+        if (!goals) return 0
+        return goals.calories + (goals.sportCaloriesBonus || 0)
       },
     }),
     {
