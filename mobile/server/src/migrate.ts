@@ -13,7 +13,7 @@ async function migrate() {
 
   try {
     // Read the full migration file
-    const migrationPath = path.join(__dirname, '../../supabase/full_migration.sql')
+    const migrationPath = path.join(__dirname, '../migration.sql')
     const migration = fs.readFileSync(migrationPath, 'utf8')
 
     // Execute migration
