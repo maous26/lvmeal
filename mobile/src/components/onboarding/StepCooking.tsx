@@ -142,6 +142,63 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
         </View>
       </View>
 
+      {/* Batch Cooking */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>📦</Text>
+          <Text style={styles.sectionTitle}>Es-tu interesse(e) par le batch cooking ?</Text>
+        </View>
+        <Text style={styles.sectionHint}>Preparer plusieurs repas a l'avance</Text>
+        <View style={styles.booleanRow}>
+          <Pressable
+            onPress={() => updatePrefs({ batchCooking: true })}
+            style={[styles.booleanOption, prefs.batchCooking === true && styles.booleanOptionSelected]}
+          >
+            <Text style={styles.booleanEmoji}>✅</Text>
+            <Text style={[styles.booleanLabel, prefs.batchCooking === true && styles.booleanLabelSelected]}>
+              Oui, ca m'interesse
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => updatePrefs({ batchCooking: false })}
+            style={[styles.booleanOption, prefs.batchCooking === false && styles.booleanOptionSelectedNo]}
+          >
+            <Text style={styles.booleanEmoji}>❌</Text>
+            <Text style={[styles.booleanLabel, prefs.batchCooking === false && styles.booleanLabelSelectedNo]}>
+              Non merci
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Quick Meals Only */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>⚡</Text>
+          <Text style={styles.sectionTitle}>Preferes-tu les recettes rapides ?</Text>
+        </View>
+        <Text style={styles.sectionHint}>Moins de 20 minutes de preparation</Text>
+        <View style={styles.booleanRow}>
+          <Pressable
+            onPress={() => updatePrefs({ quickMealsOnly: true })}
+            style={[styles.booleanOption, prefs.quickMealsOnly === true && styles.booleanOptionSelected]}
+          >
+            <Text style={styles.booleanEmoji}>⚡</Text>
+            <Text style={[styles.booleanLabel, prefs.quickMealsOnly === true && styles.booleanLabelSelected]}>
+              Oui, je suis presse(e)
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => updatePrefs({ quickMealsOnly: false })}
+            style={[styles.booleanOption, prefs.quickMealsOnly === false && styles.booleanOptionSelectedNo]}
+          >
+            <Text style={styles.booleanEmoji}>🍲</Text>
+            <Text style={[styles.booleanLabel, prefs.quickMealsOnly === false && styles.booleanLabelSelectedNo]}>
+              Non, je prends le temps
+            </Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   )
 }
