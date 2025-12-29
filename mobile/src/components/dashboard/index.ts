@@ -1,4 +1,8 @@
 // Dashboard Components
+export { default as CaloriesWidget } from './CaloriesWidget'
+export { default as MacrosWidget } from './MacrosWidget'
+export { default as MealChipsWidget } from './MealChipsWidget'
+export { default as QuickActionsWidget } from './QuickActionsWidget'
 export { GamificationPanel } from './GamificationPanel'
 export { WellnessWidget } from './WellnessWidget'
 export { SportWidget } from './SportWidget'

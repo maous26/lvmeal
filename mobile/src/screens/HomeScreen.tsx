@@ -8,12 +8,15 @@ import {
   Pressable,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Flame, Dumbbell, CalendarRange, Sparkles, Calendar } from 'lucide-react-native'
+import { Calendar } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { Card, CircularProgress, ProgressBar } from '../components/ui'
+import { Card } from '../components/ui'
 import {
+  CaloriesWidget,
+  MacrosWidget,
+  MealChipsWidget,
+  QuickActionsWidget,
   GamificationPanel,
   HydrationWidget,
   MealSuggestions,
@@ -25,7 +28,7 @@ import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
-import { getGreeting, formatNumber } from '../lib/utils'
+import { getGreeting } from '../lib/utils'
 import type { MealType } from '../types'
 
 const mealConfig: Record<MealType, { label: string; icon: string; color: string }> = {
@@ -128,116 +131,39 @@ export default function HomeScreen() {
         </View>
 
         {/* 2. Main Calories Card - Most important, first thing user sees */}
-        <Card style={styles.mainCard}>
-          <LinearGradient
-            colors={[colors.accent.primary, colors.accent.hover]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.caloriesGradient}
-          >
-            <View style={styles.caloriesContent}>
-              <View style={styles.caloriesLeft}>
-                <Text style={styles.caloriesLabel}>Calories restantes</Text>
-                <Text style={styles.caloriesValue}>
-                  {formatNumber(Math.max(0, goals.calories - totals.calories))}
-                </Text>
-                <Text style={styles.caloriesSubtext}>
-                  sur {formatNumber(goals.calories)} kcal
-                </Text>
-              </View>
-              <CircularProgress
-                value={totals.calories}
-                max={goals.calories}
-                size={100}
-                strokeWidth={8}
-                color="#FFFFFF"
-                backgroundColor="rgba(255,255,255,0.3)"
-                showValue={false}
-              />
-            </View>
-
-            <View style={styles.caloriesStats}>
-              <View style={styles.calorieStat}>
-                <Flame size={16} color="#FFFFFF" />
-                <Text style={styles.calorieStatText}>
-                  {formatNumber(totals.calories)} consommees
-                </Text>
-              </View>
-              <View style={styles.calorieStat}>
-                <Dumbbell size={16} color="#FFFFFF" />
-                <Text style={styles.calorieStatText}>0 brulees</Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </Card>
+        <View style={{ marginBottom: spacing.md }}>
+          <CaloriesWidget
+            consumed={totals.calories}
+            burned={0}
+            target={baseGoals.calories}
+            sportBonus={baseGoals.sportCaloriesBonus || 0}
+          />
+        </View>
 
         {/* 3. Quick Actions */}
-        <View style={styles.quickActions}>
-          <Pressable style={styles.planButton} onPress={handleNavigateToPlan}>
-            <View style={styles.planButtonContent}>
-              <CalendarRange size={20} color="#10B981" />
-              <Sparkles size={12} color="#F59E0B" style={styles.planSparkle} />
-            </View>
-            <Text style={styles.planButtonText}>Plan 7j</Text>
-          </Pressable>
+        <View style={{ marginBottom: spacing.md }}>
+          <QuickActionsWidget onPlanPress={handleNavigateToPlan} />
         </View>
 
         {/* 5. Macros - Complement to calories */}
-        <Card style={styles.macrosCard}>
-          <View style={styles.macrosRow}>
-            <MacroItem
-              label="Proteines"
-              value={totals.proteins}
-              max={goals.proteins}
-              unit="g"
-              color={colors.nutrients.proteins}
-            />
-            <MacroItem
-              label="Glucides"
-              value={totals.carbs}
-              max={goals.carbs}
-              unit="g"
-              color={colors.nutrients.carbs}
-            />
-            <MacroItem
-              label="Lipides"
-              value={totals.fats}
-              max={goals.fats}
-              unit="g"
-              color={colors.nutrients.fats}
-            />
-          </View>
-        </Card>
+        <MacrosWidget
+          proteins={{ value: totals.proteins, max: goals.proteins }}
+          carbs={{ value: totals.carbs, max: goals.carbs }}
+          fats={{ value: totals.fats, max: goals.fats }}
+        />
 
-        {/* 5. Meals Overview - Compact horizontal layout */}
-        <Text style={styles.sectionTitle}>Elabore ton repas</Text>
-        <View style={styles.mealsRow}>
-          {(Object.keys(mealConfig) as MealType[]).map((type) => {
-            const config = mealConfig[type]
+        {/* 5. Meals Overview - Professional meal chips */}
+        <MealChipsWidget
+          meals={(Object.keys(mealConfig) as MealType[]).map((type) => {
             const meals = getMealsByType(currentDate, type)
             const totalCalories = meals.reduce(
               (sum, meal) => sum + meal.totalNutrition.calories,
               0
             )
-            const hasData = totalCalories > 0
-
-            return (
-              <Pressable
-                key={type}
-                style={[styles.mealChip, hasData && styles.mealChipFilled]}
-                onPress={() => handleMealPress(type)}
-              >
-                <Text style={styles.mealIcon}>{config.icon}</Text>
-                <Text style={[styles.mealLabel, hasData && styles.mealLabelFilled]}>
-                  {config.label}
-                </Text>
-                {hasData && (
-                  <Text style={styles.mealCalories}>{totalCalories}</Text>
-                )}
-              </Pressable>
-            )
+            return { type, calories: totalCalories, mealsCount: meals.length }
           })}
-        </View>
+          onMealPress={handleMealPress}
+        />
 
         {/* 7. Meal Suggestions - AI-powered recommendations from enriched-recipes.json */}
         <MealSuggestions
@@ -304,34 +230,6 @@ export default function HomeScreen() {
   )
 }
 
-function MacroItem({
-  label,
-  value,
-  max,
-  unit,
-  color,
-}: {
-  label: string
-  value: number
-  max: number
-  unit: string
-  color: string
-}) {
-  const percentage = Math.min((value / max) * 100, 100)
-
-  return (
-    <View style={styles.macroItem}>
-      <Text style={styles.macroLabel}>{label}</Text>
-      <Text style={[styles.macroValue, { color }]}>
-        {value}
-        <Text style={styles.macroUnit}>{unit}</Text>
-      </Text>
-      <ProgressBar value={value} max={max} color={color} size="sm" />
-      <Text style={styles.macroGoal}>/ {max}{unit}</Text>
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -371,171 +269,6 @@ const styles = StyleSheet.create({
   // Sections
   section: {
     marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.smallMedium,
-    color: colors.text.tertiary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  // Calories Card
-  mainCard: {
-    padding: 0,
-    overflow: 'hidden',
-    marginBottom: spacing.md,
-  },
-  caloriesGradient: {
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-  },
-  caloriesContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  caloriesLeft: {},
-  caloriesLabel: {
-    ...typography.small,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  caloriesValue: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginVertical: spacing.xs,
-  },
-  caloriesSubtext: {
-    ...typography.small,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  caloriesStats: {
-    flexDirection: 'row',
-    marginTop: spacing.default,
-    gap: spacing.lg,
-  },
-  calorieStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  calorieStatText: {
-    ...typography.small,
-    color: '#FFFFFF',
-  },
-  // Quick Actions
-  quickActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  planButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    borderRadius: radius.lg,
-  },
-  planButtonContent: {
-    position: 'relative',
-  },
-  planSparkle: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-  },
-  planButtonText: {
-    ...typography.smallMedium,
-    color: '#10B981',
-  },
-  calendarButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.accent.light,
-    borderWidth: 1,
-    borderColor: colors.accent.primary + '30',
-    borderRadius: radius.lg,
-  },
-  calendarButtonText: {
-    ...typography.smallMedium,
-    color: colors.accent.primary,
-  },
-  // Macros
-  macrosCard: {
-    marginBottom: spacing.sm,
-  },
-  macrosRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  macroItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  macroLabel: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-    marginBottom: spacing.xs,
-  },
-  macroValue: {
-    ...typography.h4,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  macroUnit: {
-    ...typography.small,
-    fontWeight: '400',
-  },
-  macroGoal: {
-    ...typography.caption,
-    color: colors.text.muted,
-    marginTop: spacing.xs,
-  },
-  // Meals - Horizontal compact chips
-  mealsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  mealChip: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    backgroundColor: colors.bg.elevated,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border.light,
-  },
-  mealChipFilled: {
-    backgroundColor: colors.accent.light,
-    borderColor: colors.accent.primary,
-  },
-  mealIcon: {
-    fontSize: 20,
-    marginBottom: 2,
-  },
-  mealLabel: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-  },
-  mealLabelFilled: {
-    color: colors.accent.primary,
-    fontWeight: '500',
-  },
-  mealCalories: {
-    ...typography.caption,
-    color: colors.accent.primary,
-    fontWeight: '600',
-    marginTop: 2,
   },
   // Bottom
   bottomSpacer: {
