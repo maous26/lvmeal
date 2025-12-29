@@ -23,7 +23,10 @@ import {
   Flame,
   Dumbbell,
   Zap,
+  Edit3,
 } from 'lucide-react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, Button } from '../components/ui'
@@ -31,6 +34,7 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { formatNumber } from '../lib/utils'
+import type { RootStackParamList } from '../navigation/RootNavigator'
 
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
@@ -65,7 +69,10 @@ const dietLabels: Record<string, string> = {
   casher: 'Casher',
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>
+
 export default function ProfileScreen() {
+  const navigation = useNavigation<NavigationProp>()
   const { profile, nutritionGoals, resetStore, setProfile } = useUserStore()
   const {
     isEnrolled: isSportInitiationEnrolled,
@@ -75,13 +82,18 @@ export default function ProfileScreen() {
     currentWeek,
   } = useSportInitiationStore()
 
-  const userName = profile?.name || 'Utilisateur'
+  const userName = profile?.firstName || profile?.name || 'Utilisateur'
   const userInitials = userName
     .split(' ')
     .map((n) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
+
+  const handleEditProfile = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    navigation.navigate('EditProfile')
+  }
 
   const handleSettingPress = (setting: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -192,8 +204,9 @@ export default function ProfileScreen() {
               <Text style={styles.profileName}>{userName}</Text>
               <Text style={styles.profileEmail}>{profile?.email || 'Aucun email'}</Text>
             </View>
-            <TouchableOpacity onPress={() => handleSettingPress('edit-profile')}>
-              <ChevronRight size={24} color={colors.text.tertiary} />
+            <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
+              <Edit3 size={18} color={colors.accent.primary} />
+              <Text style={styles.editButtonText}>Modifier</Text>
             </TouchableOpacity>
           </View>
 
@@ -222,7 +235,7 @@ export default function ProfileScreen() {
         {/* Current Goals */}
         <Text style={styles.sectionTitle}>Mes objectifs</Text>
         <Card style={styles.goalsCard}>
-          <View style={styles.goalItem}>
+          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
             <View style={styles.goalIcon}>
               <Target size={20} color={colors.accent.primary} />
             </View>
@@ -233,9 +246,9 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.goalItem}>
+          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
             <View style={styles.goalIcon}>
               <Scale size={20} color={colors.secondary.primary} />
             </View>
@@ -247,9 +260,9 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.goalItem}>
+          <TouchableOpacity style={styles.goalItem} onPress={handleEditProfile} activeOpacity={0.7}>
             <View style={styles.goalIcon}>
               <Activity size={20} color={colors.success} />
             </View>
@@ -260,9 +273,9 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
-          </View>
+          </TouchableOpacity>
 
-          <View style={[styles.goalItem, { borderBottomWidth: 0 }]}>
+          <TouchableOpacity style={[styles.goalItem, { borderBottomWidth: 0 }]} onPress={handleEditProfile} activeOpacity={0.7}>
             <View style={styles.goalIcon}>
               <Utensils size={20} color={colors.nutrients.carbs} />
             </View>
@@ -273,7 +286,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
-          </View>
+          </TouchableOpacity>
         </Card>
 
         {/* Daily Targets */}
@@ -449,6 +462,20 @@ const styles = StyleSheet.create({
   profileEmail: {
     ...typography.small,
     color: colors.text.tertiary,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.accent.light,
+    borderRadius: radius.md,
+  },
+  editButtonText: {
+    ...typography.small,
+    color: colors.accent.primary,
+    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
