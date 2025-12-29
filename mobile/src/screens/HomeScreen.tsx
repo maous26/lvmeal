@@ -20,6 +20,7 @@ import {
   MealSuggestions,
   CaloricBalance,
   ProgramsSection,
+  CoachInsights,
 } from '../components/dashboard'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -122,7 +123,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 2. Main Calories Card - Most important, first thing user sees */}
+        {/* 2. Coach Insights - LymIA connects all features for the user */}
+        <CoachInsights />
+
+        {/* 3. Main Calories Card - Most important, first thing user sees */}
         <Card style={styles.mainCard}>
           <LinearGradient
             colors={[colors.accent.primary, colors.accent.hover]}
@@ -166,7 +170,7 @@ export default function HomeScreen() {
           </LinearGradient>
         </Card>
 
-        {/* 3. Quick Actions */}
+        {/* 4. Quick Actions */}
         <View style={styles.quickActions}>
           <Button
             variant="primary"
@@ -187,7 +191,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* 4. Macros - Complement to calories */}
+        {/* 5. Macros - Complement to calories */}
         <Card style={styles.macrosCard}>
           <View style={styles.macrosRow}>
             <MacroItem
@@ -214,7 +218,7 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        {/* 5. Meals Overview - Compact horizontal layout */}
+        {/* 6. Meals Overview - Compact horizontal layout */}
         <Text style={styles.sectionTitle}>Repas du jour</Text>
         <View style={styles.mealsRow}>
           {(Object.keys(mealConfig) as MealType[]).map((type) => {
@@ -244,7 +248,7 @@ export default function HomeScreen() {
           })}
         </View>
 
-        {/* 6. Meal Suggestions - AI-powered recommendations */}
+        {/* 7. Meal Suggestions - AI-powered recommendations from enriched-recipes.json */}
         <MealSuggestions
           onSuggestionPress={(suggestion) => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -270,17 +274,17 @@ export default function HomeScreen() {
           onViewAll={handleNavigateToRecipes}
         />
 
-        {/* 7. Hydration - Compact widget */}
+        {/* 8. Hydration - Compact widget */}
         <HydrationWidget onPress={handleNavigateToWellness} />
 
-        {/* 8. Programs Section - Sport, Metabolic, Wellness (grouped) */}
+        {/* 9. Programs Section - Sport, Metabolic, Wellness (grouped) */}
         <ProgramsSection
           onSportPress={handleNavigateToSportInitiation}
           onMetabolicPress={handleNavigateToMetabolicBoost}
           onWellnessPress={handleNavigateToWellness}
         />
 
-        {/* 9. Caloric Balance - Solde Plaisir */}
+        {/* 10. Caloric Balance - Solde Plaisir */}
         <CaloricBalance
           dailyBalances={dailyBalances.map(b => ({
             day: new Date(b.date).toLocaleDateString('fr-FR', { weekday: 'short' }),
@@ -296,13 +300,6 @@ export default function HomeScreen() {
           isFirstTimeSetup={isFirstTimeSetup()}
           onConfirmStart={confirmStartDay}
         />
-
-        {/* 10. LymIA Coach - Proactive tips */}
-        <View style={styles.section}>
-          <Card>
-            <LymIAWidget />
-          </Card>
-        </View>
 
         {/* 11. Gamification - Motivation at the bottom */}
         <View style={styles.section}>
