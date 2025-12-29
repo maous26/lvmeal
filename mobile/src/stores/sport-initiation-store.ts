@@ -11,6 +11,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { LymIABrain, type UserContext, type ProgramAdaptation } from '../services/lymia-brain'
+import type { UserProfile } from '../types'
 
 export type SportPhase = 'activation' | 'movement' | 'strengthening' | 'autonomy'
 
@@ -196,6 +198,8 @@ export interface SportInitiationState {
     preferredActivities: string[]
     availableMinutesPerDay: number
   }>) => void
+  // NEW: LymIA Brain powered evaluation
+  evaluateProgressionWithAI: (userProfile: UserProfile) => Promise<ProgramAdaptation>
 }
 
 const getToday = () => new Date().toISOString().split('T')[0]
@@ -455,6 +459,62 @@ export const useSportInitiationStore = create<SportInitiationState>()(
           ...state,
           ...updates,
         }))
+      },
+
+      // NEW: Evaluate progression using LymIA Brain
+      evaluateProgressionWithAI: async (userProfile) => {
+        const state = get()
+        const { currentPhase, currentWeek, dailyLogs } = state
+
+        // Get recent logs for wellness data
+        const weekStart = getWeekStart(new Date())
+        const recentLogs = dailyLogs.filter((l) => l.date >= weekStart)
+        const weekSummary = state.generateWeekSummary()
+
+        // Calculate averages
+        const avgEnergy = recentLogs.length > 0
+          ? recentLogs.reduce((sum, l) => sum + (l.energyLevel || 3), 0) / recentLogs.length
+          : undefined
+        const avgEnjoyment = recentLogs.length > 0
+          ? recentLogs.reduce((sum, l) => sum + (l.enjoyment || 3), 0) / recentLogs.length
+          : undefined
+
+        // Build LymIA context
+        const userContext: UserContext = {
+          profile: userProfile,
+          todayNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          weeklyAverage: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          currentStreak: state.currentStreak,
+          lastMeals: [],
+          wellnessData: {
+            energyLevel: avgEnergy,
+            // Convert enjoyment to a stress-like metric (inverse)
+            stressLevel: avgEnjoyment ? (6 - avgEnjoyment) * 2 : undefined,
+          },
+          programProgress: {
+            type: 'sport_initiation',
+            phase: ['activation', 'movement', 'strengthening', 'autonomy'].indexOf(currentPhase) + 1,
+            weekInPhase: currentWeek,
+            completionRate: weekSummary ? weekSummary.completionRate / 100 : 0,
+          },
+        }
+
+        try {
+          return await LymIABrain.evaluateProgramProgress(userContext, 'sport_initiation')
+        } catch (error) {
+          console.error('LymIA sport evaluation failed:', error)
+          // Fallback to basic check
+          const canProgress = state.checkPhaseCompletion()
+          return {
+            shouldProgress: canProgress,
+            nextPhaseReady: canProgress,
+            adjustments: [],
+            decision: canProgress ? 'Pret pour la phase suivante' : 'Continuer la phase actuelle',
+            reasoning: 'Evaluation basique (fallback)',
+            confidence: 0.5,
+            sources: [],
+          }
+        }
       },
     }),
     {
