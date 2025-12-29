@@ -302,9 +302,9 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
           // Use static recipes - already in French with ingredients and instructions
           console.log(`RecipeDiscovery: Loaded ${staticRecipes.length} static recipes (French)`)
 
-          // Shuffle and take 15 random recipes for display
+          // Shuffle and take 50 random recipes for display
           const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
-          const selected = shuffled.slice(0, 15)
+          const selected = shuffled.slice(0, 50)
 
           // Convert to Recipe type
           const recipes = selected.map(staticToRecipe)
@@ -333,9 +333,9 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
       const staticRecipes = await loadStaticRecipes()
 
       if (staticRecipes.length > 0) {
-        // Shuffle and take 15 random recipes
+        // Shuffle and take 50 random recipes
         const shuffled = [...staticRecipes].sort(() => Math.random() - 0.5)
-        const selected = shuffled.slice(0, 15)
+        const selected = shuffled.slice(0, 50)
         const recipes = selected.map(staticToRecipe)
         setGustarRecipesList(recipes)
         console.log(`Refresh: Loaded ${recipes.length} static recipes`)
@@ -362,7 +362,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
 
       if (results.length > 0) {
         // Found matches in static recipes
-        const recipes = results.slice(0, 15).map(staticToRecipe)
+        const recipes = results.slice(0, 50).map(staticToRecipe)
         setGustarRecipesList(recipes)
         console.log(`Search: Found ${recipes.length} static recipes for "${searchQuery}"`)
       } else {
