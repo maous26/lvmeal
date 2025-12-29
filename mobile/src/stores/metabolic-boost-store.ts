@@ -11,6 +11,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { LymIABrain, type UserContext, type ProgramAdaptation } from '../services/lymia-brain'
+import type { UserProfile } from '../types'
 
 export type MetabolicPhase = 'discovery' | 'walking' | 'resistance' | 'full_program'
 
@@ -155,6 +157,8 @@ export interface MetabolicBoostState {
   getCurrentPhaseConfig: () => PhaseConfig
   getProgressPercentage: () => number
   syncDeviceSteps: (steps: number) => void
+  // NEW: LymIA Brain powered evaluation
+  evaluateProgressionWithAI: (userProfile: UserProfile) => Promise<ProgramAdaptation>
 }
 
 const getDateString = () => new Date().toISOString().split('T')[0]
@@ -404,6 +408,63 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
           const updatedLogs = [...dailyLogs]
           updatedLogs[existingIndex] = { ...updatedLogs[existingIndex], steps }
           set({ dailyLogs: updatedLogs })
+        }
+      },
+
+      // NEW: Evaluate progression using LymIA Brain
+      evaluateProgressionWithAI: async (userProfile) => {
+        const { currentPhase, currentWeek, getWeekLogs, calculateWeekSummary } = get()
+
+        // Get recent wellness data from logs
+        const recentLogs = getWeekLogs(currentWeek)
+        const weekSummary = calculateWeekSummary(currentWeek)
+
+        // Calculate averages
+        const avgSleep = recentLogs.length > 0
+          ? recentLogs.reduce((sum, l) => sum + (l.sleepHours || 7), 0) / recentLogs.length
+          : undefined
+        const avgEnergy = recentLogs.length > 0
+          ? recentLogs.reduce((sum, l) => sum + (l.energyLevel || 3), 0) / recentLogs.length
+          : undefined
+        const avgStress = recentLogs.length > 0
+          ? recentLogs.reduce((sum, l) => sum + (l.stressLevel || 3), 0) / recentLogs.length
+          : undefined
+
+        // Build LymIA context
+        const userContext: UserContext = {
+          profile: userProfile,
+          todayNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          weeklyAverage: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          currentStreak: recentLogs.length,
+          lastMeals: [],
+          wellnessData: {
+            sleepHours: avgSleep,
+            stressLevel: avgStress ? avgStress * 2 : undefined, // Scale 1-5 to 1-10
+            energyLevel: avgEnergy,
+          },
+          programProgress: {
+            type: 'metabolic_boost',
+            phase: ['discovery', 'walking', 'resistance', 'full_program'].indexOf(currentPhase) + 1,
+            weekInPhase: currentWeek,
+            completionRate: weekSummary ? weekSummary.completionRate / 100 : 0,
+          },
+        }
+
+        try {
+          return await LymIABrain.evaluateProgramProgress(userContext, 'metabolic_boost')
+        } catch (error) {
+          console.error('LymIA metabolic evaluation failed:', error)
+          // Fallback to basic check
+          const { canProgress, reason } = get().checkPhaseProgression()
+          return {
+            shouldProgress: canProgress,
+            nextPhaseReady: canProgress,
+            adjustments: [],
+            decision: canProgress ? 'Pret pour progression' : (reason || 'Pas encore pret'),
+            reasoning: reason || 'Evaluation basique (fallback)',
+            confidence: 0.5,
+            sources: [],
+          }
         }
       },
     }),

@@ -10,6 +10,7 @@
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry } from './supabase-client'
 import { loadStaticRecipes, filterStaticRecipes, getStaticRecipesByMealType, staticToRecipe, type StaticEnrichedRecipe } from './static-recipes'
 import { generatePlanMeal, type AIRecipe } from './ai-service'
+import { LymIABrain, type UserContext } from './lymia-brain'
 import type { UserProfile, Recipe, NutritionInfo } from '../types'
 
 // ============= TYPES =============
@@ -521,6 +522,55 @@ export async function queryCoach(query: CoachQuery): Promise<CoachResponse | nul
 }
 
 /**
+ * Get intelligent meal recommendations using LymIA Brain
+ * This is the PREFERRED method - uses full AI context
+ */
+export async function getLymIAMealRecommendations(
+  context: RAGContext,
+  existingMealNames: string[] = []
+): Promise<{
+  suggestions: Array<{
+    name: string
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+    prepTime: number
+    reason: string
+  }>
+  reasoning: string
+}> {
+  // Build LymIA context from RAG context
+  const userContext: UserContext = {
+    profile: context.userProfile,
+    todayNutrition: context.consumed,
+    weeklyAverage: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+    currentStreak: 0,
+    lastMeals: existingMealNames,
+    wellnessData: {},
+  }
+
+  try {
+    const result = await LymIABrain.getMealRecommendations(
+      userContext,
+      context.mealType,
+      context.targetCalories
+    )
+
+    return {
+      suggestions: result.suggestions,
+      reasoning: result.reasoning,
+    }
+  } catch (error) {
+    console.error('LymIA meal recommendations failed:', error)
+    return {
+      suggestions: [],
+      reasoning: 'Service temporairement indisponible',
+    }
+  }
+}
+
+/**
  * Build RAG context from user stores
  */
 export function buildRAGContext(params: {
@@ -563,6 +613,9 @@ export default {
   decideMealSource,
   getRAGMeal,
   buildRAGContext,
+
+  // LymIA Brain integration
+  getLymIAMealRecommendations,
 
   // External APIs
   searchOFF,

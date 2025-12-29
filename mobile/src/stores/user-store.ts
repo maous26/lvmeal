@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { UserProfile, NutritionalNeeds, WeightEntry } from '../types'
+import type { UserProfile, NutritionalNeeds, WeightEntry, NutritionInfo } from '../types'
+import { LymIABrain, type UserContext } from '../services/lymia-brain'
 
 interface NutritionGoals {
   calories: number
@@ -16,6 +17,7 @@ interface UserState {
   isOnboarded: boolean
   weightHistory: WeightEntry[]
   nutritionGoals: NutritionGoals | null
+  lastRAGUpdate: string | null // Track when RAG last calculated needs
 
   // Actions
   setProfile: (profile: Partial<UserProfile>) => void
@@ -25,6 +27,8 @@ interface UserState {
   addWeightEntry: (entry: WeightEntry) => void
   setOnboarded: (value: boolean) => void
   calculateNeeds: () => NutritionalNeeds | null
+  // NEW: RAG-powered personalized calculation
+  calculatePersonalizedNeeds: (weeklyNutrition?: NutritionInfo, wellnessData?: UserContext['wellnessData']) => Promise<NutritionGoals | null>
 }
 
 // Harris-Benedict BMR calculation
@@ -98,6 +102,7 @@ export const useUserStore = create<UserState>()(
       isOnboarded: false,
       weightHistory: [],
       nutritionGoals: null,
+      lastRAGUpdate: null,
 
       setProfile: (profile) => {
         const needs = calculateNutritionalNeeds(profile)
@@ -148,6 +153,51 @@ export const useUserStore = create<UserState>()(
         if (!profile) return null
         return calculateNutritionalNeeds(profile)
       },
+
+      // NEW: RAG-powered personalized calculation
+      calculatePersonalizedNeeds: async (weeklyNutrition, wellnessData) => {
+        const { profile } = get()
+        if (!profile) return null
+
+        // Build context for LymIA Brain
+        const context: UserContext = {
+          profile: profile as UserProfile,
+          todayNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          weeklyAverage: weeklyNutrition || { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          currentStreak: 0,
+          lastMeals: [],
+          wellnessData: wellnessData || {},
+        }
+
+        try {
+          const result = await LymIABrain.calculatePersonalizedNeeds(context)
+
+          const goals: NutritionGoals = {
+            calories: result.calories,
+            proteins: result.proteins,
+            carbs: result.carbs,
+            fats: result.fats,
+          }
+
+          // Update store with personalized goals
+          set({
+            nutritionGoals: goals,
+            lastRAGUpdate: new Date().toISOString(),
+          })
+
+          return goals
+        } catch (error) {
+          console.error('RAG calculation failed, using fallback:', error)
+          // Fallback to Harris-Benedict
+          const needs = calculateNutritionalNeeds(profile)
+          return needs ? {
+            calories: needs.calories,
+            proteins: needs.proteins,
+            carbs: needs.carbs,
+            fats: needs.fats,
+          } : null
+        }
+      },
     }),
     {
       name: 'presence-user',
@@ -157,6 +207,7 @@ export const useUserStore = create<UserState>()(
         isOnboarded: state.isOnboarded,
         weightHistory: state.weightHistory,
         nutritionGoals: state.nutritionGoals,
+        lastRAGUpdate: state.lastRAGUpdate,
       }),
     }
   )
