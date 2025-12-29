@@ -207,21 +207,32 @@ const FAT_LEVELS = [
   { label: 'Riche', multiplier: 1.5, icon: '🧈' },
 ]
 
-// Animated food result item with fat adjuster
+// Pastel colors for light theme
+const PASTEL = {
+  bg: '#FAF9F6', // blanc cassé
+  card: '#FFFFFF',
+  border: '#E8E5DE',
+  text: '#2D3436',
+  textSecondary: '#636E72',
+  protein: '#74B9FF', // bleu pastel
+  carbs: '#FFEAA7', // jaune pastel
+  fats: '#DDA0DD', // violet pastel
+  calories: '#FF7675', // rouge pastel
+  green: '#55EFC4', // vert pastel
+  greenDark: '#00B894',
+}
+
+// Animated food result item (light theme)
 function FoodResultItem({
   food,
   isSelected,
   onToggle,
   delay,
-  fatLevel,
-  onFatLevelChange,
 }: {
   food: AnalyzedFood
   isSelected: boolean
   onToggle: () => void
   delay: number
-  fatLevel: number
-  onFatLevelChange: (level: number) => void
 }) {
   const slideAnim = useRef(new Animated.Value(50)).current
   const opacityAnim = useRef(new Animated.Value(0)).current
@@ -252,27 +263,7 @@ function FoodResultItem({
     ]).start()
   }, [])
 
-  const confidenceColor = food.confidence >= 0.8 ? '#10B981' : food.confidence >= 0.6 ? '#F59E0B' : '#EF4444'
-
-  // Calculate adjusted nutrition based on fat level
-  const fatMultiplier = FAT_LEVELS[fatLevel].multiplier
-  const adjustedFats = Math.round(food.nutrition.fats * fatMultiplier)
-  const fatCaloriesDiff = (adjustedFats - food.nutrition.fats) * 9 // 9 kcal per gram of fat
-  const adjustedCalories = food.nutrition.calories + fatCaloriesDiff
-
-  const handleFatDecrease = () => {
-    if (fatLevel > 0) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      onFatLevelChange(fatLevel - 1)
-    }
-  }
-
-  const handleFatIncrease = () => {
-    if (fatLevel < 2) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      onFatLevelChange(fatLevel + 1)
-    }
-  }
+  const confidenceColor = food.confidence >= 0.8 ? PASTEL.greenDark : food.confidence >= 0.6 ? '#FDCB6E' : '#E17055'
 
   return (
     <Animated.View
@@ -283,87 +274,103 @@ function FoodResultItem({
         },
       ]}
     >
-      <View style={[resultStyles.foodItem, isSelected && resultStyles.foodItemSelected]}>
-        {/* Top row: selection */}
-        <TouchableOpacity
-          style={resultStyles.foodMainRow}
-          onPress={onToggle}
-          activeOpacity={0.7}
-        >
-          {/* Icon */}
-          <View style={[resultStyles.foodIcon, { backgroundColor: isSelected ? colors.accent.primary : colors.bg.tertiary }]}>
-            <ChefHat size={20} color={isSelected ? '#FFFFFF' : colors.text.secondary} />
-          </View>
+      <TouchableOpacity
+        style={[resultStyles.foodItem, isSelected && resultStyles.foodItemSelected]}
+        onPress={onToggle}
+        activeOpacity={0.7}
+      >
+        {/* Icon */}
+        <View style={[resultStyles.foodIcon, { backgroundColor: isSelected ? PASTEL.green : '#F0F0ED' }]}>
+          <ChefHat size={20} color={isSelected ? PASTEL.greenDark : PASTEL.textSecondary} />
+        </View>
 
-          {/* Info */}
-          <View style={resultStyles.foodInfo}>
-            <Text style={resultStyles.foodName}>{food.name}</Text>
-            <View style={resultStyles.foodMeta}>
-              <Text style={resultStyles.foodWeight}>~{food.estimatedWeight}g</Text>
-              <View style={[resultStyles.confidenceBadge, { backgroundColor: confidenceColor + '20' }]}>
-                <View style={[resultStyles.confidenceDot, { backgroundColor: confidenceColor }]} />
-                <Text style={[resultStyles.confidenceText, { color: confidenceColor }]}>
-                  {Math.round(food.confidence * 100)}%
-                </Text>
-              </View>
+        {/* Info */}
+        <View style={resultStyles.foodInfo}>
+          <Text style={resultStyles.foodName}>{food.name}</Text>
+          <View style={resultStyles.foodMeta}>
+            <Text style={resultStyles.foodWeight}>~{food.estimatedWeight}g</Text>
+            <View style={[resultStyles.confidenceBadge, { backgroundColor: confidenceColor + '30' }]}>
+              <View style={[resultStyles.confidenceDot, { backgroundColor: confidenceColor }]} />
+              <Text style={[resultStyles.confidenceText, { color: confidenceColor }]}>
+                {Math.round(food.confidence * 100)}%
+              </Text>
             </View>
-          </View>
-
-          {/* Calories */}
-          <View style={resultStyles.nutritionBadge}>
-            <Text style={resultStyles.caloriesValue}>{adjustedCalories}</Text>
-            <Text style={resultStyles.caloriesUnit}>kcal</Text>
-          </View>
-
-          {/* Checkbox */}
-          <View style={[resultStyles.checkbox, isSelected && resultStyles.checkboxSelected]}>
-            {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-          </View>
-        </TouchableOpacity>
-
-        {/* Macros row */}
-        <View style={resultStyles.macrosRow}>
-          <View style={resultStyles.macroChip}>
-            <Beef size={12} color="#3B82F6" />
-            <Text style={[resultStyles.macroText, { color: '#3B82F6' }]}>{food.nutrition.proteins}g</Text>
-          </View>
-          <View style={resultStyles.macroChip}>
-            <Wheat size={12} color="#F59E0B" />
-            <Text style={[resultStyles.macroText, { color: '#F59E0B' }]}>{food.nutrition.carbs}g</Text>
-          </View>
-          <View style={[resultStyles.macroChip, resultStyles.fatChipHighlight]}>
-            <Droplet size={12} color="#8B5CF6" />
-            <Text style={[resultStyles.macroText, { color: '#8B5CF6' }]}>{adjustedFats}g</Text>
-          </View>
-
-          {/* Fat adjuster */}
-          <View style={resultStyles.fatAdjuster}>
-            <TouchableOpacity
-              style={[resultStyles.fatButton, fatLevel === 0 && resultStyles.fatButtonDisabled]}
-              onPress={handleFatDecrease}
-              disabled={fatLevel === 0}
-            >
-              <Minus size={14} color={fatLevel === 0 ? '#475569' : '#8B5CF6'} />
-            </TouchableOpacity>
-            <View style={resultStyles.fatLevelBadge}>
-              <Text style={resultStyles.fatLevelIcon}>{FAT_LEVELS[fatLevel].icon}</Text>
-              <Text style={resultStyles.fatLevelText}>{FAT_LEVELS[fatLevel].label}</Text>
-            </View>
-            <TouchableOpacity
-              style={[resultStyles.fatButton, fatLevel === 2 && resultStyles.fatButtonDisabled]}
-              onPress={handleFatIncrease}
-              disabled={fatLevel === 2}
-            >
-              <Plus size={14} color={fatLevel === 2 ? '#475569' : '#8B5CF6'} />
-            </TouchableOpacity>
           </View>
         </View>
-      </View>
+
+        {/* Calories */}
+        <View style={resultStyles.nutritionBadge}>
+          <Text style={resultStyles.caloriesValue}>{Math.round(food.nutrition.calories)}</Text>
+          <Text style={resultStyles.caloriesUnit}>kcal</Text>
+        </View>
+
+        {/* Checkbox */}
+        <View style={[resultStyles.checkbox, isSelected && resultStyles.checkboxSelected]}>
+          {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+        </View>
+      </TouchableOpacity>
     </Animated.View>
   )
 }
 
-// Nutrition summary card
+// Global fat adjuster component
+function GlobalFatAdjuster({
+  fatLevel,
+  onFatLevelChange,
+}: {
+  fatLevel: number
+  onFatLevelChange: (level: number) => void
+}) {
+  const handleDecrease = () => {
+    if (fatLevel > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      onFatLevelChange(fatLevel - 1)
+    }
+  }
+
+  const handleIncrease = () => {
+    if (fatLevel < 2) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      onFatLevelChange(fatLevel + 1)
+    }
+  }
+
+  return (
+    <View style={fatAdjusterStyles.container}>
+      <View style={fatAdjusterStyles.header}>
+        <Droplet size={18} color={PASTEL.fats} />
+        <Text style={fatAdjusterStyles.title}>Niveau de matière grasse</Text>
+      </View>
+      <View style={fatAdjusterStyles.controls}>
+        <TouchableOpacity
+          style={[fatAdjusterStyles.button, fatLevel === 0 && fatAdjusterStyles.buttonDisabled]}
+          onPress={handleDecrease}
+          disabled={fatLevel === 0}
+        >
+          <Minus size={18} color={fatLevel === 0 ? '#CBD5E1' : PASTEL.fats} />
+        </TouchableOpacity>
+
+        <View style={fatAdjusterStyles.levelContainer}>
+          <Text style={fatAdjusterStyles.levelIcon}>{FAT_LEVELS[fatLevel].icon}</Text>
+          <Text style={fatAdjusterStyles.levelLabel}>{FAT_LEVELS[fatLevel].label}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[fatAdjusterStyles.button, fatLevel === 2 && fatAdjusterStyles.buttonDisabled]}
+          onPress={handleIncrease}
+          disabled={fatLevel === 2}
+        >
+          <Plus size={18} color={fatLevel === 2 ? '#CBD5E1' : PASTEL.fats} />
+        </TouchableOpacity>
+      </View>
+      <Text style={fatAdjusterStyles.hint}>
+        {fatLevel === 0 ? 'Cuisson légère, peu de sauce' : fatLevel === 1 ? 'Préparation standard' : 'Riche en huile, sauce, beurre'}
+      </Text>
+    </View>
+  )
+}
+
+// Nutrition summary card (light theme)
 function NutritionSummary({ nutrition, foodCount }: { nutrition: NutritionInfo; foodCount: number }) {
   const slideAnim = useRef(new Animated.Value(30)).current
   const opacityAnim = useRef(new Animated.Value(0)).current
@@ -393,51 +400,41 @@ function NutritionSummary({ nutrition, foodCount }: { nutrition: NutritionInfo; 
         { opacity: opacityAnim, transform: [{ translateY: slideAnim }] },
       ]}
     >
-      <LinearGradient
-        colors={['#1E293B', '#0F172A']}
-        style={summaryStyles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <View style={summaryStyles.card}>
         <View style={summaryStyles.header}>
-          <Sparkles size={18} color="#10B981" />
+          <Sparkles size={18} color={PASTEL.greenDark} />
           <Text style={summaryStyles.title}>Analyse nutritionnelle</Text>
         </View>
 
         <View style={summaryStyles.grid}>
           {/* Calories - main */}
           <View style={summaryStyles.mainStat}>
-            <LinearGradient
-              colors={['#F97316', '#EA580C']}
-              style={summaryStyles.mainStatGradient}
-            >
-              <Flame size={24} color="#FFFFFF" />
-              <Text style={summaryStyles.mainValue}>{nutrition.calories}</Text>
-              <Text style={summaryStyles.mainLabel}>kcal</Text>
-            </LinearGradient>
+            <Flame size={22} color={PASTEL.calories} />
+            <Text style={summaryStyles.mainValue}>{Math.round(nutrition.calories)}</Text>
+            <Text style={summaryStyles.mainLabel}>kcal</Text>
           </View>
 
           {/* Macros */}
           <View style={summaryStyles.macros}>
             <View style={summaryStyles.macroItem}>
-              <View style={[summaryStyles.macroIcon, { backgroundColor: '#3B82F620' }]}>
-                <Beef size={16} color="#3B82F6" />
+              <View style={[summaryStyles.macroIcon, { backgroundColor: PASTEL.protein + '40' }]}>
+                <Beef size={16} color="#5A9BD5" />
               </View>
-              <Text style={summaryStyles.macroValue}>{nutrition.proteins}g</Text>
+              <Text style={summaryStyles.macroValue}>{Math.round(nutrition.proteins)}g</Text>
               <Text style={summaryStyles.macroLabel}>Protéines</Text>
             </View>
             <View style={summaryStyles.macroItem}>
-              <View style={[summaryStyles.macroIcon, { backgroundColor: '#F59E0B20' }]}>
-                <Wheat size={16} color="#F59E0B" />
+              <View style={[summaryStyles.macroIcon, { backgroundColor: PASTEL.carbs + '60' }]}>
+                <Wheat size={16} color="#E8B730" />
               </View>
-              <Text style={summaryStyles.macroValue}>{nutrition.carbs}g</Text>
+              <Text style={summaryStyles.macroValue}>{Math.round(nutrition.carbs)}g</Text>
               <Text style={summaryStyles.macroLabel}>Glucides</Text>
             </View>
             <View style={summaryStyles.macroItem}>
-              <View style={[summaryStyles.macroIcon, { backgroundColor: '#8B5CF620' }]}>
-                <Droplet size={16} color="#8B5CF6" />
+              <View style={[summaryStyles.macroIcon, { backgroundColor: PASTEL.fats + '40' }]}>
+                <Droplet size={16} color="#BA68C8" />
               </View>
-              <Text style={summaryStyles.macroValue}>{nutrition.fats}g</Text>
+              <Text style={summaryStyles.macroValue}>{Math.round(nutrition.fats)}g</Text>
               <Text style={summaryStyles.macroLabel}>Lipides</Text>
             </View>
           </View>
@@ -446,7 +443,7 @@ function NutritionSummary({ nutrition, foodCount }: { nutrition: NutritionInfo; 
         <Text style={summaryStyles.footer}>
           {foodCount} aliment{foodCount > 1 ? 's' : ''} sélectionné{foodCount > 1 ? 's' : ''}
         </Text>
-      </LinearGradient>
+      </View>
     </Animated.View>
   )
 }
@@ -462,7 +459,7 @@ export default function PhotoFoodScanner({
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analyzedFoods, setAnalyzedFoods] = useState<AnalyzedFood[]>([])
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set())
-  const [fatLevels, setFatLevels] = useState<Map<number, number>>(new Map()) // index -> fat level (0-2)
+  const [globalFatLevel, setGlobalFatLevel] = useState(1) // 0=Light, 1=Normal, 2=Riche
   const [error, setError] = useState<string | null>(null)
   const [showResults, setShowResults] = useState(false)
 
@@ -474,24 +471,12 @@ export default function PhotoFoodScanner({
     setCapturedImage(null)
     setAnalyzedFoods([])
     setSelectedFoods(new Set())
-    setFatLevels(new Map())
+    setGlobalFatLevel(1)
     setError(null)
     setIsAnalyzing(false)
     setShowResults(false)
     imageScaleAnim.setValue(1)
     imageOpacityAnim.setValue(1)
-  }
-
-  // Get fat level for a food item (default to 1 = Normal)
-  const getFatLevel = (index: number) => fatLevels.get(index) ?? 1
-
-  // Set fat level for a food item
-  const setFatLevel = (index: number, level: number) => {
-    setFatLevels(prev => {
-      const newMap = new Map(prev)
-      newMap.set(index, level)
-      return newMap
-    })
   }
 
   const handleClose = () => {
@@ -594,16 +579,15 @@ export default function PhotoFoodScanner({
     setSelectedFoods(newSelected)
   }
 
-  // Calculate adjusted nutrition for a food item based on fat level
-  const getAdjustedNutrition = (food: AnalyzedFood, index: number) => {
-    const fatLevel = getFatLevel(index)
-    const fatMultiplier = FAT_LEVELS[fatLevel].multiplier
+  // Calculate adjusted nutrition for a food item based on global fat level
+  const getAdjustedNutrition = (food: AnalyzedFood) => {
+    const fatMultiplier = FAT_LEVELS[globalFatLevel].multiplier
     const adjustedFats = Math.round(food.nutrition.fats * fatMultiplier)
     const fatCaloriesDiff = (adjustedFats - food.nutrition.fats) * 9
     return {
-      calories: food.nutrition.calories + fatCaloriesDiff,
-      proteins: food.nutrition.proteins,
-      carbs: food.nutrition.carbs,
+      calories: Math.round(food.nutrition.calories + fatCaloriesDiff),
+      proteins: Math.round(food.nutrition.proteins),
+      carbs: Math.round(food.nutrition.carbs),
       fats: adjustedFats,
       fiber: food.nutrition.fiber,
     }
@@ -614,7 +598,7 @@ export default function PhotoFoodScanner({
 
     const foods: FoodItem[] = Array.from(selectedFoods).map(index => {
       const food = analyzedFoods[index]
-      const adjustedNutrition = getAdjustedNutrition(food, index)
+      const adjustedNutrition = getAdjustedNutrition(food)
       return {
         id: `photo-${Date.now()}-${index}`,
         name: food.name,
@@ -632,7 +616,7 @@ export default function PhotoFoodScanner({
   const totalNutrition: NutritionInfo = Array.from(selectedFoods).reduce(
     (acc, index) => {
       const food = analyzedFoods[index]
-      const adjusted = getAdjustedNutrition(food, index)
+      const adjusted = getAdjustedNutrition(food)
       return {
         calories: acc.calories + adjusted.calories,
         proteins: acc.proteins + adjusted.proteins,
@@ -798,10 +782,14 @@ export default function PhotoFoodScanner({
                       isSelected={selectedFoods.has(index)}
                       onToggle={() => toggleFoodSelection(index)}
                       delay={index * 100}
-                      fatLevel={getFatLevel(index)}
-                      onFatLevelChange={(level) => setFatLevel(index, level)}
                     />
                   ))}
+
+                  {/* Global fat adjuster */}
+                  <GlobalFatAdjuster
+                    fatLevel={globalFatLevel}
+                    onFatLevelChange={setGlobalFatLevel}
+                  />
 
                   {/* Nutrition summary */}
                   {selectedFoods.size > 0 && (
@@ -948,22 +936,23 @@ const scanStyles = StyleSheet.create({
 
 const resultStyles = StyleSheet.create({
   foodItem: {
-    backgroundColor: '#1E293B',
+    backgroundColor: PASTEL.card,
     borderRadius: 16,
     marginBottom: 10,
-    borderWidth: 1.5,
-    borderColor: '#334155',
-    overflow: 'hidden',
-  },
-  foodItemSelected: {
-    borderColor: '#10B981',
-    backgroundColor: '#10B98110',
-  },
-  foodMainRow: {
+    borderWidth: 1,
+    borderColor: PASTEL.border,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    paddingBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  foodItemSelected: {
+    borderColor: PASTEL.greenDark,
+    backgroundColor: PASTEL.green + '20',
   },
   foodIcon: {
     width: 44,
@@ -979,7 +968,7 @@ const resultStyles = StyleSheet.create({
   foodName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F8FAFC',
+    color: PASTEL.text,
     marginBottom: 4,
   },
   foodMeta: {
@@ -989,7 +978,7 @@ const resultStyles = StyleSheet.create({
   },
   foodWeight: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: PASTEL.textSecondary,
   },
   confidenceBadge: {
     flexDirection: 'row',
@@ -1015,11 +1004,11 @@ const resultStyles = StyleSheet.create({
   caloriesValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F97316',
+    color: PASTEL.calories,
   },
   caloriesUnit: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: PASTEL.textSecondary,
     marginTop: -2,
   },
   checkbox: {
@@ -1027,76 +1016,79 @@ const resultStyles = StyleSheet.create({
     height: 26,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#475569',
+    borderColor: PASTEL.border,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: PASTEL.card,
   },
   checkboxSelected: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: PASTEL.greenDark,
+    borderColor: PASTEL.greenDark,
   },
-  // Macros row styles
-  macrosRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-    gap: 8,
-  },
-  macroChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
-  },
-  macroText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  fatChipHighlight: {
-    backgroundColor: '#8B5CF615',
+})
+
+// Fat adjuster styles (global)
+const fatAdjusterStyles = StyleSheet.create({
+  container: {
+    backgroundColor: PASTEL.card,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
     borderWidth: 1,
-    borderColor: '#8B5CF630',
+    borderColor: PASTEL.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  // Fat adjuster styles
-  fatAdjuster: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 'auto',
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    padding: 2,
-    gap: 2,
+    gap: 8,
+    marginBottom: 12,
   },
-  fatButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: PASTEL.text,
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  button: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
+    backgroundColor: PASTEL.fats + '30',
   },
-  fatButtonDisabled: {
+  buttonDisabled: {
     opacity: 0.4,
   },
-  fatLevelBadge: {
+  levelContainer: {
     alignItems: 'center',
-    paddingHorizontal: 6,
-    minWidth: 50,
+    minWidth: 80,
   },
-  fatLevelIcon: {
+  levelIcon: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  levelLabel: {
     fontSize: 14,
+    fontWeight: '600',
+    color: PASTEL.text,
   },
-  fatLevelText: {
-    fontSize: 9,
-    color: '#94A3B8',
-    fontWeight: '500',
+  hint: {
+    fontSize: 12,
+    color: PASTEL.textSecondary,
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
   },
 })
 
@@ -1106,8 +1098,17 @@ const summaryStyles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  gradient: {
+  card: {
+    backgroundColor: PASTEL.card,
     padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: PASTEL.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -1118,30 +1119,28 @@ const summaryStyles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#E2E8F0',
+    color: PASTEL.text,
   },
   grid: {
     flexDirection: 'row',
     gap: 16,
   },
   mainStat: {
-    width: 100,
+    width: 90,
+    backgroundColor: PASTEL.calories + '20',
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  mainStatGradient: {
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
   },
   mainValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: PASTEL.calories,
     marginTop: 4,
   },
   mainLabel: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: PASTEL.textSecondary,
     marginTop: -2,
   },
   macros: {
@@ -1163,16 +1162,16 @@ const summaryStyles = StyleSheet.create({
   macroValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: PASTEL.text,
   },
   macroLabel: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: PASTEL.textSecondary,
     marginTop: 2,
   },
   footer: {
     fontSize: 12,
-    color: '#64748B',
+    color: PASTEL.textSecondary,
     textAlign: 'center',
     marginTop: 16,
   },
@@ -1368,12 +1367,14 @@ const styles = StyleSheet.create({
   },
   analysisContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: PASTEL.bg,
   },
   imageContainer: {
-    height: SCREEN_HEIGHT * 0.35,
+    height: SCREEN_HEIGHT * 0.32,
     backgroundColor: '#000000',
     overflow: 'hidden',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   capturedImage: {
     width: '100%',
@@ -1395,10 +1396,7 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -24,
+    backgroundColor: PASTEL.bg,
   },
   resultsScroll: {
     flex: 1,
@@ -1416,18 +1414,18 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: '#10B98120',
+    backgroundColor: PASTEL.green + '40',
     justifyContent: 'center',
     alignItems: 'center',
   },
   resultsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: PASTEL.text,
   },
   resultsSubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: PASTEL.textSecondary,
     marginTop: 2,
   },
   confirmBar: {
@@ -1437,9 +1435,9 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     paddingBottom: 34,
-    backgroundColor: '#0F172A',
+    backgroundColor: PASTEL.bg,
     borderTopWidth: 1,
-    borderTopColor: '#1E293B',
+    borderTopColor: PASTEL.border,
   },
   confirmButton: {
     borderRadius: 16,
@@ -1469,10 +1467,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     overflow: 'hidden',
+    backgroundColor: PASTEL.card,
   },
   errorText: {
     fontSize: 15,
-    color: '#F8FAFC',
+    color: PASTEL.text,
     textAlign: 'center',
   },
   retryButton: {
