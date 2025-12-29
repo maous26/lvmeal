@@ -9,6 +9,7 @@ import MetabolicBoostScreen from '../screens/MetabolicBoostScreen'
 import RecipeDetailScreen from '../screens/RecipeDetailScreen'
 import SportInitiationScreen from '../screens/SportInitiationScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
+import CalendarScreen from '../screens/CalendarScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
 
@@ -45,6 +46,7 @@ export type RootStackParamList = {
   MetabolicBoost: undefined
   SportInitiation: undefined
   EditProfile: undefined
+  Calendar: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -113,6 +115,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="EditProfile"
             component={EditProfileScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="Calendar"
+            component={CalendarScreen}
             options={{
               animation: 'slide_from_right',
             }}

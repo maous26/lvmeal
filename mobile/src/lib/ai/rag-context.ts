@@ -32,6 +32,8 @@ export interface FullRAGContext {
     tdee: number
     dailyTarget: number
     deficitOrSurplus: number
+    sportCaloriesBonus: number // Extra calories from sport program
+    effectiveDailyTarget: number // dailyTarget + sportCaloriesBonus
   }
 
   // Today's Nutrition
@@ -112,6 +114,7 @@ export function buildFullRAGContext(data: {
   consumed: NutritionInfo
   target: NutritionInfo
   mealsLogged: number
+  sportCaloriesBonus?: number
   wellness?: {
     sleepHours?: number
     stressLevel?: number
@@ -125,7 +128,7 @@ export function buildFullRAGContext(data: {
     xpToNextLevel?: number
   }
 }): FullRAGContext {
-  const { profile, consumed, target, mealsLogged, wellness, gamification } = data
+  const { profile, consumed, target, mealsLogged, sportCaloriesBonus = 0, wellness, gamification } = data
 
   // Calculate BMI
   const bmi = profile.weight && profile.height
@@ -135,9 +138,11 @@ export function buildFullRAGContext(data: {
   // Calculate metabolism (approximate)
   const tdee = target.calories
   const bmr = Math.round(tdee / 1.55)
+  const effectiveDailyTarget = target.calories + sportCaloriesBonus
 
+  // Use effective target (with sport bonus) for remaining calculation
   const remaining: NutritionInfo = {
-    calories: Math.max(0, target.calories - consumed.calories),
+    calories: Math.max(0, effectiveDailyTarget - consumed.calories),
     proteins: Math.max(0, target.proteins - consumed.proteins),
     carbs: Math.max(0, target.carbs - consumed.carbs),
     fats: Math.max(0, target.fats - consumed.fats),
@@ -166,6 +171,8 @@ export function buildFullRAGContext(data: {
       tdee,
       dailyTarget: target.calories,
       deficitOrSurplus: profile.goal === 'weight_loss' ? -400 : profile.goal === 'muscle_gain' ? 300 : 0,
+      sportCaloriesBonus,
+      effectiveDailyTarget,
     },
 
     nutritionToday: {
@@ -240,6 +247,9 @@ export function getFullRAGContext(): FullRAGContext {
   const profile = userState.profile || {}
   const needs = userState.nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 70 }
 
+  // Get sport calorie bonus if enrolled in sport program
+  const sportCaloriesBonus = needs.sportCaloriesBonus || 0
+
   const today = new Date().toISOString().split('T')[0]
   const todayData = mealsState.getTodayData?.() || { totalNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 }, meals: [] }
   const todayEntry = wellnessState.getEntryForDate?.(today)
@@ -250,6 +260,7 @@ export function getFullRAGContext(): FullRAGContext {
     consumed: todayData.totalNutrition,
     target: needs,
     mealsLogged: todayData.meals?.length || 0,
+    sportCaloriesBonus,
     wellness: {
       sleepHours: todayEntry?.sleepHours,
       stressLevel: todayEntry?.stressLevel,
@@ -287,11 +298,14 @@ ${context.profile.religiousDiet ? `- Regime religieux: ${context.profile.religio
 ${context.profile.allergies.length > 0 ? `- ALLERGIES (EVITER ABSOLUMENT): ${context.profile.allergies.join(', ')}` : ''}`)
 
   // Metabolism section
+  const sportBonusText = context.metabolism.sportCaloriesBonus > 0
+    ? `\n- Bonus sport (programme actif): +${context.metabolism.sportCaloriesBonus} kcal\n- Objectif EFFECTIF: ${context.metabolism.effectiveDailyTarget} kcal`
+    : ''
   sections.push(`METABOLISME:
 - BMR (metabolisme de base): ${context.metabolism.bmr} kcal
 - TDEE (depense totale): ${context.metabolism.tdee} kcal
-- Objectif calorique quotidien: ${context.metabolism.dailyTarget} kcal
-- Deficit/Surplus: ${context.metabolism.deficitOrSurplus > 0 ? '+' : ''}${context.metabolism.deficitOrSurplus} kcal`)
+- Objectif calorique base: ${context.metabolism.dailyTarget} kcal
+- Deficit/Surplus: ${context.metabolism.deficitOrSurplus > 0 ? '+' : ''}${context.metabolism.deficitOrSurplus} kcal${sportBonusText}`)
 
   // Today's nutrition
   sections.push(`NUTRITION AUJOURD'HUI:

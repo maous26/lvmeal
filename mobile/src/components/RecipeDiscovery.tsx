@@ -25,7 +25,6 @@ import {
   Search,
   Clock,
   Flame,
-  Dumbbell,
   ChefHat,
   Globe,
   Sparkles,
@@ -548,24 +547,14 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
                 </View>
               )}
               <View style={styles.metaItem}>
-                <Flame size={12} color={colors.text.tertiary} />
+                <Flame size={12} color={colors.nutrients.calories} />
                 <Text style={styles.metaText}>{recipe.nutritionPerServing?.calories || 0} kcal</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Dumbbell size={12} color={colors.text.tertiary} />
-                <Text style={styles.metaText}>{recipe.nutritionPerServing?.proteins || 0}g</Text>
               </View>
             </View>
             <View style={styles.recipeFooter}>
               <Badge variant="outline" size="sm" style={{ borderColor: difficulty.color }}>
                 <Text style={{ color: difficulty.color, fontSize: 10 }}>{difficulty.label}</Text>
               </Badge>
-              {recipe.rating && (
-                <View style={styles.ratingContainer}>
-                  <Star size={12} color="#F59E0B" fill="#F59E0B" />
-                  <Text style={styles.ratingText}>{recipe.rating.toFixed(1)}</Text>
-                </View>
-              )}
             </View>
           </View>
         </View>

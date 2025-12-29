@@ -11,7 +11,7 @@ import {
   Alert,
   Platform,
 } from 'react-native'
-import { Mic, MicOff, X, Check, Edit2, AlertCircle } from 'lucide-react-native'
+import { X, Check, Edit2, AlertCircle } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 // Note: expo-speech is for TTS, for STT we'll use a different approach
 // For now, we'll use a text-based fallback with AI analysis
@@ -33,7 +33,6 @@ export default function VoiceFoodInput({
   onFoodsDetected,
 }: VoiceFoodInputProps) {
   const [transcript, setTranscript] = useState('')
-  const [isListening, setIsListening] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [analyzedFoods, setAnalyzedFoods] = useState<AnalyzedFood[]>([])
@@ -42,7 +41,6 @@ export default function VoiceFoodInput({
 
   const resetState = () => {
     setTranscript('')
-    setIsListening(false)
     setIsAnalyzing(false)
     setIsEditing(false)
     setAnalyzedFoods([])
@@ -55,29 +53,14 @@ export default function VoiceFoodInput({
     onClose()
   }
 
-  // Note: Real voice recognition would require native modules or a cloud service
-  // For React Native, you can use:
-  // - react-native-voice (native module)
-  // - expo-speech for TTS only
-  // - Web Speech API via WebView
-  // Here we provide a text-based fallback
+  // Note: Real voice recognition requires native build (@react-native-voice/voice)
+  // In Expo Go / dev mode, we use text input as fallback
+  // Production will have real speech-to-text with:
+  // - Silence detection (pause > 1.5s to stop)
+  // - Filler word handling (euh, hmm, etc.)
+  // - Partial results for live feedback
 
-  const toggleListening = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-    if (isListening) {
-      setIsListening(false)
-      // In a real implementation, stop voice recognition here
-    } else {
-      setIsListening(true)
-      // In a real implementation, start voice recognition here
-      // For now, show editing mode after a delay
-      setTimeout(() => {
-        setIsListening(false)
-        setIsEditing(true)
-      }, 2000)
-    }
-  }
+  const isDevMode = __DEV__
 
   const handleAnalyze = async () => {
     if (!transcript.trim()) {
@@ -191,46 +174,38 @@ export default function VoiceFoodInput({
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Voice Button */}
+          {/* Voice Input Section */}
           {!isEditing && analyzedFoods.length === 0 && (
             <View style={styles.voiceSection}>
-              <TouchableOpacity
-                style={[styles.voiceButton, isListening && styles.voiceButtonActive]}
-                onPress={toggleListening}
-                disabled={isAnalyzing}
-              >
-                {isListening ? (
-                  <MicOff size={48} color="#FFFFFF" />
-                ) : (
-                  <Mic size={48} color={isAnalyzing ? colors.text.muted : colors.accent.primary} />
-                )}
-              </TouchableOpacity>
-
-              <Text style={styles.voiceInstructions}>
-                {isListening
-                  ? 'Parlez maintenant...'
-                  : isAnalyzing
-                    ? 'Analyse en cours...'
-                    : 'Appuyez pour parler'}
-              </Text>
-
-              {isListening && (
-                <View style={styles.listeningIndicator}>
-                  <ActivityIndicator size="small" color={colors.accent.primary} />
-                  <Text style={styles.listeningText}>Ecoute...</Text>
+              {/* Dev mode banner */}
+              {isDevMode && (
+                <View style={styles.devBanner}>
+                  <Text style={styles.devBannerIcon}>🧪</Text>
+                  <View style={styles.devBannerContent}>
+                    <Text style={styles.devBannerTitle}>Mode développement</Text>
+                    <Text style={styles.devBannerText}>
+                      La reconnaissance vocale nécessite un build natif. Utilise la saisie texte.
+                    </Text>
+                  </View>
                 </View>
               )}
 
-              {/* Fallback text input */}
-              <Text style={styles.orText}>ou</Text>
-              <Button
-                variant="outline"
-                size="default"
+              {/* Main input button - goes directly to text input in dev mode */}
+              <TouchableOpacity
+                style={styles.voiceButton}
                 onPress={() => setIsEditing(true)}
+                disabled={isAnalyzing}
               >
-                <Edit2 size={18} color={colors.accent.primary} />
-                <Text style={styles.outlineButtonText}>Saisir manuellement</Text>
-              </Button>
+                <Edit2 size={48} color={colors.accent.primary} />
+              </TouchableOpacity>
+
+              <Text style={styles.voiceInstructions}>
+                Décris ton repas
+              </Text>
+
+              <Text style={styles.exampleText}>
+                Ex: "J'ai mangé un sandwich poulet avec une salade et un café"
+              </Text>
             </View>
           )}
 
@@ -415,7 +390,31 @@ const styles = StyleSheet.create({
   },
   voiceSection: {
     alignItems: 'center',
-    paddingVertical: spacing['2xl'],
+    paddingVertical: spacing.xl,
+  },
+  devBanner: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
+    width: '100%',
+  },
+  devBannerIcon: {
+    fontSize: 20,
+  },
+  devBannerContent: {
+    flex: 1,
+  },
+  devBannerTitle: {
+    ...typography.smallMedium,
+    color: colors.warning,
+    marginBottom: 2,
+  },
+  devBannerText: {
+    ...typography.caption,
+    color: colors.text.secondary,
   },
   voiceButton: {
     width: 120,
@@ -426,33 +425,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  voiceButtonActive: {
-    backgroundColor: colors.accent.primary,
-  },
   voiceInstructions: {
-    ...typography.body,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
+    ...typography.h4,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
   },
-  listeningIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  listeningText: {
+  exampleText: {
     ...typography.small,
-    color: colors.accent.primary,
-  },
-  orText: {
-    ...typography.body,
     color: colors.text.muted,
-    marginVertical: spacing.md,
-  },
-  outlineButtonText: {
-    ...typography.bodyMedium,
-    color: colors.accent.primary,
-    marginLeft: spacing.sm,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingHorizontal: spacing.lg,
   },
   transcriptSection: {
     marginTop: spacing.md,

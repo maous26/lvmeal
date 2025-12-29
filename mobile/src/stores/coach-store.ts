@@ -12,7 +12,9 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LymIABrain, type UserContext, type CoachingAdvice } from '../services/lymia-brain'
+import { getPhaseContext, PhaseMessages, type PhaseContext } from '../services/phase-context'
 import type { UserProfile } from '../types'
+import type { MetabolicPhase } from './metabolic-boost-store'
 
 export type CoachItemType = 'tip' | 'analysis' | 'alert' | 'celebration'
 
@@ -85,6 +87,10 @@ export interface CoachContext {
   // Time context
   currentHour?: number
   dayOfWeek?: number
+  // MetabolicBoost program context
+  metabolicBoostEnrolled?: boolean
+  metabolicBoostPhase?: MetabolicPhase
+  metabolicBoostWeek?: number
 }
 
 interface CoachState {
@@ -109,6 +115,7 @@ const generateId = () => `coach_${Date.now()}_${Math.random().toString(36).subst
 
 /**
  * Génère les items (conseils, analyses, alertes) basés sur le contexte
+ * Adapts messaging based on MetabolicBoost phase when enrolled
  */
 function generateItemsFromContext(context: CoachContext): CoachItem[] {
   const items: CoachItem[] = []
@@ -116,37 +123,77 @@ function generateItemsFromContext(context: CoachContext): CoachItem[] {
   const hour = context.currentHour ?? now.getHours()
   const firstName = context.firstName || ''
 
+  // Get phase context if user is in MetabolicBoost program
+  const phaseContext: PhaseContext | null = context.metabolicBoostEnrolled && context.metabolicBoostPhase
+    ? getPhaseContext(context.metabolicBoostPhase, context.metabolicBoostWeek || 1)
+    : null
+
+  // Helper to check if we should show calorie-related alerts
+  const isNoRestrictionPhase = phaseContext?.isNoRestrictionPhase ?? false
+
   // ========== ALERTES (priorité haute) ==========
 
-  // Déficit calorique dangereux
+  // Déficit calorique dangereux - ADAPT TO PHASE
   if (context.caloriesConsumed && context.caloriesTarget) {
     const ratio = context.caloriesConsumed / context.caloriesTarget
 
-    if (ratio < 0.25 && hour >= 16) {
-      items.push({
-        id: generateId(),
-        type: 'alert',
-        category: 'nutrition',
-        title: 'Déficit important détecté',
-        message: `${firstName ? firstName + ', tu' : 'Tu'} n'as consommé que ${context.caloriesConsumed} kcal aujourd'hui (${Math.round(ratio * 100)}% de ton objectif). Un déficit trop important peut ralentir ton métabolisme et augmenter les fringales. Prends soin de toi avec un repas équilibré ce soir.`,
-        priority: 'high',
-        source: 'expert',
-        data: { consumed: context.caloriesConsumed, target: context.caloriesTarget, ratio },
-        isRead: false,
-        createdAt: now.toISOString(),
-      })
-    } else if (ratio > 1.3) {
-      items.push({
-        id: generateId(),
-        type: 'alert',
-        category: 'nutrition',
-        title: 'Objectif calorique dépassé',
-        message: `Tu as dépassé ton objectif de ${Math.round((ratio - 1) * 100)}% aujourd'hui. Pas de panique ! Un écart occasionnel ne change rien sur le long terme. Demain est une nouvelle journée.`,
-        priority: 'medium',
-        source: 'expert',
-        isRead: false,
-        createdAt: now.toISOString(),
-      })
+    // Phase 1: Different messaging - no deficit alerts, encourage eating
+    if (isNoRestrictionPhase) {
+      if (ratio < 0.5 && hour >= 14) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'nutrition',
+          title: 'N\'hésite pas à manger',
+          message: `${firstName ? firstName + ', en' : 'En'} phase Découverte, l'objectif est de manger à ta faim. Écoute ton corps et mange si tu as faim. C'est important pour stabiliser ton métabolisme.`,
+          priority: 'medium',
+          source: 'expert',
+          data: { consumed: context.caloriesConsumed, target: context.caloriesTarget, ratio },
+          isRead: false,
+          createdAt: now.toISOString(),
+        })
+      } else if (ratio > 1.3) {
+        // No alert for surplus in Phase 1 - this is expected behavior
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'nutrition',
+          title: 'C\'est normal !',
+          message: `Tu as bien mangé aujourd'hui. En phase Découverte, c'est parfaitement normal. Ton corps réapprend la satiété naturelle. Continue d'écouter tes sensations.`,
+          priority: 'low',
+          source: 'expert',
+          isRead: false,
+          createdAt: now.toISOString(),
+        })
+      }
+    } else {
+      // Standard messaging for other phases
+      if (ratio < 0.25 && hour >= 16) {
+        items.push({
+          id: generateId(),
+          type: 'alert',
+          category: 'nutrition',
+          title: 'Déficit important détecté',
+          message: `${firstName ? firstName + ', tu' : 'Tu'} n'as consommé que ${context.caloriesConsumed} kcal aujourd'hui (${Math.round(ratio * 100)}% de ton objectif). Un déficit trop important peut ralentir ton métabolisme et augmenter les fringales. Prends soin de toi avec un repas équilibré ce soir.`,
+          priority: 'high',
+          source: 'expert',
+          data: { consumed: context.caloriesConsumed, target: context.caloriesTarget, ratio },
+          isRead: false,
+          createdAt: now.toISOString(),
+        })
+      } else if (ratio > 1.3) {
+        items.push({
+          id: generateId(),
+          type: 'alert',
+          category: 'nutrition',
+          title: 'Objectif calorique dépassé',
+          message: `Tu as dépassé ton objectif de ${Math.round((ratio - 1) * 100)}% aujourd'hui. Pas de panique ! Un écart occasionnel ne change rien sur le long terme. Demain est une nouvelle journée.`,
+          priority: 'medium',
+          source: 'expert',
+          isRead: false,
+          createdAt: now.toISOString(),
+        })
+      }
     }
   }
 
@@ -441,6 +488,113 @@ function generateItemsFromContext(context: CoachContext): CoachItem[] {
       createdAt: now.toISOString(),
       expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
     })
+  }
+
+  // ========== CONSEILS SPÉCIFIQUES PROGRAMME MÉTABOLIQUE ==========
+
+  if (phaseContext && context.metabolicBoostEnrolled) {
+    // Phase 1 specific tips
+    if (phaseContext.phase === 'discovery') {
+      // Morning tip: focus on habits
+      if (hour >= 7 && hour <= 10) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'metabolism',
+          title: 'Phase Découverte - Rappel',
+          message: `${firstName ? firstName + ', rappelle-toi' : 'Rappelle-toi'} : en Phase 1, pas de restriction ! Mange à ta faim aujourd'hui. L'objectif est de stabiliser ton métabolisme, pas de perdre du poids.`,
+          priority: 'medium',
+          source: 'programme',
+          isRead: false,
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+        })
+      }
+
+      // Hydration reminder
+      if (hour >= 11 && hour <= 15 && (context.waterConsumed || 0) < 1000) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'hydration',
+          title: 'Hydratation Phase 1',
+          message: 'L\'hydratation est clé en Phase Découverte. Vise 2L d\'eau par jour. Ça aide ton métabolisme à fonctionner et réduit les fausses faims.',
+          priority: 'medium',
+          source: 'programme',
+          actionLabel: 'Ajouter de l\'eau',
+          isRead: false,
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString(),
+        })
+      }
+
+      // Walk reminder
+      if (hour >= 17 && hour <= 20) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'sport',
+          title: 'Marche quotidienne',
+          message: 'As-tu fait ta marche de 20-30 min aujourd\'hui ? C\'est l\'un des piliers de la Phase Découverte. Une simple promenade après le dîner suffit !',
+          priority: 'low',
+          source: 'programme',
+          isRead: false,
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(),
+        })
+      }
+    }
+
+    // Phase 2 (walking) tips
+    if (phaseContext.phase === 'walking') {
+      if (hour >= 8 && hour <= 11) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'metabolism',
+          title: 'Phase Marche Active',
+          message: 'Tu progresses bien ! En Phase 2, on augmente la marche à 30-45 min/jour et on ajoute de la mobilité. Ton métabolisme se réveille !',
+          priority: 'medium',
+          source: 'programme',
+          isRead: false,
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+        })
+      }
+    }
+
+    // Phase 3 (resistance) tips
+    if (phaseContext.phase === 'resistance') {
+      if (hour >= 8 && hour <= 11) {
+        items.push({
+          id: generateId(),
+          type: 'tip',
+          category: 'sport',
+          title: 'Phase Résistance',
+          message: 'Tu es en phase de construction musculaire ! 2-3 séances de renforcement par semaine. Le muscle augmente ton métabolisme de base.',
+          priority: 'medium',
+          source: 'programme',
+          isRead: false,
+          createdAt: now.toISOString(),
+          expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+        })
+      }
+    }
+
+    // Celebrate phase completion
+    if (context.metabolicBoostWeek === 1 && hour >= 10 && hour <= 14) {
+      items.push({
+        id: generateId(),
+        type: 'celebration',
+        category: 'progress',
+        title: `Semaine 1 de ${phaseContext.phaseName}`,
+        message: `Bravo ! Tu as commencé la ${phaseContext.phaseName}. Continue à suivre les objectifs et tu verras des résultats durables.`,
+        priority: 'low',
+        isRead: false,
+        createdAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      })
+    }
   }
 
   return items
