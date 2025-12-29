@@ -82,9 +82,9 @@ export default function HomeScreen() {
     navigation.navigate('Profile', { screen: 'Achievements' })
   }
 
-  const handleNavigateToPlan = () => {
+  const handleNavigateToPlan = (options: { duration: 1 | 3 | 7; calorieReduction: boolean }) => {
     // @ts-ignore - Navigation typing
-    navigation.navigate('WeeklyPlan')
+    navigation.navigate('WeeklyPlan', options)
   }
 
   const handleNavigateToMetabolicBoost = () => {
