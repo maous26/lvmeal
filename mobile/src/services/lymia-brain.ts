@@ -967,6 +967,196 @@ INSTRUCTIONS:
   }
 }
 
+// ============= CONNECTED INSIGHTS =============
+
+/**
+ * Connected Insight - Messages that link features together
+ * This is KEY to avoid the app feeling "loaded" with disconnected features
+ */
+export interface ConnectedInsight {
+  id: string
+  message: string
+  linkedFeatures: Array<'nutrition' | 'sport' | 'sleep' | 'stress' | 'hydration' | 'weight'>
+  actionLabel?: string
+  actionRoute?: string
+  priority: 'high' | 'medium' | 'low'
+  icon: 'link' | 'alert' | 'tip' | 'celebration'
+}
+
+/**
+ * Generate connected insights that explain relationships between features
+ * This makes the app feel cohesive - the coach explains WHY things are connected
+ */
+export async function generateConnectedInsights(
+  context: UserContext
+): Promise<ConnectedInsight[]> {
+  const { profile, todayNutrition, wellnessData, programProgress } = context
+
+  // Query knowledge base for cross-domain relationships
+  const kbEntries = await queryKB(
+    `lien sommeil nutrition performance sport stress cortisol metabolisme recuperation`,
+    ['nutrition', 'wellness', 'sport', 'metabolism']
+  )
+  const kbContext = buildKBContext(kbEntries)
+
+  // Calculate ratios
+  const calorieRatio = profile.nutritionalNeeds
+    ? todayNutrition.calories / profile.nutritionalNeeds.calories
+    : 0
+  const proteinRatio = profile.nutritionalNeeds
+    ? todayNutrition.proteins / profile.nutritionalNeeds.proteins
+    : 0
+
+  const prompt = `Tu es LymIA, le coach central de l'app. Ta mission ESSENTIELLE est de CONNECTER les différentes dimensions de la santé pour que l'utilisateur comprenne que tout est lié.
+
+CONTEXTE ACTUEL:
+- Heure: ${new Date().getHours()}h
+- Calories: ${todayNutrition.calories} (${Math.round(calorieRatio * 100)}% objectif)
+- Protéines: ${todayNutrition.proteins}g (${Math.round(proteinRatio * 100)}% objectif)
+- Sommeil: ${wellnessData.sleepHours || '?'}h
+- Stress: ${wellnessData.stressLevel || '?'}/10
+- Énergie: ${wellnessData.energyLevel || '?'}/5
+- Hydratation: ${wellnessData.hydrationLiters || '?'}L
+${programProgress ? `- Programme actif: ${programProgress.type}` : ''}
+
+PROFIL:
+- Objectif: ${profile.goal}
+
+CONNAISSANCES SCIENTIFIQUES:
+${kbContext}
+
+MISSION CRUCIALE:
+Tu dois générer 2-3 messages qui CONNECTENT explicitement les features entre elles.
+Exemples de connexions à faire:
+- "Ton sommeil de 5h va impacter ta faim aujourd'hui → je te propose des repas plus rassasiants"
+- "Ton stress élevé + déficit calorique = risque de craquage → on ajuste tes repas"
+- "Excellente nuit ! Parfait pour ta séance sport → voici un petit-déj adapté"
+- "Tu n'as pas bu assez → ça peut expliquer ta fatigue → hydrate-toi avant le sport"
+
+FORMAT OBLIGATOIRE - Messages courts et connecteurs:
+- Commence par constater un FAIT (donnée)
+- Utilise "→" ou "donc" pour CONNECTER à une autre dimension
+- Termine par une ACTION ou PROPOSITION
+
+Réponds en JSON:
+{
+  "insights": [
+    {
+      "message": "Message court connectant 2-3 dimensions (max 100 caractères)",
+      "linkedFeatures": ["feature1", "feature2"],
+      "actionLabel": "Bouton action (optionnel)",
+      "actionRoute": "route navigation (optionnel)",
+      "priority": "high|medium|low",
+      "icon": "link|alert|tip|celebration"
+    }
+  ]
+}`
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      response_format: { type: 'json_object' },
+    })
+
+    const result = JSON.parse(response.choices[0].message.content || '{}')
+
+    return (result.insights || []).map((insight: {
+      message: string
+      linkedFeatures: string[]
+      actionLabel?: string
+      actionRoute?: string
+      priority: 'high' | 'medium' | 'low'
+      icon: 'link' | 'alert' | 'tip' | 'celebration'
+    }, index: number) => ({
+      id: `insight_${Date.now()}_${index}`,
+      message: insight.message,
+      linkedFeatures: insight.linkedFeatures as ConnectedInsight['linkedFeatures'],
+      actionLabel: insight.actionLabel,
+      actionRoute: insight.actionRoute,
+      priority: insight.priority || 'medium',
+      icon: insight.icon || 'link',
+    }))
+  } catch (error) {
+    console.error('LymIA connected insights error:', error)
+    // Fallback with static connected insights based on data
+    return generateStaticConnectedInsights(context)
+  }
+}
+
+/**
+ * Fallback static insights when AI is unavailable
+ */
+function generateStaticConnectedInsights(context: UserContext): ConnectedInsight[] {
+  const insights: ConnectedInsight[] = []
+  const { wellnessData, todayNutrition, profile } = context
+
+  // Sleep → Nutrition connection
+  if (wellnessData.sleepHours !== undefined && wellnessData.sleepHours < 6) {
+    insights.push({
+      id: `static_sleep_nutrition_${Date.now()}`,
+      message: `${wellnessData.sleepHours}h de sommeil → je privilégie des repas rassasiants aujourd'hui`,
+      linkedFeatures: ['sleep', 'nutrition'],
+      actionLabel: 'Voir suggestions',
+      priority: 'high',
+      icon: 'link',
+    })
+  }
+
+  // Stress → Nutrition connection
+  if (wellnessData.stressLevel !== undefined && wellnessData.stressLevel >= 7) {
+    insights.push({
+      id: `static_stress_nutrition_${Date.now()}`,
+      message: `Stress élevé (${wellnessData.stressLevel}/10) → on évite les sucres rapides`,
+      linkedFeatures: ['stress', 'nutrition'],
+      priority: 'medium',
+      icon: 'alert',
+    })
+  }
+
+  // Hydration → Energy connection
+  if (wellnessData.hydrationLiters !== undefined && wellnessData.hydrationLiters < 1) {
+    insights.push({
+      id: `static_hydration_energy_${Date.now()}`,
+      message: `Hydratation faible → peut expliquer ta fatigue, bois avant toute activité`,
+      linkedFeatures: ['hydration', 'sport'],
+      actionLabel: 'Ajouter eau',
+      priority: 'medium',
+      icon: 'tip',
+    })
+  }
+
+  // Good sleep → Sport opportunity
+  if (wellnessData.sleepHours !== undefined && wellnessData.sleepHours >= 7 && wellnessData.energyLevel !== undefined && wellnessData.energyLevel >= 4) {
+    insights.push({
+      id: `static_sleep_sport_${Date.now()}`,
+      message: `Bonne nuit + énergie → journée idéale pour une séance sport !`,
+      linkedFeatures: ['sleep', 'sport'],
+      actionLabel: 'Programme sport',
+      actionRoute: 'SportInitiation',
+      priority: 'low',
+      icon: 'celebration',
+    })
+  }
+
+  // Protein deficit → Sport impact
+  const proteinRatio = profile.nutritionalNeeds
+    ? todayNutrition.proteins / profile.nutritionalNeeds.proteins
+    : 1
+  if (proteinRatio < 0.5 && new Date().getHours() >= 16) {
+    insights.push({
+      id: `static_protein_sport_${Date.now()}`,
+      message: `Protéines basses → récupération musculaire compromise, rattrape ce soir`,
+      linkedFeatures: ['nutrition', 'sport'],
+      priority: 'medium',
+      icon: 'link',
+    })
+  }
+
+  return insights.slice(0, 3) // Max 3 insights
+}
+
 // ============= EXPORTS =============
 
 export const LymIABrain = {
@@ -977,9 +1167,12 @@ export const LymIABrain = {
   evaluateProgramProgress,
   askLymIA,
 
-  // History & Results Analysis (NEW)
+  // History & Results Analysis
   analyzeUserHistory,
   analyzeResults,
+
+  // Connected Insights (NEW - Key for cohesive UX)
+  generateConnectedInsights,
 }
 
 export default LymIABrain
