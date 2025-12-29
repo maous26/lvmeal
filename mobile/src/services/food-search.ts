@@ -207,6 +207,12 @@ function detectServingUnit(name: string, category?: string): ServingUnit {
 
 // ============= CIQUAL SEARCH =============
 
+/**
+ * Smart search algorithm that prioritizes:
+ * 1. Exact matches and short base food names over derivatives
+ * 2. Word boundary matches (not substring matches)
+ * 3. Multi-word queries: all words must be present
+ */
 async function searchCiqual(query: string, limit: number): Promise<FoodItem[]> {
   const foods = await loadCiqual()
   const searchIndex = await loadCiqualSearchIndex()
@@ -217,42 +223,123 @@ async function searchCiqual(query: string, limit: number): Promise<FoodItem[]> {
   const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1)
 
   // Score each food
-  const scored: { score: number; id: string }[] = []
+  const scored: { score: number; id: string; name: string }[] = []
 
   for (const item of searchIndex) {
-    let score = 0
     const normalizedName = item.name
+    // Split on spaces, commas, parentheses, slashes, hyphens, and apostrophes
+    const nameWords = normalizedName.split(/[\s,()/''-]+/).filter(w => w.length > 1)
 
-    // Exact match
+    // For multi-word queries, ALL words must be present
+    if (queryWords.length > 1) {
+      const allWordsPresent = queryWords.every(qw =>
+        nameWords.some(nw => nw === qw || nw.startsWith(qw))
+      )
+      if (!allWordsPresent) continue
+    }
+
+    let score = 0
+
+    // === EXACT MATCH BONUS ===
     if (normalizedName === normalizedQuery) {
-      score = 100
+      score = 1000 // Perfect match
     }
-    // Name starts with query
-    else if (normalizedName.startsWith(normalizedQuery)) {
-      score = 50
-    }
-    // Name contains query
-    else if (normalizedName.includes(normalizedQuery)) {
-      score = 30
+    // === WORD BOUNDARY MATCHING ===
+    else {
+      // Check if query matches a complete word in the name
+      const queryIsCompleteWord = nameWords.some(w => w === normalizedQuery)
+      // First word exactly matches OR first word starts with query (for single-word queries)
+      const firstWordExactMatch = nameWords[0] === normalizedQuery
+      const firstWordStartsWithQuery = nameWords[0]?.startsWith(normalizedQuery)
+
+      // For single-word queries, prioritize exact word matches over substring matches
+      // This prevents "laitue" from ranking higher than "lait entier" when searching "lait"
+      const isSubstringMatch = !queryIsCompleteWord && normalizedName.includes(normalizedQuery)
+
+      if (queryIsCompleteWord && nameWords.length === 1) {
+        // Single word name that matches exactly
+        score = 900
+      } else if (firstWordExactMatch && nameWords.length <= 3) {
+        // First word exactly matches query - likely a base food (e.g., "Lait entier")
+        score = 850
+      } else if (queryIsCompleteWord && nameWords.length <= 2) {
+        // Short name (1-2 words) containing the query as a word
+        score = 800
+      } else if (queryIsCompleteWord) {
+        // Query is a complete word in a longer name
+        score = 600
+      } else if (firstWordStartsWithQuery && nameWords.length <= 2) {
+        // First word starts with query in a short name
+        score = 550
+      } else if (firstWordStartsWithQuery) {
+        // Name starts with query but has more words
+        score = 500
+      } else if (normalizedName.startsWith(normalizedQuery)) {
+        // Name starts with query (substring)
+        score = 400
+      } else if (isSubstringMatch) {
+        // Name contains query as substring (e.g., "laitue" contains "lait")
+        // Lower score for substring-only matches
+        score = 150
+      }
+
+      // === MULTI-WORD QUERY BONUS ===
+      if (queryWords.length > 1) {
+        let wordMatchCount = 0
+        let exactWordMatches = 0
+
+        for (const qw of queryWords) {
+          // Exact word match (word boundary)
+          if (nameWords.some(nw => nw === qw)) {
+            exactWordMatches++
+            wordMatchCount++
+          }
+          // Word starts with query word
+          else if (nameWords.some(nw => nw.startsWith(qw))) {
+            wordMatchCount++
+          }
+        }
+
+        // Bonus for having all query words as exact matches
+        if (exactWordMatches === queryWords.length) {
+          score += 150
+        }
+        // Bonus for partial matches
+        score += wordMatchCount * 30
+      }
     }
 
-    // Check each query word
-    for (const word of queryWords) {
-      if (normalizedName.includes(word)) {
-        score += 10
+    // === LENGTH PENALTY ===
+    // Shorter names are usually base foods, longer names are derivatives
+    // "oeuf" (4 chars) should rank higher than "oeuf brouillé au fromage" (25 chars)
+    if (score > 0) {
+      const lengthPenalty = Math.min(normalizedName.length * 2, 100)
+      score -= lengthPenalty
+
+      // Extra penalty for very long names (likely composite/prepared foods)
+      if (normalizedName.length > 30) {
+        score -= 50
       }
-      if (item.groupName.includes(word)) {
-        score += 5
+    }
+
+    // === CATEGORY BONUS ===
+    // Boost if query word appears in group name
+    for (const word of queryWords) {
+      if (item.groupName.toLowerCase().includes(word)) {
+        score += 10
       }
     }
 
     if (score > 0) {
-      scored.push({ score, id: item.id })
+      scored.push({ score, id: item.id, name: normalizedName })
     }
   }
 
-  // Sort by score
-  scored.sort((a, b) => b.score - a.score)
+  // Sort by score (highest first), then by name length (shortest first for ties)
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score
+    return a.name.length - b.name.length
+  })
 
   // Map to FoodItem
   const results: FoodItem[] = []
