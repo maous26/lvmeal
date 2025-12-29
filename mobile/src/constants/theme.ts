@@ -144,6 +144,27 @@ export const typography = {
     fontWeight: '600' as const,
     letterSpacing: -0.2,
   },
+  // Size-based aliases
+  lg: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '400' as const,
+  },
+  md: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400' as const,
+  },
+  sm: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400' as const,
+  },
+  xs: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400' as const,
+  },
   body: {
     fontSize: 16,
     lineHeight: 24,
