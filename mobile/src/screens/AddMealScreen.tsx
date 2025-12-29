@@ -45,7 +45,7 @@ import {
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { Card, Button, Badge } from '../components/ui'
+import { Card, Button, Badge, NutriScoreBadge } from '../components/ui'
 import { colors, spacing, typography, radius, shadows } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -1146,6 +1146,9 @@ export default function AddMealScreen() {
                         <Text style={styles.foodName} numberOfLines={1}>
                           {food.name}
                         </Text>
+                        {food.nutriscore && food.nutriscore !== 'unknown' && (
+                          <NutriScoreBadge grade={food.nutriscore} size="sm" />
+                        )}
                         {food.source && (
                           <View style={styles.foodSourceBadge}>
                             {getSourceIcon(food.source)}
@@ -1437,7 +1440,11 @@ export default function AddMealScreen() {
           transparent
           onRequestClose={closeQuantityModal}
         >
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            style={styles.modalOverlay}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+          >
             <TouchableOpacity
               style={styles.modalBackdrop}
               activeOpacity={1}
@@ -1520,6 +1527,8 @@ export default function AddMealScreen() {
                           onChangeText={(text) => setQuantityValue(parseFloat(text) || 0)}
                           keyboardType="numeric"
                           selectTextOnFocus
+                          returnKeyType="done"
+                          blurOnSubmit
                         />
                         <Text style={styles.quantityInputUnit}>
                           {getUnitLabel(quantityModal.unit)}
@@ -1608,7 +1617,7 @@ export default function AddMealScreen() {
                 </>
               )}
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
 
         {/* Barcode Scanner Modal */}

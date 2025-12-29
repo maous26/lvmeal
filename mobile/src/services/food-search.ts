@@ -9,7 +9,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { FoodItem, NutritionInfo } from '../types'
+import type { FoodItem, NutritionInfo, NutriScoreGrade } from '../types'
 
 // ============= TYPES =============
 
@@ -64,6 +64,7 @@ interface OpenFoodFactsProduct {
   }
   serving_size?: string
   categories_tags?: string[]
+  nutriscore_grade?: string // Official Nutri-Score from OFF (a, b, c, d, e)
 }
 
 interface CacheEntry<T> {
@@ -297,6 +298,18 @@ function transformOffProduct(p: OpenFoodFactsProduct): FoodItem | null {
   const fullName = brand ? `${name} - ${brand}` : name
   const servingUnit = detectServingUnit(fullName, category)
 
+  // Map official Nutri-Score grade from OFF API
+  const validGrades = ['a', 'b', 'c', 'd', 'e']
+  const rawGrade = p.nutriscore_grade?.toLowerCase()
+  const nutriscore = rawGrade && validGrades.includes(rawGrade)
+    ? rawGrade as NutriScoreGrade
+    : undefined
+
+  // Debug log
+  if (nutriscore) {
+    console.log(`[OFF] ${p.product_name_fr || p.product_name} - Nutri-Score: ${nutriscore.toUpperCase()}`)
+  }
+
   return {
     id: `off-${p.code}`,
     name: fullName,
@@ -317,6 +330,7 @@ function transformOffProduct(p: OpenFoodFactsProduct): FoodItem | null {
     category,
     source: 'openfoodfacts',
     barcode: p.code,
+    nutriscore,
   }
 }
 
@@ -333,7 +347,7 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
     searchUrl.searchParams.set('tag_contains_0', 'contains')
     searchUrl.searchParams.set('tag_0', 'france')
     searchUrl.searchParams.set('sort_by', 'unique_scans_n')
-    searchUrl.searchParams.set('fields', 'code,product_name,product_name_fr,brands,image_front_small_url,nutriments,serving_size,categories_tags')
+    searchUrl.searchParams.set('fields', 'code,product_name,product_name_fr,brands,image_front_small_url,nutriments,serving_size,categories_tags,nutriscore_grade')
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
@@ -384,7 +398,7 @@ export async function lookupBarcode(barcode: string): Promise<FoodItem | null> {
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     const response = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=code,product_name,product_name_fr,brands,image_front_small_url,nutriments,serving_size,categories_tags`,
+      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=code,product_name,product_name_fr,brands,image_front_small_url,nutriments,serving_size,categories_tags,nutriscore_grade`,
       {
         headers: {
           'User-Agent': 'PresenceMobile/1.0 (nutrition-tracker)',
@@ -493,15 +507,36 @@ export async function searchFoods(options: SearchFoodsOptions): Promise<SearchFo
   }
 }
 
-// ============= PRELOAD =============
+// ============= PRELOAD & CACHE MANAGEMENT =============
 
 export async function preloadCiqual(): Promise<void> {
   await loadCiqual()
   await loadCiqualSearchIndex()
 }
 
+/**
+ * Clear the food search cache (useful after code updates)
+ */
+export async function clearFoodSearchCache(): Promise<void> {
+  // Clear memory cache
+  cache['memoryCache'].clear()
+
+  // Clear AsyncStorage cache
+  try {
+    const allKeys = await AsyncStorage.getAllKeys()
+    const cacheKeys = allKeys.filter(k => k.startsWith(CACHE_KEY_PREFIX))
+    if (cacheKeys.length > 0) {
+      await AsyncStorage.multiRemove(cacheKeys)
+      console.log(`[FoodSearch] Cleared ${cacheKeys.length} cached entries`)
+    }
+  } catch (e) {
+    console.warn('[FoodSearch] Error clearing cache:', e)
+  }
+}
+
 export default {
   searchFoods,
   lookupBarcode,
+  clearFoodSearchCache,
   preloadCiqual,
 }
