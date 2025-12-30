@@ -160,7 +160,7 @@ export default function HomeScreen() {
 
   const handleNavigateToWellness = () => {
     // @ts-ignore - Navigation typing
-    navigation.navigate('Progress', { screen: 'Wellness' })
+    navigation.navigate('WellnessProgram')
   }
 
   const handleNavigateToSportInitiation = () => {

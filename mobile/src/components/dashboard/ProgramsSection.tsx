@@ -3,9 +3,14 @@
  *
  * Affiche les 3 programmes (Sport, Métabolisme, Bien-être) de manière
  * compacte et horizontale pour une meilleure clarté sur la homepage.
+ *
+ * LOGIQUE D'AFFICHAGE BIEN-ÊTRE:
+ * - Caché si l'utilisateur est inscrit au programme Métabolisme (non terminé)
+ * - Proposé une fois le programme Métabolisme terminé (phase full_program)
+ * - Toujours visible si l'utilisateur n'est pas inscrit au Métabolisme
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import {
   Dumbbell,
@@ -14,11 +19,14 @@ import {
   Sparkles,
   TrendingUp,
   Flame,
+  Moon,
+  Star,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius } from '../../constants/theme'
 import { useSportInitiationStore, type SportPhase } from '../../stores/sport-initiation-store'
 import { useMetabolicBoostStore, type MetabolicPhase } from '../../stores/metabolic-boost-store'
+import { useWellnessProgramStore, type WellnessPhase } from '../../stores/wellness-program-store'
 import { useUserStore } from '../../stores/user-store'
 
 interface ProgramsSectionProps {
@@ -39,6 +47,13 @@ const metabolicPhaseLabels: Record<MetabolicPhase, string> = {
   walking: 'Marche',
   resistance: 'Résistance',
   full_program: 'Complet',
+}
+
+const wellnessPhaseLabels: Record<WellnessPhase, string> = {
+  foundations: 'Fondations',
+  awareness: 'Conscience',
+  balance: 'Équilibre',
+  harmony: 'Harmonie',
 }
 
 export function ProgramsSection({
@@ -63,16 +78,43 @@ export function ProgramsSection({
     getProgressPercentage,
   } = useMetabolicBoostStore()
 
+  const {
+    isEnrolled: isWellnessEnrolled,
+    currentPhase: wellnessPhase,
+    currentWeek: wellnessWeek,
+    currentStreak: wellnessStreak,
+    getProgressPercentage: getWellnessProgress,
+    shouldShowProgram,
+    proposeAfterMetabolic,
+  } = useWellnessProgramStore()
+
   const isSedentary = profile?.activityLevel === 'sedentary'
   const isAdaptive = profile?.metabolismProfile === 'adaptive'
 
+  // Metabolic program is completed when in full_program phase
+  const isMetabolicCompleted = isMetabolicEnrolled && metabolicPhase === 'full_program'
+
+  // Check if wellness program should be shown
+  // Hidden if: user is in metabolic program AND not completed yet
+  // Shown if: user completed metabolic OR user is not in metabolic OR user is enrolled in wellness
+  const showWellness = shouldShowProgram(isMetabolicEnrolled, isMetabolicCompleted)
+
+  // Propose wellness after metabolic completion
+  useEffect(() => {
+    if (isMetabolicCompleted && !isWellnessEnrolled) {
+      proposeAfterMetabolic()
+    }
+  }, [isMetabolicCompleted, isWellnessEnrolled, proposeAfterMetabolic])
+
   // Check if at least one program is relevant
-  const hasRelevantPrograms = isSedentary || isAdaptive
+  const hasRelevantPrograms = isSedentary || isAdaptive || showWellness
 
   // If no relevant programs, don't show the section
   if (!hasRelevantPrograms) {
     return null
   }
+
+  const wellnessProgress = getWellnessProgress()
 
   const handlePress = (type: 'sport' | 'metabolic' | 'wellness') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -178,24 +220,60 @@ export function ProgramsSection({
           </Pressable>
         )}
 
-        {/* Wellness - Coming soon for all users */}
-        <Pressable
-          style={[styles.programCard, styles.programCardDisabled]}
-          onPress={() => handlePress('wellness')}
-          disabled
-        >
-          <View style={[styles.iconContainer, styles.iconWellness]}>
-            <Heart size={20} color={colors.secondary.primary} />
-          </View>
+        {/* Wellness Program - Visible based on metabolic status */}
+        {showWellness && (
+          <Pressable
+            style={[
+              styles.programCard,
+              isMetabolicCompleted && !isWellnessEnrolled && styles.programCardHighlighted,
+            ]}
+            onPress={() => handlePress('wellness')}
+          >
+            <View style={[styles.iconContainer, styles.iconWellness]}>
+              <Heart size={20} color={colors.secondary.primary} />
+            </View>
 
-          <Text style={styles.programTitle} numberOfLines={1}>Bien-être</Text>
-          <Text style={styles.programSubtitle} numberOfLines={1}>Sommeil</Text>
+            <Text style={styles.programTitle} numberOfLines={1}>Bien-être</Text>
 
-          <View style={styles.comingSoonBadge}>
-            <Sparkles size={10} color={colors.text.muted} />
-            <Text style={styles.comingSoonText}>Bientôt</Text>
-          </View>
-        </Pressable>
+            {isWellnessEnrolled ? (
+              <>
+                <View style={styles.statusBadge}>
+                  <Text style={[styles.statusText, { color: colors.secondary.primary }]}>
+                    {wellnessPhaseLabels[wellnessPhase]}
+                  </Text>
+                </View>
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <TrendingUp size={10} color={colors.success} />
+                    <Text style={styles.statValue}>{wellnessProgress}%</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statItem}>
+                    <Moon size={10} color={colors.secondary.primary} />
+                    <Text style={styles.statValue}>{wellnessStreak}j</Text>
+                  </View>
+                </View>
+              </>
+            ) : isMetabolicCompleted ? (
+              // Special promotion after metabolic completion
+              <>
+                <Text style={styles.programSubtitle} numberOfLines={1}>8 semaines</Text>
+                <View style={[styles.joinButton, styles.joinButtonWellness]}>
+                  <Star size={10} color={colors.secondary.primary} />
+                  <Text style={[styles.joinText, styles.joinTextWellness]}>Découvrir</Text>
+                </View>
+              </>
+            ) : (
+              // Normal state - available to join
+              <>
+                <Text style={styles.programSubtitle} numberOfLines={1}>8 semaines</Text>
+                <View style={[styles.joinButton, styles.joinButtonWellness]}>
+                  <Text style={[styles.joinText, styles.joinTextWellness]}>Rejoindre</Text>
+                </View>
+              </>
+            )}
+          </Pressable>
+        )}
       </View>
     </View>
   )
@@ -230,6 +308,15 @@ const styles = StyleSheet.create({
   },
   programCardDisabled: {
     opacity: 0.6,
+  },
+  programCardHighlighted: {
+    borderColor: colors.secondary.primary,
+    borderWidth: 2,
+    shadowColor: colors.secondary.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   iconContainer: {
     width: 40,
@@ -305,6 +392,15 @@ const styles = StyleSheet.create({
   },
   joinTextMetabolic: {
     color: colors.warning,
+  },
+  joinButtonWellness: {
+    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  joinTextWellness: {
+    color: colors.secondary.primary,
   },
   comingSoonBadge: {
     flexDirection: 'row',

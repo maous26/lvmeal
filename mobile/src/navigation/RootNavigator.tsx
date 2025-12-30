@@ -8,6 +8,7 @@ import WeeklyPlanScreen from '../screens/WeeklyPlanScreen'
 import MetabolicBoostScreen from '../screens/MetabolicBoostScreen'
 import RecipeDetailScreen from '../screens/RecipeDetailScreen'
 import SportInitiationScreen from '../screens/SportInitiationScreen'
+import WellnessProgramScreen from '../screens/WellnessProgramScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import { useUserStore } from '../stores/user-store'
@@ -46,6 +47,7 @@ export type RootStackParamList = {
   WeeklyPlan: { duration?: 1 | 3 | 7; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
   MetabolicBoost: undefined
   SportInitiation: undefined
+  WellnessProgram: undefined
   EditProfile: undefined
   Calendar: undefined
 }
@@ -109,6 +111,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="SportInitiation"
             component={SportInitiationScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="WellnessProgram"
+            component={WellnessProgramScreen}
             options={{
               animation: 'slide_from_right',
             }}

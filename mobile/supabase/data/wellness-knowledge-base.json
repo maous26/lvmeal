@@ -1,0 +1,278 @@
+{
+  "description": "Base de connaissances Bien-etre - Sources scientifiques reconnues",
+  "sources": [
+    "INSERM (Institut National de la Sante et de la Recherche Medicale)",
+    "HAS (Haute Autorite de Sante)",
+    "OMS (Organisation Mondiale de la Sante)",
+    "MBSR (Mindfulness-Based Stress Reduction - Jon Kabat-Zinn)",
+    "APA (American Psychological Association)",
+    "Sleep Foundation",
+    "NIH (National Institutes of Health)"
+  ],
+  "documents": [
+    {
+      "id": "wellness_sleep_001",
+      "content": "Le sommeil est un pilier fondamental de la sante. Selon l'INSERM, un adulte a besoin de 7 a 9 heures de sommeil par nuit. Le manque de sommeil chronique augmente les risques de diabete de type 2 de 28%, d'obesite de 55%, de maladies cardiovasculaires de 48% et de depression de 62%. La dette de sommeil ne peut pas etre entierement recuperee le week-end.",
+      "category": "wellness",
+      "source": "inserm",
+      "source_url": "https://www.inserm.fr/dossier/sommeil/",
+      "metadata": {
+        "title": "Importance du sommeil pour la sante",
+        "keywords": ["sommeil", "sante", "duree", "risques"],
+        "relevance_score": 0.95
+      }
+    },
+    {
+      "id": "wellness_sleep_002",
+      "content": "L'hygiene du sommeil comprend des pratiques cles: se coucher et se lever a heures fixes (meme le week-end), eviter les ecrans 1h avant le coucher (la lumiere bleue supprime la melatonine de 50%), garder la chambre fraiche (18-19°C ideal), eviter la cafeine 6h avant le coucher, et pratiquer une activite relaxante le soir. Ces pratiques ameliorent la qualite du sommeil de 65% selon les etudes.",
+      "category": "wellness",
+      "source": "has",
+      "source_url": "https://www.has-sante.fr/",
+      "metadata": {
+        "title": "Hygiene du sommeil - Recommandations",
+        "keywords": ["hygiene sommeil", "ecrans", "melatonine", "routines"],
+        "relevance_score": 0.92
+      }
+    },
+    {
+      "id": "wellness_sleep_003",
+      "content": "Les cycles du sommeil durent environ 90 minutes et comprennent le sommeil leger, le sommeil profond et le sommeil paradoxal (REM). Le sommeil profond (20-25% du temps total) est crucial pour la recuperation physique et la consolidation de la memoire. Le sommeil paradoxal (20-25%) est essentiel pour la regulation emotionnelle et la creativite. Se reveiller en fin de cycle (apres 7h30 ou 9h) optimise la sensation de repos.",
+      "category": "wellness",
+      "source": "inserm",
+      "source_url": "https://www.inserm.fr/dossier/sommeil/",
+      "metadata": {
+        "title": "Cycles et architecture du sommeil",
+        "keywords": ["cycles", "sommeil profond", "REM", "recuperation"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_meditation_001",
+      "content": "La meditation de pleine conscience (Mindfulness) est une pratique scientifiquement validee. Le programme MBSR de Jon Kabat-Zinn (8 semaines) reduit l'anxiete de 58%, le stress de 40% et ameliore la qualite de vie de 65% selon une meta-analyse de 47 essais cliniques (JAMA Internal Medicine, 2014). La pratique reguliere modifie structurellement le cerveau: augmentation de la matiere grise dans l'hippocampe et reduction de l'amygdale.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/24395196/",
+      "metadata": {
+        "title": "MBSR - Efficacite scientifique",
+        "keywords": ["mindfulness", "MBSR", "anxiete", "stress", "cerveau"],
+        "relevance_score": 0.95
+      }
+    },
+    {
+      "id": "wellness_meditation_002",
+      "content": "La meditation peut commencer par 5 minutes par jour. L'efficacite apparait des 8 semaines de pratique quotidienne. Techniques recommandees pour debutants: respiration consciente (observer l'inspiration et l'expiration), scan corporel (parcourir mentalement le corps), meditation guidee (applications comme Petit Bambou, Headspace). La regularite prime sur la duree: 10 min/jour est plus efficace que 1h/semaine.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Debuter la meditation",
+        "keywords": ["meditation debutant", "techniques", "respiration", "scan corporel"],
+        "relevance_score": 0.88
+      }
+    },
+    {
+      "id": "wellness_meditation_003",
+      "content": "La coherence cardiaque est une technique de regulation du systeme nerveux autonome. La methode 365 (3 fois par jour, 6 respirations par minute, pendant 5 minutes) reduit le cortisol de 23% et stabilise la variabilite cardiaque. Inspire 5 secondes, expire 5 secondes. Les effets sont immediats sur le stress et cumulatifs sur 15 jours de pratique reguliere.",
+      "category": "wellness",
+      "source": "has",
+      "source_url": "https://www.has-sante.fr/",
+      "metadata": {
+        "title": "Coherence cardiaque - Methode 365",
+        "keywords": ["coherence cardiaque", "respiration", "cortisol", "stress"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_stress_001",
+      "content": "Le stress chronique a des effets deleteres mesurables: augmentation du cortisol (hormone du stress) de 37% en moyenne, inflammation systemique (CRP elevee), perturbation de l'axe hypothalamo-hypophyso-surrenalien. L'OMS considere le stress comme l'epidemie du 21e siecle. Les techniques corps-esprit (yoga, meditation, tai-chi) reduisent le cortisol de 25 a 35% apres 8 semaines.",
+      "category": "wellness",
+      "source": "inserm",
+      "source_url": "https://www.inserm.fr/",
+      "metadata": {
+        "title": "Impact du stress chronique",
+        "keywords": ["stress", "cortisol", "inflammation", "sante"],
+        "relevance_score": 0.93
+      }
+    },
+    {
+      "id": "wellness_stress_002",
+      "content": "La gestion du stress efficace combine plusieurs approches: activite physique reguliere (30 min/jour reduit l'anxiete de 20%), sommeil adequat (7-9h), alimentation equilibree (omega-3, magnesium), connexions sociales (le soutien social reduit le cortisol de 15%), et pratiques de relaxation. L'approche multidimensionnelle est 40% plus efficace que les interventions isolees.",
+      "category": "wellness",
+      "source": "has",
+      "source_url": "https://www.has-sante.fr/",
+      "metadata": {
+        "title": "Gestion integree du stress",
+        "keywords": ["gestion stress", "approche globale", "activite physique", "social"],
+        "relevance_score": 0.91
+      }
+    },
+    {
+      "id": "wellness_nutrition_mental_001",
+      "content": "L'alimentation impacte directement la sante mentale via l'axe intestin-cerveau. Le microbiote produit 95% de la serotonine (hormone du bien-etre). Une alimentation riche en fibres, ferments (yaourt, kefir), omega-3 (poissons gras, noix) ameliore l'humeur. Le regime mediterraneen reduit le risque de depression de 33% (etude PREDIMED). Les aliments ultra-transformes augmentent le risque de depression de 21%.",
+      "category": "wellness",
+      "source": "inserm",
+      "source_url": "https://www.inserm.fr/",
+      "metadata": {
+        "title": "Nutrition et sante mentale",
+        "keywords": ["microbiote", "serotonine", "omega-3", "depression"],
+        "relevance_score": 0.89
+      }
+    },
+    {
+      "id": "wellness_exercise_mental_001",
+      "content": "L'exercice physique est un antidepresseur naturel. 30 minutes d'activite moderee liberent des endorphines et reduisent le cortisol. La marche en nature (shinrin-yoku ou bain de foret) reduit l'anxiete de 20% et la pression arterielle de 5%. L'exercice regulier est aussi efficace que les antidepresseurs pour la depression legere a moderee selon une meta-analyse Cochrane.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "metadata": {
+        "title": "Exercice et sante mentale",
+        "keywords": ["exercice", "endorphines", "nature", "depression"],
+        "relevance_score": 0.92
+      }
+    },
+    {
+      "id": "wellness_energy_001",
+      "content": "L'energie quotidienne depend de plusieurs facteurs modifiables: qualite du sommeil (prioritaire), hydratation (2L/jour - la deshydratation de 2% reduit les performances cognitives de 20%), repas equilibres a IG bas (eviter les pics glycemiques), pauses regulieres (technique Pomodoro: 25 min travail, 5 min pause), et exposition a la lumiere naturelle le matin (reset du rythme circadien).",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Optimiser son energie",
+        "keywords": ["energie", "hydratation", "glycemie", "rythme circadien"],
+        "relevance_score": 0.87
+      }
+    },
+    {
+      "id": "wellness_routine_001",
+      "content": "Une routine matinale optimale pour le bien-etre: reveil a heure fixe, exposition a la lumiere naturelle 30 min (regulation melatonine), hydratation immediate (250ml eau), exercice leger ou etirements (10 min), petit-dejeuner proteique (stabilise glycemie), moment de calme (meditation 5-10 min). Cette routine active le systeme nerveux sympathique progressivement et stabilise le cortisol matinal.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Routine matinale bien-etre",
+        "keywords": ["routine", "matin", "cortisol", "lumiere"],
+        "relevance_score": 0.86
+      }
+    },
+    {
+      "id": "wellness_routine_002",
+      "content": "La routine du soir prepare un sommeil reparateur: diner leger 3h avant le coucher, diminution progressive des lumieres (baisser eclairage de 50%), arret des ecrans 1h avant (ou filtre lumiere bleue), activites calmes (lecture, musique douce), temperature chambre 18-19°C, exercice de relaxation ou gratitude (5 min). Consistance sur 21 jours pour ancrer l'habitude.",
+      "category": "wellness",
+      "source": "has",
+      "source_url": "https://www.has-sante.fr/",
+      "metadata": {
+        "title": "Routine du soir",
+        "keywords": ["routine soir", "sommeil", "ecrans", "relaxation"],
+        "relevance_score": 0.88
+      }
+    },
+    {
+      "id": "wellness_breath_001",
+      "content": "La respiration est le levier le plus rapide sur le systeme nerveux. Respiration 4-7-8 (Dr Andrew Weil): inspirer 4s, retenir 7s, expirer 8s - 4 cycles. Active le nerf vague et le systeme parasympathique. Reduit l'anxiete en moins de 2 minutes. La respiration diaphragmatique profonde reduit le rythme cardiaque de 10-15 bpm et la pression arterielle de 5mmHg.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "metadata": {
+        "title": "Techniques respiratoires",
+        "keywords": ["respiration", "4-7-8", "nerf vague", "anxiete"],
+        "relevance_score": 0.91
+      }
+    },
+    {
+      "id": "wellness_gratitude_001",
+      "content": "La pratique de la gratitude a des effets mesurables sur le bien-etre. Ecrire 3 choses positives chaque soir pendant 3 semaines augmente le bonheur de 25% et reduit les symptomes depressifs de 35% (etude Emmons & McCullough). La gratitude active les circuits de recompense du cerveau et augmente la dopamine. Pratique recommandee: journal de gratitude ou partage quotidien.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "metadata": {
+        "title": "Gratitude et bien-etre",
+        "keywords": ["gratitude", "bonheur", "depression", "journal"],
+        "relevance_score": 0.85
+      }
+    },
+    {
+      "id": "wellness_social_001",
+      "content": "Les connexions sociales sont essentielles a la sante mentale et physique. L'isolement social augmente le risque de mortalite de 26% (meta-analyse Holt-Lunstad). Les interactions sociales positives liberent de l'ocytocine, reduisent le cortisol et renforcent le systeme immunitaire. Objectif: maintenir au moins 3 relations significatives et des interactions sociales quotidiennes.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/26474556/",
+      "metadata": {
+        "title": "Lien social et sante",
+        "keywords": ["social", "isolement", "ocytocine", "mortalite"],
+        "relevance_score": 0.88
+      }
+    },
+    {
+      "id": "wellness_mindfulness_eating_001",
+      "content": "L'alimentation en pleine conscience (mindful eating) ameliore la relation a la nourriture. Principes: manger sans distraction, mastiquer lentement (20-30 fois), observer saveurs et textures, reconnaitre les signaux de faim/satiete. Reduit les comportements alimentaires compulsifs de 40% et ameliore la digestion. La satiete apparait apres 20 min - ralentir permet de manger 15% moins.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Alimentation en pleine conscience",
+        "keywords": ["mindful eating", "satiete", "mastication", "digestion"],
+        "relevance_score": 0.84
+      }
+    },
+    {
+      "id": "wellness_digital_detox_001",
+      "content": "La surexposition aux ecrans impacte le bien-etre: augmentation de l'anxiete de 40%, troubles du sommeil (lumiere bleue), comparaison sociale nefaste (reseaux sociaux). Recommandations: limiter a 2h/jour hors travail, desactiver notifications non essentielles, zones sans telephone (chambre, table), detox digitale 1 jour/semaine. 7 jours sans reseaux sociaux reduisent cortisol de 15%.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Detox digitale",
+        "keywords": ["ecrans", "reseaux sociaux", "anxiete", "detox"],
+        "relevance_score": 0.83
+      }
+    },
+    {
+      "id": "wellness_prog_phase1_001",
+      "content": "Programme Bien-etre Phase 1 - Fondations (2 semaines): Objectifs: etablir routine sommeil stable, introduction meditation 5 min/jour, journal de gratitude quotidien, identification des sources de stress. Cibles: 7h sommeil minimum, 1 technique relaxation maitrisee, conscience de ses patterns emotionnels. Cette phase prepare le terrain pour des changements durables.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Programme Bien-etre Phase 1",
+        "keywords": ["programme", "phase 1", "fondations", "routine"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_prog_phase2_001",
+      "content": "Programme Bien-etre Phase 2 - Consolidation (3 semaines): Objectifs: meditation 10-15 min/jour, coherence cardiaque 2x/jour, routine matin et soir etablies, gestion proactive du stress. Cibles: qualite sommeil amelioree, resilience stress accrue, humeur plus stable. Introduction des techniques de respiration avancees et du journaling emotionnel.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Programme Bien-etre Phase 2",
+        "keywords": ["programme", "phase 2", "consolidation", "meditation"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_prog_phase3_001",
+      "content": "Programme Bien-etre Phase 3 - Approfondissement (3 semaines): Objectifs: meditation 20 min/jour, integration pleine conscience au quotidien, alimentation consciente, connexions sociales intentionnelles. Cibles: bien-etre subjectif ameliore de 40%, gestion automatique du stress, habitudes solidement ancrees. Exploration de techniques avancees selon preferences.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Programme Bien-etre Phase 3",
+        "keywords": ["programme", "phase 3", "approfondissement", "pleine conscience"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_prog_phase4_001",
+      "content": "Programme Bien-etre Phase 4 - Autonomie (maintenance): Pratique personnalisee selon preferences, capacite a adapter techniques au contexte, resilience face aux defis, soutien a autrui possible. Le bien-etre devient un mode de vie integre, pas une contrainte. Revision reguliere des pratiques, ajustement saisonnier des routines.",
+      "category": "wellness",
+      "source": "expert",
+      "source_url": null,
+      "metadata": {
+        "title": "Programme Bien-etre Phase 4",
+        "keywords": ["programme", "phase 4", "autonomie", "maintenance"],
+        "relevance_score": 0.88
+      }
+    }
+  ]
+}
