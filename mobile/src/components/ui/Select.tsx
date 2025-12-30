@@ -9,7 +9,9 @@ import {
   ViewStyle,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { colors, radius, spacing, typography, shadows } from '../../constants/theme'
+import { ChevronDown, Check } from 'lucide-react-native'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography, shadows } from '../../constants/theme'
 
 interface SelectOption<T> {
   value: T
@@ -31,7 +33,7 @@ interface SelectProps<T> {
 
 export function Select<T extends string | number>({
   label,
-  placeholder = 'Selectionner',
+  placeholder = 'Sélectionner',
   value,
   options,
   onChange,
@@ -39,6 +41,7 @@ export function Select<T extends string | number>({
   error,
   containerStyle,
 }: SelectProps<T>) {
+  const { colors } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const insets = useSafeAreaInsets()
 
@@ -51,14 +54,21 @@ export function Select<T extends string | number>({
 
   return (
     <View style={containerStyle}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.text.secondary }]}>
+          {label}
+        </Text>
+      )}
 
       <Pressable
         onPress={() => !disabled && setIsOpen(true)}
         style={[
           styles.trigger,
+          {
+            backgroundColor: colors.bg.elevated,
+            borderColor: error ? colors.error : colors.border.light,
+          },
           disabled && styles.triggerDisabled,
-          error && styles.triggerError,
         ]}
       >
         {selectedOption?.icon && (
@@ -67,15 +77,17 @@ export function Select<T extends string | number>({
         <Text
           style={[
             styles.triggerText,
-            !selectedOption && styles.triggerPlaceholder,
+            { color: selectedOption ? colors.text.primary : colors.text.muted },
           ]}
         >
           {selectedOption?.label || placeholder}
         </Text>
-        <Text style={styles.chevron}>▼</Text>
+        <ChevronDown size={18} color={colors.text.tertiary} />
       </Pressable>
 
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
+      )}
 
       <Modal
         visible={isOpen}
@@ -83,12 +95,25 @@ export function Select<T extends string | number>({
         transparent
         onRequestClose={() => setIsOpen(false)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)} />
+        <Pressable
+          style={[styles.backdrop, { backgroundColor: colors.bg.overlay }]}
+          onPress={() => setIsOpen(false)}
+        />
 
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>{label || 'Selectionner'}</Text>
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.bg.elevated,
+              paddingBottom: insets.bottom + spacing.lg,
+            },
+          ]}
+        >
+          <View style={[styles.sheetHeader, { borderBottomColor: colors.border.light }]}>
+            <View style={[styles.sheetHandle, { backgroundColor: colors.border.default }]} />
+            <Text style={[styles.sheetTitle, { color: colors.text.primary }]}>
+              {label || 'Sélectionner'}
+            </Text>
           </View>
 
           <FlatList
@@ -99,7 +124,8 @@ export function Select<T extends string | number>({
                 onPress={() => handleSelect(item)}
                 style={[
                   styles.option,
-                  item.value === value && styles.optionSelected,
+                  { borderBottomColor: colors.border.light },
+                  item.value === value && { backgroundColor: colors.accent.light },
                 ]}
               >
                 {item.icon && <Text style={styles.optionIcon}>{item.icon}</Text>}
@@ -107,17 +133,24 @@ export function Select<T extends string | number>({
                   <Text
                     style={[
                       styles.optionLabel,
-                      item.value === value && styles.optionLabelSelected,
+                      {
+                        color: item.value === value
+                          ? colors.accent.primary
+                          : colors.text.primary,
+                        fontWeight: item.value === value ? '600' : '400',
+                      },
                     ]}
                   >
                     {item.label}
                   </Text>
                   {item.description && (
-                    <Text style={styles.optionDescription}>{item.description}</Text>
+                    <Text style={[styles.optionDescription, { color: colors.text.tertiary }]}>
+                      {item.description}
+                    </Text>
                   )}
                 </View>
                 {item.value === value && (
-                  <Text style={styles.checkmark}>✓</Text>
+                  <Check size={20} color={colors.accent.primary} strokeWidth={2.5} />
                 )}
               </Pressable>
             )}
@@ -131,26 +164,20 @@ export function Select<T extends string | number>({
 
 const styles = StyleSheet.create({
   label: {
-    ...typography.smallMedium,
-    color: colors.text.secondary,
+    ...typography.label,
     marginBottom: spacing.xs,
   },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.bg.elevated,
     borderWidth: 1.5,
-    borderColor: colors.border.light,
     borderRadius: radius.md,
     paddingHorizontal: spacing.default,
     paddingVertical: spacing.md,
-    minHeight: 48,
+    minHeight: 52,
   },
   triggerDisabled: {
     opacity: 0.5,
-  },
-  triggerError: {
-    borderColor: colors.error,
   },
   triggerIcon: {
     fontSize: 20,
@@ -159,31 +186,19 @@ const styles = StyleSheet.create({
   triggerText: {
     flex: 1,
     ...typography.body,
-    color: colors.text.primary,
-  },
-  triggerPlaceholder: {
-    color: colors.text.muted,
-  },
-  chevron: {
-    fontSize: 10,
-    color: colors.text.tertiary,
-    marginLeft: spacing.sm,
   },
   error: {
     ...typography.caption,
-    color: colors.error,
     marginTop: spacing.xs,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.bg.overlay,
   },
   sheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.bg.elevated,
     borderTopLeftRadius: radius['2xl'],
     borderTopRightRadius: radius['2xl'],
     maxHeight: '70%',
@@ -193,29 +208,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
   sheetHandle: {
     width: 36,
     height: 4,
-    backgroundColor: colors.border.default,
     borderRadius: radius.full,
     marginBottom: spacing.sm,
   },
   sheetTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.default,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-  },
-  optionSelected: {
-    backgroundColor: colors.accent.light,
   },
   optionIcon: {
     fontSize: 24,
@@ -226,21 +234,10 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     ...typography.body,
-    color: colors.text.primary,
-  },
-  optionLabelSelected: {
-    color: colors.accent.primary,
-    fontWeight: '600',
   },
   optionDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: 2,
-  },
-  checkmark: {
-    fontSize: 18,
-    color: colors.accent.primary,
-    fontWeight: '600',
   },
 })
 

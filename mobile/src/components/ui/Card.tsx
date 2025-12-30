@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, StyleSheet, ViewStyle, Pressable, StyleProp } from 'react-native'
-import { colors, shadows, radius, spacing } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { shadows, radius, spacing } from '../../constants/theme'
 
 interface CardProps {
   children: React.ReactNode
@@ -8,6 +9,7 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'default' | 'lg'
   onPress?: () => void
   elevated?: boolean
+  variant?: 'default' | 'outlined' | 'filled'
 }
 
 export function Card({
@@ -16,7 +18,10 @@ export function Card({
   padding = 'default',
   onPress,
   elevated = true,
+  variant = 'default',
 }: CardProps) {
+  const { colors } = useTheme()
+
   const paddingValue = {
     none: 0,
     sm: spacing.sm,
@@ -24,19 +29,42 @@ export function Card({
     lg: spacing.lg,
   }[padding]
 
-  const cardStyle = [
+  const getVariantStyles = (): ViewStyle => {
+    switch (variant) {
+      case 'outlined':
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: colors.border.light,
+        }
+      case 'filled':
+        return {
+          backgroundColor: colors.bg.secondary,
+          borderWidth: 0,
+        }
+      default:
+        return {
+          backgroundColor: colors.bg.elevated,
+          borderWidth: 1,
+          borderColor: colors.border.light,
+        }
+    }
+  }
+
+  const cardStyle: ViewStyle[] = [
     styles.card,
-    elevated && shadows.sm,
+    getVariantStyles(),
+    elevated && variant === 'default' && shadows.sm,
     { padding: paddingValue },
-    style,
-  ]
+    style as ViewStyle,
+  ].filter(Boolean) as ViewStyle[]
 
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [
-          cardStyle,
+          ...cardStyle,
           pressed && styles.pressed,
         ]}
       >
@@ -50,14 +78,12 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    overflow: 'hidden',
   },
   pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.95,
+    transform: [{ scale: 0.99 }],
   },
 })
 

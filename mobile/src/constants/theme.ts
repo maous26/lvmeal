@@ -1,53 +1,60 @@
-// Presence - Design System Theme
-// Direction artistique : Sobre, élégant, professionnel
+// Love Your Meal - Design System Theme
+// Direction artistique : Bienveillant, Professionnel, Confiance
+// Palette principale : Bleu (confiance) + Corail (chaleur)
 
 // =============================================================================
 // LIGHT THEME (Default)
 // =============================================================================
 export const lightColors = {
-  // Backgrounds - Fond blanc cassé
+  // Backgrounds - Crème chaleureux
   bg: {
-    primary: '#FAFAF8',
+    primary: '#FAFAF9',
     secondary: '#F5F5F3',
-    tertiary: '#EFEFED',
+    tertiary: '#EFEEEC',
     elevated: '#FFFFFF',
-    overlay: 'rgba(15, 50, 80, 0.6)',
+    overlay: 'rgba(0, 70, 110, 0.6)',
   },
 
-  // Text
+  // Text - Charbon doux
   text: {
-    primary: '#0F1A2A',
-    secondary: '#3D5068',
+    primary: '#1A2B3C',
+    secondary: '#4A5E72',
     tertiary: '#7A8FA6',
-    muted: '#B8C5D3',
+    muted: '#B0BFCF',
+    inverse: '#FFFFFF',
   },
 
-  // Accent - Bleu Océan VIF
+  // Primary - Bleu Confiance
   accent: {
-    primary: '#0077B6',
-    secondary: '#6366F1', // Indigo secondary accent
-    hover: '#005F8F',
-    light: '#E0F4FF',
-    muted: '#90CDF4',
+    primary: '#009FEB',
+    secondary: '#0080C9',
+    hover: '#007AB8',
+    light: '#EFF8FF',
+    muted: '#B6E3FF',
   },
 
-  // Secondary Accent - Corail VIF
+  // Secondary - Corail Chaleur
   secondary: {
     primary: '#FF6B5B',
     hover: '#E84C3D',
-    light: '#FFF0EE',
+    light: '#FFF5F3',
+    muted: '#FFD4CC',
   },
 
   // Semantic
   success: '#10B981',
+  successLight: '#ECFDF5',
   warning: '#F59E0B',
+  warningLight: '#FFFBEB',
   error: '#EF4444',
+  errorLight: '#FEF2F2',
   info: '#3B82F6',
+  infoLight: '#EFF6FF',
 
-  // Nutrients
+  // Nutrients - Couleurs vives pour les macros
   nutrients: {
     calories: '#FF6B5B',
-    proteins: '#0077B6',
+    proteins: '#009FEB',
     carbs: '#F59E0B',
     fats: '#A855F7',
     fiber: '#10B981',
@@ -56,10 +63,19 @@ export const lightColors = {
 
   // Borders
   border: {
-    light: '#E2E8F0',
-    default: '#CBD5E1',
-    medium: '#94A3B8',
-    focus: '#0077B6',
+    light: '#E8E8E4',
+    default: '#D4D4CD',
+    medium: '#A3A39A',
+    focus: '#009FEB',
+  },
+
+  // Gamification
+  gamification: {
+    bronze: '#CD7F32',
+    silver: '#C0C0C0',
+    gold: '#FFD700',
+    platinum: '#E5E4E2',
+    diamond: '#B9F2FF',
   },
 }
 
@@ -67,105 +83,141 @@ export const lightColors = {
 // DARK THEME
 // =============================================================================
 export const darkColors = {
-  // Backgrounds - Dark mode backgrounds
+  // Backgrounds - Bleu nuit profond
   bg: {
-    primary: '#0F1419',
-    secondary: '#1A1F26',
-    tertiary: '#252B33',
-    elevated: '#2D343D',
-    overlay: 'rgba(0, 0, 0, 0.7)',
+    primary: '#0D1520',
+    secondary: '#151D2B',
+    tertiary: '#1E2836',
+    elevated: '#263140',
+    overlay: 'rgba(0, 0, 0, 0.75)',
   },
 
-  // Text - Inverted for dark mode
+  // Text - Clair pour dark mode
   text: {
-    primary: '#F7F9FB',
-    secondary: '#B8C5D3',
-    tertiary: '#7A8FA6',
-    muted: '#4A5568',
+    primary: '#F7FAFC',
+    secondary: '#CBD5E1',
+    tertiary: '#94A3B8',
+    muted: '#64748B',
+    inverse: '#1A2B3C',
   },
 
-  // Accent - Slightly lighter for dark mode visibility
+  // Primary - Bleu plus lumineux pour dark mode
   accent: {
-    primary: '#38A3D9',
-    secondary: '#818CF8',
-    hover: '#5CB8E6',
-    light: '#1A3A4D',
-    muted: '#2C5F7A',
+    primary: '#38BDF8',
+    secondary: '#0EA5E9',
+    hover: '#7DD3FC',
+    light: '#1E3A5F',
+    muted: '#0C4A6E',
   },
 
-  // Secondary Accent - Corail adjusted for dark mode
+  // Secondary - Corail ajusté pour dark mode
   secondary: {
     primary: '#FF8577',
     hover: '#FF6B5B',
     light: '#3D2420',
+    muted: '#7C3D35',
   },
 
-  // Semantic - Slightly adjusted for dark backgrounds
+  // Semantic
   success: '#34D399',
+  successLight: '#064E3B',
   warning: '#FBBF24',
+  warningLight: '#78350F',
   error: '#F87171',
+  errorLight: '#7F1D1D',
   info: '#60A5FA',
+  infoLight: '#1E3A8A',
 
-  // Nutrients - Same vibrant colors work well on dark
+  // Nutrients - Ajustés pour dark mode
   nutrients: {
     calories: '#FF8577',
-    proteins: '#38A3D9',
+    proteins: '#38BDF8',
     carbs: '#FBBF24',
     fats: '#C084FC',
     fiber: '#34D399',
     water: '#22D3EE',
   },
 
-  // Borders - Darker for dark mode
+  // Borders
   border: {
-    light: '#2D343D',
-    default: '#3D4754',
-    medium: '#4A5568',
-    focus: '#38A3D9',
+    light: '#1E2836',
+    default: '#334155',
+    medium: '#475569',
+    focus: '#38BDF8',
+  },
+
+  // Gamification
+  gamification: {
+    bronze: '#CD7F32',
+    silver: '#C0C0C0',
+    gold: '#FFD700',
+    platinum: '#E5E4E2',
+    diamond: '#B9F2FF',
   },
 }
 
 // Default export uses light colors for backward compatibility
 export const colors = lightColors
 
+// =============================================================================
+// SHADOWS
+// =============================================================================
 export const shadows = {
   xs: {
-    shadowColor: 'rgba(15, 50, 80, 0.05)',
+    shadowColor: 'rgba(0, 70, 110, 0.06)',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 1,
     shadowRadius: 2,
     elevation: 1,
   },
   sm: {
-    shadowColor: 'rgba(15, 50, 80, 0.08)',
+    shadowColor: 'rgba(0, 70, 110, 0.08)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 2,
   },
   default: {
-    shadowColor: 'rgba(15, 50, 80, 0.12)',
+    shadowColor: 'rgba(0, 70, 110, 0.10)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 16,
+    shadowRadius: 12,
     elevation: 4,
   },
   md: {
-    shadowColor: 'rgba(15, 50, 80, 0.15)',
+    shadowColor: 'rgba(0, 70, 110, 0.12)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
-    shadowRadius: 30,
+    shadowRadius: 24,
     elevation: 8,
   },
   lg: {
-    shadowColor: 'rgba(15, 50, 80, 0.20)',
-    shadowOffset: { width: 0, height: 20 },
+    shadowColor: 'rgba(0, 70, 110, 0.16)',
+    shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 1,
-    shadowRadius: 50,
+    shadowRadius: 48,
     elevation: 16,
+  },
+  // Glow effects for CTAs
+  glowPrimary: {
+    shadowColor: '#009FEB',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  glowCoral: {
+    shadowColor: '#FF6B5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
   },
 }
 
+// =============================================================================
+// SPACING
+// =============================================================================
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -175,62 +227,69 @@ export const spacing = {
   xl: 24,
   '2xl': 32,
   '3xl': 48,
+  '4xl': 64,
 }
 
+// =============================================================================
+// BORDER RADIUS
+// =============================================================================
 export const radius = {
+  xs: 4,
   sm: 6,
   default: 8,
   md: 12,
   lg: 16,
   xl: 20,
   '2xl': 24,
+  '3xl': 32,
   full: 9999,
 }
 
+// =============================================================================
+// TYPOGRAPHY
+// =============================================================================
 export const typography = {
+  // Display - for hero/splash screens
+  display: {
+    fontSize: 48,
+    lineHeight: 52,
+    fontWeight: '700' as const,
+    letterSpacing: -1.5,
+  },
+  // Headings
   h1: {
     fontSize: 36,
-    lineHeight: 40,
-    fontWeight: '600' as const,
+    lineHeight: 42,
+    fontWeight: '700' as const,
     letterSpacing: -1,
   },
   h2: {
-    fontSize: 30,
-    lineHeight: 36,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: '600' as const,
     letterSpacing: -0.5,
   },
   h3: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '600' as const,
     letterSpacing: -0.3,
   },
   h4: {
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: '600' as const,
     letterSpacing: -0.2,
   },
-  // Size-based aliases
+  // Body text
   lg: {
     fontSize: 18,
-    lineHeight: 26,
+    lineHeight: 28,
     fontWeight: '400' as const,
   },
   md: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '400' as const,
-  },
-  sm: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '400' as const,
-  },
-  xs: {
-    fontSize: 12,
-    lineHeight: 16,
     fontWeight: '400' as const,
   },
   body: {
@@ -248,6 +307,12 @@ export const typography = {
     lineHeight: 24,
     fontWeight: '600' as const,
   },
+  // Small text
+  sm: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400' as const,
+  },
   small: {
     fontSize: 14,
     lineHeight: 20,
@@ -257,6 +322,12 @@ export const typography = {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500' as const,
+  },
+  // Caption
+  xs: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400' as const,
   },
   caption: {
     fontSize: 12,
@@ -268,12 +339,53 @@ export const typography = {
     lineHeight: 16,
     fontWeight: '500' as const,
   },
+  // Labels
+  label: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500' as const,
+    letterSpacing: 0.2,
+  },
+  // Button text
+  button: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '600' as const,
+    letterSpacing: 0.3,
+  },
+  buttonSm: {
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '600' as const,
+    letterSpacing: 0.2,
+  },
+}
+
+// =============================================================================
+// ANIMATIONS
+// =============================================================================
+export const animations = {
+  duration: {
+    fast: 150,
+    default: 250,
+    slow: 400,
+    slower: 600,
+  },
+  easing: {
+    ease: 'ease',
+    easeIn: 'ease-in',
+    easeOut: 'ease-out',
+    easeInOut: 'ease-in-out',
+  },
 }
 
 export default {
   colors,
+  lightColors,
+  darkColors,
   shadows,
   spacing,
   radius,
   typography,
+  animations,
 }

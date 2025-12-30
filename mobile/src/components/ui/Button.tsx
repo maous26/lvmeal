@@ -6,11 +6,13 @@ import {
   ViewStyle,
   TextStyle,
   ActivityIndicator,
+  View,
 } from 'react-native'
 import * as Haptics from 'expo-haptics'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography, shadows } from '../../constants/theme'
 
-export type ButtonVariant = 'default' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'default'
 type ButtonSize = 'sm' | 'default' | 'lg'
 
 interface ButtonProps {
@@ -22,20 +24,24 @@ interface ButtonProps {
   loading?: boolean
   fullWidth?: boolean
   icon?: React.ReactNode
+  iconPosition?: 'left' | 'right'
   style?: ViewStyle
 }
 
 export function Button({
   children,
   onPress,
-  variant = 'default',
+  variant = 'primary',
   size = 'default',
   disabled = false,
   loading = false,
   fullWidth = false,
   icon,
+  iconPosition = 'left',
   style,
 }: ButtonProps) {
+  const { colors } = useTheme()
+
   const handlePress = () => {
     if (!disabled && !loading) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -43,51 +49,98 @@ export function Button({
     }
   }
 
-  const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
-    default: {
-      container: { backgroundColor: colors.accent.primary },
-      text: { color: '#FFFFFF' },
-    },
-    primary: {
-      container: { backgroundColor: colors.accent.primary },
-      text: { color: '#FFFFFF' },
-    },
-    secondary: {
-      container: { backgroundColor: colors.secondary.primary },
-      text: { color: '#FFFFFF' },
-    },
-    outline: {
-      container: {
-        backgroundColor: 'transparent',
-        borderWidth: 1.5,
-        borderColor: colors.border.default,
-      },
-      text: { color: colors.text.primary },
-    },
-    ghost: {
-      container: { backgroundColor: 'transparent' },
-      text: { color: colors.accent.primary },
-    },
-    danger: {
-      container: { backgroundColor: colors.error },
-      text: { color: '#FFFFFF' },
-    },
+  const getVariantStyles = (): { container: ViewStyle; text: TextStyle } => {
+    switch (variant) {
+      case 'primary':
+        return {
+          container: {
+            backgroundColor: colors.accent.primary,
+            ...shadows.default,
+          },
+          text: { color: '#FFFFFF' },
+        }
+      case 'secondary':
+        return {
+          container: {
+            backgroundColor: colors.secondary.primary,
+            ...shadows.default,
+          },
+          text: { color: '#FFFFFF' },
+        }
+      case 'outline':
+        return {
+          container: {
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderColor: colors.border.default,
+          },
+          text: { color: colors.text.primary },
+        }
+      case 'ghost':
+        return {
+          container: {
+            backgroundColor: 'transparent',
+          },
+          text: { color: colors.accent.primary },
+        }
+      case 'danger':
+        return {
+          container: {
+            backgroundColor: colors.error,
+            ...shadows.default,
+          },
+          text: { color: '#FFFFFF' },
+        }
+      case 'success':
+        return {
+          container: {
+            backgroundColor: colors.success,
+            ...shadows.default,
+          },
+          text: { color: '#FFFFFF' },
+        }
+      default:
+        return {
+          container: { backgroundColor: colors.accent.primary },
+          text: { color: '#FFFFFF' },
+        }
+    }
   }
 
-  const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
-    sm: {
-      container: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
-      text: { fontSize: 14 },
-    },
-    default: {
-      container: { paddingVertical: spacing.md, paddingHorizontal: spacing.default },
-      text: { fontSize: 16 },
-    },
-    lg: {
-      container: { paddingVertical: spacing.default, paddingHorizontal: spacing.xl },
-      text: { fontSize: 18 },
-    },
+  const getSizeStyles = (): { container: ViewStyle; text: TextStyle } => {
+    switch (size) {
+      case 'sm':
+        return {
+          container: {
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.md,
+            borderRadius: radius.md,
+          },
+          text: { ...typography.buttonSm },
+        }
+      case 'lg':
+        return {
+          container: {
+            paddingVertical: spacing.lg,
+            paddingHorizontal: spacing.xl,
+            borderRadius: radius.xl,
+          },
+          text: { ...typography.button, fontSize: 17 },
+        }
+      default:
+        return {
+          container: {
+            paddingVertical: spacing.default,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.lg,
+          },
+          text: { ...typography.button },
+        }
+    }
   }
+
+  const variantStyles = getVariantStyles()
+  const sizeStyles = getSizeStyles()
 
   return (
     <Pressable
@@ -95,33 +148,37 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.button,
-        variantStyles[variant].container,
-        sizeStyles[size].container,
+        variantStyles.container,
+        sizeStyles.container,
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
-        pressed && styles.pressed,
+        pressed && !disabled && styles.pressed,
         style,
       ]}
     >
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variantStyles[variant].text.color}
+          color={variantStyles.text.color as string}
         />
       ) : (
-        <>
-          {icon}
+        <View style={styles.content}>
+          {icon && iconPosition === 'left' && (
+            <View style={styles.iconLeft}>{icon}</View>
+          )}
           <Text
             style={[
               styles.text,
-              variantStyles[variant].text,
-              sizeStyles[size].text,
-              icon ? styles.textWithIcon : null,
+              variantStyles.text,
+              sizeStyles.text,
             ]}
           >
             {children}
           </Text>
-        </>
+          {icon && iconPosition === 'right' && (
+            <View style={styles.iconRight}>{icon}</View>
+          )}
+        </View>
       )}
     </Pressable>
   )
@@ -132,13 +189,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.md,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
-    fontWeight: '600',
     textAlign: 'center',
   },
-  textWithIcon: {
+  iconLeft: {
+    marginRight: spacing.sm,
+  },
+  iconRight: {
     marginLeft: spacing.sm,
   },
   fullWidth: {

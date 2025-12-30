@@ -4,7 +4,8 @@ import { Droplets, Plus, Minus, ChevronRight } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { Card } from '../ui/Card'
 import { ProgressBar } from '../ui/ProgressBar'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography } from '../../constants/theme'
 import { useMealsStore } from '../../stores/meals-store'
 
 interface HydrationWidgetProps {
@@ -14,9 +15,11 @@ interface HydrationWidgetProps {
 const WATER_AMOUNTS = [150, 250, 330, 500]
 
 export function HydrationWidget({ onPress }: HydrationWidgetProps) {
+  const { colors } = useTheme()
   const { getTodayData, updateWaterIntake } = useMealsStore()
   const todayData = getTodayData()
 
+  const waterColor = colors.nutrients.water
   const currentMl = todayData.hydration
   const targetMl = 2500
   const currentL = currentMl / 1000
@@ -39,7 +42,7 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
     if (percentage >= 75) return { text: 'Presque !', emoji: '💪' }
     if (percentage >= 50) return { text: 'Bien parti !', emoji: '👍' }
     if (percentage >= 25) return { text: 'Continue !', emoji: '💧' }
-    return { text: 'Reste hydrate !', emoji: '🌊' }
+    return { text: 'Reste hydraté !', emoji: '🌊' }
   }
 
   const message = getMessage()
@@ -54,12 +57,12 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.iconContainer}>
-              <Droplets size={20} color="#06B6D4" />
+            <View style={[styles.iconContainer, { backgroundColor: `${waterColor}20` }]}>
+              <Droplets size={20} color={waterColor} />
             </View>
             <View>
-              <Text style={styles.title}>Hydratation</Text>
-              <Text style={styles.subtitle}>{message.emoji} {message.text}</Text>
+              <Text style={[styles.title, { color: colors.text.primary }]}>Hydratation</Text>
+              <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>{message.emoji} {message.text}</Text>
             </View>
           </View>
           <ChevronRight size={20} color={colors.text.tertiary} />
@@ -68,8 +71,8 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
         {/* Main Display */}
         <View style={styles.mainDisplay}>
           <View style={styles.valueContainer}>
-            <Text style={styles.currentValue}>{currentL.toFixed(1)}</Text>
-            <Text style={styles.targetValue}>/ {targetL}L</Text>
+            <Text style={[styles.currentValue, { color: waterColor }]}>{currentL.toFixed(1)}</Text>
+            <Text style={[styles.targetValue, { color: colors.text.tertiary }]}>/ {targetL}L</Text>
           </View>
 
           {/* Glasses visualization */}
@@ -79,7 +82,7 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
                 key={i}
                 style={[
                   styles.glass,
-                  i < glassesConsumed && styles.glassFilled,
+                  i < glassesConsumed && { backgroundColor: `${waterColor}15` },
                 ]}
               >
                 <Text style={styles.glassEmoji}>
@@ -94,16 +97,16 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
         <ProgressBar
           value={currentMl}
           max={targetMl}
-          color="#06B6D4"
+          color={waterColor}
           size="md"
           style={styles.progressBar}
         />
       </Pressable>
 
       {/* Quick Add Buttons */}
-      <View style={styles.actionsContainer}>
+      <View style={[styles.actionsContainer, { borderTopColor: colors.border.light }]}>
         <TouchableOpacity
-          style={styles.removeButton}
+          style={[styles.removeButton, { backgroundColor: colors.bg.tertiary }]}
           onPress={handleRemoveWater}
           disabled={currentMl <= 0}
         >
@@ -114,12 +117,18 @@ export function HydrationWidget({ onPress }: HydrationWidgetProps) {
           {WATER_AMOUNTS.map((amount) => (
             <TouchableOpacity
               key={amount}
-              style={styles.addButton}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: `${waterColor}15`,
+                  borderColor: `${waterColor}30`,
+                },
+              ]}
               onPress={() => handleAddWater(amount)}
               activeOpacity={0.7}
             >
-              <Plus size={12} color="#06B6D4" />
-              <Text style={styles.addButtonText}>{amount}ml</Text>
+              <Plus size={12} color={waterColor} />
+              <Text style={[styles.addButtonText, { color: waterColor }]}>{amount}ml</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -150,17 +159,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   subtitle: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   mainDisplay: {
     alignItems: 'center',
@@ -174,11 +180,9 @@ const styles = StyleSheet.create({
   currentValue: {
     fontSize: 42,
     fontWeight: '700',
-    color: '#06B6D4',
   },
   targetValue: {
     ...typography.body,
-    color: colors.text.tertiary,
     marginLeft: spacing.xs,
   },
   glassesRow: {
@@ -195,9 +199,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glassFilled: {
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
-  },
   glassEmoji: {
     fontSize: 14,
   },
@@ -210,13 +211,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   removeButton: {
     width: 36,
     height: 36,
     borderRadius: radius.md,
-    backgroundColor: colors.bg.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -232,14 +231,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: spacing.sm,
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.2)',
   },
   addButtonText: {
     ...typography.caption,
-    color: '#06B6D4',
     fontWeight: '600',
   },
 })

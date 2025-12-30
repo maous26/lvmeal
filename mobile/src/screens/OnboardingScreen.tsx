@@ -24,19 +24,62 @@ import type { UserProfile, NutritionalNeeds } from '../types'
 
 type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'sport-initiation' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
 
-const stepConfig: Record<OnboardingStep, { title: string; subtitle: string }> = {
+const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valueProposition?: string }> = {
   welcome: { title: '', subtitle: '' },
-  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Etape 1' },
-  activity: { title: "Votre niveau d'activite", subtitle: 'Etape 2' },
-  'sport-initiation': { title: 'Reprendre le sport', subtitle: 'Programme Sport' },
-  goal: { title: 'Quel est votre objectif ?', subtitle: 'Etape 3' },
-  diet: { title: 'Vos preferences alimentaires', subtitle: 'Etape 4' },
-  cooking: { title: 'En cuisine', subtitle: 'Etape 5' },
-  metabolism: { title: 'Mieux te connaitre', subtitle: 'Etape 6' },
-  'metabolic-program': { title: 'Programme Metabolisme', subtitle: 'Programme personnalise' },
-  'wellness-program': { title: 'Programme Bien-etre', subtitle: 'Programme personnalise' },
-  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Etape 7' },
-  analysis: { title: 'Ton programme personnalise', subtitle: 'Resume' },
+  'basic-info': {
+    title: 'Faisons connaissance',
+    subtitle: 'TON PROFIL',
+    valueProposition: "Ces infos permettent de calculer précisément tes besoins caloriques et de personnaliser tes recommandations.",
+  },
+  activity: {
+    title: 'Comment tu bouges ?',
+    subtitle: 'TON ACTIVITÉ',
+    valueProposition: "Ton niveau d'activité influence directement tes besoins énergétiques. On adapte tout à ton rythme de vie réel.",
+  },
+  'sport-initiation': {
+    title: 'Envie de bouger plus ?',
+    subtitle: 'PROGRAMME SPORT',
+    valueProposition: "Un programme progressif et bienveillant pour reprendre le sport en douceur, à ton rythme.",
+  },
+  goal: {
+    title: 'Ton objectif principal',
+    subtitle: 'TA MOTIVATION',
+    valueProposition: "Chaque objectif a sa stratégie. On adapte les conseils et les macros pour t'aider à y arriver.",
+  },
+  diet: {
+    title: 'Comment tu manges ?',
+    subtitle: 'TES PRÉFÉRENCES',
+    valueProposition: "Pour te proposer des recettes et conseils qui correspondent vraiment à ton mode d'alimentation.",
+  },
+  cooking: {
+    title: 'Et en cuisine ?',
+    subtitle: 'TON STYLE',
+    valueProposition: "On adapte les recettes à ton niveau et au temps dont tu disposes. Pas de pression !",
+  },
+  metabolism: {
+    title: 'Ton historique alimentaire',
+    subtitle: 'MIEUX TE COMPRENDRE',
+    valueProposition: "Ces questions nous aident à détecter si tu as besoin d'une approche plus douce. Zéro jugement, que de la bienveillance.",
+  },
+  'metabolic-program': {
+    title: 'Programme Métabolique',
+    subtitle: 'SPÉCIALEMENT POUR TOI',
+    valueProposition: "Un accompagnement sur-mesure pour réparer ton métabolisme en douceur et retrouver une relation saine avec la nourriture.",
+  },
+  'wellness-program': {
+    title: 'Programme Bien-être',
+    subtitle: 'PRENDS SOIN DE TOI',
+    valueProposition: "Sommeil, stress, hydratation... Parce que bien manger, c'est aussi bien vivre.",
+  },
+  lifestyle: {
+    title: 'Tes habitudes de vie',
+    subtitle: 'TON ÉQUILIBRE',
+    valueProposition: "Le sommeil et le stress impactent directement ton métabolisme. On prend tout en compte !",
+  },
+  analysis: {
+    title: 'Ton programme est prêt !',
+    subtitle: 'RÉCAPITULATIF',
+  },
 }
 
 // Base steps - conditional steps are inserted dynamically
@@ -381,15 +424,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
   }
 
-  // Welcome step has its own layout
+  // Welcome step has its own full-screen layout
   if (currentStep === 'welcome') {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.welcomeContent}>
-          {renderStep()}
-        </View>
-      </SafeAreaView>
-    )
+    return renderStep()
   }
 
   return (
@@ -398,9 +435,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       totalSteps={steps.length - 1}
       title={config.title}
       subtitle={config.subtitle}
+      valueProposition={config.valueProposition}
       onBack={stepIndex > 1 ? handleBack : undefined}
       onNext={handleNext}
-      nextLabel={currentStep === 'analysis' ? 'Commencer' : 'Continuer'}
+      nextLabel={currentStep === 'analysis' ? 'C\'est parti !' : 'Continuer'}
       nextDisabled={!canProceed}
       loading={loading}
       showProgress
@@ -413,11 +451,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
-  },
-  welcomeContent: {
-    flex: 1,
-    padding: 24,
   },
 })
 

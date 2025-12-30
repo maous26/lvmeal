@@ -6,6 +6,7 @@
  * - Clear visual hierarchy
  * - Breakdown of consumed/burned/remaining
  * - Sport bonus indicator when active
+ * - Full dark mode support
  */
 
 import React from 'react'
@@ -17,7 +18,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 import { Flame, Zap, Target, TrendingUp } from 'lucide-react-native'
-import { colors, spacing, typography, radius, shadows } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { spacing, typography, radius, shadows } from '../../constants/theme'
 import { formatNumber } from '../../lib/utils'
 
 interface CaloriesWidgetProps {
@@ -39,8 +41,8 @@ function AnimatedCircularProgress({
   strokeWidth?: number
 }) {
   const center = size / 2
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
+  const r = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * r
   const progress = Math.min(value / max, 1)
   const strokeDashoffset = circumference * (1 - progress)
 
@@ -60,7 +62,7 @@ function AnimatedCircularProgress({
         <Circle
           cx={center}
           cy={center}
-          r={radius}
+          r={r}
           stroke="rgba(255,255,255,0.2)"
           strokeWidth={strokeWidth}
           fill="none"
@@ -69,7 +71,7 @@ function AnimatedCircularProgress({
         <Circle
           cx={center}
           cy={center}
-          r={radius}
+          r={r}
           stroke="url(#progressGradient)"
           strokeWidth={strokeWidth}
           fill="none"
@@ -88,14 +90,19 @@ function AnimatedCircularProgress({
 }
 
 export default function CaloriesWidget({ consumed, burned, target, sportBonus = 0 }: CaloriesWidgetProps) {
+  const { colors, isDark } = useTheme()
   const effectiveTarget = target + sportBonus
   const remaining = Math.max(0, effectiveTarget - consumed + burned)
-  const netConsumed = consumed - burned
+
+  // Dynamic gradient colors based on theme
+  const gradientColors = isDark
+    ? ['#0080C9', '#005580'] as const
+    : ['#009FEB', '#0080C9'] as const
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#0077B6', '#005F8F']}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -113,8 +120,8 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
 
             {sportBonus > 0 && (
               <View style={styles.bonusBadge}>
-                <TrendingUp size={10} color="#10B981" />
-                <Text style={styles.bonusText}>+{sportBonus} sport</Text>
+                <TrendingUp size={10} color={colors.success} />
+                <Text style={[styles.bonusText, { color: colors.success }]}>+{sportBonus} sport</Text>
               </View>
             )}
           </View>
@@ -135,11 +142,11 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Flame size={14} color="#FF6B5B" />
+              <Flame size={14} color={colors.secondary.primary} />
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{formatNumber(consumed)}</Text>
-              <Text style={styles.statLabel}>Consomme</Text>
+              <Text style={styles.statLabel}>Consommé</Text>
             </View>
           </View>
 
@@ -147,11 +154,11 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
 
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Zap size={14} color="#10B981" />
+              <Zap size={14} color={colors.success} />
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{formatNumber(burned)}</Text>
-              <Text style={styles.statLabel}>Brule</Text>
+              <Text style={styles.statLabel}>Brûlé</Text>
             </View>
           </View>
 
@@ -159,7 +166,7 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
 
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Target size={14} color="#F59E0B" />
+              <Target size={14} color={colors.warning} />
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{formatNumber(effectiveTarget)}</Text>
@@ -226,7 +233,6 @@ const styles = StyleSheet.create({
   },
   bonusText: {
     ...typography.caption,
-    color: '#10B981',
     fontWeight: '600',
   },
   progressPercentage: {

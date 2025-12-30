@@ -8,7 +8,8 @@ import {
   TextInputProps,
   Pressable,
 } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography } from '../../constants/theme'
 
 interface InputProps extends TextInputProps {
   label?: string
@@ -31,17 +32,29 @@ export function Input({
   style,
   ...props
 }: InputProps) {
+  const { colors } = useTheme()
   const [isFocused, setIsFocused] = useState(false)
 
   return (
     <View style={containerStyle}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.text.secondary }]}>
+          {label}
+        </Text>
+      )}
 
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputContainerFocused,
-          error && styles.inputContainerError,
+          {
+            backgroundColor: colors.bg.elevated,
+            borderColor: error
+              ? colors.error
+              : isFocused
+              ? colors.accent.primary
+              : colors.border.light,
+          },
+          isFocused && { backgroundColor: colors.bg.primary },
         ]}
       >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
@@ -49,6 +62,7 @@ export function Input({
         <TextInput
           style={[
             styles.input,
+            { color: colors.text.primary },
             leftIcon ? styles.inputWithLeftIcon : undefined,
             rightIcon ? styles.inputWithRightIcon : undefined,
             style,
@@ -66,38 +80,31 @@ export function Input({
         )}
       </View>
 
-      {error && <Text style={styles.error}>{error}</Text>}
-      {hint && !error && <Text style={styles.hint}>{hint}</Text>}
+      {error && (
+        <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
+      )}
+      {hint && !error && (
+        <Text style={[styles.hint, { color: colors.text.tertiary }]}>{hint}</Text>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   label: {
-    ...typography.smallMedium,
-    color: colors.text.secondary,
+    ...typography.label,
     marginBottom: spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.bg.elevated,
     borderWidth: 1.5,
-    borderColor: colors.border.light,
     borderRadius: radius.md,
-    minHeight: 48,
-  },
-  inputContainerFocused: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.bg.primary,
-  },
-  inputContainerError: {
-    borderColor: colors.error,
+    minHeight: 52,
   },
   input: {
     flex: 1,
     ...typography.body,
-    color: colors.text.primary,
     paddingHorizontal: spacing.default,
     paddingVertical: spacing.md,
   },
@@ -115,12 +122,10 @@ const styles = StyleSheet.create({
   },
   hint: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: spacing.xs,
   },
   error: {
     ...typography.caption,
-    color: colors.error,
     marginTop: spacing.xs,
   },
 })

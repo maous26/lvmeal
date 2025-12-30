@@ -1,3 +1,5 @@
+import "./global.css"
+
 import React, { useCallback, useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'

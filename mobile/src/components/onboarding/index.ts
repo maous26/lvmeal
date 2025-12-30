@@ -1,5 +1,7 @@
 // Onboarding Components
 export { OnboardingLayout } from './OnboardingLayout'
+export { OnboardingHero } from './OnboardingHero'
+export { OnboardingBenefits } from './OnboardingBenefits'
 export { StepWelcome } from './StepWelcome'
 export { StepBasicInfo } from './StepBasicInfo'
 export { StepGoal } from './StepGoal'

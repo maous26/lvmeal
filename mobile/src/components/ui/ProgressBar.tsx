@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, StyleSheet, ViewStyle } from 'react-native'
-import { colors, radius } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius } from '../../constants/theme'
 
 interface ProgressBarProps {
   value: number
@@ -15,12 +16,16 @@ interface ProgressBarProps {
 export function ProgressBar({
   value,
   max,
-  color = colors.accent.primary,
-  backgroundColor = colors.bg.tertiary,
+  color,
+  backgroundColor,
   size = 'default',
   showOverflow = false,
   style,
 }: ProgressBarProps) {
+  const { colors } = useTheme()
+
+  const fillColor = color || colors.accent.primary
+  const trackColor = backgroundColor || colors.bg.tertiary
   const percentage = Math.min((value / max) * 100, showOverflow ? 150 : 100)
   const isOverflow = value > max
 
@@ -35,7 +40,7 @@ export function ProgressBar({
     <View
       style={[
         styles.container,
-        { height: heights[size], backgroundColor },
+        { height: heights[size], backgroundColor: trackColor },
         style,
       ]}
     >
@@ -44,7 +49,7 @@ export function ProgressBar({
           styles.fill,
           {
             width: `${Math.min(percentage, 100)}%`,
-            backgroundColor: isOverflow ? colors.warning : color,
+            backgroundColor: isOverflow ? colors.warning : fillColor,
             borderRadius: radius.full,
           },
         ]}

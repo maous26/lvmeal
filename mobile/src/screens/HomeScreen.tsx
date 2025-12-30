@@ -5,15 +5,30 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  Pressable,
   TouchableOpacity,
   Alert,
   LayoutAnimation,
   UIManager,
   Platform,
+  Dimensions,
 } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
-import { Calendar, ChevronDown, ChevronUp, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react-native'
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Droplets,
+  Trophy,
+  Sparkles,
+  Bell,
+} from 'lucide-react-native'
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -23,15 +38,12 @@ import * as Haptics from 'expo-haptics'
 
 import { Card } from '../components/ui'
 import {
-  CaloriesWidget,
   QuickActionsWidget,
-  RankingWidget,
-  HydrationWidget,
   CaloricBalance,
   ProgramsSection,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, lightColors as defaultColors } from '../constants/theme'
+import { spacing, typography, radius, shadows } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -40,48 +52,135 @@ import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/u
 import type { MealType } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
-// Pastel backgrounds for sections (light mode)
-const LIGHT_PASTEL_COLORS = {
-  calories: 'rgba(59, 130, 246, 0.06)',   // Blue pastel
-  meals: 'rgba(249, 115, 22, 0.06)',       // Orange pastel
-  macros: 'rgba(16, 185, 129, 0.06)',      // Green pastel
-  plan: 'rgba(139, 92, 246, 0.06)',        // Purple pastel
-  hydration: 'rgba(6, 182, 212, 0.06)',    // Cyan pastel
-  programs: 'rgba(236, 72, 153, 0.06)',    // Pink pastel
-  solde: 'rgba(245, 158, 11, 0.06)',       // Amber pastel
-  ranking: 'rgba(99, 102, 241, 0.06)',     // Indigo pastel
-}
-
-// Darker pastel backgrounds for dark mode
-const DARK_PASTEL_COLORS = {
-  calories: 'rgba(59, 130, 246, 0.12)',
-  meals: 'rgba(249, 115, 22, 0.12)',
-  macros: 'rgba(16, 185, 129, 0.12)',
-  plan: 'rgba(139, 92, 246, 0.12)',
-  hydration: 'rgba(6, 182, 212, 0.12)',
-  programs: 'rgba(236, 72, 153, 0.12)',
-  solde: 'rgba(245, 158, 11, 0.12)',
-  ranking: 'rgba(99, 102, 241, 0.12)',
-}
+const { width } = Dimensions.get('window')
 
 // Meal config function that uses dynamic colors
-const getMealConfig = (colors: typeof import('../constants/theme').lightColors): Record<MealType, { label: string; icon: string; color: string }> => ({
-  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning },
-  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary },
-  snack: { label: 'Collation', icon: '🍎', color: colors.success },
-  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary },
+const getMealConfig = (colors: typeof import('../constants/theme').lightColors): Record<MealType, { label: string; icon: string; color: string; gradient: readonly [string, string] }> => ({
+  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning, gradient: ['#FCD34D', '#F59E0B'] as const },
+  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary, gradient: ['#38BDF8', '#0EA5E9'] as const },
+  snack: { label: 'Collation', icon: '🍎', color: colors.success, gradient: ['#34D399', '#10B981'] as const },
+  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary, gradient: ['#FB7185', '#F43F5E'] as const },
 })
 
 const mealOrder: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
+// Circular Progress Component
+function CircularProgress({
+  value,
+  max,
+  size = 160,
+  strokeWidth = 14,
+  colors,
+}: {
+  value: number
+  max: number
+  size?: number
+  strokeWidth?: number
+  colors: typeof import('../constants/theme').lightColors
+}) {
+  const center = size / 2
+  const r = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * r
+  const progress = Math.min(value / max, 1)
+  const strokeDashoffset = circumference * (1 - progress)
+  const remaining = Math.max(0, max - value)
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+        <Defs>
+          <SvgGradient id="caloriesGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor={colors.accent.primary} />
+            <Stop offset="100%" stopColor={colors.secondary.primary} />
+          </SvgGradient>
+        </Defs>
+        {/* Background circle */}
+        <Circle
+          cx={center}
+          cy={center}
+          r={r}
+          stroke={colors.border.light}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        {/* Progress circle */}
+        <Circle
+          cx={center}
+          cy={center}
+          r={r}
+          stroke="url(#caloriesGradient)"
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </Svg>
+      {/* Center content */}
+      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={[styles.caloriesRemaining, { color: colors.text.primary }]}>
+          {formatNumber(remaining)}
+        </Text>
+        <Text style={[styles.caloriesRemainingLabel, { color: colors.text.muted }]}>
+          kcal restantes
+        </Text>
+      </View>
+    </View>
+  )
+}
+
+// Macro Progress Bar with Gradient
+function MacroProgressBar({
+  label,
+  current,
+  target,
+  color,
+  gradientColors,
+  icon,
+}: {
+  label: string
+  current: number
+  target: number
+  color: string
+  gradientColors: readonly [string, string]
+  icon: React.ReactNode
+}) {
+  const { colors } = useTheme()
+  const progress = Math.min((current / target) * 100, 100)
+
+  return (
+    <View style={styles.macroItem}>
+      <View style={styles.macroHeader}>
+        <View style={[styles.macroIconContainer, { backgroundColor: `${color}20` }]}>
+          {icon}
+        </View>
+        <View style={styles.macroInfo}>
+          <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>{label}</Text>
+          <Text style={styles.macroValues}>
+            <Text style={[styles.macroCurrentValue, { color }]}>{Math.round(current)}g</Text>
+            <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {target}g</Text>
+          </Text>
+        </View>
+      </View>
+      <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.macroProgressFill, { width: `${progress}%` }]}
+        />
+      </View>
+    </View>
+  )
+}
+
 export default function HomeScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
-  const PASTEL_COLORS = isDark ? DARK_PASTEL_COLORS : LIGHT_PASTEL_COLORS
   const mealConfig = getMealConfig(colors)
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
-  const { checkAndUpdateStreak } = useGamificationStore()
+  const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
     dailyBalances,
     weekStartDate,
@@ -92,12 +191,10 @@ export default function HomeScreen() {
     initializeWeek,
   } = useCaloricBankStore()
 
-  const [isHydrated, setIsHydrated] = useState(false)
   const [isPlanExpanded, setIsPlanExpanded] = useState(false)
-  const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set()) // Tracks which meals are collapsed
+  const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set())
 
   useEffect(() => {
-    setIsHydrated(true)
     checkAndUpdateStreak()
     initializeWeek()
   }, [checkAndUpdateStreak, initializeWeek])
@@ -110,6 +207,7 @@ export default function HomeScreen() {
 
   const greeting = getGreeting()
   const userName = profile?.firstName || profile?.name?.split(' ')[0] || 'Utilisateur'
+  const userInitials = userName.substring(0, 2).toUpperCase()
 
   // Date navigation
   const changeDate = (delta: number) => {
@@ -122,7 +220,7 @@ export default function HomeScreen() {
   // Meal handlers
   const handleAddMeal = (type: MealType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('AddMeal', { type })
   }
 
@@ -161,41 +259,43 @@ export default function HomeScreen() {
 
   // Navigation handlers
   const handleNavigateToAchievements = () => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('Profile', { screen: 'Achievements' })
   }
 
   const handleNavigateToPlan = (options: { duration: 1 | 3 | 7; calorieReduction: boolean; complexity: RecipeComplexity }) => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('WeeklyPlan', options)
   }
 
   const handleNavigateToMetabolicBoost = () => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('MetabolicBoost')
   }
 
   const handleNavigateToWellness = () => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('WellnessProgram')
   }
 
   const handleNavigateToSportInitiation = () => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('SportInitiation')
   }
 
   const handleNavigateToCalendar = () => {
-    // @ts-ignore - Navigation typing
+    // @ts-ignore
     navigation.navigate('Calendar')
   }
 
   const togglePlanExpanded = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
     setIsPlanExpanded(!isPlanExpanded)
   }
 
   const currentDayIndex = getCurrentDayIndex()
+  const hydrationProgress = Math.min((todayData.hydration / 2500) * 100, 100)
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -204,145 +304,180 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* 1. Header */}
+        {/* Premium Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.text.secondary }]}>{greeting},</Text>
-            <Text style={[styles.userName, { color: colors.text.primary }]}>{userName}</Text>
+            <LinearGradient
+              colors={[colors.accent.primary, colors.secondary.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatarGradient}
+            >
+              <Text style={styles.avatarText}>{userInitials}</Text>
+            </LinearGradient>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.greeting, { color: colors.text.tertiary }]}>{greeting}</Text>
+              <Text style={[styles.userName, { color: colors.text.primary }]}>{userName}</Text>
+            </View>
           </View>
-          <Pressable style={[styles.calendarIconButton, { backgroundColor: colors.accent.light }]} onPress={handleNavigateToCalendar}>
-            <Calendar size={24} color={colors.accent.primary} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={[styles.headerIconButton, { backgroundColor: colors.bg.secondary }]}
+              onPress={() => {}}
+            >
+              <Bell size={20} color={colors.text.secondary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerIconButton, { backgroundColor: colors.accent.light }]}
+              onPress={handleNavigateToCalendar}
+            >
+              <Calendar size={20} color={colors.accent.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* 2. Main Calories Card */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.calories }]}>
-          <CaloriesWidget
-            consumed={totals.calories}
-            burned={0}
-            target={baseGoals.calories}
-            sportBonus={baseGoals.sportCaloriesBonus || 0}
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
+            <Flame size={18} color={colors.secondary.primary} />
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>{currentStreak}</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Streak</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
+            <Trophy size={18} color={colors.warning} />
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>Niv. {currentLevel}</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Niveau</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}
+            onPress={handleNavigateToWellness}
+          >
+            <Droplets size={18} color={colors.info} />
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>{Math.round(hydrationProgress)}%</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Hydratation</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Main Calories Widget */}
+        <View style={[styles.caloriesSection, { backgroundColor: colors.bg.elevated }, shadows.md]}>
+          <View style={styles.caloriesHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Aujourd'hui</Text>
+            <View style={[styles.calorieBadge, { backgroundColor: colors.accent.light }]}>
+              <Sparkles size={12} color={colors.accent.primary} />
+              <Text style={[styles.calorieBadgeText, { color: colors.accent.primary }]}>
+                {Math.round((totals.calories / goals.calories) * 100)}% atteint
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.caloriesContent}>
+            <CircularProgress
+              value={totals.calories}
+              max={goals.calories}
+              size={160}
+              strokeWidth={14}
+              colors={colors}
+            />
+
+            <View style={styles.caloriesStats}>
+              <View style={styles.calorieStatItem}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
+                <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Consommé</Text>
+                <Text style={[styles.calorieStatValue, { color: colors.text.primary }]}>
+                  {formatNumber(totals.calories)}
+                </Text>
+              </View>
+              <View style={styles.calorieStatItem}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
+                <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Objectif</Text>
+                <Text style={[styles.calorieStatValue, { color: colors.text.primary }]}>
+                  {formatNumber(goals.calories)}
+                </Text>
+              </View>
+              {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
+                <View style={styles.calorieStatItem}>
+                  <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
+                  <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Bonus sport</Text>
+                  <Text style={[styles.calorieStatValue, { color: colors.warning }]}>
+                    +{baseGoals.sportCaloriesBonus}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* Macros Widget */}
+        <View style={[styles.macrosSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
+            Macronutriments
+          </Text>
+
+          <MacroProgressBar
+            label="Protéines"
+            current={totals.proteins}
+            target={goals.proteins}
+            color={colors.nutrients.proteins}
+            gradientColors={['#38BDF8', '#0284C7']}
+            icon={<Text style={{ fontSize: 14 }}>🥩</Text>}
+          />
+
+          <MacroProgressBar
+            label="Glucides"
+            current={totals.carbs}
+            target={goals.carbs}
+            color={colors.nutrients.carbs}
+            gradientColors={['#FBBF24', '#F59E0B']}
+            icon={<Text style={{ fontSize: 14 }}>🍞</Text>}
+          />
+
+          <MacroProgressBar
+            label="Lipides"
+            current={totals.fats}
+            target={goals.fats}
+            color={colors.nutrients.fats}
+            gradientColors={['#C084FC', '#A855F7']}
+            icon={<Text style={{ fontSize: 14 }}>🥑</Text>}
           />
         </View>
 
-        {/* 3. Professional Macros Widget with progress bars */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.macros }]}>
-          <Card style={[styles.macrosCard, { backgroundColor: colors.bg.elevated }]}>
-            {/* Proteins */}
-            <View style={styles.macroItem}>
-              <View style={styles.macroHeader}>
-                <View style={[styles.macroDot, { backgroundColor: colors.nutrients.proteins }]} />
-                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Protéines</Text>
-                <Text style={styles.macroValues}>
-                  <Text style={[styles.macroCurrentValue, { color: colors.nutrients.proteins }]}>
-                    {Math.round(totals.proteins)}g
-                  </Text>
-                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.proteins}g</Text>
-                </Text>
-              </View>
-              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
-                <View
-                  style={[
-                    styles.macroProgressFill,
-                    {
-                      backgroundColor: colors.nutrients.proteins,
-                      width: `${Math.min((totals.proteins / goals.proteins) * 100, 100)}%`
-                    }
-                  ]}
-                />
-              </View>
+        {/* Meals Section */}
+        <View style={[styles.mealsSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          <View style={styles.mealsSectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Journal des repas</Text>
+            <View style={styles.dateSelector}>
+              <TouchableOpacity onPress={() => changeDate(-1)} style={styles.dateButton}>
+                <ChevronLeft size={18} color={colors.text.secondary} />
+              </TouchableOpacity>
+              <Text style={[styles.dateText, { color: colors.text.primary }]}>{getRelativeDate(currentDate)}</Text>
+              <TouchableOpacity onPress={() => changeDate(1)} style={styles.dateButton}>
+                <ChevronRight size={18} color={colors.text.secondary} />
+              </TouchableOpacity>
             </View>
-
-            {/* Carbs */}
-            <View style={styles.macroItem}>
-              <View style={styles.macroHeader}>
-                <View style={[styles.macroDot, { backgroundColor: colors.nutrients.carbs }]} />
-                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Glucides</Text>
-                <Text style={styles.macroValues}>
-                  <Text style={[styles.macroCurrentValue, { color: colors.nutrients.carbs }]}>
-                    {Math.round(totals.carbs)}g
-                  </Text>
-                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.carbs}g</Text>
-                </Text>
-              </View>
-              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
-                <View
-                  style={[
-                    styles.macroProgressFill,
-                    {
-                      backgroundColor: colors.nutrients.carbs,
-                      width: `${Math.min((totals.carbs / goals.carbs) * 100, 100)}%`
-                    }
-                  ]}
-                />
-              </View>
-            </View>
-
-            {/* Fats */}
-            <View style={styles.macroItem}>
-              <View style={styles.macroHeader}>
-                <View style={[styles.macroDot, { backgroundColor: colors.nutrients.fats }]} />
-                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Lipides</Text>
-                <Text style={styles.macroValues}>
-                  <Text style={[styles.macroCurrentValue, { color: colors.nutrients.fats }]}>
-                    {Math.round(totals.fats)}g
-                  </Text>
-                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.fats}g</Text>
-                </Text>
-              </View>
-              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
-                <View
-                  style={[
-                    styles.macroProgressFill,
-                    {
-                      backgroundColor: colors.nutrients.fats,
-                      width: `${Math.min((totals.fats / goals.fats) * 100, 100)}%`
-                    }
-                  ]}
-                />
-              </View>
-            </View>
-          </Card>
-        </View>
-
-        {/* 4. Meals Section (integrated from MealsScreen) */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.meals }]}>
-          {/* Section Title */}
-          <Text style={[styles.mealsSectionTitle, { color: colors.text.primary }]}>Journal des repas</Text>
-
-          {/* Date Selector */}
-          <View style={styles.dateSelector}>
-            <TouchableOpacity onPress={() => changeDate(-1)} style={styles.dateButton}>
-              <ChevronLeft size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
-            <Text style={[styles.dateText, { color: colors.text.primary }]}>{getRelativeDate(currentDate)}</Text>
-            <TouchableOpacity onPress={() => changeDate(1)} style={styles.dateButton}>
-              <ChevronRight size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
           </View>
 
-          {/* Meal Cards */}
           {mealOrder.map((type) => {
             const config = mealConfig[type]
             const meals = getMealsByType(currentDate, type)
-            const totalCalories = meals.reduce(
-              (sum, meal) => sum + meal.totalNutrition.calories,
-              0
-            )
+            const totalCalories = meals.reduce((sum, meal) => sum + meal.totalNutrition.calories, 0)
             const hasMeals = meals.length > 0
             const isCollapsed = collapsedMeals.has(type)
             const totalItems = meals.reduce((sum, m) => sum + m.items.length, 0)
 
             return (
-              <Card key={type} style={[styles.mealCard, { backgroundColor: colors.bg.elevated }]}>
-                {/* Clickable header to expand/collapse */}
+              <View key={type} style={[styles.mealCard, { borderColor: colors.border.light }]}>
                 <TouchableOpacity
                   style={styles.mealHeader}
                   onPress={() => hasMeals && toggleMealCollapsed(type)}
                   activeOpacity={hasMeals ? 0.7 : 1}
                 >
                   <View style={styles.mealInfo}>
-                    <Text style={styles.mealIcon}>{config.icon}</Text>
+                    <LinearGradient
+                      colors={config.gradient}
+                      style={styles.mealIconContainer}
+                    >
+                      <Text style={styles.mealIcon}>{config.icon}</Text>
+                    </LinearGradient>
                     <View>
                       <Text style={[styles.mealLabel, { color: colors.text.primary }]}>{config.label}</Text>
                       {hasMeals && (
@@ -367,13 +502,12 @@ export default function HomeScreen() {
                         style={[styles.addButton, { backgroundColor: `${config.color}15` }]}
                         onPress={() => handleAddMeal(type)}
                       >
-                        <Plus size={20} color={config.color} />
+                        <Plus size={18} color={config.color} />
                       </TouchableOpacity>
                     )}
                   </View>
                 </TouchableOpacity>
 
-                {/* Collapsible content */}
                 {hasMeals && !isCollapsed && (
                   <View style={[styles.mealContent, { borderTopColor: colors.border.light }]}>
                     {meals.map((meal) => (
@@ -403,25 +537,38 @@ export default function HomeScreen() {
                       onPress={() => handleAddMeal(type)}
                     >
                       <Plus size={14} color={colors.accent.primary} />
-                      <Text style={[styles.addMoreText, { color: colors.accent.primary }]}>Ajouter</Text>
+                      <Text style={[styles.addMoreText, { color: colors.accent.primary }]}>Ajouter un aliment</Text>
                     </TouchableOpacity>
                   </View>
                 )}
-              </Card>
+              </View>
             )
           })}
         </View>
 
-        {/* 5. Plan Repas IA - Collapsible */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.plan }]}>
-          <Pressable style={styles.collapsibleHeader} onPress={togglePlanExpanded}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Plan Repas IA</Text>
+        {/* Plan Repas IA */}
+        <View style={[styles.planSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          <TouchableOpacity style={styles.planHeader} onPress={togglePlanExpanded}>
+            <View style={styles.planHeaderLeft}>
+              <LinearGradient
+                colors={['#A855F7', '#7C3AED']}
+                style={styles.planIconContainer}
+              >
+                <Sparkles size={18} color="#FFFFFF" />
+              </LinearGradient>
+              <View>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Plan Repas IA</Text>
+                <Text style={[styles.planSubtitle, { color: colors.text.tertiary }]}>
+                  Recettes personnalisées
+                </Text>
+              </View>
+            </View>
             {isPlanExpanded ? (
               <ChevronUp size={20} color={colors.text.secondary} />
             ) : (
               <ChevronDown size={20} color={colors.text.secondary} />
             )}
-          </Pressable>
+          </TouchableOpacity>
           {isPlanExpanded && (
             <View style={styles.planContent}>
               <QuickActionsWidget onPlanPress={handleNavigateToPlan} />
@@ -429,13 +576,11 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* 6. Hydration */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.hydration }]}>
-          <HydrationWidget onPress={handleNavigateToWellness} />
-        </View>
-
-        {/* 7. Programs Section */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.programs }]}>
+        {/* Programs Section */}
+        <View style={[styles.programsSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
+            Mes programmes
+          </Text>
           <ProgramsSection
             onSportPress={handleNavigateToSportInitiation}
             onMetabolicPress={handleNavigateToMetabolicBoost}
@@ -443,8 +588,8 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* 8. Solde Plaisir - Full version with 7-day graph */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.solde }]}>
+        {/* Caloric Balance */}
+        <View style={[styles.balanceSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
           <CaloricBalance
             dailyBalances={dailyBalances.map(b => ({
               day: new Date(b.date).toLocaleDateString('fr-FR', { weekday: 'short' }),
@@ -462,12 +607,7 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* 9. Ranking & Gamification */}
-        <View style={[styles.section, { backgroundColor: PASTEL_COLORS.ranking }]}>
-          <RankingWidget onPress={handleNavigateToAchievements} />
-        </View>
-
-        {/* Spacer for bottom nav */}
+        {/* Bottom Spacer */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
@@ -485,39 +625,140 @@ const styles = StyleSheet.create({
     padding: spacing.default,
     paddingBottom: spacing['3xl'],
   },
-  // Header
+  // Premium Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: spacing.lg,
   },
   headerLeft: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
-  calendarIconButton: {
-    padding: spacing.sm,
-    borderRadius: radius.full,
-    marginLeft: spacing.md,
+  avatarGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  headerTextContainer: {
+    gap: 2,
   },
   greeting: {
-    ...typography.body,
+    ...typography.small,
   },
   userName: {
-    ...typography.h3,
+    ...typography.h4,
+    fontWeight: '700',
   },
-  // Sections with pastel backgrounds
-  section: {
-    marginBottom: spacing.md,
-    padding: spacing.sm,
+  headerRight: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  headerIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Stats Row
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.md,
     borderRadius: radius.lg,
+    gap: spacing.xs,
+  },
+  statValue: {
+    ...typography.bodyMedium,
+    fontWeight: '700',
+  },
+  statLabel: {
+    ...typography.caption,
+  },
+  // Calories Section
+  caloriesSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  caloriesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    ...typography.bodyMedium,
+    ...typography.h4,
+    fontWeight: '600',
   },
-  // Professional Macros Widget
-  macrosCard: {
-    padding: spacing.md,
+  calorieBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+  },
+  calorieBadgeText: {
+    ...typography.captionMedium,
+  },
+  caloriesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  caloriesRemaining: {
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -1,
+  },
+  caloriesRemainingLabel: {
+    ...typography.caption,
+    marginTop: 2,
+  },
+  caloriesStats: {
+    flex: 1,
+    marginLeft: spacing.lg,
+    gap: spacing.md,
+  },
+  calorieStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  calorieStatDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  calorieStatLabel: {
+    ...typography.small,
+    flex: 1,
+  },
+  calorieStatValue: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+  },
+  // Macros Section
+  macrosSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
   macroItem: {
     marginBottom: spacing.md,
@@ -525,30 +766,37 @@ const styles = StyleSheet.create({
   macroHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  macroDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  macroIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  macroLabel: {
+  macroInfo: {
     flex: 1,
-    ...typography.smallMedium,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  macroLabel: {
+    ...typography.bodyMedium,
   },
   macroValues: {
     flexDirection: 'row',
   },
   macroCurrentValue: {
-    ...typography.smallMedium,
+    ...typography.bodyMedium,
     fontWeight: '700',
   },
   macroGoalValue: {
-    ...typography.small,
+    ...typography.body,
   },
   macroProgressTrack: {
-    height: 6,
+    height: 8,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -556,29 +804,34 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radius.full,
   },
-  // Meals section title
-  mealsSectionTitle: {
-    ...typography.bodyMedium,
-    marginBottom: spacing.sm,
+  // Meals Section
+  mealsSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
-  // Date selector
+  mealsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   dateSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
   },
   dateButton: {
     padding: spacing.xs,
   },
   dateText: {
-    ...typography.bodyMedium,
-    marginHorizontal: spacing.md,
+    ...typography.smallMedium,
+    marginHorizontal: spacing.sm,
   },
-  // Meal cards
   mealCard: {
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     marginBottom: spacing.sm,
-    padding: spacing.sm,
   },
   mealHeader: {
     flexDirection: 'row',
@@ -588,23 +841,30 @@ const styles = StyleSheet.create({
   mealInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
+  },
+  mealIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mealIcon: {
-    fontSize: 24,
+    fontSize: 20,
   },
   mealLabel: {
-    ...typography.smallMedium,
+    ...typography.bodyMedium,
   },
   mealItems: {
     ...typography.caption,
-    fontSize: 10,
   },
   mealRight: {
     alignItems: 'flex-end',
   },
   mealCalories: {
-    ...typography.smallMedium,
+    ...typography.bodyMedium,
+    fontWeight: '600',
   },
   mealRightContent: {
     flexDirection: 'row',
@@ -621,15 +881,15 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '180deg' }],
   },
   addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mealContent: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
     borderTopWidth: 1,
   },
   mealItemsList: {
@@ -639,30 +899,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: spacing.xs,
-    marginVertical: 1,
-    borderRadius: radius.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    marginVertical: 2,
+    borderRadius: radius.md,
   },
   foodItemInfo: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: spacing.xs,
+    marginRight: spacing.sm,
   },
   foodName: {
-    fontSize: 11,
+    ...typography.small,
     flex: 1,
     marginRight: spacing.sm,
   },
   foodCalories: {
-    fontSize: 11,
-    fontWeight: '500',
+    ...typography.smallMedium,
   },
   deleteItemButton: {
-    width: 22,
-    height: 22,
+    width: 28,
+    height: 28,
     borderRadius: radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
@@ -671,25 +930,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    marginTop: spacing.xs,
-    borderRadius: radius.sm,
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.sm,
+    borderRadius: radius.md,
   },
   addMoreText: {
-    fontSize: 11,
-    fontWeight: '500',
+    ...typography.smallMedium,
   },
-  // Collapsible Plan
-  collapsibleHeader: {
+  // Plan Section
+  planSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
+  },
+  planHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  planIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planSubtitle: {
+    ...typography.caption,
   },
   planContent: {
-    paddingTop: spacing.xs,
+    marginTop: spacing.lg,
+  },
+  // Programs Section
+  programsSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  // Balance Section
+  balanceSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
   // Bottom
   bottomSpacer: {

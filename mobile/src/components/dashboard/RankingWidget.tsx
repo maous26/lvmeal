@@ -3,14 +3,16 @@ import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { ChevronRight, Trophy, TrendingUp, Zap } from 'lucide-react-native'
 import { Card } from '../ui/Card'
 import { ProgressBar } from '../ui/ProgressBar'
-import { colors, radius, spacing, typography } from '../../constants/theme'
-import { useGamificationStore, TIERS } from '../../stores/gamification-store'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography } from '../../constants/theme'
+import { useGamificationStore } from '../../stores/gamification-store'
 
 interface RankingWidgetProps {
   onPress?: () => void
 }
 
 export function RankingWidget({ onPress }: RankingWidgetProps) {
+  const { colors } = useTheme()
   const {
     weeklyXP,
     getTier,
@@ -30,10 +32,10 @@ export function RankingWidget({ onPress }: RankingWidgetProps) {
 
   // Determine rank color and message
   const getRankStyle = () => {
-    if (rank.percentile <= 1) return { color: '#B9F2FF', bg: 'rgba(185, 242, 255, 0.15)', label: 'Elite' }
-    if (rank.percentile <= 5) return { color: '#FFD700', bg: 'rgba(255, 215, 0, 0.15)', label: 'Top 5%' }
-    if (rank.percentile <= 10) return { color: '#C0C0C0', bg: 'rgba(192, 192, 192, 0.15)', label: 'Top 10%' }
-    if (rank.percentile <= 25) return { color: '#CD7F32', bg: 'rgba(205, 127, 50, 0.15)', label: 'Top 25%' }
+    if (rank.percentile <= 1) return { color: colors.gamification.diamond, bg: `${colors.gamification.diamond}20`, label: 'Élite' }
+    if (rank.percentile <= 5) return { color: colors.gamification.gold, bg: `${colors.gamification.gold}20`, label: 'Top 5%' }
+    if (rank.percentile <= 10) return { color: colors.gamification.silver, bg: `${colors.gamification.silver}20`, label: 'Top 10%' }
+    if (rank.percentile <= 25) return { color: colors.gamification.bronze, bg: `${colors.gamification.bronze}20`, label: 'Top 25%' }
     return { color: colors.text.secondary, bg: colors.bg.tertiary, label: `Top ${rank.percentile}%` }
   }
 
@@ -52,8 +54,8 @@ export function RankingWidget({ onPress }: RankingWidgetProps) {
             </View>
             <View style={styles.xpInfo}>
               <Zap size={14} color={colors.accent.primary} />
-              <Text style={styles.xpValue}>{weeklyXP} XP</Text>
-              <Text style={styles.xpLabel}>cette semaine</Text>
+              <Text style={[styles.xpValue, { color: colors.accent.primary }]}>{weeklyXP} XP</Text>
+              <Text style={[styles.xpLabel, { color: colors.text.muted }]}>cette semaine</Text>
             </View>
           </View>
 
@@ -68,10 +70,10 @@ export function RankingWidget({ onPress }: RankingWidgetProps) {
         {nextTier && (
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>
+              <Text style={[styles.progressLabel, { color: colors.text.secondary }]}>
                 Vers {nextTier.icon} {nextTier.nameFr}
               </Text>
-              <Text style={styles.progressValue}>
+              <Text style={[styles.progressValue, { color: colors.text.primary }]}>
                 {Math.round(tierProgress.percentage)}%
               </Text>
             </View>
@@ -85,39 +87,39 @@ export function RankingWidget({ onPress }: RankingWidgetProps) {
         )}
 
         {/* Stats Row */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, { borderTopColor: colors.border.light }]}>
           {/* Streak */}
           <View style={styles.statItem}>
             <Text style={styles.statEmoji}>🔥</Text>
-            <Text style={styles.statValue}>{streakInfo.current}</Text>
-            <Text style={styles.statLabel}>Serie</Text>
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>{streakInfo.current}</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Série</Text>
           </View>
 
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border.light }]} />
 
           {/* AI Credits */}
           <View style={styles.statItem}>
             <Text style={styles.statEmoji}>🤖</Text>
-            <Text style={styles.statValue}>{aiCredits === 999 ? '∞' : aiCredits}</Text>
-            <Text style={styles.statLabel}>Credits IA</Text>
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>{aiCredits === 999 ? '∞' : aiCredits}</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Crédits IA</Text>
           </View>
 
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border.light }]} />
 
           {/* Bonus */}
           {streakInfo.bonus > 0 ? (
             <View style={styles.statItem}>
               <TrendingUp size={18} color={colors.success} />
               <Text style={[styles.statValue, { color: colors.success }]}>+{streakInfo.bonus}%</Text>
-              <Text style={styles.statLabel}>Bonus XP</Text>
+              <Text style={[styles.statLabel, { color: colors.text.muted }]}>Bonus XP</Text>
             </View>
           ) : (
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>🎯</Text>
-              <Text style={styles.statValue}>{tierProgress.needed - tierProgress.current}</Text>
-              <Text style={styles.statLabel}>XP restants</Text>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>{tierProgress.needed - tierProgress.current}</Text>
+              <Text style={[styles.statLabel, { color: colors.text.muted }]}>XP restants</Text>
             </View>
           )}
 
@@ -166,12 +168,10 @@ const styles = StyleSheet.create({
   },
   xpValue: {
     ...typography.bodyMedium,
-    color: colors.accent.primary,
     fontWeight: '600',
   },
   xpLabel: {
     ...typography.caption,
-    color: colors.text.muted,
   },
   rankBadge: {
     flexDirection: 'row',
@@ -196,11 +196,9 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     ...typography.caption,
-    color: colors.text.secondary,
   },
   progressValue: {
     ...typography.caption,
-    color: colors.text.primary,
     fontWeight: '600',
   },
   statsRow: {
@@ -208,7 +206,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   statItem: {
     flex: 1,
@@ -220,18 +217,15 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
     fontWeight: '600',
   },
   statLabel: {
     ...typography.caption,
-    color: colors.text.muted,
     fontSize: 10,
   },
   divider: {
     width: 1,
     height: 30,
-    backgroundColor: colors.border.light,
   },
   arrow: {
     marginLeft: spacing.sm,

@@ -187,6 +187,23 @@ export default function ProfileScreen() {
     )
   }
 
+  const handleReplayOnboarding = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    Alert.alert(
+      'Revoir l\'onboarding',
+      'Cela te permettra de revoir le nouvel onboarding marketing. Tes données seront conservées.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Revoir',
+          onPress: () => {
+            useUserStore.getState().setOnboarded(false)
+          },
+        },
+      ]
+    )
+  }
+
   const handleToggleDarkMode = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     toggleTheme()

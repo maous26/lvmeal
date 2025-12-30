@@ -3,14 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  Pressable,
+  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
+import * as Haptics from 'expo-haptics'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ChevronLeft, Sparkles } from 'lucide-react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useTheme } from '../../contexts/ThemeContext'
 import { Button } from '../ui/Button'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { spacing, radius, typography, shadows } from '../../constants/theme'
 
 interface OnboardingLayoutProps {
   children: React.ReactNode
@@ -18,6 +22,8 @@ interface OnboardingLayoutProps {
   totalSteps: number
   title?: string
   subtitle?: string
+  /** Explain WHY we're asking this - builds trust */
+  valueProposition?: string
   onBack?: () => void
   onNext?: () => void
   onSkip?: () => void
@@ -34,6 +40,7 @@ export function OnboardingLayout({
   totalSteps,
   title,
   subtitle,
+  valueProposition,
   onBack,
   onNext,
   onSkip,
@@ -43,45 +50,52 @@ export function OnboardingLayout({
   loading = false,
   showProgress = true,
 }: OnboardingLayoutProps) {
+  const { colors } = useTheme()
   const insets = useSafeAreaInsets()
+
+  const progress = ((step) / (totalSteps - 1)) * 100
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { paddingTop: insets.top }]}
+      style={[styles.container, { backgroundColor: colors.bg.primary, paddingTop: insets.top }]}
     >
       {/* Header */}
       <View style={styles.header}>
         {/* Back button */}
         {onBack && step > 1 ? (
-          <Pressable onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backIcon}>‹</Text>
-          </Pressable>
+          <TouchableOpacity
+            onPress={onBack}
+            style={[styles.backButton, { backgroundColor: colors.bg.secondary }]}
+          >
+            <ChevronLeft size={20} color={colors.text.secondary} />
+          </TouchableOpacity>
         ) : (
           <View style={styles.backPlaceholder} />
         )}
 
-        {/* Progress indicator */}
+        {/* Progress bar */}
         {showProgress && (
           <View style={styles.progressContainer}>
-            {Array.from({ length: totalSteps }).map((_, i) => (
+            <View style={[styles.progressTrack, { backgroundColor: colors.border.light }]}>
               <View
-                key={i}
                 style={[
-                  styles.progressDot,
-                  i + 1 === step && styles.progressDotActive,
-                  i + 1 < step && styles.progressDotComplete,
+                  styles.progressFill,
+                  { backgroundColor: colors.accent.primary, width: `${progress}%` },
                 ]}
               />
-            ))}
+            </View>
+            <Text style={[styles.progressText, { color: colors.text.muted }]}>
+              {step}/{totalSteps - 1}
+            </Text>
           </View>
         )}
 
         {/* Skip button */}
         {onSkip ? (
-          <Pressable onPress={onSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>{skipLabel}</Text>
-          </Pressable>
+          <TouchableOpacity onPress={onSkip} style={styles.skipButton}>
+            <Text style={[styles.skipText, { color: colors.text.tertiary }]}>{skipLabel}</Text>
+          </TouchableOpacity>
         ) : (
           <View style={styles.skipPlaceholder} />
         )}
@@ -97,8 +111,26 @@ export function OnboardingLayout({
         {/* Title section */}
         {(title || subtitle) && (
           <View style={styles.titleSection}>
-            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-            {title && <Text style={styles.title}>{title}</Text>}
+            {subtitle && (
+              <Text style={[styles.subtitle, { color: colors.accent.primary }]}>
+                {subtitle}
+              </Text>
+            )}
+            {title && (
+              <Text style={[styles.title, { color: colors.text.primary }]}>
+                {title}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Value proposition - WHY we ask this */}
+        {valueProposition && (
+          <View style={[styles.valueCard, { backgroundColor: colors.accent.light }]}>
+            <Sparkles size={16} color={colors.accent.primary} />
+            <Text style={[styles.valueText, { color: colors.accent.secondary }]}>
+              {valueProposition}
+            </Text>
           </View>
         )}
 
@@ -109,15 +141,30 @@ export function OnboardingLayout({
       {/* Footer with action */}
       {onNext && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.default }]}>
-          <Button
-            onPress={onNext}
-            disabled={nextDisabled}
-            loading={loading}
-            fullWidth
-            size="lg"
+          <TouchableOpacity
+            onPress={() => {
+              if (!nextDisabled && !loading) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                onNext()
+              }
+            }}
+            activeOpacity={0.8}
+            style={[
+              styles.ctaButton,
+              {
+                backgroundColor: nextDisabled ? colors.border.default : colors.accent.primary,
+              },
+              !nextDisabled && shadows.default,
+            ]}
           >
-            {nextLabel}
-          </Button>
+            {loading ? (
+              <Text style={styles.ctaText}>Chargement...</Text>
+            ) : (
+              <Text style={[styles.ctaText, nextDisabled && { opacity: 0.6 }]}>
+                {nextLabel}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -127,7 +174,6 @@ export function OnboardingLayout({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   header: {
     flexDirection: 'row',
@@ -140,35 +186,33 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.full,
-    backgroundColor: colors.bg.secondary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: colors.text.secondary,
-    marginTop: -2,
   },
   backPlaceholder: {
     width: 40,
   },
   progressContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginHorizontal: spacing.md,
+    gap: spacing.sm,
   },
-  progressDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border.default,
+  progressTrack: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  progressDotActive: {
-    width: 24,
-    backgroundColor: colors.accent.primary,
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
-  progressDotComplete: {
-    backgroundColor: colors.accent.primary,
+  progressText: {
+    ...typography.caption,
+    minWidth: 32,
+    textAlign: 'right',
   },
   skipButton: {
     paddingHorizontal: spacing.sm,
@@ -176,7 +220,6 @@ const styles = StyleSheet.create({
   },
   skipText: {
     ...typography.small,
-    color: colors.text.tertiary,
   },
   skipPlaceholder: {
     width: 50,
@@ -185,7 +228,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
   },
   titleSection: {
@@ -193,23 +236,44 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   subtitle: {
-    ...typography.smallMedium,
-    color: colors.accent.primary,
+    ...typography.captionMedium,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
     marginBottom: spacing.xs,
   },
   title: {
-    ...typography.h3,
-    color: colors.text.primary,
+    ...typography.h2,
+  },
+  valueCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  valueText: {
+    ...typography.small,
+    flex: 1,
+    lineHeight: 20,
   },
   content: {
     flex: 1,
   },
   footer: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
-    backgroundColor: colors.bg.primary,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.light,
+  },
+  ctaButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+  },
+  ctaText: {
+    ...typography.button,
+    color: '#FFFFFF',
   },
 })
 
