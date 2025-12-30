@@ -135,7 +135,8 @@ export function ProgramsSection({
 
   // Check if at least one program should be displayed
   // Either user qualifies for it OR is already enrolled
-  const hasRelevantPrograms = showSport || isSportEnrolled || showMetabolic || isMetabolicEnrolled || showWellness || isWellnessEnrolled
+  // Note: Metabolic only counts if user is adaptive
+  const hasRelevantPrograms = showSport || isSportEnrolled || (isAdaptive && (showMetabolic || isMetabolicEnrolled)) || showWellness || isWellnessEnrolled
 
   // If no relevant programs, don't show the section
   if (!hasRelevantPrograms) {
@@ -206,8 +207,8 @@ export function ProgramsSection({
           </Pressable>
         )}
 
-        {/* Metabolic Boost - For adaptive metabolism (blocked by Sport AND Wellness) */}
-        {(showMetabolic || isMetabolicEnrolled) && (
+        {/* Metabolic Boost - For adaptive metabolism ONLY (blocked by Sport AND Wellness) */}
+        {isAdaptive && (showMetabolic || isMetabolicEnrolled) && (
           <Pressable
             style={styles.programCard}
             onPress={() => handlePress('metabolic')}
