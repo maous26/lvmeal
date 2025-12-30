@@ -43,8 +43,8 @@ export default function MealsScreen() {
   const { nutritionGoals } = useUserStore()
   const { currentDate, setCurrentDate, getTodayData, getMealsByType, removeItemFromMeal } = useMealsStore()
 
-  // Track collapsed meal sections (collapsed by default for sections with meals)
-  const [collapsedSections, setCollapsedSections] = useState<Set<MealType>>(new Set(mealOrder))
+  // Track collapsed meal sections (expanded by default - empty set means nothing collapsed)
+  const [collapsedSections, setCollapsedSections] = useState<Set<MealType>>(new Set())
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
