@@ -59,14 +59,19 @@ export const MEAL_TYPE_GUIDELINES: Record<string, string> = {
 // Food analysis prompt for photo recognition
 export const FOOD_ANALYSIS_PROMPT = `Analyse cette image de nourriture et identifie tous les aliments visibles.
 
+IMPORTANT: Tu dois fournir:
+1. Un TITRE de plat global (ex: "Poulet roti aux legumes", "Salade nicoise", "Pates carbonara")
+2. La liste des ingredients identifies avec leurs valeurs nutritionnelles
+
 Pour chaque aliment, estime:
-1. Le nom en francais
-2. Le poids approximatif en grammes
-3. Les valeurs nutritionnelles pour ce poids (calories, proteines, glucides, lipides, fibres)
-4. Un score de confiance entre 0 et 1
+- Le nom en francais
+- Le poids approximatif en grammes
+- Les valeurs nutritionnelles pour ce poids (calories, proteines, glucides, lipides, fibres)
+- Un score de confiance entre 0 et 1
 
 Reponds UNIQUEMENT en JSON avec ce format exact:
 {
+  "mealTitle": "Titre appetissant du plat (ex: Poulet grille aux legumes, Salade composee, etc.)",
   "foods": [
     {
       "name": "nom de l'aliment",
@@ -83,6 +88,12 @@ Reponds UNIQUEMENT en JSON avec ce format exact:
   ],
   "description": "Description courte du repas"
 }
+
+REGLES pour le titre:
+- Court et appetissant (2-5 mots)
+- En francais
+- Decrit le plat dans son ensemble, pas la liste des ingredients
+- Exemples: "Steak frites", "Bowl poke saumon", "Risotto aux champignons", "Assiette complete"
 
 Si tu ne vois pas de nourriture, reponds avec un tableau vide et une description expliquant pourquoi.`
 

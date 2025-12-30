@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,9 +7,18 @@ import {
   SafeAreaView,
   TouchableOpacity,
   FlatList,
+  Animated,
+  LayoutAnimation,
+  UIManager,
+  Platform,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, X } from 'lucide-react-native'
+import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, X, ChevronDown } from 'lucide-react-native'
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true)
+}
 import * as Haptics from 'expo-haptics'
 import { Alert } from 'react-native'
 
@@ -34,8 +43,8 @@ export default function MealsScreen() {
   const { nutritionGoals } = useUserStore()
   const { currentDate, setCurrentDate, getTodayData, getMealsByType, removeItemFromMeal } = useMealsStore()
 
-  // Track expanded meal cards
-  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set())
+  // Track collapsed meal sections (collapsed by default for sections with meals)
+  const [collapsedSections, setCollapsedSections] = useState<Set<MealType>>(new Set(mealOrder))
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -73,9 +82,10 @@ export default function MealsScreen() {
     )
   }
 
-  const toggleMealExpanded = (mealType: MealType) => {
+  const toggleSectionCollapsed = (mealType: MealType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    setExpandedMeals(prev => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    setCollapsedSections(prev => {
       const next = new Set(prev)
       if (next.has(mealType)) {
         next.delete(mealType)
@@ -153,26 +163,38 @@ export default function MealsScreen() {
             0
           )
           const hasMeals = meals.length > 0
+          const isCollapsed = collapsedSections.has(type)
+          const totalItems = meals.reduce((sum, m) => sum + m.items.length, 0)
 
           return (
             <Card key={type} style={styles.mealCard}>
-              <View style={styles.mealHeader}>
+              {/* Clickable header to expand/collapse */}
+              <TouchableOpacity
+                style={styles.mealHeader}
+                onPress={() => hasMeals && toggleSectionCollapsed(type)}
+                activeOpacity={hasMeals ? 0.7 : 1}
+              >
                 <View style={styles.mealInfo}>
                   <Text style={styles.mealIcon}>{config.icon}</Text>
                   <View>
                     <Text style={styles.mealLabel}>{config.label}</Text>
                     {hasMeals && (
                       <Text style={styles.mealItems}>
-                        {meals.reduce((sum, m) => sum + m.items.length, 0)} aliments
+                        {totalItems} aliment{totalItems > 1 ? 's' : ''}
                       </Text>
                     )}
                   </View>
                 </View>
                 <View style={styles.mealRight}>
                   {hasMeals ? (
-                    <Text style={[styles.mealCalories, { color: config.color }]}>
-                      {formatNumber(totalCalories)} kcal
-                    </Text>
+                    <View style={styles.mealRightContent}>
+                      <Text style={[styles.mealCalories, { color: config.color }]}>
+                        {formatNumber(totalCalories)} kcal
+                      </Text>
+                      <View style={[styles.chevronContainer, !isCollapsed && styles.chevronRotated]}>
+                        <ChevronDown size={18} color={colors.text.tertiary} />
+                      </View>
+                    </View>
                   ) : (
                     <TouchableOpacity
                       style={[styles.addButton, { backgroundColor: `${config.color}15` }]}
@@ -182,56 +204,33 @@ export default function MealsScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
+              </TouchableOpacity>
 
-              {hasMeals && (
+              {/* Collapsible content */}
+              {hasMeals && !isCollapsed && (
                 <View style={styles.mealContent}>
-                  {meals.map((meal) => {
-                    const isExpanded = expandedMeals.has(type)
-                    const itemsToShow = isExpanded ? meal.items : meal.items.slice(0, 3)
-                    const hasMoreItems = meal.items.length > 3
-
-                    return (
-                      <View key={meal.id} style={styles.mealItemsList}>
-                        {itemsToShow.map((item) => (
-                          <View key={item.id} style={styles.foodItem}>
-                            <View style={styles.foodItemInfo}>
-                              <Text style={styles.foodName} numberOfLines={1}>
-                                {item.food.name}
-                              </Text>
-                              <Text style={styles.foodCalories}>
-                                {Math.round(item.food.nutrition.calories * item.quantity)} kcal
-                              </Text>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.deleteItemButton}
-                              onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
-                            >
-                              <X size={16} color={colors.error} />
-                            </TouchableOpacity>
-                          </View>
-                        ))}
-                        {hasMoreItems && !isExpanded && (
-                          <TouchableOpacity
-                            style={styles.showMoreButton}
-                            onPress={() => toggleMealExpanded(type)}
-                          >
-                            <Text style={styles.showMoreText}>
-                              Voir {meal.items.length - 3} autres aliments
+                  {meals.map((meal) => (
+                    <View key={meal.id} style={styles.mealItemsList}>
+                      {meal.items.map((item) => (
+                        <View key={item.id} style={styles.foodItem}>
+                          <View style={styles.foodItemInfo}>
+                            <Text style={styles.foodName} numberOfLines={1}>
+                              {item.food.name}
                             </Text>
-                          </TouchableOpacity>
-                        )}
-                        {hasMoreItems && isExpanded && (
+                            <Text style={styles.foodCalories}>
+                              {Math.round(item.food.nutrition.calories * item.quantity)} kcal
+                            </Text>
+                          </View>
                           <TouchableOpacity
-                            style={styles.showMoreButton}
-                            onPress={() => toggleMealExpanded(type)}
+                            style={styles.deleteItemButton}
+                            onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
                           >
-                            <Text style={styles.showMoreText}>Voir moins</Text>
+                            <X size={16} color={colors.error} />
                           </TouchableOpacity>
-                        )}
-                      </View>
-                    )
-                  })}
+                        </View>
+                      ))}
+                    </View>
+                  ))}
                   <TouchableOpacity
                     style={styles.addMoreButton}
                     onPress={() => handleAddMeal(type)}
@@ -346,6 +345,20 @@ const styles = StyleSheet.create({
   mealCalories: {
     ...typography.bodySemibold,
   },
+  mealRightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  chevronContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chevronRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
   addButton: {
     width: 40,
     height: 40,
@@ -396,21 +409,6 @@ const styles = StyleSheet.create({
     backgroundColor: `${colors.error}15`,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  showMoreButton: {
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  showMoreText: {
-    ...typography.caption,
-    color: colors.accent.primary,
-    fontWeight: '500',
-  },
-  moreItems: {
-    ...typography.caption,
-    color: colors.text.muted,
-    fontStyle: 'italic',
-    marginTop: spacing.xs,
   },
   addMoreButton: {
     flexDirection: 'row',

@@ -458,6 +458,7 @@ export default function PhotoFoodScanner({
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analyzedFoods, setAnalyzedFoods] = useState<AnalyzedFood[]>([])
+  const [mealTitle, setMealTitle] = useState<string | null>(null) // AI-generated meal title
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set())
   const [globalFatLevel, setGlobalFatLevel] = useState(1) // 0=Light, 1=Normal, 2=Riche
   const [error, setError] = useState<string | null>(null)
@@ -470,6 +471,7 @@ export default function PhotoFoodScanner({
   const resetState = () => {
     setCapturedImage(null)
     setAnalyzedFoods([])
+    setMealTitle(null)
     setSelectedFoods(new Set())
     setGlobalFatLevel(1)
     setError(null)
@@ -550,6 +552,7 @@ export default function PhotoFoodScanner({
         ]).start()
 
         setAnalyzedFoods(result.foods)
+        setMealTitle(result.mealTitle || null)
         setSelectedFoods(new Set(result.foods.map((_, i) => i)))
         setShowResults(true)
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -596,20 +599,23 @@ export default function PhotoFoodScanner({
   const handleConfirm = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
-    const foods: FoodItem[] = Array.from(selectedFoods).map(index => {
-      const food = analyzedFoods[index]
-      const adjustedNutrition = getAdjustedNutrition(food)
-      return {
-        id: `photo-${Date.now()}-${index}`,
-        name: food.name,
-        nutrition: adjustedNutrition,
-        servingSize: food.estimatedWeight,
-        servingUnit: 'g',
-        source: 'photo',
-      }
-    })
+    // Calculate total weight from selected foods
+    const totalWeight = Array.from(selectedFoods).reduce(
+      (sum, index) => sum + analyzedFoods[index].estimatedWeight,
+      0
+    )
 
-    onFoodsDetected(foods)
+    // Create a single FoodItem with the meal title and combined nutrition
+    const combinedFood: FoodItem = {
+      id: `photo-${Date.now()}`,
+      name: mealTitle || 'Repas scanné',
+      nutrition: totalNutrition,
+      servingSize: totalWeight,
+      servingUnit: 'g',
+      source: 'photo',
+    }
+
+    onFoodsDetected([combinedFood])
     handleClose()
   }
 
@@ -761,16 +767,18 @@ export default function PhotoFoodScanner({
                   contentContainerStyle={styles.resultsContent}
                   showsVerticalScrollIndicator={false}
                 >
-                  {/* Header */}
+                  {/* Header with meal title */}
                   <View style={styles.resultsHeader}>
                     <View style={styles.resultsHeaderIcon}>
                       <Sparkles size={20} color="#10B981" />
                     </View>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={styles.resultsTitle}>
-                        {analyzedFoods.length} aliment{analyzedFoods.length > 1 ? 's' : ''} détecté{analyzedFoods.length > 1 ? 's' : ''}
+                        {mealTitle || 'Repas analysé'}
                       </Text>
-                      <Text style={styles.resultsSubtitle}>Sélectionnez les éléments à ajouter</Text>
+                      <Text style={styles.resultsSubtitle}>
+                        {analyzedFoods.length} ingrédient{analyzedFoods.length > 1 ? 's' : ''} • Ajustez si besoin
+                      </Text>
                     </View>
                   </View>
 
@@ -814,7 +822,7 @@ export default function PhotoFoodScanner({
                       >
                         <Check size={22} color="#FFFFFF" strokeWidth={3} />
                         <Text style={styles.confirmText}>
-                          Ajouter {selectedFoods.size} aliment{selectedFoods.size > 1 ? 's' : ''}
+                          Ajouter ce repas
                         </Text>
                       </LinearGradient>
                     </TouchableOpacity>

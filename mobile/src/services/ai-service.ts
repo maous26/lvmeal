@@ -41,6 +41,7 @@ export interface FoodAnalysisResult {
   success: boolean
   foods: AnalyzedFood[]
   totalNutrition: NutritionInfo
+  mealTitle?: string // AI-generated meal title (e.g., "Poulet rôti aux légumes")
   description?: string
   error?: string
 }
@@ -235,7 +236,7 @@ export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResu
       { model: 'gpt-4o-mini', maxTokens: 1024 }
     )
 
-    const result = extractJSON(response) as { foods?: AnalyzedFood[]; description?: string }
+    const result = extractJSON(response) as { foods?: AnalyzedFood[]; mealTitle?: string; description?: string }
     const foods: AnalyzedFood[] = result.foods || []
 
     const totalNutrition = foods.reduce(
@@ -252,6 +253,7 @@ export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResu
       success: true,
       foods,
       totalNutrition,
+      mealTitle: result.mealTitle,
       description: result.description,
     }
   } catch (error) {
