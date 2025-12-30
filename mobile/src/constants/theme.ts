@@ -1,7 +1,10 @@
 // Presence - Design System Theme
 // Direction artistique : Sobre, élégant, professionnel
 
-export const colors = {
+// =============================================================================
+// LIGHT THEME (Default)
+// =============================================================================
+export const lightColors = {
   // Backgrounds - Fond blanc cassé
   bg: {
     primary: '#FAFAF8',
@@ -59,6 +62,71 @@ export const colors = {
     focus: '#0077B6',
   },
 }
+
+// =============================================================================
+// DARK THEME
+// =============================================================================
+export const darkColors = {
+  // Backgrounds - Dark mode backgrounds
+  bg: {
+    primary: '#0F1419',
+    secondary: '#1A1F26',
+    tertiary: '#252B33',
+    elevated: '#2D343D',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+  },
+
+  // Text - Inverted for dark mode
+  text: {
+    primary: '#F7F9FB',
+    secondary: '#B8C5D3',
+    tertiary: '#7A8FA6',
+    muted: '#4A5568',
+  },
+
+  // Accent - Slightly lighter for dark mode visibility
+  accent: {
+    primary: '#38A3D9',
+    secondary: '#818CF8',
+    hover: '#5CB8E6',
+    light: '#1A3A4D',
+    muted: '#2C5F7A',
+  },
+
+  // Secondary Accent - Corail adjusted for dark mode
+  secondary: {
+    primary: '#FF8577',
+    hover: '#FF6B5B',
+    light: '#3D2420',
+  },
+
+  // Semantic - Slightly adjusted for dark backgrounds
+  success: '#34D399',
+  warning: '#FBBF24',
+  error: '#F87171',
+  info: '#60A5FA',
+
+  // Nutrients - Same vibrant colors work well on dark
+  nutrients: {
+    calories: '#FF8577',
+    proteins: '#38A3D9',
+    carbs: '#FBBF24',
+    fats: '#C084FC',
+    fiber: '#34D399',
+    water: '#22D3EE',
+  },
+
+  // Borders - Darker for dark mode
+  border: {
+    light: '#2D343D',
+    default: '#3D4754',
+    medium: '#4A5568',
+    focus: '#38A3D9',
+  },
+}
+
+// Default export uses light colors for backward compatibility
+export const colors = lightColors
 
 export const shadows = {
   xs: {

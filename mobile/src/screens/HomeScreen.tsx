@@ -30,7 +30,8 @@ import {
   CaloricBalance,
   ProgramsSection,
 } from '../components/dashboard'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { spacing, typography, radius, lightColors as defaultColors } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -39,8 +40,8 @@ import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/u
 import type { MealType } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
-// Pastel backgrounds for sections
-const PASTEL_COLORS = {
+// Pastel backgrounds for sections (light mode)
+const LIGHT_PASTEL_COLORS = {
   calories: 'rgba(59, 130, 246, 0.06)',   // Blue pastel
   meals: 'rgba(249, 115, 22, 0.06)',       // Orange pastel
   macros: 'rgba(16, 185, 129, 0.06)',      // Green pastel
@@ -51,17 +52,33 @@ const PASTEL_COLORS = {
   ranking: 'rgba(99, 102, 241, 0.06)',     // Indigo pastel
 }
 
-const mealConfig: Record<MealType, { label: string; icon: string; color: string }> = {
+// Darker pastel backgrounds for dark mode
+const DARK_PASTEL_COLORS = {
+  calories: 'rgba(59, 130, 246, 0.12)',
+  meals: 'rgba(249, 115, 22, 0.12)',
+  macros: 'rgba(16, 185, 129, 0.12)',
+  plan: 'rgba(139, 92, 246, 0.12)',
+  hydration: 'rgba(6, 182, 212, 0.12)',
+  programs: 'rgba(236, 72, 153, 0.12)',
+  solde: 'rgba(245, 158, 11, 0.12)',
+  ranking: 'rgba(99, 102, 241, 0.12)',
+}
+
+// Meal config function that uses dynamic colors
+const getMealConfig = (colors: typeof import('../constants/theme').lightColors): Record<MealType, { label: string; icon: string; color: string }> => ({
   breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning },
   lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary },
   snack: { label: 'Collation', icon: '🍎', color: colors.success },
   dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary },
-}
+})
 
 const mealOrder: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
 export default function HomeScreen() {
   const navigation = useNavigation()
+  const { colors, isDark } = useTheme()
+  const PASTEL_COLORS = isDark ? DARK_PASTEL_COLORS : LIGHT_PASTEL_COLORS
+  const mealConfig = getMealConfig(colors)
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
   const { checkAndUpdateStreak } = useGamificationStore()
@@ -181,7 +198,7 @@ export default function HomeScreen() {
   const currentDayIndex = getCurrentDayIndex()
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -190,10 +207,10 @@ export default function HomeScreen() {
         {/* 1. Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>{greeting},</Text>
-            <Text style={styles.userName}>{userName}</Text>
+            <Text style={[styles.greeting, { color: colors.text.secondary }]}>{greeting},</Text>
+            <Text style={[styles.userName, { color: colors.text.primary }]}>{userName}</Text>
           </View>
-          <Pressable style={styles.calendarIconButton} onPress={handleNavigateToCalendar}>
+          <Pressable style={[styles.calendarIconButton, { backgroundColor: colors.accent.light }]} onPress={handleNavigateToCalendar}>
             <Calendar size={24} color={colors.accent.primary} />
           </Pressable>
         </View>
@@ -210,20 +227,20 @@ export default function HomeScreen() {
 
         {/* 3. Professional Macros Widget with progress bars */}
         <View style={[styles.section, { backgroundColor: PASTEL_COLORS.macros }]}>
-          <Card style={styles.macrosCard}>
+          <Card style={[styles.macrosCard, { backgroundColor: colors.bg.elevated }]}>
             {/* Proteins */}
             <View style={styles.macroItem}>
               <View style={styles.macroHeader}>
                 <View style={[styles.macroDot, { backgroundColor: colors.nutrients.proteins }]} />
-                <Text style={styles.macroLabel}>Protéines</Text>
+                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Protéines</Text>
                 <Text style={styles.macroValues}>
                   <Text style={[styles.macroCurrentValue, { color: colors.nutrients.proteins }]}>
                     {Math.round(totals.proteins)}g
                   </Text>
-                  <Text style={styles.macroGoalValue}> / {goals.proteins}g</Text>
+                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.proteins}g</Text>
                 </Text>
               </View>
-              <View style={styles.macroProgressTrack}>
+              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
                 <View
                   style={[
                     styles.macroProgressFill,
@@ -240,15 +257,15 @@ export default function HomeScreen() {
             <View style={styles.macroItem}>
               <View style={styles.macroHeader}>
                 <View style={[styles.macroDot, { backgroundColor: colors.nutrients.carbs }]} />
-                <Text style={styles.macroLabel}>Glucides</Text>
+                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Glucides</Text>
                 <Text style={styles.macroValues}>
                   <Text style={[styles.macroCurrentValue, { color: colors.nutrients.carbs }]}>
                     {Math.round(totals.carbs)}g
                   </Text>
-                  <Text style={styles.macroGoalValue}> / {goals.carbs}g</Text>
+                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.carbs}g</Text>
                 </Text>
               </View>
-              <View style={styles.macroProgressTrack}>
+              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
                 <View
                   style={[
                     styles.macroProgressFill,
@@ -265,15 +282,15 @@ export default function HomeScreen() {
             <View style={styles.macroItem}>
               <View style={styles.macroHeader}>
                 <View style={[styles.macroDot, { backgroundColor: colors.nutrients.fats }]} />
-                <Text style={styles.macroLabel}>Lipides</Text>
+                <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>Lipides</Text>
                 <Text style={styles.macroValues}>
                   <Text style={[styles.macroCurrentValue, { color: colors.nutrients.fats }]}>
                     {Math.round(totals.fats)}g
                   </Text>
-                  <Text style={styles.macroGoalValue}> / {goals.fats}g</Text>
+                  <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {goals.fats}g</Text>
                 </Text>
               </View>
-              <View style={styles.macroProgressTrack}>
+              <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
                 <View
                   style={[
                     styles.macroProgressFill,
@@ -291,14 +308,14 @@ export default function HomeScreen() {
         {/* 4. Meals Section (integrated from MealsScreen) */}
         <View style={[styles.section, { backgroundColor: PASTEL_COLORS.meals }]}>
           {/* Section Title */}
-          <Text style={styles.mealsSectionTitle}>Journal des repas</Text>
+          <Text style={[styles.mealsSectionTitle, { color: colors.text.primary }]}>Journal des repas</Text>
 
           {/* Date Selector */}
           <View style={styles.dateSelector}>
             <TouchableOpacity onPress={() => changeDate(-1)} style={styles.dateButton}>
               <ChevronLeft size={20} color={colors.text.secondary} />
             </TouchableOpacity>
-            <Text style={styles.dateText}>{getRelativeDate(currentDate)}</Text>
+            <Text style={[styles.dateText, { color: colors.text.primary }]}>{getRelativeDate(currentDate)}</Text>
             <TouchableOpacity onPress={() => changeDate(1)} style={styles.dateButton}>
               <ChevronRight size={20} color={colors.text.secondary} />
             </TouchableOpacity>
@@ -317,7 +334,7 @@ export default function HomeScreen() {
             const totalItems = meals.reduce((sum, m) => sum + m.items.length, 0)
 
             return (
-              <Card key={type} style={styles.mealCard}>
+              <Card key={type} style={[styles.mealCard, { backgroundColor: colors.bg.elevated }]}>
                 {/* Clickable header to expand/collapse */}
                 <TouchableOpacity
                   style={styles.mealHeader}
@@ -327,9 +344,9 @@ export default function HomeScreen() {
                   <View style={styles.mealInfo}>
                     <Text style={styles.mealIcon}>{config.icon}</Text>
                     <View>
-                      <Text style={styles.mealLabel}>{config.label}</Text>
+                      <Text style={[styles.mealLabel, { color: colors.text.primary }]}>{config.label}</Text>
                       {hasMeals && (
-                        <Text style={styles.mealItems}>
+                        <Text style={[styles.mealItems, { color: colors.text.tertiary }]}>
                           {totalItems} aliment{totalItems > 1 ? 's' : ''}
                         </Text>
                       )}
@@ -358,21 +375,21 @@ export default function HomeScreen() {
 
                 {/* Collapsible content */}
                 {hasMeals && !isCollapsed && (
-                  <View style={styles.mealContent}>
+                  <View style={[styles.mealContent, { borderTopColor: colors.border.light }]}>
                     {meals.map((meal) => (
                       <View key={meal.id} style={styles.mealItemsList}>
                         {meal.items.map((item) => (
-                          <View key={item.id} style={styles.foodItem}>
+                          <View key={item.id} style={[styles.foodItem, { backgroundColor: colors.bg.secondary }]}>
                             <View style={styles.foodItemInfo}>
-                              <Text style={styles.foodName} numberOfLines={1}>
+                              <Text style={[styles.foodName, { color: colors.text.secondary }]} numberOfLines={1}>
                                 {item.food.name}
                               </Text>
-                              <Text style={styles.foodCalories}>
+                              <Text style={[styles.foodCalories, { color: colors.text.tertiary }]}>
                                 {Math.round(item.food.nutrition.calories * item.quantity)} kcal
                               </Text>
                             </View>
                             <TouchableOpacity
-                              style={styles.deleteItemButton}
+                              style={[styles.deleteItemButton, { backgroundColor: `${colors.error}15` }]}
                               onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
                             >
                               <X size={14} color={colors.error} />
@@ -382,11 +399,11 @@ export default function HomeScreen() {
                       </View>
                     ))}
                     <TouchableOpacity
-                      style={styles.addMoreButton}
+                      style={[styles.addMoreButton, { backgroundColor: colors.accent.light }]}
                       onPress={() => handleAddMeal(type)}
                     >
                       <Plus size={14} color={colors.accent.primary} />
-                      <Text style={styles.addMoreText}>Ajouter</Text>
+                      <Text style={[styles.addMoreText, { color: colors.accent.primary }]}>Ajouter</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -398,7 +415,7 @@ export default function HomeScreen() {
         {/* 5. Plan Repas IA - Collapsible */}
         <View style={[styles.section, { backgroundColor: PASTEL_COLORS.plan }]}>
           <Pressable style={styles.collapsibleHeader} onPress={togglePlanExpanded}>
-            <Text style={styles.sectionTitle}>Plan Repas IA</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Plan Repas IA</Text>
             {isPlanExpanded ? (
               <ChevronUp size={20} color={colors.text.secondary} />
             ) : (
@@ -460,7 +477,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   scrollView: {
     flex: 1,
@@ -481,17 +497,14 @@ const styles = StyleSheet.create({
   },
   calendarIconButton: {
     padding: spacing.sm,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.full,
     marginLeft: spacing.md,
   },
   greeting: {
     ...typography.body,
-    color: colors.text.secondary,
   },
   userName: {
     ...typography.h3,
-    color: colors.text.primary,
   },
   // Sections with pastel backgrounds
   section: {
@@ -501,7 +514,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   // Professional Macros Widget
   macrosCard: {
@@ -524,7 +536,6 @@ const styles = StyleSheet.create({
   macroLabel: {
     flex: 1,
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   macroValues: {
     flexDirection: 'row',
@@ -535,11 +546,9 @@ const styles = StyleSheet.create({
   },
   macroGoalValue: {
     ...typography.small,
-    color: colors.text.muted,
   },
   macroProgressTrack: {
     height: 6,
-    backgroundColor: colors.bg.tertiary,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
@@ -550,7 +559,6 @@ const styles = StyleSheet.create({
   // Meals section title
   mealsSectionTitle: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
     marginBottom: spacing.sm,
   },
   // Date selector
@@ -565,7 +573,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
     marginHorizontal: spacing.md,
   },
   // Meal cards
@@ -588,11 +595,9 @@ const styles = StyleSheet.create({
   },
   mealLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
   },
   mealItems: {
     ...typography.caption,
-    color: colors.text.tertiary,
     fontSize: 10,
   },
   mealRight: {
@@ -626,7 +631,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   mealItemsList: {
     marginBottom: spacing.xs,
@@ -638,7 +642,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: spacing.xs,
     marginVertical: 1,
-    backgroundColor: colors.bg.secondary,
     borderRadius: radius.sm,
   },
   foodItemInfo: {
@@ -650,20 +653,17 @@ const styles = StyleSheet.create({
   },
   foodName: {
     fontSize: 11,
-    color: colors.text.secondary,
     flex: 1,
     marginRight: spacing.sm,
   },
   foodCalories: {
     fontSize: 11,
-    color: colors.text.tertiary,
     fontWeight: '500',
   },
   deleteItemButton: {
     width: 22,
     height: 22,
     borderRadius: radius.sm,
-    backgroundColor: `${colors.error}15`,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -674,12 +674,10 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 6,
     marginTop: spacing.xs,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.sm,
   },
   addMoreText: {
     fontSize: 11,
-    color: colors.accent.primary,
     fontWeight: '500',
   },
   // Collapsible Plan

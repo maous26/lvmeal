@@ -26,13 +26,16 @@ import {
   Zap,
   Heart,
   Edit3,
+  Moon,
+  Sun,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, Button } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
@@ -77,6 +80,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>()
+  const { colors, isDark, toggleTheme } = useTheme()
   const { profile, nutritionGoals, resetStore, setProfile } = useUserStore()
   const {
     isEnrolled: isSportInitiationEnrolled,
@@ -181,6 +185,11 @@ export default function ProfileScreen() {
         },
       ]
     )
+  }
+
+  const handleToggleDarkMode = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    toggleTheme()
   }
 
   const handleToggleSportInitiation = () => {
@@ -309,7 +318,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -317,99 +326,99 @@ export default function ProfileScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Profil</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Profil</Text>
         </View>
 
         {/* Profile Card */}
-        <Card style={styles.profileCard}>
+        <Card style={[styles.profileCard, { backgroundColor: colors.bg.elevated }]}>
           <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
+            <View style={[styles.avatar, { backgroundColor: colors.accent.primary }]}>
               <Text style={styles.avatarText}>{userInitials}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{userName}</Text>
-              <Text style={styles.profileEmail}>{profile?.email || 'Aucun email'}</Text>
+              <Text style={[styles.profileName, { color: colors.text.primary }]}>{userName}</Text>
+              <Text style={[styles.profileEmail, { color: colors.text.tertiary }]}>{profile?.email || 'Aucun email'}</Text>
             </View>
-            <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
+            <TouchableOpacity onPress={handleEditProfile} style={[styles.editButton, { backgroundColor: colors.accent.light }]}>
               <Edit3 size={18} color={colors.accent.primary} />
-              <Text style={styles.editButtonText}>Modifier</Text>
+              <Text style={[styles.editButtonText, { color: colors.accent.primary }]}>Modifier</Text>
             </TouchableOpacity>
           </View>
 
           {/* Stats Row */}
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, { borderTopColor: colors.border.light }]}>
             <View style={styles.statItem}>
               <Flame size={20} color={colors.warning} />
-              <Text style={styles.statValue}>12</Text>
-              <Text style={styles.statLabel}>Streak</Text>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>12</Text>
+              <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Streak</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
             <View style={styles.statItem}>
               <Award size={20} color={colors.accent.primary} />
-              <Text style={styles.statValue}>5</Text>
-              <Text style={styles.statLabel}>Badges</Text>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>5</Text>
+              <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Badges</Text>
             </View>
-            <View style={styles.statDivider} />
+            <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
             <View style={styles.statItem}>
               <Activity size={20} color={colors.success} />
-              <Text style={styles.statValue}>Niv. 3</Text>
-              <Text style={styles.statLabel}>Niveau</Text>
+              <Text style={[styles.statValue, { color: colors.text.primary }]}>Niv. 3</Text>
+              <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Niveau</Text>
             </View>
           </View>
         </Card>
 
         {/* Current Goals */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Mes objectifs</Text>
-          <TouchableOpacity onPress={handleEditProfile} style={styles.sectionEditButton}>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Mes objectifs</Text>
+          <TouchableOpacity onPress={handleEditProfile} style={[styles.sectionEditButton, { backgroundColor: colors.accent.light }]}>
             <Edit3 size={16} color={colors.accent.primary} />
           </TouchableOpacity>
         </View>
-        <Card style={styles.goalsCard}>
-          <View style={styles.goalItem}>
-            <View style={styles.goalIcon}>
+        <Card style={[styles.goalsCard, { backgroundColor: colors.bg.elevated }]}>
+          <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
+            <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
               <Target size={20} color={colors.accent.primary} />
             </View>
             <View style={styles.goalInfo}>
-              <Text style={styles.goalLabel}>Objectif</Text>
-              <Text style={styles.goalValue}>
+              <Text style={[styles.goalLabel, { color: colors.text.tertiary }]}>Objectif</Text>
+              <Text style={[styles.goalValue, { color: colors.text.primary }]}>
                 {goalLabels[profile?.goal || 'maintain']}
               </Text>
             </View>
           </View>
 
-          <View style={styles.goalItem}>
-            <View style={styles.goalIcon}>
+          <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
+            <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
               <Scale size={20} color={colors.secondary.primary} />
             </View>
             <View style={styles.goalInfo}>
-              <Text style={styles.goalLabel}>Poids actuel</Text>
-              <Text style={styles.goalValue}>
+              <Text style={[styles.goalLabel, { color: colors.text.tertiary }]}>Poids actuel</Text>
+              <Text style={[styles.goalValue, { color: colors.text.primary }]}>
                 {profile?.weight || 70} kg
                 {profile?.targetWeight && ` → ${profile.targetWeight} kg`}
               </Text>
             </View>
           </View>
 
-          <View style={styles.goalItem}>
-            <View style={styles.goalIcon}>
+          <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
+            <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
               <Activity size={20} color={colors.success} />
             </View>
             <View style={styles.goalInfo}>
-              <Text style={styles.goalLabel}>Niveau d'activité</Text>
-              <Text style={styles.goalValue}>
+              <Text style={[styles.goalLabel, { color: colors.text.tertiary }]}>Niveau d'activité</Text>
+              <Text style={[styles.goalValue, { color: colors.text.primary }]}>
                 {activityLabels[profile?.activityLevel || 'moderate']}
               </Text>
             </View>
           </View>
 
           <View style={[styles.goalItem, { borderBottomWidth: 0 }]}>
-            <View style={styles.goalIcon}>
+            <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
               <Utensils size={20} color={colors.nutrients.carbs} />
             </View>
             <View style={styles.goalInfo}>
-              <Text style={styles.goalLabel}>Régime alimentaire</Text>
-              <Text style={styles.goalValue}>
+              <Text style={[styles.goalLabel, { color: colors.text.tertiary }]}>Régime alimentaire</Text>
+              <Text style={[styles.goalValue, { color: colors.text.primary }]}>
                 {dietLabels[profile?.dietType || 'omnivore']}
               </Text>
             </View>
@@ -417,28 +426,28 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Daily Targets */}
-        <Text style={styles.sectionTitle}>Objectifs journaliers</Text>
-        <Card style={styles.targetsCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Objectifs journaliers</Text>
+        <Card style={[styles.targetsCard, { backgroundColor: colors.bg.elevated }]}>
           <View style={styles.targetItem}>
-            <Text style={styles.targetLabel}>Calories</Text>
-            <Text style={styles.targetValue}>
+            <Text style={[styles.targetLabel, { color: colors.text.secondary }]}>Calories</Text>
+            <Text style={[styles.targetValue, { color: colors.text.primary }]}>
               {formatNumber(nutritionGoals?.calories || 2000)} kcal
             </Text>
           </View>
           <View style={styles.targetItem}>
-            <Text style={styles.targetLabel}>Protéines</Text>
+            <Text style={[styles.targetLabel, { color: colors.text.secondary }]}>Protéines</Text>
             <Text style={[styles.targetValue, { color: colors.nutrients.proteins }]}>
               {nutritionGoals?.proteins || 100}g
             </Text>
           </View>
           <View style={styles.targetItem}>
-            <Text style={styles.targetLabel}>Glucides</Text>
+            <Text style={[styles.targetLabel, { color: colors.text.secondary }]}>Glucides</Text>
             <Text style={[styles.targetValue, { color: colors.nutrients.carbs }]}>
               {nutritionGoals?.carbs || 250}g
             </Text>
           </View>
           <View style={styles.targetItem}>
-            <Text style={styles.targetLabel}>Lipides</Text>
+            <Text style={[styles.targetLabel, { color: colors.text.secondary }]}>Lipides</Text>
             <Text style={[styles.targetValue, { color: colors.nutrients.fats }]}>
               {nutritionGoals?.fats || 67}g
             </Text>
@@ -446,11 +455,11 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Programs - Always show all 3, disable switches when blocked */}
-        <Text style={styles.sectionTitle}>Programmes</Text>
-        <Card padding="none">
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Programmes</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
           {/* Sport - disabled if muscle_gain or Metabolic active */}
           <TouchableOpacity
-            style={[styles.programItem, styles.programItemBorder, !canToggleSport && !isSportInitiationEnrolled && styles.programItemDisabled]}
+            style={[styles.programItem, styles.programItemBorder, { borderBottomColor: colors.border.light }, !canToggleSport && !isSportInitiationEnrolled && styles.programItemDisabled]}
             onPress={canToggleSport || isSportInitiationEnrolled ? handleToggleSportInitiation : undefined}
             activeOpacity={canToggleSport || isSportInitiationEnrolled ? 0.7 : 1}
           >
@@ -458,10 +467,10 @@ export default function ProfileScreen() {
               <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
             </View>
             <View style={styles.programInfo}>
-              <Text style={[styles.programLabel, !canToggleSport && !isSportInitiationEnrolled && styles.programLabelDisabled]}>
+              <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleSport && !isSportInitiationEnrolled && { color: colors.text.muted }]}>
                 Initiation Sportive
               </Text>
-              <Text style={styles.programDescription}>
+              <Text style={[styles.programDescription, { color: colors.text.tertiary }]}>
                 {isSportInitiationEnrolled
                   ? `Phase ${sportPhase} - Semaine ${sportWeek}`
                   : sportBlockedReason || 'Programme pour reprendre le sport'}
@@ -479,7 +488,7 @@ export default function ProfileScreen() {
 
           {/* Métabolisme - disabled if Sport or Wellness active */}
           <TouchableOpacity
-            style={[styles.programItem, styles.programItemBorder, !canToggleMetabolic && !isMetabolicEnrolled && styles.programItemDisabled]}
+            style={[styles.programItem, styles.programItemBorder, { borderBottomColor: colors.border.light }, !canToggleMetabolic && !isMetabolicEnrolled && styles.programItemDisabled]}
             onPress={canToggleMetabolic || isMetabolicEnrolled ? handleToggleMetabolic : undefined}
             activeOpacity={canToggleMetabolic || isMetabolicEnrolled ? 0.7 : 1}
           >
@@ -487,10 +496,10 @@ export default function ProfileScreen() {
               <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.warning} />
             </View>
             <View style={styles.programInfo}>
-              <Text style={[styles.programLabel, !canToggleMetabolic && !isMetabolicEnrolled && styles.programLabelDisabled]}>
+              <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleMetabolic && !isMetabolicEnrolled && { color: colors.text.muted }]}>
                 Métabolisme
               </Text>
-              <Text style={styles.programDescription}>
+              <Text style={[styles.programDescription, { color: colors.text.tertiary }]}>
                 {isMetabolicEnrolled
                   ? `Phase ${metabolicPhase} - Semaine ${metabolicWeek}`
                   : metabolicBlockedReason || 'Relancer ton métabolisme'}
@@ -516,10 +525,10 @@ export default function ProfileScreen() {
               <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.secondary.primary} />
             </View>
             <View style={styles.programInfo}>
-              <Text style={[styles.programLabel, !canToggleWellness && !isWellnessEnrolled && styles.programLabelDisabled]}>
+              <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleWellness && !isWellnessEnrolled && { color: colors.text.muted }]}>
                 Bien-être
               </Text>
-              <Text style={styles.programDescription}>
+              <Text style={[styles.programDescription, { color: colors.text.tertiary }]}>
                 {isWellnessEnrolled
                   ? `Phase ${wellnessPhase} - Semaine ${wellnessWeek}`
                   : wellnessBlockedReason || 'Sommeil, stress et sérénité'}
@@ -537,23 +546,42 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Settings */}
-        <Text style={styles.sectionTitle}>Paramètres</Text>
-        <Card padding="none">
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
+          {/* Dark Mode Toggle */}
+          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
+            {isDark ? (
+              <Moon size={20} color={colors.accent.primary} />
+            ) : (
+              <Sun size={20} color={colors.warning} />
+            )}
+            <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Mode sombre</Text>
+            <Switch
+              value={isDark}
+              onValueChange={handleToggleDarkMode}
+              trackColor={{ false: colors.bg.tertiary, true: colors.accent.light }}
+              thumbColor={isDark ? colors.accent.primary : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
           <SettingItem
             icon={<Bell size={20} color={colors.text.secondary} />}
             label="Notifications"
             onPress={() => handleSettingPress('notifications')}
+            colors={colors}
           />
           <SettingItem
             icon={<Shield size={20} color={colors.text.secondary} />}
             label="Confidentialité"
             onPress={() => handleSettingPress('privacy')}
+            colors={colors}
           />
           <SettingItem
             icon={<HelpCircle size={20} color={colors.text.secondary} />}
             label="Aide & Support"
             onPress={() => handleSettingPress('help')}
             isLast
+            colors={colors}
           />
         </Card>
 
@@ -567,12 +595,12 @@ export default function ProfileScreen() {
             Déconnexion
           </Button>
           <TouchableOpacity onPress={handleResetData}>
-            <Text style={styles.resetText}>Réinitialiser les données</Text>
+            <Text style={[styles.resetText, { color: colors.error }]}>Réinitialiser les données</Text>
           </TouchableOpacity>
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Presence v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.text.muted }]}>Presence v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   )
@@ -583,20 +611,22 @@ function SettingItem({
   label,
   onPress,
   isLast = false,
+  colors,
 }: {
   icon: React.ReactNode
   label: string
   onPress: () => void
   isLast?: boolean
+  colors: typeof import('../constants/theme').lightColors
 }) {
   return (
     <TouchableOpacity
-      style={[styles.settingItem, !isLast && styles.settingItemBorder]}
+      style={[styles.settingItem, !isLast && [styles.settingItemBorder, { borderBottomColor: colors.border.light }]]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       {icon}
-      <Text style={styles.settingLabel}>{label}</Text>
+      <Text style={[styles.settingLabel, { color: colors.text.primary }]}>{label}</Text>
       <ChevronRight size={20} color={colors.text.tertiary} />
     </TouchableOpacity>
   )
@@ -605,7 +635,6 @@ function SettingItem({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   scrollView: {
     flex: 1,
@@ -619,7 +648,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h2,
-    color: colors.text.primary,
   },
   profileCard: {
     marginBottom: spacing.lg,
@@ -633,7 +661,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: radius.full,
-    backgroundColor: colors.accent.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -648,11 +675,9 @@ const styles = StyleSheet.create({
   },
   profileName: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   profileEmail: {
     ...typography.small,
-    color: colors.text.tertiary,
   },
   editButton: {
     flexDirection: 'row',
@@ -660,12 +685,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.md,
   },
   editButtonText: {
     ...typography.small,
-    color: colors.accent.primary,
     fontWeight: '600',
   },
   statsRow: {
@@ -673,7 +696,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   statItem: {
     alignItems: 'center',
@@ -681,15 +703,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   statLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.border.light,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -700,13 +719,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.bodyMedium,
-    color: colors.text.secondary,
   },
   sectionEditButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.accent.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -719,13 +736,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.default,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
   goalIcon: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: colors.bg.secondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -735,11 +750,9 @@ const styles = StyleSheet.create({
   },
   goalLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   goalValue: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   targetsCard: {
     marginBottom: spacing.lg,
@@ -752,11 +765,9 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     ...typography.body,
-    color: colors.text.secondary,
   },
   targetValue: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   settingItem: {
     flexDirection: 'row',
@@ -766,12 +777,10 @@ const styles = StyleSheet.create({
   },
   settingItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
   settingLabel: {
     flex: 1,
     ...typography.body,
-    color: colors.text.primary,
   },
   dangerZone: {
     alignItems: 'center',
@@ -780,11 +789,9 @@ const styles = StyleSheet.create({
   },
   resetText: {
     ...typography.small,
-    color: colors.error,
   },
   version: {
     ...typography.caption,
-    color: colors.text.muted,
     textAlign: 'center',
     marginTop: spacing.lg,
   },
@@ -803,23 +810,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   programIconActive: {
-    backgroundColor: colors.success,
+    backgroundColor: '#10B981',
   },
   programIconMetabolic: {
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
   },
   programIconMetabolicActive: {
-    backgroundColor: colors.warning,
+    backgroundColor: '#F59E0B',
   },
   programIconWellness: {
     backgroundColor: 'rgba(139, 92, 246, 0.1)',
   },
   programIconWellnessActive: {
-    backgroundColor: colors.secondary.primary,
+    backgroundColor: '#FF6B5B',
   },
   programItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
   programInfo: {
     flex: 1,
@@ -827,14 +833,12 @@ const styles = StyleSheet.create({
   },
   programLabel: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   programLabelDisabled: {
-    color: colors.text.muted,
+    opacity: 0.5,
   },
   programDescription: {
     ...typography.small,
-    color: colors.text.tertiary,
     marginTop: 2,
   },
   programItemDisabled: {

@@ -13,7 +13,8 @@ import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, CircularProgress } from '../components/ui'
 import { GamificationPanel } from '../components/dashboard'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore, TIERS, ACHIEVEMENTS } from '../stores/gamification-store'
@@ -25,6 +26,7 @@ type TimeRange = '7d' | '30d' | '90d'
 type TabType = 'nutrition' | 'gamification'
 
 export default function ProgressScreen() {
+  const { colors } = useTheme()
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
   const [activeTab, setActiveTab] = useState<TabType>('gamification')
   const { profile, nutritionGoals } = useUserStore()
@@ -94,7 +96,7 @@ export default function ProgressScreen() {
   const unlockedCount = achievements.filter(a => a.unlocked).length
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -102,26 +104,26 @@ export default function ProgressScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Progres</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Progres</Text>
         </View>
 
         {/* Tab Selector */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'gamification' && styles.tabActive]}
+            style={[styles.tab, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }, activeTab === 'gamification' && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary }]}
             onPress={() => handleTabChange('gamification')}
           >
             <Trophy size={18} color={activeTab === 'gamification' ? '#FFFFFF' : colors.text.secondary} />
-            <Text style={[styles.tabText, activeTab === 'gamification' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.text.secondary }, activeTab === 'gamification' && styles.tabTextActive]}>
               Classement
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'nutrition' && styles.tabActive]}
+            style={[styles.tab, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }, activeTab === 'nutrition' && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary }]}
             onPress={() => handleTabChange('nutrition')}
           >
             <Target size={18} color={activeTab === 'nutrition' ? '#FFFFFF' : colors.text.secondary} />
-            <Text style={[styles.tabText, activeTab === 'nutrition' && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.text.secondary }, activeTab === 'nutrition' && styles.tabTextActive]}>
               Nutrition
             </Text>
           </TouchableOpacity>
@@ -135,11 +137,11 @@ export default function ProgressScreen() {
                 <Text style={styles.tierIconLarge}>{tier.icon}</Text>
                 <View style={styles.tierInfo}>
                   <Text style={[styles.tierName, { color: tier.color }]}>{tier.nameFr}</Text>
-                  <Text style={styles.totalXP}>{totalXP.toLocaleString('fr-FR')} XP total</Text>
+                  <Text style={[styles.totalXP, { color: colors.text.secondary }]}>{totalXP.toLocaleString('fr-FR')} XP total</Text>
                 </View>
-                <View style={[styles.rankBadge, { backgroundColor: getRankColor(rank.percentile) + '20' }]}>
-                  <Trophy size={16} color={getRankColor(rank.percentile)} />
-                  <Text style={[styles.rankText, { color: getRankColor(rank.percentile) }]}>
+                <View style={[styles.rankBadge, { backgroundColor: getRankColor(rank.percentile, colors.text.secondary) + '20' }]}>
+                  <Trophy size={16} color={getRankColor(rank.percentile, colors.text.secondary)} />
+                  <Text style={[styles.rankText, { color: getRankColor(rank.percentile, colors.text.secondary) }]}>
                     Top {rank.percentile}%
                   </Text>
                 </View>
@@ -149,10 +151,10 @@ export default function ProgressScreen() {
               {nextTier && (
                 <View style={styles.tierProgress}>
                   <View style={styles.tierProgressHeader}>
-                    <Text style={styles.tierProgressLabel}>
+                    <Text style={[styles.tierProgressLabel, { color: colors.text.secondary }]}>
                       Vers {nextTier.icon} {nextTier.nameFr}
                     </Text>
-                    <Text style={styles.tierProgressValue}>
+                    <Text style={[styles.tierProgressValue, { color: colors.text.primary }]}>
                       {tierProgress.current}/{tierProgress.needed} XP
                     </Text>
                   </View>
@@ -168,52 +170,52 @@ export default function ProgressScreen() {
 
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
-              <View style={[styles.statCard, streakInfo.isActive && styles.statCardHighlight]}>
+              <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }, streakInfo.isActive && styles.statCardHighlight]}>
                 <Text style={styles.statEmoji}>🔥</Text>
-                <Text style={styles.statValue}>{streakInfo.current}</Text>
-                <Text style={styles.statLabel}>Serie</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>{streakInfo.current}</Text>
+                <Text style={[styles.statLabel, { color: colors.text.muted }]}>Serie</Text>
                 {streakInfo.bonus > 0 && (
-                  <Text style={styles.statBonus}>+{streakInfo.bonus}% XP</Text>
+                  <Text style={[styles.statBonus, { color: colors.success }]}>+{streakInfo.bonus}% XP</Text>
                 )}
               </View>
 
-              <View style={styles.statCard}>
+              <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
                 <Zap size={28} color={colors.accent.primary} />
-                <Text style={styles.statValue}>{weeklyXP}</Text>
-                <Text style={styles.statLabel}>XP cette semaine</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>{weeklyXP}</Text>
+                <Text style={[styles.statLabel, { color: colors.text.muted }]}>XP cette semaine</Text>
               </View>
 
-              <View style={styles.statCard}>
+              <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
                 <Text style={styles.statEmoji}>🤖</Text>
-                <Text style={styles.statValue}>{aiCredits === 999 ? '∞' : aiCredits}</Text>
-                <Text style={styles.statLabel}>Credits IA/mois</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>{aiCredits === 999 ? '∞' : aiCredits}</Text>
+                <Text style={[styles.statLabel, { color: colors.text.muted }]}>Credits IA/mois</Text>
               </View>
 
-              <View style={styles.statCard}>
+              <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
                 <Award size={28} color={colors.warning} />
-                <Text style={styles.statValue}>{unlockedCount}/{achievements.length}</Text>
-                <Text style={styles.statLabel}>Achievements</Text>
+                <Text style={[styles.statValue, { color: colors.text.primary }]}>{unlockedCount}/{achievements.length}</Text>
+                <Text style={[styles.statLabel, { color: colors.text.muted }]}>Achievements</Text>
               </View>
             </View>
 
             {/* AI Features Unlocked */}
-            <Text style={styles.sectionTitle}>Fonctionnalites debloquees</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Fonctionnalites debloquees</Text>
             <Card style={styles.featuresCard}>
               {tier.features.map((feature, idx) => (
                 <View key={idx} style={styles.featureItem}>
                   <Sparkles size={16} color={tier.color} />
-                  <Text style={styles.featureText}>{feature}</Text>
+                  <Text style={[styles.featureText, { color: colors.text.primary }]}>{feature}</Text>
                 </View>
               ))}
               {nextTier && (
-                <View style={styles.nextFeatures}>
-                  <Text style={styles.nextFeaturesTitle}>
+                <View style={[styles.nextFeatures, { borderTopColor: colors.border.light }]}>
+                  <Text style={[styles.nextFeaturesTitle, { color: colors.text.muted }]}>
                     A {nextTier.minXP - totalXP} XP pour debloquer:
                   </Text>
                   {nextTier.features.slice(0, 2).map((feature, idx) => (
                     <View key={idx} style={styles.featureItemLocked}>
                       <Text style={styles.lockIcon}>🔒</Text>
-                      <Text style={styles.featureTextLocked}>{feature}</Text>
+                      <Text style={[styles.featureTextLocked, { color: colors.text.tertiary }]}>{feature}</Text>
                     </View>
                   ))}
                 </View>
@@ -221,22 +223,22 @@ export default function ProgressScreen() {
             </Card>
 
             {/* Achievements */}
-            <Text style={styles.sectionTitle}>Achievements</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Achievements</Text>
             <View style={styles.achievementsGrid}>
               {achievements.map(({ achievement, unlocked }) => (
                 <View
                   key={achievement.id}
-                  style={[styles.achievementCard, !unlocked && styles.achievementLocked]}
+                  style={[styles.achievementCard, { backgroundColor: colors.bg.elevated }, !unlocked && styles.achievementLocked]}
                 >
                   <Text style={[styles.achievementIcon, !unlocked && styles.achievementIconLocked]}>
                     {achievement.icon}
                   </Text>
-                  <Text style={[styles.achievementName, !unlocked && styles.achievementNameLocked]}>
+                  <Text style={[styles.achievementName, { color: colors.text.primary }, !unlocked && { color: colors.text.tertiary }]}>
                     {achievement.name}
                   </Text>
-                  <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                  <Text style={[styles.achievementDesc, { color: colors.text.muted }]}>{achievement.description}</Text>
                   {!unlocked && achievement.xpReward > 0 && (
-                    <Text style={styles.achievementXP}>+{achievement.xpReward} XP</Text>
+                    <Text style={[styles.achievementXP, { color: colors.accent.primary }]}>+{achievement.xpReward} XP</Text>
                   )}
                   {unlocked && (
                     <Badge variant="success" size="sm">Obtenu</Badge>
@@ -246,7 +248,7 @@ export default function ProgressScreen() {
             </View>
 
             {/* Tier Roadmap */}
-            <Text style={styles.sectionTitle}>Parcours des tiers</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Parcours des tiers</Text>
             <Card style={styles.roadmapCard}>
               {Object.values(TIERS).map((t, idx) => {
                 const isUnlocked = totalXP >= t.minXP
@@ -255,18 +257,19 @@ export default function ProgressScreen() {
                   <View key={t.id} style={styles.roadmapItem}>
                     <View style={[
                       styles.roadmapIcon,
+                      { backgroundColor: colors.bg.tertiary },
                       isUnlocked && { backgroundColor: t.color + '20' },
-                      isCurrent && styles.roadmapIconCurrent,
+                      isCurrent && { borderColor: colors.accent.primary, borderWidth: 2 },
                     ]}>
                       <Text style={[styles.roadmapEmoji, !isUnlocked && styles.roadmapEmojiLocked]}>
                         {t.icon}
                       </Text>
                     </View>
                     <View style={styles.roadmapInfo}>
-                      <Text style={[styles.roadmapName, isCurrent && { color: t.color }]}>
+                      <Text style={[styles.roadmapName, { color: colors.text.primary }, isCurrent && { color: t.color }]}>
                         {t.nameFr}
                       </Text>
-                      <Text style={styles.roadmapXP}>{t.minXP} XP</Text>
+                      <Text style={[styles.roadmapXP, { color: colors.text.muted }]}>{t.minXP} XP</Text>
                     </View>
                     {isCurrent && (
                       <View style={[styles.currentBadge, { backgroundColor: t.color }]}>
@@ -274,7 +277,7 @@ export default function ProgressScreen() {
                       </View>
                     )}
                     {idx < Object.values(TIERS).length - 1 && (
-                      <View style={[styles.roadmapLine, isUnlocked && styles.roadmapLineActive]} />
+                      <View style={[styles.roadmapLine, { backgroundColor: colors.border.light }, isUnlocked && { backgroundColor: colors.accent.primary }]} />
                     )}
                   </View>
                 )
@@ -291,13 +294,15 @@ export default function ProgressScreen() {
                   key={range}
                   style={[
                     styles.timeRangeButton,
-                    timeRange === range && styles.timeRangeButtonActive,
+                    { backgroundColor: colors.bg.elevated, borderColor: colors.border.light },
+                    timeRange === range && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary },
                   ]}
                   onPress={() => handleTimeRangeChange(range)}
                 >
                   <Text
                     style={[
                       styles.timeRangeText,
+                      { color: colors.text.secondary },
                       timeRange === range && styles.timeRangeTextActive,
                     ]}
                   >
@@ -310,11 +315,11 @@ export default function ProgressScreen() {
             {/* Stats Overview */}
             <View style={styles.statsRow}>
               <Card style={styles.nutritionStatCard}>
-                <View style={styles.nutritionStatIcon}>
+                <View style={[styles.nutritionStatIcon, { backgroundColor: `${colors.nutrients.calories}15` }]}>
                   <Flame size={20} color={colors.nutrients.calories} />
                 </View>
-                <Text style={styles.nutritionStatValue}>{formatNumber(averageCalories)}</Text>
-                <Text style={styles.nutritionStatLabel}>Moy. kcal/jour</Text>
+                <Text style={[styles.nutritionStatValue, { color: colors.text.primary }]}>{formatNumber(averageCalories)}</Text>
+                <Text style={[styles.nutritionStatLabel, { color: colors.text.tertiary }]}>Moy. kcal/jour</Text>
                 <View style={styles.statTrend}>
                   {averageCalories > goals.calories ? (
                     <TrendingUp size={14} color={colors.warning} />
@@ -330,21 +335,21 @@ export default function ProgressScreen() {
                 <View style={[styles.nutritionStatIcon, { backgroundColor: `${colors.nutrients.proteins}15` }]}>
                   <Target size={20} color={colors.nutrients.proteins} />
                 </View>
-                <Text style={styles.nutritionStatValue}>{calorieGoalMet}/7</Text>
-                <Text style={styles.nutritionStatLabel}>Objectifs atteints</Text>
+                <Text style={[styles.nutritionStatValue, { color: colors.text.primary }]}>{calorieGoalMet}/7</Text>
+                <Text style={[styles.nutritionStatLabel, { color: colors.text.tertiary }]}>Objectifs atteints</Text>
               </Card>
 
               <Card style={styles.nutritionStatCard}>
                 <View style={[styles.nutritionStatIcon, { backgroundColor: `${colors.warning}15` }]}>
                   <Award size={20} color={colors.warning} />
                 </View>
-                <Text style={styles.nutritionStatValue}>{currentStreak}</Text>
-                <Text style={styles.nutritionStatLabel}>Jours serie</Text>
+                <Text style={[styles.nutritionStatValue, { color: colors.text.primary }]}>{currentStreak}</Text>
+                <Text style={[styles.nutritionStatLabel, { color: colors.text.tertiary }]}>Jours serie</Text>
               </Card>
             </View>
 
             {/* Weekly Chart */}
-            <Text style={styles.sectionTitle}>Calories cette semaine</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Calories cette semaine</Text>
             <Card style={styles.chartCard}>
               <View style={styles.chartContainer}>
                 {weeklyData.map((data, index) => {
@@ -354,7 +359,7 @@ export default function ProgressScreen() {
 
                   return (
                     <View key={index} style={styles.chartBar}>
-                      <View style={styles.barContainer}>
+                      <View style={[styles.barContainer, { backgroundColor: colors.bg.secondary }]}>
                         <View
                           style={[
                             styles.bar,
@@ -368,12 +373,13 @@ export default function ProgressScreen() {
                             },
                           ]}
                         />
-                        <View style={styles.goalLine} />
+                        <View style={[styles.goalLine, { backgroundColor: colors.border.default }]} />
                       </View>
                       <Text
                         style={[
                           styles.barLabel,
-                          isToday && styles.barLabelActive,
+                          { color: colors.text.tertiary },
+                          isToday && { color: colors.accent.primary, fontWeight: '600' },
                         ]}
                       >
                         {dayNames[(new Date().getDay() - 6 + index + 7) % 7]}
@@ -385,17 +391,17 @@ export default function ProgressScreen() {
               <View style={styles.chartLegend}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.accent.primary }]} />
-                  <Text style={styles.legendText}>Aujourd'hui</Text>
+                  <Text style={[styles.legendText, { color: colors.text.tertiary }]}>Aujourd'hui</Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.border.default }]} />
-                  <Text style={styles.legendText}>Objectif</Text>
+                  <Text style={[styles.legendText, { color: colors.text.tertiary }]}>Objectif</Text>
                 </View>
               </View>
             </Card>
 
             {/* Macros Average */}
-            <Text style={styles.sectionTitle}>Repartition moyenne</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Repartition moyenne</Text>
             <Card style={styles.macrosCard}>
               <View style={styles.macrosRow}>
                 <View style={styles.macroItem}>
@@ -441,18 +447,17 @@ export default function ProgressScreen() {
 }
 
 // Helper function to get rank color
-function getRankColor(percentile: number): string {
+function getRankColor(percentile: number, textSecondary: string): string {
   if (percentile <= 1) return '#B9F2FF'
   if (percentile <= 5) return '#FFD700'
   if (percentile <= 10) return '#C0C0C0'
   if (percentile <= 25) return '#CD7F32'
-  return colors.text.secondary
+  return textSecondary
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   scrollView: {
     flex: 1,
@@ -466,7 +471,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h2,
-    color: colors.text.primary,
   },
 
   // Tab Selector
@@ -483,18 +487,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.md,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border.light,
   },
   tabActive: {
-    backgroundColor: colors.accent.primary,
-    borderColor: colors.accent.primary,
+    // Dynamic via inline style
   },
   tabText: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   tabTextActive: {
     color: '#FFFFFF',
@@ -526,7 +526,6 @@ const styles = StyleSheet.create({
   },
   totalXP: {
     ...typography.body,
-    color: colors.text.secondary,
   },
   rankBadge: {
     flexDirection: 'row',
@@ -551,11 +550,9 @@ const styles = StyleSheet.create({
   },
   tierProgressLabel: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   tierProgressValue: {
     ...typography.smallMedium,
-    color: colors.text.primary,
   },
 
   // Stats Grid
@@ -568,7 +565,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: (width - spacing.default * 2 - spacing.sm) / 2 - 1,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     padding: spacing.md,
     alignItems: 'center',
@@ -582,23 +578,19 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...typography.h3,
-    color: colors.text.primary,
   },
   statLabel: {
     ...typography.caption,
-    color: colors.text.muted,
     textAlign: 'center',
   },
   statBonus: {
     ...typography.caption,
-    color: colors.success,
     fontWeight: '600',
   },
 
   // Section Title
   sectionTitle: {
     ...typography.bodyMedium,
-    color: colors.text.secondary,
     paddingHorizontal: spacing.default,
     marginBottom: spacing.md,
   },
@@ -617,17 +609,14 @@ const styles = StyleSheet.create({
   },
   featureText: {
     ...typography.body,
-    color: colors.text.primary,
   },
   nextFeatures: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   nextFeaturesTitle: {
     ...typography.caption,
-    color: colors.text.muted,
     marginBottom: spacing.sm,
   },
   featureItemLocked: {
@@ -642,7 +631,6 @@ const styles = StyleSheet.create({
   },
   featureTextLocked: {
     ...typography.body,
-    color: colors.text.tertiary,
   },
 
   // Achievements Grid
@@ -655,7 +643,6 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: (width - spacing.default * 2 - spacing.sm * 2) / 3 - 1,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     padding: spacing.sm,
     alignItems: 'center',
@@ -672,22 +659,19 @@ const styles = StyleSheet.create({
   },
   achievementName: {
     ...typography.caption,
-    color: colors.text.primary,
     fontWeight: '600',
     textAlign: 'center',
   },
   achievementNameLocked: {
-    color: colors.text.tertiary,
+    // Dynamic via inline style
   },
   achievementDesc: {
     ...typography.caption,
-    color: colors.text.muted,
     textAlign: 'center',
     fontSize: 9,
   },
   achievementXP: {
     ...typography.caption,
-    color: colors.accent.primary,
     fontWeight: '600',
     fontSize: 10,
   },
@@ -709,13 +693,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.full,
-    backgroundColor: colors.bg.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   roadmapIconCurrent: {
-    borderWidth: 2,
-    borderColor: colors.accent.primary,
+    // Dynamic via inline style
   },
   roadmapEmoji: {
     fontSize: 24,
@@ -728,11 +710,9 @@ const styles = StyleSheet.create({
   },
   roadmapName: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   roadmapXP: {
     ...typography.caption,
-    color: colors.text.muted,
   },
   currentBadge: {
     paddingHorizontal: spacing.sm,
@@ -750,10 +730,9 @@ const styles = StyleSheet.create({
     top: 56,
     width: 2,
     height: 20,
-    backgroundColor: colors.border.light,
   },
   roadmapLineActive: {
-    backgroundColor: colors.accent.primary,
+    // Dynamic via inline style
   },
 
   // Nutrition Tab Styles
@@ -766,19 +745,15 @@ const styles = StyleSheet.create({
   timeRangeButton: {
     flex: 1,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border.light,
   },
   timeRangeButtonActive: {
-    backgroundColor: colors.accent.primary,
-    borderColor: colors.accent.primary,
+    // Dynamic via inline style
   },
   timeRangeText: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   timeRangeTextActive: {
     color: '#FFFFFF',
@@ -798,19 +773,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: `${colors.nutrients.calories}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   nutritionStatValue: {
     ...typography.h4,
-    color: colors.text.primary,
     marginBottom: spacing.xs,
   },
   nutritionStatLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
     textAlign: 'center',
   },
   statTrend: {
@@ -834,7 +806,6 @@ const styles = StyleSheet.create({
   barContainer: {
     flex: 1,
     width: 20,
-    backgroundColor: colors.bg.secondary,
     borderRadius: radius.sm,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -850,16 +821,13 @@ const styles = StyleSheet.create({
     right: -4,
     top: '16.7%',
     height: 2,
-    backgroundColor: colors.border.default,
   },
   barLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: spacing.xs,
   },
   barLabelActive: {
-    color: colors.accent.primary,
-    fontWeight: '600',
+    // Dynamic via inline style
   },
   chartLegend: {
     flexDirection: 'row',
@@ -879,7 +847,6 @@ const styles = StyleSheet.create({
   },
   legendText: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   macrosCard: {
     marginHorizontal: spacing.default,

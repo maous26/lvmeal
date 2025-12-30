@@ -33,7 +33,8 @@ import {
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
 import {
   loadStaticRecipes,
@@ -62,6 +63,7 @@ const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
 
 export default function RecipesScreen() {
   const navigation = useNavigation()
+  const { colors, isDark } = useTheme()
   const { getTopRatedAIRecipes } = useRecipesStore()
   const [favorites, setFavorites] = useState<string[]>([])
 
@@ -253,7 +255,7 @@ export default function RecipesScreen() {
     return (
       <TouchableOpacity
         key={recipe.id}
-        style={[styles.recipeCard, { width: cardWidth }]}
+        style={[styles.recipeCard, { width: cardWidth, backgroundColor: colors.bg.elevated }]}
         onPress={() => handleRecipePress(recipe)}
         activeOpacity={0.8}
       >
@@ -266,8 +268,8 @@ export default function RecipesScreen() {
               resizeMode="cover"
             />
           ) : (
-            <View style={styles.recipeImagePlaceholder}>
-              <ChefHat size={32} color="#9CA3AF" />
+            <View style={[styles.recipeImagePlaceholder, { backgroundColor: colors.bg.tertiary }]}>
+              <ChefHat size={32} color={colors.text.muted} />
             </View>
           )}
 
@@ -336,7 +338,7 @@ export default function RecipesScreen() {
           style={styles.categoryGradient}
         >
           <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-          <Text style={[styles.categoryLabel, isSelected && { fontWeight: '700' }]}>
+          <Text style={[styles.categoryLabel, { color: colors.text.primary }, isSelected && { fontWeight: '700' }]}>
             {category.label}
           </Text>
         </LinearGradient>
@@ -347,30 +349,30 @@ export default function RecipesScreen() {
   // Render section header
   const renderSectionHeader = (title: string, onViewAll?: () => void) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text.tertiary }]}>{title}</Text>
       {onViewAll && (
         <TouchableOpacity onPress={onViewAll}>
-          <Text style={styles.viewAllText}>Voir tout</Text>
+          <Text style={[styles.viewAllText, { color: colors.accent.primary }]}>Voir tout</Text>
         </TouchableOpacity>
       )}
     </View>
   )
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}>
           <Search size={20} color={colors.text.muted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text.primary }]}
             placeholder="Rechercher"
             placeholderTextColor={colors.text.muted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
-        <TouchableOpacity style={styles.filterButton}>
+        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}>
           <SlidersHorizontal size={20} color={colors.accent.primary} />
         </TouchableOpacity>
       </View>
@@ -378,7 +380,7 @@ export default function RecipesScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
-          <Text style={styles.loadingText}>Chargement des recettes...</Text>
+          <Text style={[styles.loadingText, { color: colors.text.muted }]}>Chargement des recettes...</Text>
         </View>
       ) : (
         <ScrollView
@@ -405,7 +407,7 @@ export default function RecipesScreen() {
                   {searchResults.map(recipe => renderRecipeCard(recipe))}
                 </ScrollView>
               ) : (
-                <Text style={styles.noResultsText}>Aucun résultat trouvé</Text>
+                <Text style={[styles.noResultsText, { color: colors.text.muted }]}>Aucun résultat trouvé</Text>
               )}
             </View>
           )}
@@ -423,15 +425,15 @@ export default function RecipesScreen() {
 
               {/* Active filter indicator */}
               {selectedCategory && (
-                <View style={styles.activeFilterContainer}>
-                  <Text style={styles.activeFilterText}>
+                <View style={[styles.activeFilterContainer, { backgroundColor: colors.accent.primary + '15', borderColor: colors.accent.primary + '30' }]}>
+                  <Text style={[styles.activeFilterText, { color: colors.accent.primary }]}>
                     Filtre actif : {CATEGORIES.find(c => c.id === selectedCategory)?.label}
                   </Text>
                   <TouchableOpacity
                     onPress={() => setSelectedCategory(null)}
                     style={styles.clearFilterButton}
                   >
-                    <Text style={styles.clearFilterText}>Effacer</Text>
+                    <Text style={[styles.clearFilterText, { color: colors.accent.primary }]}>Effacer</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -556,7 +558,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.body,
-    color: colors.text.muted,
   },
   // Categories
   categoriesScroll: {
@@ -604,7 +605,6 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     ...typography.small,
-    color: colors.accent.primary,
   },
   horizontalScroll: {
     paddingHorizontal: spacing.default,
@@ -678,7 +678,6 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     ...typography.body,
-    color: colors.text.muted,
     textAlign: 'center',
     paddingVertical: spacing.xl,
   },
@@ -691,14 +690,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.accent.primary + '15',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.accent.primary + '30',
   },
   activeFilterText: {
     ...typography.small,
-    color: colors.accent.primary,
     fontWeight: '500',
   },
   clearFilterButton: {
@@ -707,7 +703,6 @@ const styles = StyleSheet.create({
   },
   clearFilterText: {
     ...typography.small,
-    color: colors.accent.primary,
     fontWeight: '600',
   },
 })

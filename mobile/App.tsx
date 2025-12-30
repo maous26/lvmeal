@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -7,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 
 import { RootNavigator } from './src/navigation'
-import { colors } from './src/constants/theme'
+import { ThemeProvider } from './src/contexts/ThemeContext'
 import { clearFoodSearchCache } from './src/services/food-search'
 
 // Keep splash screen visible while loading fonts
@@ -52,10 +51,11 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar style="dark" backgroundColor={colors.bg.primary} />
-          <RootNavigator />
-        </NavigationContainer>
+        <ThemeProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )

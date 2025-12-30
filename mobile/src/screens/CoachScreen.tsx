@@ -38,7 +38,8 @@ import {
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
 import { useCoachStore, type CoachItem, type CoachItemType, type CoachItemCategory } from '../stores/coach-store'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
@@ -47,23 +48,23 @@ import { useGamificationStore } from '../stores/gamification-store'
 
 // Configuration des icônes et couleurs par type
 const typeConfig: Record<CoachItemType, { icon: typeof Lightbulb; label: string; color: string }> = {
-  tip: { icon: Lightbulb, label: 'Conseil', color: colors.accent.primary },
-  analysis: { icon: BarChart3, label: 'Analyse', color: colors.secondary.primary },
-  alert: { icon: Bell, label: 'Alerte', color: colors.warning },
-  celebration: { icon: PartyPopper, label: 'Bravo !', color: colors.success },
+  tip: { icon: Lightbulb, label: 'Conseil', color: staticColors.accent.primary },
+  analysis: { icon: BarChart3, label: 'Analyse', color: staticColors.secondary.primary },
+  alert: { icon: Bell, label: 'Alerte', color: staticColors.warning },
+  celebration: { icon: PartyPopper, label: 'Bravo !', color: staticColors.success },
 }
 
 // Configuration par catégorie
 const categoryConfig: Record<CoachItemCategory, { icon: typeof Apple; bgColor: string }> = {
-  nutrition: { icon: Apple, bgColor: `${colors.success}15` },
-  metabolism: { icon: Flame, bgColor: `${colors.warning}15` },
-  wellness: { icon: Heart, bgColor: `${colors.error}15` },
-  sport: { icon: Dumbbell, bgColor: `${colors.accent.primary}15` },
-  hydration: { icon: Droplets, bgColor: `${colors.info}15` },
-  sleep: { icon: Moon, bgColor: `${colors.secondary.primary}15` },
-  stress: { icon: Brain, bgColor: `${colors.warning}15` },
-  progress: { icon: Trophy, bgColor: `${colors.success}15` },
-  cooking: { icon: ChefHat, bgColor: `${colors.warning}15` },
+  nutrition: { icon: Apple, bgColor: `${staticColors.success}15` },
+  metabolism: { icon: Flame, bgColor: `${staticColors.warning}15` },
+  wellness: { icon: Heart, bgColor: `${staticColors.error}15` },
+  sport: { icon: Dumbbell, bgColor: `${staticColors.accent.primary}15` },
+  hydration: { icon: Droplets, bgColor: `${staticColors.info}15` },
+  sleep: { icon: Moon, bgColor: `${staticColors.secondary.primary}15` },
+  stress: { icon: Brain, bgColor: `${staticColors.warning}15` },
+  progress: { icon: Trophy, bgColor: `${staticColors.success}15` },
+  cooking: { icon: ChefHat, bgColor: `${staticColors.warning}15` },
 }
 
 // Libellés des sources
@@ -79,9 +80,10 @@ interface ItemCardProps {
   item: CoachItem
   onRead: () => void
   onDismiss: () => void
+  colors: ReturnType<typeof useTheme>['colors']
 }
 
-function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
+function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
   const typeConf = typeConfig[item.type]
   const catConf = categoryConfig[item.category]
   const TypeIcon = typeConf.icon
@@ -110,7 +112,8 @@ function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
     <Pressable
       style={[
         styles.itemCard,
-        !item.isRead && styles.itemCardUnread,
+        { backgroundColor: colors.bg.secondary },
+        !item.isRead && { backgroundColor: colors.bg.elevated },
         { borderLeftColor: borderColor },
       ]}
       onPress={handlePress}
@@ -124,7 +127,7 @@ function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
           <Text style={[styles.typeLabel, { color: typeConf.color }]}>
             {typeConf.label}
           </Text>
-          {!item.isRead && <View style={styles.unreadDot} />}
+          {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: colors.accent.primary }]} />}
         </View>
         <Pressable onPress={handleDismiss} style={styles.dismissButton} hitSlop={8}>
           <X size={16} color={colors.text.tertiary} />
@@ -136,18 +139,18 @@ function ItemCard({ item, onRead, onDismiss }: ItemCardProps) {
         <View style={[styles.catIconContainer, { backgroundColor: catConf.bgColor }]}>
           <CatIcon size={18} color={colors.text.secondary} />
         </View>
-        <Text style={styles.itemMessage}>{item.message}</Text>
+        <Text style={[styles.itemMessage, { color: colors.text.primary }]}>{item.message}</Text>
       </View>
 
       {/* Footer: source + time + action */}
       <View style={styles.itemFooter}>
         <View style={styles.footerLeft}>
           {item.source && (
-            <Text style={styles.sourceText}>
+            <Text style={[styles.sourceText, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
               {sourceLabels[item.source] || item.source}
             </Text>
           )}
-          <Text style={styles.timeText}>
+          <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
             {formatTimeAgo(item.createdAt)}
           </Text>
         </View>
@@ -179,6 +182,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export default function CoachScreen() {
+  const { colors } = useTheme()
   const { items, unreadCount, generateItemsWithAI, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
@@ -251,16 +255,16 @@ export default function CoachScreen() {
   const celebrations = items.filter((i) => i.type === 'celebration')
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: colors.border.light }]}>
         <View style={styles.headerLeft}>
-          <View style={styles.headerIconContainer}>
+          <View style={[styles.headerIconContainer, { backgroundColor: `${colors.accent.primary}20` }]}>
             <Sparkles size={24} color={colors.accent.primary} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>LymIA Coach</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>LymIA Coach</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>
               {unreadCount > 0
                 ? `${unreadCount} nouvelle${unreadCount > 1 ? 's' : ''} notification${unreadCount > 1 ? 's' : ''}`
                 : 'Tout est à jour'}
@@ -268,9 +272,9 @@ export default function CoachScreen() {
           </View>
         </View>
         {unreadCount > 0 && (
-          <Pressable onPress={handleMarkAllRead} style={styles.markAllButton}>
+          <Pressable onPress={handleMarkAllRead} style={[styles.markAllButton, { backgroundColor: `${colors.accent.primary}10` }]}>
             <Check size={16} color={colors.accent.primary} />
-            <Text style={styles.markAllText}>Tout lire</Text>
+            <Text style={[styles.markAllText, { color: colors.accent.primary }]}>Tout lire</Text>
           </Pressable>
         )}
       </View>
@@ -279,14 +283,14 @@ export default function CoachScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />
         }
       >
         {items.length === 0 ? (
           <View style={styles.emptyState}>
             <Sparkles size={48} color={colors.text.tertiary} />
-            <Text style={styles.emptyTitle}>Aucune notification</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Aucune notification</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
               Continue à tracker tes repas et ton bien-être pour recevoir des conseils, analyses et alertes personnalisés.
             </Text>
           </View>
@@ -307,6 +311,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -327,6 +332,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -347,6 +353,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -367,6 +374,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -381,7 +389,6 @@ export default function CoachScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   header: {
     flexDirection: 'row',
@@ -390,7 +397,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -401,18 +407,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: `${colors.accent.primary}20`,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     ...typography.lg,
     fontWeight: '700',
-    color: colors.text.primary,
   },
   headerSubtitle: {
     ...typography.sm,
-    color: colors.text.secondary,
   },
   markAllButton: {
     flexDirection: 'row',
@@ -420,12 +423,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: `${colors.accent.primary}10`,
     borderRadius: radius.md,
   },
   markAllText: {
     ...typography.sm,
-    color: colors.accent.primary,
     fontWeight: '600',
   },
   scrollView: {
@@ -451,14 +452,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   itemCard: {
-    backgroundColor: colors.bg.secondary,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderLeftWidth: 4,
   },
   itemCardUnread: {
-    backgroundColor: colors.bg.elevated,
+    // Dynamic via inline style
   },
   itemHeader: {
     flexDirection: 'row',
@@ -488,7 +488,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.accent.primary,
   },
   dismissButton: {
     padding: spacing.xs,
@@ -509,7 +508,6 @@ const styles = StyleSheet.create({
   },
   itemMessage: {
     ...typography.sm,
-    color: colors.text.primary,
     lineHeight: 20,
     flex: 1,
   },
@@ -525,15 +523,12 @@ const styles = StyleSheet.create({
   },
   sourceText: {
     ...typography.xs,
-    color: colors.text.tertiary,
-    backgroundColor: colors.bg.tertiary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.sm,
   },
   timeText: {
     ...typography.xs,
-    color: colors.text.tertiary,
   },
   actionButton: {
     flexDirection: 'row',
@@ -552,12 +547,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     ...typography.lg,
     fontWeight: '600',
-    color: colors.text.primary,
     marginTop: spacing.lg,
   },
   emptySubtitle: {
     ...typography.sm,
-    color: colors.text.secondary,
     textAlign: 'center',
     marginTop: spacing.sm,
     paddingHorizontal: spacing.xl,
