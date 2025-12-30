@@ -44,7 +44,9 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Headphones,
 } from 'lucide-react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 
@@ -56,6 +58,7 @@ import {
   type WellnessPhase,
 } from '../stores/wellness-program-store'
 import { useUserStore } from '../stores/user-store'
+import { useMeditationStore } from '../stores/meditation-store'
 import { WellnessAgent, type WellnessAnalysisResult } from '../services/wellness-agent'
 
 const phaseColors: Record<WellnessPhase, string> = {
@@ -104,6 +107,7 @@ export default function WellnessProgramScreen() {
   } = useWellnessProgramStore()
 
   const { profile } = useUserStore()
+  const { totalMeditationMinutes: oralMeditationMinutes, sessionsCompleted } = useMeditationStore()
 
   const phaseConfig = getCurrentPhaseConfig()
   const todayLog = getTodayLog()
@@ -182,6 +186,12 @@ export default function WellnessProgramScreen() {
     setGratitudeText('')
     setShowGratitudeInput(false)
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+  }
+
+  const handleOpenMeditations = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // @ts-ignore
+    navigation.navigate('MeditationList')
   }
 
   const handleProgressPhase = () => {
@@ -426,14 +436,57 @@ export default function WellnessProgramScreen() {
         {/* Daily Practices */}
         <Text style={styles.sectionTitle}>Pratiques du jour</Text>
 
-        {/* Meditation */}
+        {/* Oral Meditations - NEW */}
+        <TouchableOpacity
+          style={styles.oralMeditationCard}
+          onPress={handleOpenMeditations}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#8B5CF6', '#7C3AED']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.oralMeditationGradient}
+          >
+            <View style={styles.oralMeditationContent}>
+              <View style={styles.oralMeditationIcon}>
+                <Headphones size={28} color="#FFFFFF" />
+              </View>
+              <View style={styles.oralMeditationInfo}>
+                <Text style={styles.oralMeditationTitle}>Meditations Guidees</Text>
+                <Text style={styles.oralMeditationSubtitle}>
+                  8 sessions audio generees par IA
+                </Text>
+              </View>
+              <ChevronRight size={24} color="rgba(255,255,255,0.7)" />
+            </View>
+            <View style={styles.oralMeditationStats}>
+              <View style={styles.oralMeditationStat}>
+                <Text style={styles.oralMeditationStatValue}>{sessionsCompleted}</Text>
+                <Text style={styles.oralMeditationStatLabel}>sessions</Text>
+              </View>
+              <View style={styles.oralMeditationStatDivider} />
+              <View style={styles.oralMeditationStat}>
+                <Text style={styles.oralMeditationStatValue}>{Math.round(oralMeditationMinutes)}</Text>
+                <Text style={styles.oralMeditationStatLabel}>minutes</Text>
+              </View>
+              <View style={styles.oralMeditationStatDivider} />
+              <View style={styles.oralMeditationStat}>
+                <Text style={styles.oralMeditationStatValue}>{currentWeek}/8</Text>
+                <Text style={styles.oralMeditationStatLabel}>semaine</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Quick meditation log - legacy */}
         <Card style={styles.practiceCard}>
           <View style={styles.practiceHeader}>
             <View style={[styles.practiceIconBg, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
               <Brain size={20} color={colors.secondary.primary} />
             </View>
             <View style={styles.practiceInfo}>
-              <Text style={styles.practiceTitle}>Meditation</Text>
+              <Text style={styles.practiceTitle}>Meditation libre</Text>
               <Text style={styles.practiceGoal}>
                 Objectif: {phaseConfig.dailyPractices.meditationMinutes} min/jour
               </Text>
@@ -1392,5 +1445,67 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: spacing.xl,
+  },
+  // Oral Meditation Widget
+  oralMeditationCard: {
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  oralMeditationGradient: {
+    padding: spacing.lg,
+  },
+  oralMeditationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  oralMeditationIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  oralMeditationInfo: {
+    flex: 1,
+  },
+  oralMeditationTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  oralMeditationSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  oralMeditationStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  oralMeditationStat: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  oralMeditationStatValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  oralMeditationStatLabel: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
+  oralMeditationStatDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 })

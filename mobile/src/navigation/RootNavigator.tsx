@@ -9,6 +9,8 @@ import MetabolicBoostScreen from '../screens/MetabolicBoostScreen'
 import RecipeDetailScreen from '../screens/RecipeDetailScreen'
 import SportInitiationScreen from '../screens/SportInitiationScreen'
 import WellnessProgramScreen from '../screens/WellnessProgramScreen'
+import MeditationListScreen from '../screens/MeditationListScreen'
+import MeditationPlayerScreen from '../screens/MeditationPlayerScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import WeightScreen from '../screens/WeightScreen'
@@ -50,6 +52,8 @@ export type RootStackParamList = {
   MetabolicBoost: undefined
   SportInitiation: undefined
   WellnessProgram: undefined
+  MeditationList: undefined
+  MeditationPlayer: { sessionId: string }
   EditProfile: undefined
   Calendar: undefined
   Paywall: undefined
@@ -123,6 +127,21 @@ export default function RootNavigator() {
             component={WellnessProgramScreen}
             options={{
               animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="MeditationList"
+            component={MeditationListScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="MeditationPlayer"
+            component={MeditationPlayerScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              presentation: 'modal',
             }}
           />
           <Stack.Screen
