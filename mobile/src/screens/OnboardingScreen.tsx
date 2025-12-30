@@ -158,38 +158,54 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { enroll: enrollWellnessProgram } = useWellnessProgramStore()
 
   // Build steps dynamically based on user profile
-  // - sport-initiation: after activity if sedentary
-  // - metabolic-program: after metabolism if adaptive metabolism detected
-  // - wellness-program: after metabolic-program if user refused metabolic (and didn't choose sport)
+  // PRIORITY ORDER:
+  // 1. metabolic-program: FIRST if user has adaptive metabolism (after metabolism step)
+  // 2. sport-initiation: after metabolic-program IF user refused metabolic AND is sedentary
+  //    OR directly after activity if no metabolic issues
+  // 3. wellness-program: if user refused metabolic program
   const steps = useMemo(() => {
     let dynamicSteps = [...baseSteps]
 
-    // 1. Insert sport-initiation after activity if sedentary
-    if (profile.activityLevel === 'sedentary') {
-      const activityIndex = dynamicSteps.indexOf('activity') + 1
-      dynamicSteps = [...dynamicSteps.slice(0, activityIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(activityIndex)]
-    }
-
-    // 2. Insert metabolic-program after metabolism if adaptive metabolism detected
-    //    BUT NOT if user chose sport initiation (sport blocks metabolic)
-    if (profile.metabolismProfile === 'adaptive' && !profile.wantsSportInitiation) {
+    // 1. If adaptive metabolism detected, propose Metabolic Program FIRST (after metabolism step)
+    if (profile.metabolismProfile === 'adaptive') {
       const metabolismIndex = dynamicSteps.indexOf('metabolism') + 1
       dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'metabolic-program' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
     }
 
-    // 3. Insert wellness-program after metabolic-program if:
-    //    - User has adaptive metabolism AND refused metabolic program
-    //    - OR user is stressed/has poor sleep (could add lifestyle check later)
-    //    Wellness is NOT blocked by sport, only by metabolic
+    // 2. Insert sport-initiation for sedentary users
+    //    - If user has adaptive metabolism: only show if they REFUSED metabolic program
+    //    - If user doesn't have adaptive metabolism: show after activity step
+    if (profile.activityLevel === 'sedentary') {
+      if (profile.metabolismProfile === 'adaptive') {
+        // User has metabolism issues - only propose sport if they refused metabolic
+        if (profile.wantsMetabolicProgram === false) {
+          const metabolicProgramIndex = dynamicSteps.indexOf('metabolic-program')
+          if (metabolicProgramIndex !== -1) {
+            dynamicSteps = [...dynamicSteps.slice(0, metabolicProgramIndex + 1), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(metabolicProgramIndex + 1)]
+          }
+        }
+      } else {
+        // No metabolism issues - propose sport directly after activity
+        const activityIndex = dynamicSteps.indexOf('activity') + 1
+        dynamicSteps = [...dynamicSteps.slice(0, activityIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(activityIndex)]
+      }
+    }
+
+    // 3. Insert wellness-program if user refused metabolic program
+    //    Wellness comes after sport-initiation if present, otherwise after metabolic-program
     if (profile.metabolismProfile === 'adaptive' && profile.wantsMetabolicProgram === false) {
-      const metabolicProgramIndex = dynamicSteps.indexOf('metabolic-program')
-      if (metabolicProgramIndex !== -1) {
-        dynamicSteps = [...dynamicSteps.slice(0, metabolicProgramIndex + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(metabolicProgramIndex + 1)]
+      // Find the right insertion point (after sport-initiation if present, otherwise after metabolic-program)
+      const sportIndex = dynamicSteps.indexOf('sport-initiation')
+      const metabolicIndex = dynamicSteps.indexOf('metabolic-program')
+      const insertAfter = sportIndex !== -1 ? sportIndex : metabolicIndex
+
+      if (insertAfter !== -1) {
+        dynamicSteps = [...dynamicSteps.slice(0, insertAfter + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(insertAfter + 1)]
       }
     }
 
     return dynamicSteps
-  }, [profile.activityLevel, profile.metabolismProfile, profile.wantsSportInitiation, profile.wantsMetabolicProgram])
+  }, [profile.activityLevel, profile.metabolismProfile, profile.wantsMetabolicProgram])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
