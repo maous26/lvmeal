@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "enrich-recipes": "npx ts-node scripts/enrich-recipes.ts",
-    "generate-meditations": "npx ts-node scripts/generate-meditation-audios.ts"
+    "generate-meditations": "npx ts-node --transpile-only scripts/generate-meditation-audios.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

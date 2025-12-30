@@ -6,7 +6,7 @@
  * et les upload sur Supabase Storage.
  *
  * Usage:
- *   npx ts-node scripts/generate-meditation-audios.ts
+ *   cd mobile && npx ts-node scripts/generate-meditation-audios.ts
  *
  * Pré-requis:
  *   - GOOGLE_AI_API_KEY (ou EXPO_PUBLIC_GEMINI_API_KEY)
@@ -14,10 +14,10 @@
  *   - SUPABASE_SERVICE_ROLE_KEY (pour upload)
  */
 
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-import * as fs from 'fs'
-import * as path from 'path'
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { createClient } = require('@supabase/supabase-js')
+const dotenv = require('dotenv')
+const path = require('path')
 
 // Charger les variables d'environnement
 dotenv.config({ path: path.join(__dirname, '../.env') })
@@ -484,7 +484,7 @@ async function generateAudio(script: string): Promise<Buffer> {
 }
 
 // Fonction pour uploader sur Supabase Storage
-async function uploadToSupabase(supabase: ReturnType<typeof createClient>, sessionId: string, audioBuffer: Buffer): Promise<string> {
+async function uploadToSupabase(supabase: any, sessionId: string, audioBuffer: Buffer): Promise<string> {
   const { error } = await supabase.storage
     .from(MEDITATION_BUCKET)
     .upload(`${sessionId}.wav`, audioBuffer, {
@@ -524,7 +524,7 @@ async function main() {
 
   // Vérifier/créer le bucket
   const { data: buckets } = await supabase.storage.listBuckets()
-  const bucketExists = buckets?.some(b => b.name === MEDITATION_BUCKET)
+  const bucketExists = buckets?.some((b: any) => b.name === MEDITATION_BUCKET)
 
   if (!bucketExists) {
     console.log(`📦 Création du bucket "${MEDITATION_BUCKET}"...`)
@@ -552,7 +552,7 @@ async function main() {
         .from(MEDITATION_BUCKET)
         .list('', { search: `${session.id}.wav` })
 
-      if (existingFiles?.some(f => f.name === `${session.id}.wav`)) {
+      if (existingFiles?.some((f: any) => f.name === `${session.id}.wav`)) {
         console.log('   ⏭️  Déjà existant, skip')
         const { data } = supabase.storage
           .from(MEDITATION_BUCKET)
