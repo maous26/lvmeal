@@ -18,32 +18,12 @@ interface CaloricBalanceProps {
   dailyBalances: DailyBalance[]
   currentDay: number
   daysUntilNewWeek: number
-  weekStartDate?: string
   dailyTarget: number
   isFirstTimeSetup?: boolean
   onConfirmStart?: () => void
-  onResetDay?: () => void
 }
 
 const MAX_VARIANCE_PERCENT = 0.10
-
-const DAY_NAMES = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
-
-function getCycleDays(startDate?: string): { day: string; date: string }[] {
-  const start = startDate ? new Date(startDate) : new Date()
-  const days: { day: string; date: string }[] = []
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start)
-    d.setDate(start.getDate() + i)
-    days.push({
-      day: DAY_NAMES[d.getDay()],
-      date: `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
-    })
-  }
-
-  return days
-}
 
 function clampBalance(balance: number, target: number): number {
   const maxVariance = target * MAX_VARIANCE_PERCENT
@@ -58,13 +38,11 @@ export function CaloricBalance({
   dailyBalances,
   currentDay,
   daysUntilNewWeek,
-  weekStartDate,
   dailyTarget,
   isFirstTimeSetup = false,
   onConfirmStart,
 }: CaloricBalanceProps) {
   const [showInfoModal, setShowInfoModal] = useState(false)
-  const cycleDays = getCycleDays(weekStartDate)
 
   const maxDailyVariance = Math.round(dailyTarget * MAX_VARIANCE_PERCENT)
   const maxCredit = maxDailyVariance * 6
@@ -150,54 +128,6 @@ export function CaloricBalance({
             <Text style={styles.gaugeLabel}>0</Text>
             <Text style={styles.gaugeLabel}>{formatNumber(Math.round(maxCredit / 2))}</Text>
             <Text style={styles.gaugeLabel}>{formatNumber(maxCredit)}</Text>
-          </View>
-        </View>
-
-        {/* 7-day breakdown */}
-        <View style={styles.weekSection}>
-          <Text style={styles.sectionTitle}>Votre semaine</Text>
-          <View style={styles.weekGrid}>
-            {cycleDays.map((dayInfo, index) => {
-              const dayData = dailyBalances[index]
-              const isCurrentDay = index === currentDay
-              const isPast = index < currentDay
-              const isFuture = index > currentDay
-              const consumed = dayData?.consumed ?? 0
-              const target = dayData?.target ?? dailyTarget
-              const isUnderTarget = consumed <= target
-              const barHeight = Math.min((consumed / target) * 100, 100)
-
-              return (
-                <View key={`${dayInfo.day}-${dayInfo.date}`} style={styles.dayColumn}>
-                  <View style={styles.barContainer}>
-                    {isPast && (
-                      <View
-                        style={[
-                          styles.bar,
-                          isUnderTarget ? styles.barUnder : styles.barOver,
-                          { height: `${barHeight}%` }
-                        ]}
-                      />
-                    )}
-                    {isCurrentDay && (
-                      <View style={[styles.barCurrent, { height: `${Math.max(barHeight, 20)}%` }]} />
-                    )}
-                    {isFuture && (
-                      <View style={styles.barFuture} />
-                    )}
-                  </View>
-                  <Text style={[styles.dayLabel, isCurrentDay && styles.dayLabelCurrent]}>
-                    {dayInfo.day}
-                  </Text>
-                  <Text style={styles.dateLabel}>{dayInfo.date}</Text>
-                  {(isPast || isCurrentDay) && consumed > 0 && (
-                    <Text style={[styles.consumedLabel, isUnderTarget && styles.consumedGood]}>
-                      {formatNumber(consumed)}
-                    </Text>
-                  )}
-                </View>
-              )
-            })}
           </View>
         </View>
 
@@ -430,74 +360,6 @@ const styles = StyleSheet.create({
   gaugeLabel: {
     ...typography.caption,
     color: colors.text.tertiary,
-  },
-  weekSection: {
-    marginBottom: spacing.default,
-  },
-  sectionTitle: {
-    ...typography.smallMedium,
-    color: colors.text.secondary,
-    marginBottom: spacing.sm,
-  },
-  weekGrid: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  dayColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  barContainer: {
-    height: 64,
-    width: '100%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  bar: {
-    width: '100%',
-    borderTopLeftRadius: radius.md,
-    borderTopRightRadius: radius.md,
-  },
-  barUnder: {
-    backgroundColor: colors.accent.primary,
-  },
-  barOver: {
-    backgroundColor: colors.accent.secondary,
-  },
-  barCurrent: {
-    width: '100%',
-    borderRadius: radius.md,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.light,
-  },
-  barFuture: {
-    width: '100%',
-    height: '100%',
-    borderRadius: radius.md,
-    backgroundColor: colors.bg.tertiary,
-    opacity: 0.4,
-  },
-  dayLabel: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-    fontWeight: '500',
-  },
-  dayLabelCurrent: {
-    color: colors.accent.primary,
-  },
-  dateLabel: {
-    fontSize: 10,
-    color: colors.text.muted,
-  },
-  consumedLabel: {
-    fontSize: 10,
-    color: colors.text.secondary,
-  },
-  consumedGood: {
-    color: colors.success,
   },
   infoBox: {
     flexDirection: 'row',

@@ -24,9 +24,22 @@ import {
   StyleSheet,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+import {
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Scale,
+  Plus,
+  Minus,
+  Bluetooth,
+  Calendar,
+  X,
+  Check,
+  Info,
+} from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+// Animations temporarily disabled - Worklets version mismatch in Expo Go
 import * as Haptics from 'expo-haptics'
 
 import { useUserStore } from '../stores/user-store'
@@ -197,7 +210,7 @@ export default function WeightScreen() {
           onPress={() => navigation.goBack()}
           style={[styles.backButton, { backgroundColor: colors.bg.secondary }]}
         >
-          <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
+          <ChevronLeft size={24} color={colors.text.primary} />
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
@@ -213,8 +226,8 @@ export default function WeightScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Current Weight Card */}
-        <Animated.View
-          entering={FadeInDown.delay(100)}
+        <View
+          
           style={[styles.card, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}
         >
           <View style={styles.weightHeader}>
@@ -233,13 +246,21 @@ export default function WeightScreen() {
 
               {trend !== 0 && (
                 <View style={styles.trendRow}>
-                  <Ionicons
-                    name={trend < 0 ? 'trending-down' : 'trending-up'}
-                    size={18}
-                    color={(isLosingWeight && trend < 0) || (!isLosingWeight && trend > 0)
-                      ? colors.success
-                      : colors.warning}
-                  />
+                  {trend < 0 ? (
+                    <TrendingDown
+                      size={18}
+                      color={(isLosingWeight && trend < 0) || (!isLosingWeight && trend > 0)
+                        ? colors.success
+                        : colors.warning}
+                    />
+                  ) : (
+                    <TrendingUp
+                      size={18}
+                      color={(isLosingWeight && trend < 0) || (!isLosingWeight && trend > 0)
+                        ? colors.success
+                        : colors.warning}
+                    />
+                  )}
                   <Text style={[styles.trendText, {
                     color: (isLosingWeight && trend < 0) || (!isLosingWeight && trend > 0)
                       ? colors.success
@@ -252,7 +273,7 @@ export default function WeightScreen() {
             </View>
 
             <View style={[styles.iconBox, { backgroundColor: colors.accent.primary }]}>
-              <Ionicons name="scale-outline" size={28} color="#FFF" />
+              <Scale size={28} color="#FFF" />
             </View>
           </View>
 
@@ -293,18 +314,18 @@ export default function WeightScreen() {
               </View>
             </View>
           )}
-        </Animated.View>
+        </View>
 
         {/* Quick Actions */}
-        <Animated.View
-          entering={FadeInDown.delay(200)}
+        <View
+          
           style={styles.actionsRow}
         >
           <TouchableOpacity
             onPress={() => setShowAddModal(true)}
             style={[styles.primaryButton, { backgroundColor: colors.accent.primary }]}
           >
-            <Ionicons name="add" size={22} color="#FFF" />
+            <Plus size={22} color="#FFF" />
             <Text style={styles.primaryButtonText}>
               Ajouter une pesée
             </Text>
@@ -314,17 +335,17 @@ export default function WeightScreen() {
             onPress={() => setShowDevicesModal(true)}
             style={[styles.iconButton, { backgroundColor: colors.bg.secondary, borderColor: colors.border.light }]}
           >
-            <Ionicons name="bluetooth" size={24} color={colors.accent.primary} />
+            <Bluetooth size={24} color={colors.accent.primary} />
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* Chart */}
-        <Animated.View
-          entering={FadeInDown.delay(300)}
+        <View
+          
           style={[styles.card, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}
         >
           <View style={styles.sectionHeader}>
-            <Ionicons name="calendar-outline" size={20} color={colors.accent.primary} />
+            <Calendar size={20} color={colors.accent.primary} />
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
               Évolution (30 jours)
             </Text>
@@ -387,7 +408,7 @@ export default function WeightScreen() {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="scale-outline" size={48} color={colors.text.muted} />
+              <Scale size={48} color={colors.text.muted} />
               <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                 Aucune pesée enregistrée
               </Text>
@@ -396,11 +417,11 @@ export default function WeightScreen() {
               </Text>
             </View>
           )}
-        </Animated.View>
+        </View>
 
         {/* Connected Devices */}
-        <Animated.View
-          entering={FadeInDown.delay(400)}
+        <View
+          
           style={styles.section}
         >
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
@@ -411,7 +432,7 @@ export default function WeightScreen() {
             {connectedScales.length === 0 ? (
               <View style={styles.emptyDevices}>
                 <View style={[styles.emptyIcon, { backgroundColor: colors.border.light }]}>
-                  <Ionicons name="bluetooth" size={24} color={colors.text.tertiary} />
+                  <Bluetooth size={24} color={colors.text.tertiary} />
                 </View>
                 <Text style={[styles.emptyText, { color: colors.text.secondary }]}>
                   Aucun appareil connecté
@@ -420,7 +441,7 @@ export default function WeightScreen() {
                   onPress={() => setShowDevicesModal(true)}
                   style={[styles.smallButton, { backgroundColor: colors.accent.light }]}
                 >
-                  <Ionicons name="add" size={18} color={colors.accent.primary} />
+                  <Plus size={18} color={colors.accent.primary} />
                   <Text style={[styles.smallButtonText, { color: colors.accent.primary }]}>
                     Connecter un appareil
                   </Text>
@@ -464,12 +485,12 @@ export default function WeightScreen() {
               ))
             )}
           </View>
-        </Animated.View>
+        </View>
 
         {/* Recent Entries */}
         {weightHistory.length > 0 && (
-          <Animated.View
-            entering={FadeInDown.delay(500)}
+          <View
+            
             style={styles.section}
           >
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
@@ -490,7 +511,7 @@ export default function WeightScreen() {
                     }]}
                   >
                     <View style={[styles.entryIcon, { backgroundColor: colors.border.light }]}>
-                      <Ionicons name="scale-outline" size={18} color={colors.text.tertiary} />
+                      <Scale size={18} color={colors.text.tertiary} />
                     </View>
                     <View style={styles.entryInfo}>
                       <Text style={[styles.entryWeight, { color: colors.text.primary }]}>
@@ -522,7 +543,7 @@ export default function WeightScreen() {
                 )
               })}
             </View>
-          </Animated.View>
+          </View>
         )}
       </ScrollView>
 
@@ -552,7 +573,7 @@ export default function WeightScreen() {
                   Nouvelle pesée
                 </Text>
                 <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                  <Ionicons name="close" size={24} color={colors.text.tertiary} />
+                  <X size={24} color={colors.text.tertiary} />
                 </TouchableOpacity>
               </View>
 
@@ -567,7 +588,7 @@ export default function WeightScreen() {
                     onPress={() => adjustWeight(-0.1)}
                     style={[styles.adjustButton, { backgroundColor: colors.bg.secondary }]}
                   >
-                    <Ionicons name="remove" size={24} color={colors.text.primary} />
+                    <Minus size={24} color={colors.text.primary} />
                   </TouchableOpacity>
 
                   <View style={styles.inputWrapper}>
@@ -591,7 +612,7 @@ export default function WeightScreen() {
                     onPress={() => adjustWeight(0.1)}
                     style={[styles.adjustButton, { backgroundColor: colors.bg.secondary }]}
                   >
-                    <Ionicons name="add" size={24} color={colors.text.primary} />
+                    <Plus size={24} color={colors.text.primary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -606,7 +627,7 @@ export default function WeightScreen() {
                     : colors.accent.primary,
                 }]}
               >
-                <Ionicons name="checkmark" size={22} color="#FFF" />
+                <Check size={22} color="#FFF" />
                 <Text style={styles.saveButtonText}>
                   Enregistrer
                 </Text>
@@ -639,7 +660,7 @@ export default function WeightScreen() {
               {/* Header */}
               <View style={styles.devicesHeader}>
                 <View style={[styles.devicesIcon, { backgroundColor: colors.accent.primary }]}>
-                  <Ionicons name="bluetooth" size={24} color="#FFF" />
+                  <Bluetooth size={24} color="#FFF" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
@@ -647,13 +668,13 @@ export default function WeightScreen() {
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setShowDevicesModal(false)}>
-                  <Ionicons name="close" size={24} color={colors.text.tertiary} />
+                  <X size={24} color={colors.text.tertiary} />
                 </TouchableOpacity>
               </View>
 
               {/* Info */}
               <View style={[styles.infoBox, { backgroundColor: colors.infoLight }]}>
-                <Ionicons name="information-circle" size={20} color={colors.info} />
+                <Info size={20} color={colors.info} />
                 <Text style={[styles.infoText, { color: colors.text.secondary }]}>
                   Connectez vos appareils pour synchroniser automatiquement votre poids.
                 </Text>
@@ -694,7 +715,7 @@ export default function WeightScreen() {
                           </Text>
                         </View>
                       ) : (
-                        <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                        <ChevronRight size={20} color={colors.text.tertiary} />
                       )}
                     </TouchableOpacity>
                   )

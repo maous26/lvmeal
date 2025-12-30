@@ -12,6 +12,7 @@
 
 import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import {
   Dumbbell,
   Zap,
@@ -173,9 +174,14 @@ export function ProgramsSection({
             style={styles.programCard}
             onPress={() => handlePress('sport')}
           >
-            <View style={[styles.iconContainer, styles.iconSport]}>
-              <Dumbbell size={20} color={colors.success} />
-            </View>
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconGradient}
+            >
+              <Dumbbell size={20} color="#FFFFFF" />
+            </LinearGradient>
 
             <Text style={styles.programTitle} numberOfLines={1}>Sport</Text>
 
@@ -214,9 +220,14 @@ export function ProgramsSection({
             style={styles.programCard}
             onPress={() => handlePress('metabolic')}
           >
-            <View style={[styles.iconContainer, styles.iconMetabolic]}>
-              <Zap size={20} color={colors.warning} />
-            </View>
+            <LinearGradient
+              colors={['#F59E0B', '#D97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconGradient}
+            >
+              <Zap size={20} color="#FFFFFF" />
+            </LinearGradient>
 
             <Text style={styles.programTitle} numberOfLines={1}>Métabo</Text>
 
@@ -259,9 +270,14 @@ export function ProgramsSection({
             ]}
             onPress={() => handlePress('wellness')}
           >
-            <View style={[styles.iconContainer, styles.iconWellness]}>
-              <Heart size={20} color={colors.secondary.primary} />
-            </View>
+            <LinearGradient
+              colors={['#8B5CF6', '#7C3AED']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.iconGradient}
+            >
+              <Heart size={20} color="#FFFFFF" />
+            </LinearGradient>
 
             <Text style={styles.programTitle} numberOfLines={1}>Bien-être</Text>
 
@@ -348,22 +364,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  iconSport: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-  },
-  iconMetabolic: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-  },
-  iconWellness: {
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
+    marginBottom: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   programTitle: {
     ...typography.caption,

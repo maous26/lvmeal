@@ -186,7 +186,6 @@ export default function HomeScreen() {
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
     dailyBalances,
-    weekStartDate,
     getCurrentDayIndex,
     getDaysUntilNewWeek,
     isFirstTimeSetup,
@@ -506,32 +505,97 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Hydration Widget */}
+        {/* Hydration Widget - Cool design */}
         <View style={[styles.hydrationSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
-          <View style={styles.hydrationHeader}>
-            <View style={styles.hydrationLeft}>
-              <View style={[styles.hydrationIconContainer, { backgroundColor: colors.info + '20' }]}>
-                <Droplets size={20} color={colors.info} />
+          <LinearGradient
+            colors={['rgba(56, 189, 248, 0.08)', 'rgba(14, 165, 233, 0.04)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.hydrationGradientBg}
+          >
+            <View style={styles.hydrationHeader}>
+              <View style={styles.hydrationLeft}>
+                <LinearGradient
+                  colors={['#38BDF8', '#0EA5E9']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.hydrationIconGradient}
+                >
+                  <Droplets size={22} color="#FFFFFF" />
+                </LinearGradient>
+                <View>
+                  <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Hydratation</Text>
+                  <Text style={[styles.hydrationSubtitle, { color: colors.text.tertiary }]}>
+                    Objectif : 2,5L par jour
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Hydratation</Text>
-                <Text style={[styles.hydrationSubtitle, { color: colors.text.tertiary }]}>
-                  {todayData.hydration} / 2500 ml
+            </View>
+
+            {/* Water glasses visualization */}
+            <View style={styles.hydrationGlasses}>
+              {[...Array(8)].map((_, index) => {
+                const glassAmount = 313 // 2500ml / 8 glasses
+                const filled = todayData.hydration >= glassAmount * (index + 1)
+                const partial = !filled && todayData.hydration > glassAmount * index
+                const partialPercent = partial
+                  ? ((todayData.hydration - glassAmount * index) / glassAmount) * 100
+                  : 0
+
+                return (
+                  <View key={index} style={styles.glassContainer}>
+                    <View style={[styles.glass, { backgroundColor: colors.border.light }]}>
+                      {filled ? (
+                        <LinearGradient
+                          colors={['#38BDF8', '#0EA5E9']}
+                          start={{ x: 0, y: 1 }}
+                          end={{ x: 0, y: 0 }}
+                          style={styles.glassFilled}
+                        />
+                      ) : partial ? (
+                        <LinearGradient
+                          colors={['#38BDF8', '#0EA5E9']}
+                          start={{ x: 0, y: 1 }}
+                          end={{ x: 0, y: 0 }}
+                          style={[styles.glassPartial, { height: `${partialPercent}%` }]}
+                        />
+                      ) : null}
+                    </View>
+                  </View>
+                )
+              })}
+            </View>
+
+            {/* Stats row */}
+            <View style={styles.hydrationStats}>
+              <View style={styles.hydrationStatItem}>
+                <Text style={[styles.hydrationStatValue, { color: colors.info }]}>
+                  {(todayData.hydration / 1000).toFixed(1)}L
+                </Text>
+                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
+                  consommé
+                </Text>
+              </View>
+              <View style={[styles.hydrationStatDivider, { backgroundColor: colors.border.light }]} />
+              <View style={styles.hydrationStatItem}>
+                <Text style={[styles.hydrationStatValue, { color: colors.text.primary }]}>
+                  {Math.max(0, (2500 - todayData.hydration) / 1000).toFixed(1)}L
+                </Text>
+                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
+                  restant
+                </Text>
+              </View>
+              <View style={[styles.hydrationStatDivider, { backgroundColor: colors.border.light }]} />
+              <View style={styles.hydrationStatItem}>
+                <Text style={[styles.hydrationStatValue, { color: hydrationProgress >= 100 ? colors.success : colors.text.primary }]}>
+                  {Math.round(hydrationProgress)}%
+                </Text>
+                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
+                  objectif
                 </Text>
               </View>
             </View>
-            <Text style={[styles.hydrationPercent, { color: colors.info }]}>
-              {Math.round(hydrationProgress)}%
-            </Text>
-          </View>
-          <View style={[styles.hydrationTrack, { backgroundColor: colors.border.light }]}>
-            <LinearGradient
-              colors={['#38BDF8', '#0EA5E9']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.hydrationFill, { width: `${hydrationProgress}%` }]}
-            />
-          </View>
+          </LinearGradient>
         </View>
 
         {/* Meals Section */}
@@ -693,7 +757,6 @@ export default function HomeScreen() {
             }))}
             currentDay={currentDayIndex}
             daysUntilNewWeek={getDaysUntilNewWeek()}
-            weekStartDate={weekStartDate || undefined}
             dailyTarget={goals.calories}
             isFirstTimeSetup={isFirstTimeSetup()}
             onConfirmStart={confirmStartDay}
@@ -942,43 +1005,89 @@ const styles = StyleSheet.create({
   // Hydration Section
   hydrationSection: {
     borderRadius: radius.xl,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  hydrationGradientBg: {
+    padding: spacing.lg,
+    borderRadius: radius.xl,
   },
   hydrationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   hydrationLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
-  hydrationIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.lg,
+  hydrationIconGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#0EA5E9',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   hydrationSubtitle: {
     ...typography.small,
     marginTop: 2,
   },
-  hydrationPercent: {
-    ...typography.h3,
+  hydrationGlasses: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xs,
+  },
+  glassContainer: {
+    alignItems: 'center',
+  },
+  glass: {
+    width: 28,
+    height: 36,
+    borderRadius: 6,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  glassFilled: {
+    width: '100%',
+    height: '100%',
+  },
+  glassPartial: {
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  hydrationStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  hydrationStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  hydrationStatValue: {
+    fontSize: 18,
     fontWeight: '700',
   },
-  hydrationTrack: {
-    height: 10,
-    borderRadius: radius.full,
-    overflow: 'hidden',
+  hydrationStatLabel: {
+    ...typography.caption,
+    marginTop: 2,
   },
-  hydrationFill: {
-    height: '100%',
-    borderRadius: radius.full,
+  hydrationStatDivider: {
+    width: 1,
+    height: 30,
   },
   // Meals Section
   mealsSection: {
