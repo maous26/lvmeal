@@ -182,7 +182,7 @@ export default function HomeScreen() {
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
   const { profile, nutritionGoals, weightHistory } = useUserStore()
-  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
+  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal, updateWaterIntake } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
     dailyBalances,
@@ -564,6 +564,42 @@ export default function HomeScreen() {
                   </View>
                 )
               })}
+            </View>
+
+            {/* Quick add buttons */}
+            <View style={styles.hydrationQuickAdd}>
+              <TouchableOpacity
+                style={[styles.hydrationQuickButton, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  updateWaterIntake(250)
+                }}
+                activeOpacity={0.7}
+              >
+                <Droplets size={16} color="#0EA5E9" />
+                <Text style={styles.hydrationQuickButtonText}>+250ml</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.hydrationQuickButton, { backgroundColor: 'rgba(56, 189, 248, 0.25)' }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  updateWaterIntake(500)
+                }}
+                activeOpacity={0.7}
+              >
+                <Droplets size={18} color="#0EA5E9" />
+                <Text style={[styles.hydrationQuickButtonText, { fontWeight: '700' }]}>+500ml</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.hydrationQuickButton, styles.hydrationRemoveButton]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  updateWaterIntake(-250)
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.hydrationRemoveButtonText}>-250ml</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Stats row */}
@@ -1088,6 +1124,33 @@ const styles = StyleSheet.create({
   hydrationStatDivider: {
     width: 1,
     height: 30,
+  },
+  hydrationQuickAdd: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  hydrationQuickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+  },
+  hydrationQuickButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0EA5E9',
+  },
+  hydrationRemoveButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  hydrationRemoveButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#EF4444',
   },
   // Meals Section
   mealsSection: {
