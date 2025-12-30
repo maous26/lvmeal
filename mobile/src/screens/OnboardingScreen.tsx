@@ -158,26 +158,36 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { enroll: enrollWellnessProgram } = useWellnessProgramStore()
 
   // Build steps dynamically based on user profile
-  // PRIORITY ORDER:
-  // 1. metabolic-program: FIRST if user has adaptive metabolism (after metabolism step)
-  // 2. sport-initiation: after metabolic-program IF user refused metabolic AND is sedentary
-  //    OR directly after activity if no metabolic issues
-  // 3. wellness-program: if user refused metabolic program
+  // ORDRE DE PRIORITÉ:
+  // 1. Diagnostic métabolisme d'ABORD (après cooking)
+  // 2. metabolic-program: si métabolisme adaptatif détecté (après metabolism)
+  // 3. sport-initiation: APRÈS métabolisme, si sédentaire ET PAS prise de masse ET (pas adaptatif OU refusé métabo)
+  // 4. wellness-program: proposé à TOUS sauf si métabo accepté (après sport si présent, sinon après metabolism/metabolic-program)
+  //
+  // EXCLUSIONS:
+  // - Sport et Métabo sont mutuellement exclusifs
+  // - Métabo et Bien-être sont mutuellement exclusifs
+  // - Pas de sport pour objectif prise de masse (muscle_gain)
   const steps = useMemo(() => {
     let dynamicSteps = [...baseSteps]
 
-    // 1. If adaptive metabolism detected, propose Metabolic Program FIRST (after metabolism step)
+    // 1. Si métabolisme adaptatif détecté, proposer Programme Métabo (après metabolism step)
     if (profile.metabolismProfile === 'adaptive') {
       const metabolismIndex = dynamicSteps.indexOf('metabolism') + 1
       dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'metabolic-program' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
     }
 
-    // 2. Insert sport-initiation for sedentary users
-    //    - If user has adaptive metabolism: only show if they REFUSED metabolic program
-    //    - If user doesn't have adaptive metabolism: show after activity step
-    if (profile.activityLevel === 'sedentary') {
+    // 2. Sport-initiation: seulement pour sédentaires, PAS pour prise de masse
+    //    Doit venir APRÈS le diagnostic métabolisme
+    //    - Si adaptatif: seulement si refusé métabo (les 2 sont exclusifs)
+    //    - Si standard: proposer après metabolism
+    const isSedentary = profile.activityLevel === 'sedentary'
+    const isMuscleGain = profile.goal === 'muscle_gain'
+    const canProposeSport = isSedentary && !isMuscleGain
+
+    if (canProposeSport) {
       if (profile.metabolismProfile === 'adaptive') {
-        // User has metabolism issues - only propose sport if they refused metabolic
+        // Utilisateur avec métabolisme adaptatif - proposer sport seulement s'il a REFUSÉ métabo
         if (profile.wantsMetabolicProgram === false) {
           const metabolicProgramIndex = dynamicSteps.indexOf('metabolic-program')
           if (metabolicProgramIndex !== -1) {
@@ -185,19 +195,32 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           }
         }
       } else {
-        // No metabolism issues - propose sport directly after activity
-        const activityIndex = dynamicSteps.indexOf('activity') + 1
-        dynamicSteps = [...dynamicSteps.slice(0, activityIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(activityIndex)]
+        // Métabolisme standard - proposer sport après metabolism step
+        const metabolismIndex = dynamicSteps.indexOf('metabolism') + 1
+        dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
       }
     }
 
-    // 3. Insert wellness-program if user refused metabolic program
-    //    Wellness comes after sport-initiation if present, otherwise after metabolic-program
-    if (profile.metabolismProfile === 'adaptive' && profile.wantsMetabolicProgram === false) {
-      // Find the right insertion point (after sport-initiation if present, otherwise after metabolic-program)
+    // 3. Wellness-program: proposé à TOUS sauf si métabo accepté
+    //    - Si adaptatif et accepté métabo: NE PAS proposer (exclusif)
+    //    - Si adaptatif et refusé métabo: proposer après sport (si présent) ou après metabolic-program
+    //    - Si standard: proposer après sport (si présent) ou après metabolism
+    const shouldProposeWellness = profile.metabolismProfile !== 'adaptive' || profile.wantsMetabolicProgram === false
+
+    if (shouldProposeWellness) {
       const sportIndex = dynamicSteps.indexOf('sport-initiation')
       const metabolicIndex = dynamicSteps.indexOf('metabolic-program')
-      const insertAfter = sportIndex !== -1 ? sportIndex : metabolicIndex
+      const metabolismIndex = dynamicSteps.indexOf('metabolism')
+
+      // Trouver le bon point d'insertion (après sport > après metabolic-program > après metabolism)
+      let insertAfter = -1
+      if (sportIndex !== -1) {
+        insertAfter = sportIndex
+      } else if (metabolicIndex !== -1) {
+        insertAfter = metabolicIndex
+      } else if (metabolismIndex !== -1) {
+        insertAfter = metabolismIndex
+      }
 
       if (insertAfter !== -1) {
         dynamicSteps = [...dynamicSteps.slice(0, insertAfter + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(insertAfter + 1)]
@@ -205,7 +228,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
 
     return dynamicSteps
-  }, [profile.activityLevel, profile.metabolismProfile, profile.wantsMetabolicProgram])
+  }, [profile.activityLevel, profile.goal, profile.metabolismProfile, profile.wantsMetabolicProgram])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]

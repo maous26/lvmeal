@@ -90,35 +90,37 @@ export function ProgramsSection({
 
   const isSedentary = profile?.activityLevel === 'sedentary'
   const isAdaptive = profile?.metabolismProfile === 'adaptive'
+  const isMuscleGain = profile?.goal === 'muscle_gain'
 
   // Metabolic program is completed when in full_program phase
   const isMetabolicCompleted = isMetabolicEnrolled && metabolicPhase === 'full_program'
 
   // ============================================================================
   // PROGRAM EXCLUSION RULES:
-  // - Sport: blocks Metabolic (not Wellness)
+  // - Sport: blocks Metabolic (not Wellness), NOT for muscle_gain
   // - Metabolic: blocks Sport AND Wellness
   // - Wellness: blocks Metabolic (not Sport)
   // ============================================================================
 
   // Show Sport if:
-  // - User is sedentary AND
+  // - User is NOT pursuing muscle gain AND
   // - User is NOT enrolled in Metabolic program (unless completed)
-  const showSport = isSedentary && (!isMetabolicEnrolled || isMetabolicCompleted)
+  // - OR already enrolled in Sport
+  const showSport = !isMuscleGain && (!isMetabolicEnrolled || isMetabolicCompleted)
 
   // Show Metabolic if:
-  // - User has adaptive metabolism AND
   // - User is NOT enrolled in Sport program AND
   // - User is NOT enrolled in Wellness program
-  const showMetabolic = isAdaptive && !isSportEnrolled && !isWellnessEnrolled
+  // - OR already enrolled in Metabolic
+  const showMetabolic = (!isSportEnrolled && !isWellnessEnrolled) || isMetabolicEnrolled
 
   // Show Wellness if:
   // - User is NOT enrolled in Metabolic program (unless completed)
   // - OR already enrolled in Wellness
   const showWellness = shouldShowProgram(isMetabolicEnrolled, isMetabolicCompleted) || isWellnessEnrolled
 
-  // Can user JOIN Sport? (blocked by active Metabolic)
-  const canJoinSport = !isMetabolicEnrolled || isMetabolicCompleted
+  // Can user JOIN Sport? (blocked by active Metabolic, not for muscle_gain)
+  const canJoinSport = !isMuscleGain && (!isMetabolicEnrolled || isMetabolicCompleted)
 
   // Can user JOIN Metabolic? (blocked by Sport OR Wellness)
   const canJoinMetabolic = !isSportEnrolled && !isWellnessEnrolled
@@ -135,8 +137,7 @@ export function ProgramsSection({
 
   // Check if at least one program should be displayed
   // Either user qualifies for it OR is already enrolled
-  // Note: Metabolic only counts if user is adaptive
-  const hasRelevantPrograms = showSport || isSportEnrolled || (isAdaptive && (showMetabolic || isMetabolicEnrolled)) || showWellness || isWellnessEnrolled
+  const hasRelevantPrograms = showSport || isSportEnrolled || showMetabolic || isMetabolicEnrolled || showWellness || isWellnessEnrolled
 
   // If no relevant programs, don't show the section
   if (!hasRelevantPrograms) {
@@ -166,7 +167,7 @@ export function ProgramsSection({
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Mes Programmes</Text>
       <View style={styles.cardsRow}>
-        {/* Sport Initiation - For sedentary users (blocked by Metabolic) */}
+        {/* Sport Initiation - NOT for muscle_gain, blocked by Metabolic */}
         {(showSport || isSportEnrolled) && (
           <Pressable
             style={styles.programCard}
@@ -207,8 +208,8 @@ export function ProgramsSection({
           </Pressable>
         )}
 
-        {/* Metabolic Boost - For adaptive metabolism ONLY (blocked by Sport AND Wellness) */}
-        {isAdaptive && (showMetabolic || isMetabolicEnrolled) && (
+        {/* Metabolic Boost - Blocked by Sport AND Wellness */}
+        {(showMetabolic || isMetabolicEnrolled) && (
           <Pressable
             style={styles.programCard}
             onPress={() => handlePress('metabolic')}

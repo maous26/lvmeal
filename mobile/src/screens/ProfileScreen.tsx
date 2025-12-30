@@ -103,16 +103,30 @@ export default function ProfileScreen() {
   } = useWellnessProgramStore()
 
   // Profile conditions
-  const isSedentary = profile?.activityLevel === 'sedentary'
-  const isAdaptive = profile?.metabolismProfile === 'adaptive'
+  const isMuscleGain = profile?.goal === 'muscle_gain'
 
-  // Program exclusion rules:
-  // - Sport: blocked by active Metabolic
-  // - Metabolic: blocked by Sport OR Wellness (only for adaptive users)
-  // - Wellness: blocked by active Metabolic (available to all)
-  const canShowSport = isSedentary && (!isMetabolicEnrolled || isSportInitiationEnrolled)
-  const canShowMetabolic = isAdaptive && (!isSportInitiationEnrolled && !isWellnessEnrolled || isMetabolicEnrolled)
-  const canShowWellness = !isMetabolicEnrolled || isWellnessEnrolled
+  // Program exclusion rules - ALL programs always visible but some may be disabled
+  // - Sport: disabled if muscle_gain OR if Metabolic is active
+  // - Metabolic: disabled if Sport OR Wellness is active (exclusive program)
+  // - Wellness: disabled if Metabolic is active
+  const canToggleSport = !isMuscleGain && !isMetabolicEnrolled
+  const canToggleMetabolic = !isSportInitiationEnrolled && !isWellnessEnrolled
+  const canToggleWellness = !isMetabolicEnrolled
+
+  // Blocking reasons for UI feedback
+  const sportBlockedReason = isMuscleGain
+    ? 'Non disponible pour la prise de masse'
+    : isMetabolicEnrolled
+      ? 'Désactivez le programme Métabolisme d\'abord'
+      : null
+  const metabolicBlockedReason = isSportInitiationEnrolled
+    ? 'Désactivez le programme Sport d\'abord'
+    : isWellnessEnrolled
+      ? 'Désactivez le programme Bien-être d\'abord'
+      : null
+  const wellnessBlockedReason = isMetabolicEnrolled
+    ? 'Désactivez le programme Métabolisme d\'abord'
+    : null
 
   const userName = profile?.firstName || profile?.name || 'Utilisateur'
   const userInitials = userName
@@ -431,92 +445,95 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        {/* Programs */}
+        {/* Programs - Always show all 3, disable switches when blocked */}
         <Text style={styles.sectionTitle}>Programmes</Text>
         <Card padding="none">
-          {/* Sport - visible si sédentaire ET pas inscrit au Métabo */}
-          {canShowSport && (
-            <TouchableOpacity
-              style={[styles.programItem, styles.programItemBorder]}
-              onPress={handleToggleSportInitiation}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
-                <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
-              </View>
-              <View style={styles.programInfo}>
-                <Text style={styles.programLabel}>Initiation Sportive</Text>
-                <Text style={styles.programDescription}>
-                  {isSportInitiationEnrolled
-                    ? `Phase ${sportPhase} - Semaine ${sportWeek}`
-                    : 'Programme pour reprendre le sport'}
-                </Text>
-              </View>
-              <Switch
-                value={isSportInitiationEnrolled}
-                onValueChange={handleToggleSportInitiation}
-                trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
-                thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
-                ios_backgroundColor={colors.bg.tertiary}
-              />
-            </TouchableOpacity>
-          )}
+          {/* Sport - disabled if muscle_gain or Metabolic active */}
+          <TouchableOpacity
+            style={[styles.programItem, styles.programItemBorder, !canToggleSport && !isSportInitiationEnrolled && styles.programItemDisabled]}
+            onPress={canToggleSport || isSportInitiationEnrolled ? handleToggleSportInitiation : undefined}
+            activeOpacity={canToggleSport || isSportInitiationEnrolled ? 0.7 : 1}
+          >
+            <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
+              <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
+            </View>
+            <View style={styles.programInfo}>
+              <Text style={[styles.programLabel, !canToggleSport && !isSportInitiationEnrolled && styles.programLabelDisabled]}>
+                Initiation Sportive
+              </Text>
+              <Text style={styles.programDescription}>
+                {isSportInitiationEnrolled
+                  ? `Phase ${sportPhase} - Semaine ${sportWeek}`
+                  : sportBlockedReason || 'Programme pour reprendre le sport'}
+              </Text>
+            </View>
+            <Switch
+              value={isSportInitiationEnrolled}
+              onValueChange={handleToggleSportInitiation}
+              disabled={!canToggleSport && !isSportInitiationEnrolled}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
+              thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </TouchableOpacity>
 
-          {/* Métabolisme - visible si adaptatif ET pas inscrit au Sport/Wellness */}
-          {canShowMetabolic && (
-            <TouchableOpacity
-              style={[styles.programItem, styles.programItemBorder]}
-              onPress={handleToggleMetabolic}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.programIcon, styles.programIconMetabolic, isMetabolicEnrolled && styles.programIconMetabolicActive]}>
-                <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.warning} />
-              </View>
-              <View style={styles.programInfo}>
-                <Text style={styles.programLabel}>Métabolisme</Text>
-                <Text style={styles.programDescription}>
-                  {isMetabolicEnrolled
-                    ? `Phase ${metabolicPhase} - Semaine ${metabolicWeek}`
-                    : 'Relancer ton métabolisme'}
-                </Text>
-              </View>
-              <Switch
-                value={isMetabolicEnrolled}
-                onValueChange={handleToggleMetabolic}
-                trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
-                thumbColor={isMetabolicEnrolled ? colors.warning : colors.text.tertiary}
-                ios_backgroundColor={colors.bg.tertiary}
-              />
-            </TouchableOpacity>
-          )}
+          {/* Métabolisme - disabled if Sport or Wellness active */}
+          <TouchableOpacity
+            style={[styles.programItem, styles.programItemBorder, !canToggleMetabolic && !isMetabolicEnrolled && styles.programItemDisabled]}
+            onPress={canToggleMetabolic || isMetabolicEnrolled ? handleToggleMetabolic : undefined}
+            activeOpacity={canToggleMetabolic || isMetabolicEnrolled ? 0.7 : 1}
+          >
+            <View style={[styles.programIcon, styles.programIconMetabolic, isMetabolicEnrolled && styles.programIconMetabolicActive]}>
+              <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.warning} />
+            </View>
+            <View style={styles.programInfo}>
+              <Text style={[styles.programLabel, !canToggleMetabolic && !isMetabolicEnrolled && styles.programLabelDisabled]}>
+                Métabolisme
+              </Text>
+              <Text style={styles.programDescription}>
+                {isMetabolicEnrolled
+                  ? `Phase ${metabolicPhase} - Semaine ${metabolicWeek}`
+                  : metabolicBlockedReason || 'Relancer ton métabolisme'}
+              </Text>
+            </View>
+            <Switch
+              value={isMetabolicEnrolled}
+              onValueChange={handleToggleMetabolic}
+              disabled={!canToggleMetabolic && !isMetabolicEnrolled}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
+              thumbColor={isMetabolicEnrolled ? colors.warning : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </TouchableOpacity>
 
-          {/* Bien-être - visible si pas inscrit au Métabo */}
-          {canShowWellness && (
-            <TouchableOpacity
-              style={styles.programItem}
-              onPress={handleToggleWellness}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.programIcon, styles.programIconWellness, isWellnessEnrolled && styles.programIconWellnessActive]}>
-                <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.secondary.primary} />
-              </View>
-              <View style={styles.programInfo}>
-                <Text style={styles.programLabel}>Bien-être</Text>
-                <Text style={styles.programDescription}>
-                  {isWellnessEnrolled
-                    ? `Phase ${wellnessPhase} - Semaine ${wellnessWeek}`
-                    : 'Sommeil, stress et sérénité'}
-                </Text>
-              </View>
-              <Switch
-                value={isWellnessEnrolled}
-                onValueChange={handleToggleWellness}
-                trackColor={{ false: colors.bg.tertiary, true: 'rgba(139, 92, 246, 0.3)' }}
-                thumbColor={isWellnessEnrolled ? colors.secondary.primary : colors.text.tertiary}
-                ios_backgroundColor={colors.bg.tertiary}
-              />
-            </TouchableOpacity>
-          )}
+          {/* Bien-être - disabled if Metabolic active */}
+          <TouchableOpacity
+            style={[styles.programItem, !canToggleWellness && !isWellnessEnrolled && styles.programItemDisabled]}
+            onPress={canToggleWellness || isWellnessEnrolled ? handleToggleWellness : undefined}
+            activeOpacity={canToggleWellness || isWellnessEnrolled ? 0.7 : 1}
+          >
+            <View style={[styles.programIcon, styles.programIconWellness, isWellnessEnrolled && styles.programIconWellnessActive]}>
+              <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.secondary.primary} />
+            </View>
+            <View style={styles.programInfo}>
+              <Text style={[styles.programLabel, !canToggleWellness && !isWellnessEnrolled && styles.programLabelDisabled]}>
+                Bien-être
+              </Text>
+              <Text style={styles.programDescription}>
+                {isWellnessEnrolled
+                  ? `Phase ${wellnessPhase} - Semaine ${wellnessWeek}`
+                  : wellnessBlockedReason || 'Sommeil, stress et sérénité'}
+              </Text>
+            </View>
+            <Switch
+              value={isWellnessEnrolled}
+              onValueChange={handleToggleWellness}
+              disabled={!canToggleWellness && !isWellnessEnrolled}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(139, 92, 246, 0.3)' }}
+              thumbColor={isWellnessEnrolled ? colors.secondary.primary : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </TouchableOpacity>
         </Card>
 
         {/* Settings */}
@@ -812,9 +829,15 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.text.primary,
   },
+  programLabelDisabled: {
+    color: colors.text.muted,
+  },
   programDescription: {
     ...typography.small,
     color: colors.text.tertiary,
     marginTop: 2,
+  },
+  programItemDisabled: {
+    opacity: 0.6,
   },
 })
