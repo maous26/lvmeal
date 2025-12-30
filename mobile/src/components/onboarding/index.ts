@@ -14,3 +14,7 @@ export { StepSportInitiation } from './StepSportInitiation'
 export { StepMetabolicProgram } from './StepMetabolicProgram'
 export { StepWellnessProgram } from './StepWellnessProgram'
 export { StepAnalysis } from './StepAnalysis'
+
+// Progressive Unlock Components
+export { default as FeatureDiscoveryModal } from './FeatureDiscoveryModal'
+export { default as FeatureLockOverlay } from './FeatureLockOverlay'

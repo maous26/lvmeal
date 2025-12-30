@@ -27,6 +27,7 @@ import {
   Trophy,
   Sparkles,
   Bell,
+  Scale,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
@@ -48,6 +49,8 @@ import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
+import { useOnboardingStore, FEATURE_DISCOVERY_MESSAGES } from '../stores/onboarding-store'
+import FeatureDiscoveryModal from '../components/onboarding/FeatureDiscoveryModal'
 import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/utils'
 import type { MealType } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
@@ -178,7 +181,7 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
-  const { profile, nutritionGoals } = useUserStore()
+  const { profile, nutritionGoals, weightHistory } = useUserStore()
   const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
@@ -191,13 +194,67 @@ export default function HomeScreen() {
     initializeWeek,
   } = useCaloricBankStore()
 
+  const {
+    getNewlyUnlockedFeature,
+    markFeatureDiscovered,
+    getDaysSinceSignup,
+    isTrialExpired,
+    hasSeenPaywall,
+  } = useOnboardingStore()
+
   const [isPlanExpanded, setIsPlanExpanded] = useState(false)
   const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set())
+  const [discoveryModalVisible, setDiscoveryModalVisible] = useState(false)
+  const [currentDiscoveryFeature, setCurrentDiscoveryFeature] = useState<{
+    feature: string
+    title: string
+    message: string
+    icon: string
+    day: number
+  } | null>(null)
 
   useEffect(() => {
     checkAndUpdateStreak()
     initializeWeek()
   }, [checkAndUpdateStreak, initializeWeek])
+
+  // Check for newly unlocked features to show discovery modal
+  useEffect(() => {
+    const newFeature = getNewlyUnlockedFeature()
+    if (newFeature) {
+      const discovery = FEATURE_DISCOVERY_MESSAGES[newFeature]
+      if (discovery) {
+        setCurrentDiscoveryFeature({
+          feature: newFeature,
+          title: discovery.title,
+          message: discovery.message,
+          icon: discovery.icon,
+          day: getDaysSinceSignup(),
+        })
+        setDiscoveryModalVisible(true)
+      }
+    }
+  }, [getNewlyUnlockedFeature, getDaysSinceSignup])
+
+  // Check if should show paywall (trial expired and not seen)
+  useEffect(() => {
+    if (isTrialExpired() && !hasSeenPaywall) {
+      // Navigate to paywall after a short delay
+      const timer = setTimeout(() => {
+        // @ts-ignore
+        navigation.navigate('Paywall')
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [isTrialExpired, hasSeenPaywall, navigation])
+
+  const handleDiscoveryDismiss = () => {
+    if (currentDiscoveryFeature) {
+      markFeatureDiscovered(currentDiscoveryFeature.feature as any)
+    }
+    setDiscoveryModalVisible(false)
+    setCurrentDiscoveryFeature(null)
+  }
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -288,6 +345,12 @@ export default function HomeScreen() {
     navigation.navigate('Calendar')
   }
 
+  const handleNavigateToWeight = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // @ts-ignore
+    navigation.navigate('WeightHistory')
+  }
+
   const togglePlanExpanded = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
@@ -296,6 +359,16 @@ export default function HomeScreen() {
 
   const currentDayIndex = getCurrentDayIndex()
   const hydrationProgress = Math.min((todayData.hydration / 2500) * 100, 100)
+
+  // Weight tracking
+  const sortedWeights = [...weightHistory].sort((a, b) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+  const currentWeight = sortedWeights[0]?.weight || profile?.weight || null
+  const previousWeight = sortedWeights[1]?.weight
+  const weightTrend = currentWeight && previousWeight
+    ? (currentWeight - previousWeight).toFixed(1)
+    : null
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -336,26 +409,18 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Stats Row */}
+        {/* Stats Row - 2 cards only */}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
             <Flame size={18} color={colors.secondary.primary} />
             <Text style={[styles.statValue, { color: colors.text.primary }]}>{currentStreak}</Text>
-            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Streak</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Série</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
             <Trophy size={18} color={colors.warning} />
             <Text style={[styles.statValue, { color: colors.text.primary }]}>Niv. {currentLevel}</Text>
             <Text style={[styles.statLabel, { color: colors.text.muted }]}>Niveau</Text>
           </View>
-          <TouchableOpacity
-            style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}
-            onPress={handleNavigateToWellness}
-          >
-            <Droplets size={18} color={colors.info} />
-            <Text style={[styles.statValue, { color: colors.text.primary }]}>{Math.round(hydrationProgress)}%</Text>
-            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Hydratation</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Main Calories Widget */}
@@ -439,6 +504,34 @@ export default function HomeScreen() {
             gradientColors={['#C084FC', '#A855F7']}
             icon={<Text style={{ fontSize: 14 }}>🥑</Text>}
           />
+        </View>
+
+        {/* Hydration Widget */}
+        <View style={[styles.hydrationSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          <View style={styles.hydrationHeader}>
+            <View style={styles.hydrationLeft}>
+              <View style={[styles.hydrationIconContainer, { backgroundColor: colors.info + '20' }]}>
+                <Droplets size={20} color={colors.info} />
+              </View>
+              <View>
+                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Hydratation</Text>
+                <Text style={[styles.hydrationSubtitle, { color: colors.text.tertiary }]}>
+                  {todayData.hydration} / 2500 ml
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.hydrationPercent, { color: colors.info }]}>
+              {Math.round(hydrationProgress)}%
+            </Text>
+          </View>
+          <View style={[styles.hydrationTrack, { backgroundColor: colors.border.light }]}>
+            <LinearGradient
+              colors={['#38BDF8', '#0EA5E9']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.hydrationFill, { width: `${hydrationProgress}%` }]}
+            />
+          </View>
         </View>
 
         {/* Meals Section */}
@@ -607,9 +700,51 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Weight Widget */}
+        <TouchableOpacity
+          style={[styles.weightSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}
+          onPress={handleNavigateToWeight}
+          activeOpacity={0.7}
+        >
+          <View style={styles.weightLeft}>
+            <View style={[styles.weightIconContainer, { backgroundColor: colors.accent.light }]}>
+              <Scale size={22} color={colors.accent.primary} />
+            </View>
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Suivi du poids</Text>
+              <Text style={[styles.weightSubtitle, { color: colors.text.tertiary }]}>
+                {currentWeight ? `${currentWeight} kg` : 'Non renseigné'}
+                {weightTrend && (
+                  <Text style={{ color: Number(weightTrend) > 0 ? colors.warning : colors.success }}>
+                    {' '}({Number(weightTrend) > 0 ? '+' : ''}{weightTrend} kg)
+                  </Text>
+                )}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.weightRight}>
+            <Text style={[styles.weightCta, { color: colors.accent.primary }]}>
+              Enregistrer
+            </Text>
+            <ChevronRight size={18} color={colors.accent.primary} />
+          </View>
+        </TouchableOpacity>
+
         {/* Bottom Spacer */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Feature Discovery Modal */}
+      {currentDiscoveryFeature && (
+        <FeatureDiscoveryModal
+          visible={discoveryModalVisible}
+          icon={currentDiscoveryFeature.icon}
+          title={currentDiscoveryFeature.title}
+          message={currentDiscoveryFeature.message}
+          dayNumber={currentDiscoveryFeature.day}
+          onClose={handleDiscoveryDismiss}
+        />
+      )}
     </SafeAreaView>
   )
 }
@@ -804,6 +939,47 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radius.full,
   },
+  // Hydration Section
+  hydrationSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  hydrationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  hydrationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  hydrationIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hydrationSubtitle: {
+    ...typography.small,
+    marginTop: 2,
+  },
+  hydrationPercent: {
+    ...typography.h3,
+    fontWeight: '700',
+  },
+  hydrationTrack: {
+    height: 10,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  hydrationFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
   // Meals Section
   mealsSection: {
     borderRadius: radius.xl,
@@ -978,6 +1154,40 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
+  },
+  // Weight Section
+  weightSection: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  weightLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  weightIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weightSubtitle: {
+    ...typography.small,
+    marginTop: 2,
+  },
+  weightRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  weightCta: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
   },
   // Bottom
   bottomSpacer: {

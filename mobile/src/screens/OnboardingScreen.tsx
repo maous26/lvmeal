@@ -19,6 +19,7 @@ import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { useUserStore } from '../stores/user-store'
+import { useOnboardingStore } from '../stores/onboarding-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
@@ -194,6 +195,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   // User store for persistent profile storage
   const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
+  const { setSignupDate } = useOnboardingStore()
   const { enroll: enrollSportInitiation } = useSportInitiationStore()
 
   // Program stores for enrollment
@@ -369,6 +371,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       // Save to Zustand store (persisted via AsyncStorage)
       setStoreProfile(finalProfile)
       setOnboarded(true)
+
+      // Initialize the 7-day trial (signup date for progressive unlock)
+      setSignupDate()
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500))

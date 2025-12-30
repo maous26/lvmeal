@@ -12,6 +12,7 @@ import WellnessProgramScreen from '../screens/WellnessProgramScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import WeightScreen from '../screens/WeightScreen'
+import PaywallScreen from '../screens/PaywallScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
@@ -51,6 +52,7 @@ export type RootStackParamList = {
   WellnessProgram: undefined
   EditProfile: undefined
   Calendar: undefined
+  Paywall: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -142,6 +144,14 @@ export default function RootNavigator() {
             component={WeightScreen}
             options={{
               animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="Paywall"
+            component={PaywallScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              presentation: 'modal',
             }}
           />
         </>
