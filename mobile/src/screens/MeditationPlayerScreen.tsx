@@ -207,20 +207,20 @@ export default function MeditationPlayerScreen() {
             <View style={styles.cacheAlert}>
               <Zap size={20} color="#FBBF24" />
               <View style={styles.cacheAlertContent}>
-                <Text style={styles.cacheAlertTitle}>Première écoute</Text>
+                <Text style={styles.cacheAlertTitle}>Premiere ecoute</Text>
                 <Text style={styles.cacheAlertText}>
-                  Génération de l'audio IA requise...
+                  Telechargement requis (une seule fois)
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.generateButton}
                 onPress={handleGenerate}
-                disabled={isGenerating || currentStatus === 'generating'}
+                disabled={isGenerating || currentStatus === 'downloading'}
               >
-                {isGenerating || currentStatus === 'generating' ? (
+                {isGenerating || currentStatus === 'downloading' ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.generateButtonText}>GÉNÉRER</Text>
+                  <Text style={styles.generateButtonText}>CHARGER</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -270,9 +270,9 @@ export default function MeditationPlayerScreen() {
                 (!isCached && !isGenerating) && styles.playButtonDisabled,
               ]}
               onPress={handlePlayPause}
-              disabled={!isCached && !isGenerating && currentStatus !== 'generating'}
+              disabled={!isCached && !isGenerating && currentStatus !== 'downloading'}
             >
-              {currentStatus === 'generating' ? (
+              {currentStatus === 'downloading' ? (
                 <ActivityIndicator size="large" color="#312E81" />
               ) : isPlaying ? (
                 <Pause size={36} color="#312E81" fill="#312E81" />

@@ -309,3 +309,128 @@ export async function getKnowledgeBaseStats(): Promise<{
     return null
   }
 }
+
+// ============================================================================
+// STORAGE - Meditation Audio Files
+// ============================================================================
+
+const MEDITATION_BUCKET = 'meditations'
+
+/**
+ * Get public URL for a meditation audio file
+ */
+export function getMeditationAudioUrl(sessionId: string): string | null {
+  const client = getSupabaseClient()
+  if (!client) return null
+
+  const { data } = client.storage
+    .from(MEDITATION_BUCKET)
+    .getPublicUrl(`${sessionId}.wav`)
+
+  return data.publicUrl
+}
+
+/**
+ * Check if meditation audio exists in storage
+ */
+export async function checkMeditationAudioExists(sessionId: string): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  try {
+    const { data, error } = await client.storage
+      .from(MEDITATION_BUCKET)
+      .list('', {
+        search: `${sessionId}.wav`,
+      })
+
+    if (error) {
+      console.error('Error checking meditation audio:', error)
+      return false
+    }
+
+    return data?.some(file => file.name === `${sessionId}.wav`) || false
+  } catch (error) {
+    console.error('Error checking meditation audio:', error)
+    return false
+  }
+}
+
+/**
+ * Download meditation audio as blob
+ */
+export async function downloadMeditationAudio(sessionId: string): Promise<Blob | null> {
+  const client = getSupabaseClient()
+  if (!client) return null
+
+  try {
+    const { data, error } = await client.storage
+      .from(MEDITATION_BUCKET)
+      .download(`${sessionId}.wav`)
+
+    if (error) {
+      console.error('Error downloading meditation audio:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error downloading meditation audio:', error)
+    return null
+  }
+}
+
+/**
+ * Upload meditation audio (for pre-generation script)
+ */
+export async function uploadMeditationAudio(
+  sessionId: string,
+  audioData: Blob | ArrayBuffer,
+  contentType: string = 'audio/wav'
+): Promise<string | null> {
+  const client = getSupabaseClient()
+  if (!client) return null
+
+  try {
+    const { error } = await client.storage
+      .from(MEDITATION_BUCKET)
+      .upload(`${sessionId}.wav`, audioData, {
+        contentType,
+        upsert: true,
+      })
+
+    if (error) {
+      console.error('Error uploading meditation audio:', error)
+      return null
+    }
+
+    return getMeditationAudioUrl(sessionId)
+  } catch (error) {
+    console.error('Error uploading meditation audio:', error)
+    return null
+  }
+}
+
+/**
+ * List all meditation audio files
+ */
+export async function listMeditationAudios(): Promise<string[]> {
+  const client = getSupabaseClient()
+  if (!client) return []
+
+  try {
+    const { data, error } = await client.storage
+      .from(MEDITATION_BUCKET)
+      .list('')
+
+    if (error) {
+      console.error('Error listing meditation audios:', error)
+      return []
+    }
+
+    return data?.map(file => file.name.replace('.wav', '')) || []
+  } catch (error) {
+    console.error('Error listing meditation audios:', error)
+    return []
+  }
+}

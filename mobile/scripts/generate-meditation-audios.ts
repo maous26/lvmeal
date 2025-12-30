@@ -1,35 +1,35 @@
+#!/usr/bin/env npx ts-node
 /**
- * Meditation TTS Service - Méditations guidées audio
+ * Script de pré-génération des audios de méditation
  *
- * Télécharge les audios pré-générés depuis Supabase Storage
- * et les cache localement pour une écoute offline.
+ * Ce script génère les 8 audios de méditation via Gemini TTS
+ * et les upload sur Supabase Storage.
+ *
+ * Usage:
+ *   npx ts-node scripts/generate-meditation-audios.ts
+ *
+ * Pré-requis:
+ *   - GOOGLE_AI_API_KEY (ou EXPO_PUBLIC_GEMINI_API_KEY)
+ *   - EXPO_PUBLIC_SUPABASE_URL
+ *   - SUPABASE_SERVICE_ROLE_KEY (pour upload)
  */
 
-import { Paths, File, Directory } from 'expo-file-system'
-import { Audio, type AVPlaybackStatus } from 'expo-av'
-import { getMeditationAudioUrl, isSupabaseConfigured } from './supabase-client'
+import { createClient } from '@supabase/supabase-js'
+import * as dotenv from 'dotenv'
+import * as fs from 'fs'
+import * as path from 'path'
 
-// Types
-export interface MeditationSession {
-  id: string
-  title: string
-  week: number
-  script: string
-  durationMinutes: number
-  phase: 'foundations' | 'awareness' | 'balance' | 'harmony'
-}
+// Charger les variables d'environnement
+dotenv.config({ path: path.join(__dirname, '../.env') })
 
-export interface MeditationAudioCache {
-  sessionId: string
-  localUri: string
-  generatedAt: string
-  durationSeconds: number
-}
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || ''
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || process.env.EXPO_PUBLIC_GEMINI_API_KEY || ''
 
-export type MeditationStatus = 'idle' | 'generating' | 'downloading' | 'ready' | 'playing' | 'paused' | 'error'
+const MEDITATION_BUCKET = 'meditations'
 
-// Programme de méditations sur 8 semaines
-export const MEDITATION_SESSIONS: MeditationSession[] = [
+// Sessions de méditation (copie de meditation-tts-service.ts)
+const MEDITATION_SESSIONS = [
   {
     id: 'wk1_body_scan',
     title: 'Scan Corporel',
@@ -403,221 +403,198 @@ Namaste.`,
   },
 ]
 
-// Répertoire de cache pour les audios
-const MEDITATION_CACHE_DIR = 'meditation_audio'
+// Fonction pour convertir PCM en WAV
+function pcmToWav(pcmBase64: string, sampleRate: number): Buffer {
+  const binaryString = Buffer.from(pcmBase64, 'base64')
+  const dataLength = binaryString.length
 
-class MeditationTTSService {
-  private sound: Audio.Sound | null = null
-  private currentSessionId: string | null = null
-  private cacheDir: Directory | null = null
+  // Créer le header WAV
+  const wavHeaderLength = 44
+  const totalLength = wavHeaderLength + dataLength
 
-  /**
-   * Initialise le répertoire de cache
-   */
-  async initializeCache(): Promise<void> {
-    this.cacheDir = new Directory(Paths.cache, MEDITATION_CACHE_DIR)
-    if (!this.cacheDir.exists) {
-      this.cacheDir.create()
-    }
+  const buffer = Buffer.alloc(totalLength)
+
+  // RIFF header
+  buffer.write('RIFF', 0)
+  buffer.writeUInt32LE(totalLength - 8, 4)
+  buffer.write('WAVE', 8)
+
+  // fmt chunk
+  buffer.write('fmt ', 12)
+  buffer.writeUInt32LE(16, 16) // chunk size
+  buffer.writeUInt16LE(1, 20) // audio format (PCM)
+  buffer.writeUInt16LE(1, 22) // num channels
+  buffer.writeUInt32LE(sampleRate, 24) // sample rate
+  buffer.writeUInt32LE(sampleRate * 2, 28) // byte rate
+  buffer.writeUInt16LE(2, 32) // block align
+  buffer.writeUInt16LE(16, 34) // bits per sample
+
+  // data chunk
+  buffer.write('data', 36)
+  buffer.writeUInt32LE(dataLength, 40)
+
+  // Copier les données PCM
+  binaryString.copy(buffer, wavHeaderLength)
+
+  return buffer
+}
+
+// Fonction pour générer l'audio via Gemini TTS
+async function generateAudio(script: string): Promise<Buffer> {
+  const payload = {
+    contents: [
+      {
+        parts: [
+          {
+            text: `Voix apaisante et calme pour méditation guidée. Parle lentement avec des pauses naturelles entre les phrases. Ton doux et rassurant. Texte : ${script}`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['AUDIO'],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: 'Kore',
+          },
+        },
+      },
+    },
   }
 
-  /**
-   * Vérifie si un audio est en cache
-   */
-  async isAudioCached(sessionId: string): Promise<boolean> {
-    if (!this.cacheDir) await this.initializeCache()
-    const file = new File(this.cacheDir!, `${sessionId}.wav`)
-    return file.exists
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Erreur API Gemini: ${response.status} - ${errorText}`)
   }
 
-  /**
-   * Récupère le chemin local d'un audio caché
-   */
-  getLocalAudioPath(sessionId: string): string {
-    if (!this.cacheDir) {
-      this.cacheDir = new Directory(Paths.cache, MEDITATION_CACHE_DIR)
-    }
-    return new File(this.cacheDir, `${sessionId}.wav`).uri
-  }
+  const result = await response.json()
+  const audioBase64 = result.candidates[0].content.parts[0].inlineData.data
 
-  /**
-   * Télécharge l'audio depuis Supabase Storage et le cache localement
-   */
-  async downloadAndCacheAudio(
-    session: MeditationSession,
-    onProgress?: (status: MeditationStatus) => void
-  ): Promise<string> {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Supabase non configuré')
-    }
+  return pcmToWav(audioBase64, 24000)
+}
 
-    onProgress?.('downloading')
-
-    try {
-      // Récupérer l'URL publique de l'audio
-      const audioUrl = getMeditationAudioUrl(session.id)
-      if (!audioUrl) {
-        throw new Error('URL audio non disponible')
-      }
-
-      // Télécharger le fichier
-      const response = await fetch(audioUrl)
-      if (!response.ok) {
-        throw new Error(`Erreur téléchargement: ${response.status}`)
-      }
-
-      // Lire le contenu en ArrayBuffer puis convertir en base64
-      const arrayBuffer = await response.arrayBuffer()
-      const bytes = new Uint8Array(arrayBuffer)
-      let binary = ''
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i])
-      }
-      const audioBase64 = btoa(binary)
-
-      // Sauvegarder localement
-      if (!this.cacheDir) await this.initializeCache()
-      const file = new File(this.cacheDir!, `${session.id}.wav`)
-      file.write(audioBase64, { encoding: 'base64' })
-
-      onProgress?.('ready')
-      return file.uri
-    } catch (error) {
-      onProgress?.('error')
-      console.error('Erreur téléchargement audio:', error)
-      throw error
-    }
-  }
-
-  /**
-   * @deprecated Utilisez downloadAndCacheAudio à la place
-   * Conservé pour compatibilité avec le code existant
-   */
-  async generateAndCacheAudio(
-    session: MeditationSession,
-    onProgress?: (status: MeditationStatus) => void
-  ): Promise<string> {
-    return this.downloadAndCacheAudio(session, onProgress)
-  }
-
-  /**
-   * Joue un audio de méditation
-   */
-  async playAudio(
-    sessionId: string,
-    onStatusChange?: (status: AVPlaybackStatus) => void
-  ): Promise<void> {
-    // Arrêter l'audio précédent si nécessaire
-    await this.stopAudio()
-
-    const filePath = this.getLocalAudioPath(sessionId)
-    if (!this.cacheDir) await this.initializeCache()
-    const file = new File(this.cacheDir!, `${sessionId}.wav`)
-
-    if (!file.exists) {
-      throw new Error('Audio non trouvé en cache')
-    }
-
-    // Configurer l'audio pour la lecture en arrière-plan
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      staysActiveInBackground: true,
-      playsInSilentModeIOS: true,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
+// Fonction pour uploader sur Supabase Storage
+async function uploadToSupabase(supabase: ReturnType<typeof createClient>, sessionId: string, audioBuffer: Buffer): Promise<string> {
+  const { error } = await supabase.storage
+    .from(MEDITATION_BUCKET)
+    .upload(`${sessionId}.wav`, audioBuffer, {
+      contentType: 'audio/wav',
+      upsert: true,
     })
 
-    // Créer et jouer le son
-    const { sound } = await Audio.Sound.createAsync(
-      { uri: filePath },
-      { shouldPlay: true },
-      onStatusChange
-    )
-
-    this.sound = sound
-    this.currentSessionId = sessionId
+  if (error) {
+    throw new Error(`Erreur upload Supabase: ${error.message}`)
   }
 
-  /**
-   * Met en pause l'audio
-   */
-  async pauseAudio(): Promise<void> {
-    if (this.sound) {
-      await this.sound.pauseAsync()
+  const { data } = supabase.storage
+    .from(MEDITATION_BUCKET)
+    .getPublicUrl(`${sessionId}.wav`)
+
+  return data.publicUrl
+}
+
+// Fonction principale
+async function main() {
+  console.log('🧘 Génération des audios de méditation')
+  console.log('=====================================\n')
+
+  // Vérifier les clés API
+  if (!GEMINI_API_KEY) {
+    console.error('❌ Clé API Gemini manquante (GOOGLE_AI_API_KEY ou EXPO_PUBLIC_GEMINI_API_KEY)')
+    process.exit(1)
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+    console.error('❌ Configuration Supabase manquante (EXPO_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY)')
+    process.exit(1)
+  }
+
+  // Créer le client Supabase avec la clé service
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+  // Vérifier/créer le bucket
+  const { data: buckets } = await supabase.storage.listBuckets()
+  const bucketExists = buckets?.some(b => b.name === MEDITATION_BUCKET)
+
+  if (!bucketExists) {
+    console.log(`📦 Création du bucket "${MEDITATION_BUCKET}"...`)
+    const { error } = await supabase.storage.createBucket(MEDITATION_BUCKET, {
+      public: true,
+      fileSizeLimit: 52428800, // 50MB
+    })
+    if (error) {
+      console.error(`❌ Erreur création bucket: ${error.message}`)
+      process.exit(1)
     }
+    console.log('✅ Bucket créé\n')
   }
 
-  /**
-   * Reprend la lecture
-   */
-  async resumeAudio(): Promise<void> {
-    if (this.sound) {
-      await this.sound.playAsync()
-    }
-  }
+  // Générer et uploader chaque session
+  const results: { id: string; title: string; url: string; status: string }[] = []
 
-  /**
-   * Arrête l'audio
-   */
-  async stopAudio(): Promise<void> {
-    if (this.sound) {
-      await this.sound.stopAsync()
-      await this.sound.unloadAsync()
-      this.sound = null
-      this.currentSessionId = null
-    }
-  }
+  for (const session of MEDITATION_SESSIONS) {
+    console.log(`\n🎵 Session ${session.week}/8: ${session.title}`)
+    console.log(`   ID: ${session.id}`)
 
-  /**
-   * Définit la position de lecture
-   */
-  async seekTo(positionMillis: number): Promise<void> {
-    if (this.sound) {
-      await this.sound.setPositionAsync(positionMillis)
-    }
-  }
+    try {
+      // Vérifier si l'audio existe déjà
+      const { data: existingFiles } = await supabase.storage
+        .from(MEDITATION_BUCKET)
+        .list('', { search: `${session.id}.wav` })
 
-  /**
-   * Récupère la session en cours de lecture
-   */
-  getCurrentSessionId(): string | null {
-    return this.currentSessionId
-  }
-
-  /**
-   * Supprime le cache audio
-   */
-  async clearCache(): Promise<void> {
-    await this.stopAudio()
-    if (!this.cacheDir) await this.initializeCache()
-    if (this.cacheDir?.exists) {
-      this.cacheDir.delete()
-      this.cacheDir = null
-      await this.initializeCache()
-    }
-  }
-
-  /**
-   * Récupère la taille du cache (approximatif)
-   */
-  async getCacheSize(): Promise<number> {
-    if (!this.cacheDir) await this.initializeCache()
-    if (!this.cacheDir?.exists) return 0
-
-    // Note: L'API expo-file-system nouvelle version ne fournit pas directement la taille
-    // On compte simplement le nombre de fichiers * taille estimée
-    let totalSize = 0
-    for (const session of MEDITATION_SESSIONS) {
-      const file = new File(this.cacheDir!, `${session.id}.wav`)
-      if (file.exists) {
-        // Estimation ~2MB par fichier audio
-        totalSize += 2 * 1024 * 1024
+      if (existingFiles?.some(f => f.name === `${session.id}.wav`)) {
+        console.log('   ⏭️  Déjà existant, skip')
+        const { data } = supabase.storage
+          .from(MEDITATION_BUCKET)
+          .getPublicUrl(`${session.id}.wav`)
+        results.push({ id: session.id, title: session.title, url: data.publicUrl, status: 'skipped' })
+        continue
       }
-    }
 
-    return totalSize
+      // Générer l'audio
+      console.log('   🔊 Génération audio via Gemini TTS...')
+      const audioBuffer = await generateAudio(session.script)
+      console.log(`   📦 Taille: ${(audioBuffer.length / 1024 / 1024).toFixed(2)} MB`)
+
+      // Uploader sur Supabase
+      console.log('   ☁️  Upload sur Supabase Storage...')
+      const publicUrl = await uploadToSupabase(supabase, session.id, audioBuffer)
+      console.log(`   ✅ Terminé: ${publicUrl}`)
+
+      results.push({ id: session.id, title: session.title, url: publicUrl, status: 'generated' })
+
+      // Petite pause entre les appels API
+      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error(`   ❌ Erreur: ${error}`)
+      results.push({ id: session.id, title: session.title, url: '', status: 'error' })
+    }
+  }
+
+  // Résumé
+  console.log('\n\n📊 RÉSUMÉ')
+  console.log('=========')
+  console.log(`Total: ${results.length} sessions`)
+  console.log(`Générées: ${results.filter(r => r.status === 'generated').length}`)
+  console.log(`Existantes: ${results.filter(r => r.status === 'skipped').length}`)
+  console.log(`Erreurs: ${results.filter(r => r.status === 'error').length}`)
+
+  console.log('\n📝 URLs des audios:')
+  for (const r of results) {
+    if (r.url) {
+      console.log(`   ${r.id}: ${r.url}`)
+    }
   }
 }
 
-export const meditationTTSService = new MeditationTTSService()
-export default meditationTTSService
+main().catch(console.error)
