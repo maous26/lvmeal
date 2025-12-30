@@ -8,9 +8,17 @@ import {
   Pressable,
   TouchableOpacity,
   Alert,
+  LayoutAnimation,
+  UIManager,
+  Platform,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { Calendar, ChevronDown, ChevronUp, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react-native'
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true)
+}
 import * as Haptics from 'expo-haptics'
 
 import { Card } from '../components/ui'
@@ -69,7 +77,7 @@ export default function HomeScreen() {
 
   const [isHydrated, setIsHydrated] = useState(false)
   const [isPlanExpanded, setIsPlanExpanded] = useState(false)
-  const [expandedMeals, setExpandedMeals] = useState<Set<string>>(new Set())
+  const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set()) // Tracks which meals are collapsed
 
   useEffect(() => {
     setIsHydrated(true)
@@ -120,9 +128,10 @@ export default function HomeScreen() {
     )
   }
 
-  const toggleMealExpanded = (mealType: MealType) => {
+  const toggleMealCollapsed = (mealType: MealType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    setExpandedMeals(prev => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    setCollapsedMeals(prev => {
       const next = new Set(prev)
       if (next.has(mealType)) {
         next.delete(mealType)
@@ -304,26 +313,38 @@ export default function HomeScreen() {
               0
             )
             const hasMeals = meals.length > 0
+            const isCollapsed = collapsedMeals.has(type)
+            const totalItems = meals.reduce((sum, m) => sum + m.items.length, 0)
 
             return (
               <Card key={type} style={styles.mealCard}>
-                <View style={styles.mealHeader}>
+                {/* Clickable header to expand/collapse */}
+                <TouchableOpacity
+                  style={styles.mealHeader}
+                  onPress={() => hasMeals && toggleMealCollapsed(type)}
+                  activeOpacity={hasMeals ? 0.7 : 1}
+                >
                   <View style={styles.mealInfo}>
                     <Text style={styles.mealIcon}>{config.icon}</Text>
                     <View>
                       <Text style={styles.mealLabel}>{config.label}</Text>
                       {hasMeals && (
                         <Text style={styles.mealItems}>
-                          {meals.reduce((sum, m) => sum + m.items.length, 0)} aliments
+                          {totalItems} aliment{totalItems > 1 ? 's' : ''}
                         </Text>
                       )}
                     </View>
                   </View>
                   <View style={styles.mealRight}>
                     {hasMeals ? (
-                      <Text style={[styles.mealCalories, { color: config.color }]}>
-                        {formatNumber(totalCalories)} kcal
-                      </Text>
+                      <View style={styles.mealRightContent}>
+                        <Text style={[styles.mealCalories, { color: config.color }]}>
+                          {formatNumber(totalCalories)} kcal
+                        </Text>
+                        <View style={[styles.chevronContainer, !isCollapsed && styles.chevronRotated]}>
+                          <ChevronDown size={16} color={colors.text.tertiary} />
+                        </View>
+                      </View>
                     ) : (
                       <TouchableOpacity
                         style={[styles.addButton, { backgroundColor: `${config.color}15` }]}
@@ -333,48 +354,33 @@ export default function HomeScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
-                </View>
+                </TouchableOpacity>
 
-                {hasMeals && (
+                {/* Collapsible content */}
+                {hasMeals && !isCollapsed && (
                   <View style={styles.mealContent}>
-                    {meals.map((meal) => {
-                      const isExpanded = expandedMeals.has(type)
-                      const itemsToShow = isExpanded ? meal.items : meal.items.slice(0, 2)
-                      const hasMoreItems = meal.items.length > 2
-
-                      return (
-                        <View key={meal.id} style={styles.mealItemsList}>
-                          {itemsToShow.map((item) => (
-                            <View key={item.id} style={styles.foodItem}>
-                              <View style={styles.foodItemInfo}>
-                                <Text style={styles.foodName} numberOfLines={1}>
-                                  {item.food.name}
-                                </Text>
-                                <Text style={styles.foodCalories}>
-                                  {Math.round(item.food.nutrition.calories * item.quantity)} kcal
-                                </Text>
-                              </View>
-                              <TouchableOpacity
-                                style={styles.deleteItemButton}
-                                onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
-                              >
-                                <X size={14} color={colors.error} />
-                              </TouchableOpacity>
-                            </View>
-                          ))}
-                          {hasMoreItems && (
-                            <TouchableOpacity
-                              style={styles.showMoreButton}
-                              onPress={() => toggleMealExpanded(type)}
-                            >
-                              <Text style={styles.showMoreText}>
-                                {isExpanded ? 'Voir moins' : `+${meal.items.length - 2} autres`}
+                    {meals.map((meal) => (
+                      <View key={meal.id} style={styles.mealItemsList}>
+                        {meal.items.map((item) => (
+                          <View key={item.id} style={styles.foodItem}>
+                            <View style={styles.foodItemInfo}>
+                              <Text style={styles.foodName} numberOfLines={1}>
+                                {item.food.name}
                               </Text>
+                              <Text style={styles.foodCalories}>
+                                {Math.round(item.food.nutrition.calories * item.quantity)} kcal
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.deleteItemButton}
+                              onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
+                            >
+                              <X size={14} color={colors.error} />
                             </TouchableOpacity>
-                          )}
-                        </View>
-                      )
-                    })}
+                          </View>
+                        ))}
+                      </View>
+                    ))}
                     <TouchableOpacity
                       style={styles.addMoreButton}
                       onPress={() => handleAddMeal(type)}
@@ -595,6 +601,20 @@ const styles = StyleSheet.create({
   mealCalories: {
     ...typography.smallMedium,
   },
+  mealRightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  chevronContainer: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chevronRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
   addButton: {
     width: 32,
     height: 32,
@@ -646,15 +666,6 @@ const styles = StyleSheet.create({
     backgroundColor: `${colors.error}15`,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  showMoreButton: {
-    paddingVertical: 4,
-    alignItems: 'center',
-  },
-  showMoreText: {
-    fontSize: 10,
-    color: colors.accent.primary,
-    fontWeight: '500',
   },
   addMoreButton: {
     flexDirection: 'row',
