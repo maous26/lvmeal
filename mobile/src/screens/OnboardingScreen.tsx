@@ -11,29 +11,35 @@ import {
   StepLifestyle,
   StepMetabolism,
   StepSportInitiation,
+  StepMetabolicProgram,
+  StepWellnessProgram,
   StepAnalysis,
 } from '../components/onboarding'
 import { useSportInitiationStore } from '../stores/sport-initiation-store'
+import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
+import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { useUserStore } from '../stores/user-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
-type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'sport-initiation' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'lifestyle' | 'analysis'
+type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'sport-initiation' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string }> = {
   welcome: { title: '', subtitle: '' },
-  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Etape 1 sur 9' },
-  activity: { title: "Votre niveau d'activite", subtitle: 'Etape 2 sur 9' },
-  'sport-initiation': { title: 'Reprendre le sport', subtitle: 'Etape 3 sur 9' },
-  goal: { title: 'Quel est votre objectif ?', subtitle: 'Etape 4 sur 9' },
-  diet: { title: 'Vos preferences alimentaires', subtitle: 'Etape 5 sur 9' },
-  cooking: { title: 'En cuisine', subtitle: 'Etape 6 sur 9' },
-  metabolism: { title: 'Mieux te connaitre', subtitle: 'Etape 7 sur 9' },
-  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Etape 8 sur 9' },
-  analysis: { title: 'Ton programme personnalise', subtitle: 'Etape 9 sur 9' },
+  'basic-info': { title: 'Parlez-nous de vous', subtitle: 'Etape 1' },
+  activity: { title: "Votre niveau d'activite", subtitle: 'Etape 2' },
+  'sport-initiation': { title: 'Reprendre le sport', subtitle: 'Programme Sport' },
+  goal: { title: 'Quel est votre objectif ?', subtitle: 'Etape 3' },
+  diet: { title: 'Vos preferences alimentaires', subtitle: 'Etape 4' },
+  cooking: { title: 'En cuisine', subtitle: 'Etape 5' },
+  metabolism: { title: 'Mieux te connaitre', subtitle: 'Etape 6' },
+  'metabolic-program': { title: 'Programme Metabolisme', subtitle: 'Programme personnalise' },
+  'wellness-program': { title: 'Programme Bien-etre', subtitle: 'Programme personnalise' },
+  lifestyle: { title: 'Tes habitudes de vie', subtitle: 'Etape 7' },
+  analysis: { title: 'Ton programme personnalise', subtitle: 'Resume' },
 }
 
-// Base steps - sport-initiation is conditionally inserted
+// Base steps - conditional steps are inserted dynamically
 const baseSteps: OnboardingStep[] = ['welcome', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
@@ -147,15 +153,43 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
   const { enroll: enrollSportInitiation } = useSportInitiationStore()
 
-  // Build steps dynamically based on activity level
-  // Insert sport-initiation step after activity if user is sedentary
+  // Program stores for enrollment
+  const { enroll: enrollMetabolicBoost } = useMetabolicBoostStore()
+  const { enroll: enrollWellnessProgram } = useWellnessProgramStore()
+
+  // Build steps dynamically based on user profile
+  // - sport-initiation: after activity if sedentary
+  // - metabolic-program: after metabolism if adaptive metabolism detected
+  // - wellness-program: after metabolic-program if user refused metabolic (and didn't choose sport)
   const steps = useMemo(() => {
+    let dynamicSteps = [...baseSteps]
+
+    // 1. Insert sport-initiation after activity if sedentary
     if (profile.activityLevel === 'sedentary') {
-      const index = baseSteps.indexOf('activity') + 1
-      return [...baseSteps.slice(0, index), 'sport-initiation' as OnboardingStep, ...baseSteps.slice(index)]
+      const activityIndex = dynamicSteps.indexOf('activity') + 1
+      dynamicSteps = [...dynamicSteps.slice(0, activityIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(activityIndex)]
     }
-    return baseSteps
-  }, [profile.activityLevel])
+
+    // 2. Insert metabolic-program after metabolism if adaptive metabolism detected
+    //    BUT NOT if user chose sport initiation (sport blocks metabolic)
+    if (profile.metabolismProfile === 'adaptive' && !profile.wantsSportInitiation) {
+      const metabolismIndex = dynamicSteps.indexOf('metabolism') + 1
+      dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'metabolic-program' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
+    }
+
+    // 3. Insert wellness-program after metabolic-program if:
+    //    - User has adaptive metabolism AND refused metabolic program
+    //    - OR user is stressed/has poor sleep (could add lifestyle check later)
+    //    Wellness is NOT blocked by sport, only by metabolic
+    if (profile.metabolismProfile === 'adaptive' && profile.wantsMetabolicProgram === false) {
+      const metabolicProgramIndex = dynamicSteps.indexOf('metabolic-program')
+      if (metabolicProgramIndex !== -1) {
+        dynamicSteps = [...dynamicSteps.slice(0, metabolicProgramIndex + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(metabolicProgramIndex + 1)]
+      }
+    }
+
+    return dynamicSteps
+  }, [profile.activityLevel, profile.metabolismProfile, profile.wantsSportInitiation, profile.wantsMetabolicProgram])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
@@ -181,6 +215,12 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       case 'metabolism':
         // Can always proceed - questions are optional diagnostic
         return true
+      case 'metabolic-program':
+        // Must make a choice (yes or no)
+        return profile.wantsMetabolicProgram !== undefined
+      case 'wellness-program':
+        // Must make a choice (yes or no)
+        return profile.wantsWellnessProgram !== undefined
       case 'lifestyle':
         // Can always proceed - helps personalization
         return true
@@ -219,6 +259,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       }
 
       // If user wants sport initiation program, enroll them
+      // Note: Sport blocks Metabolic program
       if (profile.wantsSportInitiation) {
         finalProfile.sportInitiationActive = true
         enrollSportInitiation({
@@ -227,6 +268,20 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           preferredActivities: ['walking', 'stretching'],
           availableMinutesPerDay: 15,
         })
+      }
+
+      // If user wants metabolic boost program, enroll them
+      // Note: Metabolic blocks both Sport and Wellness
+      if (profile.wantsMetabolicProgram) {
+        finalProfile.metabolicProgramActive = true
+        enrollMetabolicBoost()
+      }
+
+      // If user wants wellness program, enroll them
+      // Note: Wellness blocks Metabolic only (can be combined with Sport)
+      if (profile.wantsWellnessProgram) {
+        finalProfile.wellnessProgramActive = true
+        enrollWellnessProgram()
       }
 
       // Save to Zustand store (persisted via AsyncStorage)
@@ -245,14 +300,14 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex])
     }
-  }, [currentStep, stepIndex, profile, setStoreProfile, setOnboarded, onComplete])
+  }, [currentStep, stepIndex, steps, profile, setStoreProfile, setOnboarded, enrollSportInitiation, enrollMetabolicBoost, enrollWellnessProgram, onComplete])
 
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1
     if (prevIndex >= 0) {
       setCurrentStep(steps[prevIndex])
     }
-  }, [stepIndex])
+  }, [stepIndex, steps])
 
   const needs = useMemo(() => calculateNeeds(profile), [profile])
 
@@ -274,6 +329,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return <StepCooking data={profile} onChange={setProfile} />
       case 'metabolism':
         return <StepMetabolism data={profile} onChange={setProfile} />
+      case 'metabolic-program':
+        return <StepMetabolicProgram data={profile} onChange={setProfile} />
+      case 'wellness-program':
+        return <StepWellnessProgram data={profile} onChange={setProfile} />
       case 'lifestyle':
         return <StepLifestyle data={profile} onChange={setProfile} />
       case 'analysis':
