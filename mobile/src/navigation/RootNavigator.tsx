@@ -11,6 +11,7 @@ import SportInitiationScreen from '../screens/SportInitiationScreen'
 import WellnessProgramScreen from '../screens/WellnessProgramScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
+import WeightScreen from '../screens/WeightScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
@@ -132,6 +133,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="Calendar"
             component={CalendarScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="WeightHistory"
+            component={WeightScreen}
             options={{
               animation: 'slide_from_right',
             }}
