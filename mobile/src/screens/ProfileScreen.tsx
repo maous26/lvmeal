@@ -24,6 +24,7 @@ import {
   Flame,
   Dumbbell,
   Zap,
+  Heart,
   Edit3,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
@@ -34,6 +35,8 @@ import { Card, Badge, ProgressBar, Button } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useSportInitiationStore } from '../stores/sport-initiation-store'
+import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
+import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { formatNumber } from '../lib/utils'
 import type { RootStackParamList } from '../navigation/RootNavigator'
 
@@ -79,9 +82,37 @@ export default function ProfileScreen() {
     isEnrolled: isSportInitiationEnrolled,
     enroll: enrollSportInitiation,
     unenroll: unenrollSportInitiation,
-    currentPhase,
-    currentWeek,
+    currentPhase: sportPhase,
+    currentWeek: sportWeek,
   } = useSportInitiationStore()
+
+  const {
+    isEnrolled: isMetabolicEnrolled,
+    enroll: enrollMetabolic,
+    unenroll: unenrollMetabolic,
+    currentPhase: metabolicPhase,
+    currentWeek: metabolicWeek,
+  } = useMetabolicBoostStore()
+
+  const {
+    isEnrolled: isWellnessEnrolled,
+    enroll: enrollWellness,
+    unenroll: unenrollWellness,
+    currentPhase: wellnessPhase,
+    currentWeek: wellnessWeek,
+  } = useWellnessProgramStore()
+
+  // Profile conditions
+  const isSedentary = profile?.activityLevel === 'sedentary'
+  const isAdaptive = profile?.metabolismProfile === 'adaptive'
+
+  // Program exclusion rules:
+  // - Sport: blocked by active Metabolic
+  // - Metabolic: blocked by Sport OR Wellness (only for adaptive users)
+  // - Wellness: blocked by active Metabolic (available to all)
+  const canShowSport = isSedentary && (!isMetabolicEnrolled || isSportInitiationEnrolled)
+  const canShowMetabolic = isAdaptive && (!isSportInitiationEnrolled && !isWellnessEnrolled || isMetabolicEnrolled)
+  const canShowWellness = !isMetabolicEnrolled || isWellnessEnrolled
 
   const userName = profile?.firstName || profile?.name || 'Utilisateur'
   const userInitials = userName
@@ -175,6 +206,86 @@ export default function ProfileScreen() {
               })
               if (profile) {
                 setProfile({ ...profile, sportInitiationActive: true })
+              }
+            },
+          },
+        ]
+      )
+    }
+  }
+
+  const handleToggleMetabolic = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (isMetabolicEnrolled) {
+      Alert.alert(
+        'Quitter le programme',
+        'Êtes-vous sûr de vouloir quitter le programme Métabolisme ? Votre progression sera conservée.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Quitter',
+            style: 'destructive',
+            onPress: () => {
+              unenrollMetabolic()
+              if (profile) {
+                setProfile({ ...profile, metabolicProgramActive: false })
+              }
+            },
+          },
+        ]
+      )
+    } else {
+      Alert.alert(
+        'Rejoindre le programme',
+        'Le programme Métabolisme vous aide à relancer votre métabolisme en douceur sur 9 semaines.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Commencer',
+            onPress: () => {
+              enrollMetabolic()
+              if (profile) {
+                setProfile({ ...profile, metabolicProgramActive: true })
+              }
+            },
+          },
+        ]
+      )
+    }
+  }
+
+  const handleToggleWellness = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    if (isWellnessEnrolled) {
+      Alert.alert(
+        'Quitter le programme',
+        'Êtes-vous sûr de vouloir quitter le programme Bien-être ? Votre progression sera conservée.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Quitter',
+            style: 'destructive',
+            onPress: () => {
+              unenrollWellness()
+              if (profile) {
+                setProfile({ ...profile, wellnessProgramActive: false })
+              }
+            },
+          },
+        ]
+      )
+    } else {
+      Alert.alert(
+        'Rejoindre le programme',
+        'Le programme Bien-être vous accompagne pour améliorer votre sommeil, gérer le stress et cultiver la sérénité sur 8 semaines.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Commencer',
+            onPress: () => {
+              enrollWellness()
+              if (profile) {
+                setProfile({ ...profile, wellnessProgramActive: true })
               }
             },
           },
@@ -323,30 +434,89 @@ export default function ProfileScreen() {
         {/* Programs */}
         <Text style={styles.sectionTitle}>Programmes</Text>
         <Card padding="none">
-          <TouchableOpacity
-            style={styles.programItem}
-            onPress={handleToggleSportInitiation}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
-              <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
-            </View>
-            <View style={styles.programInfo}>
-              <Text style={styles.programLabel}>Initiation Sportive</Text>
-              <Text style={styles.programDescription}>
-                {isSportInitiationEnrolled
-                  ? `Phase ${currentPhase} - Semaine ${currentWeek}`
-                  : 'Programme pour reprendre le sport'}
-              </Text>
-            </View>
-            <Switch
-              value={isSportInitiationEnrolled}
-              onValueChange={handleToggleSportInitiation}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
-              thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
-              ios_backgroundColor={colors.bg.tertiary}
-            />
-          </TouchableOpacity>
+          {/* Sport - visible si sédentaire ET pas inscrit au Métabo */}
+          {canShowSport && (
+            <TouchableOpacity
+              style={[styles.programItem, styles.programItemBorder]}
+              onPress={handleToggleSportInitiation}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
+                <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
+              </View>
+              <View style={styles.programInfo}>
+                <Text style={styles.programLabel}>Initiation Sportive</Text>
+                <Text style={styles.programDescription}>
+                  {isSportInitiationEnrolled
+                    ? `Phase ${sportPhase} - Semaine ${sportWeek}`
+                    : 'Programme pour reprendre le sport'}
+                </Text>
+              </View>
+              <Switch
+                value={isSportInitiationEnrolled}
+                onValueChange={handleToggleSportInitiation}
+                trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
+                thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
+                ios_backgroundColor={colors.bg.tertiary}
+              />
+            </TouchableOpacity>
+          )}
+
+          {/* Métabolisme - visible si adaptatif ET pas inscrit au Sport/Wellness */}
+          {canShowMetabolic && (
+            <TouchableOpacity
+              style={[styles.programItem, styles.programItemBorder]}
+              onPress={handleToggleMetabolic}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.programIcon, styles.programIconMetabolic, isMetabolicEnrolled && styles.programIconMetabolicActive]}>
+                <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.warning} />
+              </View>
+              <View style={styles.programInfo}>
+                <Text style={styles.programLabel}>Métabolisme</Text>
+                <Text style={styles.programDescription}>
+                  {isMetabolicEnrolled
+                    ? `Phase ${metabolicPhase} - Semaine ${metabolicWeek}`
+                    : 'Relancer ton métabolisme'}
+                </Text>
+              </View>
+              <Switch
+                value={isMetabolicEnrolled}
+                onValueChange={handleToggleMetabolic}
+                trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
+                thumbColor={isMetabolicEnrolled ? colors.warning : colors.text.tertiary}
+                ios_backgroundColor={colors.bg.tertiary}
+              />
+            </TouchableOpacity>
+          )}
+
+          {/* Bien-être - visible si pas inscrit au Métabo */}
+          {canShowWellness && (
+            <TouchableOpacity
+              style={styles.programItem}
+              onPress={handleToggleWellness}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.programIcon, styles.programIconWellness, isWellnessEnrolled && styles.programIconWellnessActive]}>
+                <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.secondary.primary} />
+              </View>
+              <View style={styles.programInfo}>
+                <Text style={styles.programLabel}>Bien-être</Text>
+                <Text style={styles.programDescription}>
+                  {isWellnessEnrolled
+                    ? `Phase ${wellnessPhase} - Semaine ${wellnessWeek}`
+                    : 'Sommeil, stress et sérénité'}
+                </Text>
+              </View>
+              <Switch
+                value={isWellnessEnrolled}
+                onValueChange={handleToggleWellness}
+                trackColor={{ false: colors.bg.tertiary, true: 'rgba(139, 92, 246, 0.3)' }}
+                thumbColor={isWellnessEnrolled ? colors.secondary.primary : colors.text.tertiary}
+                ios_backgroundColor={colors.bg.tertiary}
+              />
+            </TouchableOpacity>
+          )}
         </Card>
 
         {/* Settings */}
@@ -617,6 +787,22 @@ const styles = StyleSheet.create({
   },
   programIconActive: {
     backgroundColor: colors.success,
+  },
+  programIconMetabolic: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  programIconMetabolicActive: {
+    backgroundColor: colors.warning,
+  },
+  programIconWellness: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+  },
+  programIconWellnessActive: {
+    backgroundColor: colors.secondary.primary,
+  },
+  programItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
   },
   programInfo: {
     flex: 1,
