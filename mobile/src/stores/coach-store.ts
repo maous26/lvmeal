@@ -20,7 +20,13 @@ import {
   type BehaviorPattern,
   type UserBehaviorData,
 } from '../services/behavior-analysis-agent'
-import type { UserProfile, Meal, WellnessEntry } from '../types'
+import {
+  runCoordinatedAnalysis,
+  type CoordinatorContext,
+  type CoordinatedAnalysis,
+  type EventTrigger,
+} from '../services/agent-coordinator'
+import type { UserProfile, Meal, WellnessEntry, NutritionInfo } from '../types'
 import type { MetabolicPhase } from './metabolic-boost-store'
 
 export type CoachItemType = 'tip' | 'analysis' | 'alert' | 'celebration'
@@ -117,11 +123,13 @@ interface CoachState {
   lastGeneratedAt: string | null
   context: CoachContext
   isGeneratingAI: boolean
+  lastCoordinatedAnalysis: CoordinatedAnalysis | null
 
   // Actions
   setContext: (context: Partial<CoachContext>) => void
   generateItems: () => void
   generateItemsWithAI: () => Promise<void> // NEW: LymIA Brain powered
+  generateWithCoordinator: (trigger?: EventTrigger) => Promise<void> // NEW: Agent Coordinator powered
   markAsRead: (itemId: string) => void
   markAllAsRead: () => void
   dismissItem: (itemId: string) => void
@@ -919,6 +927,7 @@ export const useCoachStore = create<CoachState>()(
       lastGeneratedAt: null,
       context: {},
       isGeneratingAI: false,
+      lastCoordinatedAnalysis: null,
 
       setContext: (newContext) => {
         set((state) => ({
@@ -1049,6 +1058,170 @@ export const useCoachStore = create<CoachState>()(
           set({ isGeneratingAI: false })
           // Fallback to static generation
           get().generateItems()
+        }
+      },
+
+      // NEW: Generate using Agent Coordinator (all agents communicate + notifications)
+      generateWithCoordinator: async (trigger?: EventTrigger) => {
+        const { context, items: existingItems, isGeneratingAI } = get()
+
+        // Prevent concurrent generation
+        if (isGeneratingAI) return
+
+        set({ isGeneratingAI: true })
+
+        try {
+          const now = new Date()
+
+          // Build CoordinatorContext from CoachContext
+          const coordinatorContext: CoordinatorContext = {
+            profile: {
+              firstName: context.firstName,
+              goal: context.goal as UserProfile['goal'],
+              dietType: context.dietType as UserProfile['dietType'],
+              allergies: context.allergies,
+              weight: context.weight || 70,
+              height: 170,
+              age: 30,
+              gender: 'male',
+              activityLevel: 'moderate',
+            } as UserProfile,
+            meals: context.recentMeals || [],
+            todayNutrition: {
+              calories: context.caloriesConsumed || 0,
+              proteins: context.proteinConsumed || 0,
+              carbs: context.carbsConsumed || 0,
+              fats: context.fatsConsumed || 0,
+            },
+            weeklyNutrition: context.weeklyCaloriesAvg
+              ? [{ calories: context.weeklyCaloriesAvg, proteins: context.weeklyProteinAvg || 0, carbs: 0, fats: 0 }]
+              : [],
+            wellnessEntries: context.wellnessEntries || [],
+            currentWellness: {
+              sleepHours: context.sleepHours,
+              stressLevel: context.stressLevel,
+              energyLevel: context.energyLevel,
+            },
+            sportSessions: context.sportSessions || [],
+            streak: context.streak || 0,
+            level: context.level || 1,
+            xp: context.xp || 0,
+            daysTracked: context.daysTracked || 0,
+          }
+
+          // Run coordinated analysis (all agents + notifications)
+          const analysis = await runCoordinatedAnalysis(coordinatorContext, trigger)
+
+          // Convert agent results to CoachItems
+          const newItems: CoachItem[] = []
+
+          for (const result of analysis.results) {
+            // Convert alerts
+            for (const alert of result.alerts) {
+              if ('category' in alert) {
+                // BehaviorAlert
+                newItems.push(behaviorAlertToCoachItem(alert as BehaviorAlert))
+              } else {
+                // WellnessAlert - convert to CoachItem
+                const wellnessAlert = alert as { id: string; severity: string; title: string; message: string; recommendation: string; scientificSource: string }
+                newItems.push({
+                  id: generateId(),
+                  type: 'alert',
+                  category: 'wellness',
+                  title: wellnessAlert.title,
+                  message: wellnessAlert.message,
+                  priority: wellnessAlert.severity === 'warning' ? 'high' : 'medium',
+                  source: wellnessAlert.scientificSource,
+                  isRead: false,
+                  createdAt: new Date().toISOString(),
+                  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                })
+              }
+            }
+
+            // Convert insights to tips
+            for (const insight of result.insights) {
+              newItems.push({
+                id: generateId(),
+                type: 'tip',
+                category: result.agent === 'wellness' ? 'wellness' :
+                         result.agent === 'behavior' ? 'nutrition' : 'progress',
+                title: insight.length > 50 ? insight.substring(0, 47) + '...' : insight,
+                message: insight,
+                priority: 'medium',
+                source: result.ragSources[0] || 'LymIA',
+                isRead: false,
+                createdAt: new Date().toISOString(),
+                expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+              })
+            }
+          }
+
+          // Add connected insights as special items
+          for (const connectedInsight of analysis.connectedInsights) {
+            newItems.push({
+              id: generateId(),
+              type: 'analysis',
+              category: 'progress',
+              title: 'Lien détecté',
+              message: connectedInsight,
+              priority: 'high',
+              source: 'LymIA Coordinator',
+              isRead: false,
+              createdAt: new Date().toISOString(),
+              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            })
+          }
+
+          // Clean expired items
+          const validItems = existingItems.filter((item) => {
+            if (!item.expiresAt) return true
+            return new Date(item.expiresAt) > now
+          })
+
+          // Avoid duplicates
+          const recentTitles = new Set(
+            validItems
+              .filter((item) => {
+                const age = now.getTime() - new Date(item.createdAt).getTime()
+                return age < 24 * 60 * 60 * 1000
+              })
+              .map((item) => item.title)
+          )
+
+          const uniqueNewItems = newItems.filter((item) => !recentTitles.has(item.title))
+
+          // Sort and limit
+          const allItems = [...uniqueNewItems, ...validItems]
+            .sort((a, b) => {
+              const priorityOrder = { high: 0, medium: 1, low: 2 }
+              const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+              if (priorityDiff !== 0) return priorityDiff
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            })
+            .slice(0, 10)
+
+          const unreadCount = allItems.filter((item) => !item.isRead).length
+
+          set({
+            items: allItems,
+            unreadCount,
+            lastGeneratedAt: now.toISOString(),
+            lastCoordinatedAnalysis: analysis,
+            isGeneratingAI: false,
+          })
+
+          console.log('[CoachStore] Coordinator analysis complete:', {
+            itemsGenerated: uniqueNewItems.length,
+            notificationSent: analysis.notificationSent,
+            ragSources: analysis.ragSourcesUsed.length,
+          })
+
+        } catch (error) {
+          console.error('[CoachStore] Coordinator generation error:', error)
+          set({ isGeneratingAI: false })
+          // Fallback to regular AI generation
+          get().generateItemsWithAI()
         }
       },
 

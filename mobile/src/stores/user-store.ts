@@ -13,6 +13,14 @@ interface NutritionGoals {
   sportCaloriesBonus?: number
 }
 
+// Notification preferences for AI Coach
+export interface NotificationPreferences {
+  dailyInsightsEnabled: boolean
+  alertsEnabled: boolean
+  celebrationsEnabled: boolean
+  lastNotificationDate: string | null
+}
+
 interface UserState {
   profile: Partial<UserProfile> | null
   isLoading: boolean
@@ -20,6 +28,7 @@ interface UserState {
   weightHistory: WeightEntry[]
   nutritionGoals: NutritionGoals | null
   lastRAGUpdate: string | null // Track when RAG last calculated needs
+  notificationPreferences: NotificationPreferences
 
   // Actions
   setProfile: (profile: Partial<UserProfile>) => void
@@ -34,6 +43,8 @@ interface UserState {
   // Sport program calorie adjustment
   updateSportCalorieBonus: (bonus: number) => void
   getEffectiveCalories: () => number
+  // Notification preferences
+  updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void
 }
 
 // Harris-Benedict BMR calculation
@@ -108,6 +119,12 @@ export const useUserStore = create<UserState>()(
       weightHistory: [],
       nutritionGoals: null,
       lastRAGUpdate: null,
+      notificationPreferences: {
+        dailyInsightsEnabled: true,
+        alertsEnabled: true,
+        celebrationsEnabled: true,
+        lastNotificationDate: null,
+      },
 
       setProfile: (profile) => {
         const needs = calculateNutritionalNeeds(profile)
@@ -223,6 +240,15 @@ export const useUserStore = create<UserState>()(
         if (!goals) return 0
         return goals.calories + (goals.sportCaloriesBonus || 0)
       },
+
+      updateNotificationPreferences: (prefs) => {
+        set((state) => ({
+          notificationPreferences: {
+            ...state.notificationPreferences,
+            ...prefs,
+          },
+        }))
+      },
     }),
     {
       name: 'presence-user',
@@ -233,6 +259,7 @@ export const useUserStore = create<UserState>()(
         weightHistory: state.weightHistory,
         nutritionGoals: state.nutritionGoals,
         lastRAGUpdate: state.lastRAGUpdate,
+        notificationPreferences: state.notificationPreferences,
       }),
     }
   )

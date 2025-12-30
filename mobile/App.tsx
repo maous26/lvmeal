@@ -9,7 +9,12 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 
 import { RootNavigator } from './src/navigation'
 import { ThemeProvider } from './src/contexts/ThemeContext'
+import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { clearFoodSearchCache } from './src/services/food-search'
+import {
+  requestNotificationPermissions,
+  addNotificationResponseListener,
+} from './src/services/notification-service'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -29,6 +34,11 @@ export default function App() {
       try {
         // Clear food search cache to get fresh results with nutriscore
         await clearFoodSearchCache()
+
+        // Initialize notifications
+        const notificationsEnabled = await requestNotificationPermissions()
+        console.log('[App] Notifications enabled:', notificationsEnabled)
+
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e) {
         console.warn(e)
@@ -38,6 +48,22 @@ export default function App() {
     }
 
     prepare()
+  }, [])
+
+  // Handle notification taps
+  useEffect(() => {
+    const subscription = addNotificationResponseListener((response) => {
+      const data = response.notification.request.content.data
+      console.log('[App] Notification tapped:', data)
+
+      // Handle deep links from notifications
+      if (data?.deepLink) {
+        // Navigation will be handled by the NavigationContainer
+        console.log('[App] Deep link:', data.deepLink)
+      }
+    })
+
+    return () => subscription.remove()
   }, [])
 
   const onLayoutRootView = useCallback(async () => {
@@ -54,9 +80,11 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
+          <AgentTriggersProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </AgentTriggersProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
