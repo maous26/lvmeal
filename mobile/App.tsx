@@ -16,6 +16,7 @@ import {
   addNotificationResponseListener,
 } from './src/services/notification-service'
 import { initializeDailyInsightService } from './src/services/daily-insight-service'
+import { loadStaticRecipes } from './src/services/static-recipes'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -33,8 +34,14 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Clear food search cache to get fresh results with nutriscore
-        await clearFoodSearchCache()
+        // OPTIMIZATION: Pre-load static recipes in parallel with other init tasks
+        // This prevents latency during meal plan generation
+        const preloadPromises = [
+          clearFoodSearchCache(),
+          loadStaticRecipes().then(recipes => {
+            console.log(`[App] Pre-loaded ${recipes.length} static recipes`)
+          }),
+        ]
 
         // Initialize notifications
         const notificationsEnabled = await requestNotificationPermissions()
@@ -45,6 +52,9 @@ export default function App() {
           await initializeDailyInsightService()
           console.log('[App] Super Agent daily insights initialized')
         }
+
+        // Wait for preload tasks to complete
+        await Promise.all(preloadPromises)
 
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e) {

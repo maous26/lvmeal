@@ -391,16 +391,10 @@ Reponds UNIQUEMENT en JSON:
     const response = await callOpenAI([{ role: 'user', content: prompt }], { maxTokens: 1500 })
     const recipe = extractJSON<AIRecipe>(response)
 
-    // Generate image in background (don't wait, but update when ready)
-    // For now, generate synchronously to show image in modal
-    try {
-      const imageUrl = await generateRecipeImage(recipe.title)
-      if (imageUrl) {
-        recipe.imageUrl = imageUrl
-      }
-    } catch (imgError) {
-      console.log('Image generation skipped:', imgError)
-    }
+    // OPTIMIZATION: Don't wait for image - return recipe immediately
+    // Image generation takes 10-20s and blocks the modal
+    // Set imageUrl to null, caller can generate image separately if needed
+    recipe.imageUrl = null
 
     return {
       success: true,
