@@ -1,5 +1,18 @@
-# Simple Backend Dependencies
-fastapi>=0.109.0
-uvicorn>=0.27.0
-pydantic>=2.5.0
+# DSPy Backend Dependencies
+# Note: dspy-ai installs litellm automatically, no need to specify it separately
+
+# Core DSPy - use specific version for stability
+dspy-ai==2.5.43
+
+# FastAPI stack
+fastapi>=0.109.0,<0.112.0
+uvicorn[standard]>=0.27.0,<0.28.0
+pydantic>=2.5.0,<3.0.0
+
+# Utilities
 python-dotenv>=1.0.0
+httpx>=0.26.0
+diskcache>=5.6.0
+
+# OpenAI (required by litellm for OpenAI provider)
+openai>=1.12.0
