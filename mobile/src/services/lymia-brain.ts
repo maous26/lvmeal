@@ -17,6 +17,15 @@ import OpenAI from 'openai'
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry } from './supabase-client'
 import { buildPhasePromptModifier, getPhaseContext, PhaseMessages } from './phase-context'
 import { aiRateLimiter, type AIRequestType } from './ai-rate-limiter'
+import {
+  isDSPyEnabled,
+  hookRewriteQuery,
+  hookSelectEvidence,
+  runEnhancedRAG,
+  formatCitationsForDisplay,
+  extractSourcesFromCitations,
+  kbEntriesToPassages,
+} from './dspy'
 import type {
   UserProfile,
   NutritionInfo,
@@ -1073,13 +1082,88 @@ Reponds en JSON:
 
 /**
  * Answer any nutrition/wellness question using RAG
+ * Enhanced with DSPy when available for better retrieval and grounded answers
  */
 export async function askLymIA(
   question: string,
   context: UserContext
-): Promise<{ answer: string; sources: string[] }> {
-  const kbEntries = await queryKB(question)
-  const kbContext = buildKBContext(kbEntries)
+): Promise<{
+  answer: string
+  sources: string[]
+  confidence?: number
+  isGrounded?: boolean
+  enhanced?: boolean
+}> {
+  // Check if DSPy is available for enhanced RAG
+  const dspyEnabled = await isDSPyEnabled()
+
+  // Step 1: Query rewriting (DSPy-enhanced if available)
+  let searchQueries = [question]
+  if (dspyEnabled) {
+    const rewriteResult = await hookRewriteQuery(question, context.profile, {
+      sleepHours: context.wellnessData.sleepHours,
+      stressLevel: context.wellnessData.stressLevel,
+    })
+    if (rewriteResult.enhanced) {
+      searchQueries = rewriteResult.queries
+      console.log('[LymIA] DSPy rewritten queries:', searchQueries)
+    }
+  }
+
+  // Step 2: Retrieve from KB using rewritten queries
+  const allEntries: KnowledgeBaseEntry[] = []
+  for (const query of searchQueries.slice(0, 3)) {
+    const entries = await queryKB(query)
+    allEntries.push(...entries)
+  }
+
+  // Deduplicate by ID
+  const uniqueEntries = Array.from(
+    new Map(allEntries.map(e => [e.id, e])).values()
+  )
+
+  // Step 3: Try full DSPy pipeline for grounded answer
+  if (dspyEnabled && uniqueEntries.length > 0) {
+    const dspyResult = await runEnhancedRAG(
+      question,
+      uniqueEntries,
+      context.profile,
+      {
+        sleepHours: context.wellnessData.sleepHours,
+        stressLevel: context.wellnessData.stressLevel,
+      },
+      false // Don't skip verification
+    )
+
+    if (dspyResult) {
+      // Format citations for display
+      const formattedAnswer = formatCitationsForDisplay(dspyResult.answer, uniqueEntries)
+      const sources = extractSourcesFromCitations(dspyResult.citations, uniqueEntries)
+
+      console.log('[LymIA] DSPy grounded answer generated:', {
+        confidence: dspyResult.confidence,
+        isGrounded: dspyResult.is_grounded,
+        citations: dspyResult.citations.length,
+      })
+
+      // Add disclaimer if not fully grounded
+      let finalAnswer = formattedAnswer
+      if (dspyResult.is_grounded === false && dspyResult.disclaimer) {
+        finalAnswer = `${formattedAnswer}\n\n⚠️ ${dspyResult.disclaimer}`
+      }
+
+      return {
+        answer: finalAnswer,
+        sources: sources.length > 0 ? sources : uniqueEntries.map(e => e.source),
+        confidence: dspyResult.confidence,
+        isGrounded: dspyResult.is_grounded,
+        enhanced: true,
+      }
+    }
+  }
+
+  // Fallback: Standard RAG without DSPy
+  const kbContext = buildKBContext(uniqueEntries)
 
   const prompt = `Tu es LymIA, assistant nutrition et bien-etre. Reponds a cette question:
 
@@ -1113,18 +1197,21 @@ INSTRUCTIONS:
       return {
         answer: 'Credits IA insuffisants. Essaie plus tard.',
         sources: [],
+        enhanced: false,
       }
     }
 
     return {
       answer: aiResult.content || 'Je ne peux pas repondre pour le moment.',
-      sources: kbEntries.map(e => e.source),
+      sources: uniqueEntries.map(e => e.source),
+      enhanced: false,
     }
   } catch (error) {
     console.error('LymIA Brain ask error:', error)
     return {
       answer: 'Desole, je ne peux pas repondre pour le moment. Reessaie plus tard.',
       sources: [],
+      enhanced: false,
     }
   }
 }

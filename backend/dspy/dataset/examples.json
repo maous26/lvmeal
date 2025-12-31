@@ -1,0 +1,294 @@
+{
+  "version": "1.0.0",
+  "description": "Training examples for DSPy RAG optimization in French nutrition/wellness context",
+  "examples": [
+    {
+      "id": "ex_001",
+      "question": "Pourquoi j'ai des fringales le soir?",
+      "user_context": {
+        "goal": "weight_loss",
+        "sleep_hours": 5,
+        "stress_level": 8,
+        "calories_today": 1200,
+        "target_calories": 1800
+      },
+      "expected_queries": [
+        "fringales soir cortisol stress",
+        "manque sommeil faim hormone ghréline",
+        "déficit calorique envies sucrées"
+      ],
+      "expected_category": "wellness",
+      "expected_sources": ["inserm", "anses"],
+      "relevant_passage_ids": ["kb_sleep_hunger", "kb_cortisol_cravings", "kb_calorie_deficit"],
+      "expected_answer_keywords": ["sommeil", "cortisol", "ghréline", "déficit"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_002",
+      "question": "Combien de protéines par jour pour perdre du poids?",
+      "user_context": {
+        "goal": "weight_loss",
+        "weight": 75,
+        "activity_level": "moderate"
+      },
+      "expected_queries": [
+        "apport protéines perte poids recommandations",
+        "protéines maintien masse musculaire régime",
+        "quantité protéines objectif minceur"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_protein_weight_loss", "kb_protein_rda"],
+      "expected_answer_keywords": ["1.2g", "1.6g", "kg", "masse musculaire"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_003",
+      "question": "Est-ce que le jeûne intermittent est efficace?",
+      "user_context": {
+        "goal": "weight_loss",
+        "age": 35
+      },
+      "expected_queries": [
+        "jeûne intermittent efficacité perte poids",
+        "fasting 16/8 études scientifiques",
+        "restriction calorique horaires repas"
+      ],
+      "expected_category": "metabolism",
+      "expected_sources": ["inserm", "pubmed"],
+      "relevant_passage_ids": ["kb_if_studies", "kb_fasting_metabolism"],
+      "expected_answer_keywords": ["études", "restriction calorique", "métabolisme"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_004",
+      "question": "Comment améliorer mon sommeil pour mieux récupérer?",
+      "user_context": {
+        "goal": "muscle_gain",
+        "sleep_hours": 6,
+        "stress_level": 6
+      },
+      "expected_queries": [
+        "améliorer sommeil récupération musculaire",
+        "qualité sommeil hormone croissance",
+        "hygiène sommeil sportif"
+      ],
+      "expected_category": "wellness",
+      "expected_sources": ["inserm", "has"],
+      "relevant_passage_ids": ["kb_sleep_recovery", "kb_sleep_muscle"],
+      "expected_answer_keywords": ["hormone de croissance", "récupération", "7-9 heures"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_005",
+      "question": "Quels aliments sont riches en fer?",
+      "user_context": {
+        "goal": "maintain",
+        "diet_type": "vegetarian"
+      },
+      "expected_queries": [
+        "aliments riches fer végétarien",
+        "sources fer végétal absorption",
+        "fer non héminique légumineuses"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["ciqual", "anses"],
+      "relevant_passage_ids": ["kb_iron_sources", "kb_vegetarian_iron"],
+      "expected_answer_keywords": ["légumineuses", "vitamine C", "absorption", "lentilles"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_006",
+      "question": "Le stress fait-il grossir?",
+      "user_context": {
+        "goal": "weight_loss",
+        "stress_level": 9
+      },
+      "expected_queries": [
+        "stress cortisol prise poids",
+        "cortisol stockage graisse abdominale",
+        "stress chronique métabolisme"
+      ],
+      "expected_category": "wellness",
+      "expected_sources": ["inserm", "pubmed"],
+      "relevant_passage_ids": ["kb_stress_weight", "kb_cortisol_fat"],
+      "expected_answer_keywords": ["cortisol", "graisse abdominale", "stockage"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_007",
+      "question": "Que manger avant une séance de sport?",
+      "user_context": {
+        "goal": "muscle_gain",
+        "activity_level": "very_active"
+      },
+      "expected_queries": [
+        "nutrition pré-entraînement musculation",
+        "glucides avant sport énergie",
+        "repas avant séance sport timing"
+      ],
+      "expected_category": "sport",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_pre_workout", "kb_sport_nutrition"],
+      "expected_answer_keywords": ["glucides", "2-3 heures", "digestion", "énergie"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_008",
+      "question": "Comment savoir si je mange assez?",
+      "user_context": {
+        "goal": "maintain",
+        "calories_today": 1100,
+        "target_calories": 1800
+      },
+      "expected_queries": [
+        "signes déficit calorique insuffisance",
+        "sous-alimentation symptômes fatigue",
+        "métabolisme ralenti restriction"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_undereating_signs", "kb_metabolic_adaptation"],
+      "expected_answer_keywords": ["fatigue", "faim constante", "métabolisme", "1200 kcal"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_009",
+      "question": "Les édulcorants sont-ils mauvais pour la santé?",
+      "user_context": {
+        "goal": "weight_loss"
+      },
+      "expected_queries": [
+        "édulcorants santé études aspartame",
+        "sucralose effet métabolisme",
+        "alternatives sucre impact glycémie"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "efsa"],
+      "relevant_passage_ids": ["kb_sweeteners_health", "kb_aspartame_studies"],
+      "expected_answer_keywords": ["études", "modération", "glycémie", "EFSA"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_010",
+      "question": "Pourquoi je ne perds plus de poids malgré mon régime?",
+      "user_context": {
+        "goal": "weight_loss",
+        "calories_today": 1400,
+        "target_calories": 1600,
+        "recent_patterns": ["plateau depuis 3 semaines"]
+      },
+      "expected_queries": [
+        "plateau perte poids causes",
+        "adaptation métabolique régime",
+        "stagnation poids malgré déficit"
+      ],
+      "expected_category": "metabolism",
+      "expected_sources": ["inserm", "pubmed"],
+      "relevant_passage_ids": ["kb_weight_plateau", "kb_metabolic_adaptation"],
+      "expected_answer_keywords": ["adaptation métabolique", "rétention eau", "pause régime"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_011",
+      "question": "Est-ce grave si je saute le petit-déjeuner?",
+      "user_context": {
+        "goal": "weight_loss"
+      },
+      "expected_queries": [
+        "sauter petit déjeuner effet santé",
+        "jeûne matin métabolisme",
+        "importance premier repas journée"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "inserm"],
+      "relevant_passage_ids": ["kb_breakfast_skip", "kb_meal_timing"],
+      "expected_answer_keywords": ["personnel", "écouter", "faim", "pas obligatoire"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_012",
+      "question": "Comment bien m'hydrater pendant le sport?",
+      "user_context": {
+        "goal": "muscle_gain",
+        "activity_level": "very_active"
+      },
+      "expected_queries": [
+        "hydratation sport recommandations",
+        "eau pendant exercice quantité",
+        "déshydratation performance sportive"
+      ],
+      "expected_category": "sport",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_hydration_sport", "kb_water_performance"],
+      "expected_answer_keywords": ["150-250ml", "15-20 minutes", "soif", "électrolytes"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_013",
+      "question": "Qu'est-ce que le Nutri-Score?",
+      "user_context": {
+        "goal": "maintain"
+      },
+      "expected_queries": [
+        "nutri-score explication calcul",
+        "étiquetage nutritionnel France",
+        "score A B C D E signification"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_nutriscore_explain", "kb_food_labels"],
+      "expected_answer_keywords": ["A à E", "composition nutritionnelle", "comparaison"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_014",
+      "question": "Le gluten est-il mauvais pour tout le monde?",
+      "user_context": {
+        "goal": "maintain"
+      },
+      "expected_queries": [
+        "gluten intolérance maladie coeliaque",
+        "régime sans gluten santé",
+        "sensibilité gluten non coeliaque"
+      ],
+      "expected_category": "nutrition",
+      "expected_sources": ["anses", "has"],
+      "relevant_passage_ids": ["kb_gluten_health", "kb_celiac_disease"],
+      "expected_answer_keywords": ["maladie coeliaque", "sensibilité", "pas nécessaire"],
+      "expected_citations": 2
+    },
+    {
+      "id": "ex_015",
+      "question": "Comment gérer les envies de sucre?",
+      "user_context": {
+        "goal": "weight_loss",
+        "stress_level": 7
+      },
+      "expected_queries": [
+        "envies sucre gestion addiction",
+        "réduire consommation sucre méthodes",
+        "sucre dopamine récompense"
+      ],
+      "expected_category": "wellness",
+      "expected_sources": ["inserm", "anses"],
+      "relevant_passage_ids": ["kb_sugar_cravings", "kb_sugar_addiction"],
+      "expected_answer_keywords": ["progressif", "fruits", "sommeil", "stress"],
+      "expected_citations": 2
+    }
+  ],
+  "metrics": {
+    "query_rewriting": {
+      "description": "Measure if rewritten queries retrieve more relevant passages",
+      "target_recall_at_5": 0.8
+    },
+    "evidence_selection": {
+      "description": "Measure if selected passages are actually relevant",
+      "target_precision": 0.9
+    },
+    "answer_grounding": {
+      "description": "Measure citation coverage in answers",
+      "target_citation_rate": 0.95
+    }
+  }
+}
