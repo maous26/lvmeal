@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { Card } from '../ui/Card'
 import { colors, radius, spacing, typography } from '../../constants/theme'
-import type { UserProfile, NutritionalNeeds } from '../../types'
+import type { UserProfile, NutritionalNeeds, NutritionInfo } from '../../types'
+import { LymIABrain, type UserContext, type CalorieRecommendation } from '../../services/lymia-brain'
 
 interface StepAnalysisProps {
   profile: Partial<UserProfile>
@@ -15,13 +16,42 @@ const formatNumber = (num: number): string => {
 
 export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
   const [showResults, setShowResults] = useState(false)
+  const [personalizedNeeds, setPersonalizedNeeds] = useState<CalorieRecommendation | null>(null)
+  const [loadingMessage, setLoadingMessage] = useState('Analyse en cours...')
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowResults(true)
-    }, 1500)
+    async function calculateRAGNeeds() {
+      try {
+        setLoadingMessage('Recherche des recommandations ANSES...')
+
+        // Build context for RAG-powered calculation
+        const context: UserContext = {
+          profile: profile as UserProfile,
+          todayNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          weeklyAverage: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+          currentStreak: 0,
+          lastMeals: [],
+          wellnessData: {},
+        }
+
+        setLoadingMessage('Calcul personnalisé avec IA...')
+
+        // Call RAG+DSPy powered calculation
+        const ragNeeds = await LymIABrain.calculatePersonalizedNeeds(context)
+        setPersonalizedNeeds(ragNeeds)
+
+      } catch (error) {
+        console.error('RAG calculation failed:', error)
+        // Will fallback to basic needs
+      } finally {
+        setShowResults(true)
+      }
+    }
+
+    // Start calculation with slight delay for UX
+    const timer = setTimeout(calculateRAGNeeds, 500)
     return () => clearTimeout(timer)
-  }, [])
+  }, [profile])
 
   if (!showResults) {
     return (
@@ -29,16 +59,21 @@ export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
         <View style={styles.spinner}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
         </View>
-        <Text style={styles.loadingTitle}>Analyse en cours...</Text>
+        <Text style={styles.loadingTitle}>{loadingMessage}</Text>
         <Text style={styles.loadingText}>Calcul de vos besoins nutritionnels</Text>
       </View>
     )
   }
 
+  // Use RAG-calculated needs if available, fallback to basic Harris-Benedict
+  const finalNeeds = personalizedNeeds || needs
+  const isRAGPowered = personalizedNeeds !== null
+  const sources = personalizedNeeds?.sources || []
+
   const macros = [
-    { label: 'Proteines', value: needs.proteins, unit: 'g', color: colors.nutrients.proteins },
-    { label: 'Glucides', value: needs.carbs, unit: 'g', color: colors.nutrients.carbs },
-    { label: 'Lipides', value: needs.fats, unit: 'g', color: colors.nutrients.fats },
+    { label: 'Proteines', value: finalNeeds.proteins, unit: 'g', color: colors.nutrients.proteins },
+    { label: 'Glucides', value: finalNeeds.carbs, unit: 'g', color: colors.nutrients.carbs },
+    { label: 'Lipides', value: finalNeeds.fats, unit: 'g', color: colors.nutrients.fats },
   ]
 
   const goalLabels: Record<string, string> = {
@@ -69,12 +104,23 @@ export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
           <Text style={styles.caloriesLabel}>Objectif calorique quotidien</Text>
         </View>
         <View style={styles.caloriesValue}>
-          <Text style={styles.caloriesNumber}>{formatNumber(needs.calories)}</Text>
+          <Text style={styles.caloriesNumber}>{formatNumber(finalNeeds.calories)}</Text>
           <Text style={styles.caloriesUnit}>kcal</Text>
         </View>
         <Text style={styles.caloriesHint}>
           Base sur votre profil et objectif : {goalLabels[profile.goal || 'maintenance']}
         </Text>
+        {isRAGPowered && personalizedNeeds?.reasoning && (
+          <Text style={styles.reasoningText}>{personalizedNeeds.reasoning}</Text>
+        )}
+        {sources.length > 0 && (
+          <View style={styles.sourcesContainer}>
+            <Text style={styles.sourcesLabel}>Sources scientifiques:</Text>
+            <Text style={styles.sourcesText}>
+              {sources.map(s => s.source.toUpperCase()).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
+            </Text>
+          </View>
+        )}
       </Card>
 
       {/* Macros breakdown */}
@@ -214,6 +260,29 @@ const styles = StyleSheet.create({
     ...typography.small,
     color: colors.text.tertiary,
     marginTop: spacing.sm,
+  },
+  reasoningText: {
+    ...typography.small,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  sourcesContainer: {
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    alignItems: 'center',
+  },
+  sourcesLabel: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+  },
+  sourcesText: {
+    ...typography.caption,
+    color: colors.accent.primary,
+    fontWeight: '600',
   },
   macrosSection: {},
   macrosTitle: {

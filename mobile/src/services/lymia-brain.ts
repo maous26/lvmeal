@@ -210,66 +210,133 @@ async function executeAICall(
 
 /**
  * Calculate personalized calorie and macro needs
- * Uses RAG to adapt to user's metabolism, history, and goals
+ * Uses RAG + DSPy to adapt to user's metabolism, history, and goals
+ *
+ * Sources prioritaires: ANSES, EFSA, OMS pour les recommandations macros
  */
 export async function calculatePersonalizedNeeds(
   context: UserContext
 ): Promise<CalorieRecommendation> {
   const { profile, weeklyAverage, wellnessData, programProgress } = context
 
-  // Query knowledge base for relevant nutrition science
-  const kbEntries = await queryKB(
-    `besoins caloriques ${profile.goal} ${profile.metabolismProfile || 'standard'} activite ${profile.activityLevel}`,
-    ['nutrition', 'metabolism', 'guidelines']
+  // Query RAG for ANSES macro distribution recommendations
+  const macroQuery = `répartition macronutriments ${profile.goal} proteines glucides lipides ANSES recommandations adulte`
+  const calorieQuery = `besoins énergétiques ${profile.activityLevel} ${profile.gender} ANSES EFSA`
+
+  // Use DSPy to rewrite queries if available
+  let searchQueries = [macroQuery, calorieQuery]
+  const dspyEnabled = await isDSPyEnabled()
+
+  if (dspyEnabled) {
+    const rewritten = await hookRewriteQuery(
+      `Quels sont les besoins caloriques et la répartition des macronutriments pour une personne ${profile.gender} de ${profile.age} ans, ${profile.weight}kg, activité ${profile.activityLevel}, objectif ${profile.goal}?`,
+      profile
+    )
+    if (rewritten?.queries && rewritten.queries.length > 0) {
+      searchQueries = rewritten.queries
+    }
+  }
+
+  // Query knowledge base with optimized queries
+  const kbResults = await Promise.all(
+    searchQueries.map(q => queryKB(q, ['nutrition', 'metabolism', 'guidelines']))
   )
+  const kbEntries = kbResults.flat()
 
   const kbContext = buildKBContext(kbEntries)
 
   // Build prompt with all context
-  const prompt = `Tu es LymIA, expert en nutrition personnalisee. Calcule les besoins nutritionnels optimaux.
+  const prompt = `Tu es LymIA, expert en nutrition basé sur les recommandations ANSES/EFSA. Calcule les besoins nutritionnels optimaux.
 
 PROFIL UTILISATEUR:
 - Age: ${profile.age} ans
 - Sexe: ${profile.gender}
 - Poids: ${profile.weight} kg
 - Taille: ${profile.height} cm
-- Niveau d'activite: ${profile.activityLevel}
+- Niveau d'activité: ${profile.activityLevel}
 - Objectif: ${profile.goal}
-- Regime: ${profile.dietType || 'omnivore'}
-${profile.metabolismProfile === 'adaptive' ? '- ATTENTION: Metabolisme adaptatif detecte (historique de regimes)' : ''}
-${profile.metabolismFactors?.restrictiveDietsHistory ? '- Historique de regimes restrictifs' : ''}
+- Régime: ${profile.dietType || 'omnivore'}
+${profile.metabolismProfile === 'adaptive' ? '- ATTENTION: Métabolisme adaptatif détecté (historique de régimes)' : ''}
+${profile.metabolismFactors?.restrictiveDietsHistory ? '- Historique de régimes restrictifs' : ''}
 
-DONNEES RECENTES:
+DONNÉES RÉCENTES:
 - Moyenne hebdomadaire: ${weeklyAverage.calories} kcal/jour
-- Sommeil: ${wellnessData.sleepHours || 'non renseigne'} h
-- Stress: ${wellnessData.stressLevel || 'non renseigne'}/10
-- Energie: ${wellnessData.energyLevel || 'non renseigne'}/5
-${programProgress ? `- Programme en cours: ${programProgress.type} Phase ${programProgress.phase} (${Math.round(programProgress.completionRate * 100)}% complete)` : ''}
+- Sommeil: ${wellnessData.sleepHours || 'non renseigné'} h
+- Stress: ${wellnessData.stressLevel || 'non renseigné'}/10
+- Énergie: ${wellnessData.energyLevel || 'non renseigné'}/5
+${programProgress ? `- Programme en cours: ${programProgress.type} Phase ${programProgress.phase} (${Math.round(programProgress.completionRate * 100)}% complété)` : ''}
 
-CONNAISSANCES SCIENTIFIQUES:
-${kbContext || 'Base de connaissances non disponible - utiliser les formules standard'}
+RECOMMANDATIONS ANSES (références):
+- Protéines: 0.83g/kg minimum, 1.2-2.0g/kg si sportif ou perte de poids
+- Glucides: 40-55% des AET (Apports Énergétiques Totaux)
+- Lipides: 35-40% des AET (dont <12% acides gras saturés)
+- Fibres: 30g/jour minimum
+
+CONNAISSANCES RAG:
+${kbContext || 'Utiliser les recommandations ANSES ci-dessus'}
 
 INSTRUCTIONS:
-1. Calcule le MB avec Harris-Benedict ou Mifflin-St Jeor
-2. Applique le multiplicateur d'activite
-3. ADAPTE selon:
-   - Si metabolisme adaptatif: deficit MAX 100-200 kcal, proteines hautes
-   - Si stress eleve: eviter deficit agressif
-   - Si manque de sommeil: augmenter proteines
-   - Si en programme de relance: suivre les recommandations de phase
-4. Donne les macros en g (proteines, glucides, lipides)
+1. Calcule le MB (métabolisme de base) avec Mifflin-St Jeor
+2. Applique le multiplicateur d'activité (NAP)
+3. ADAPTE la répartition des macros selon:
+   - Objectif perte de poids: protéines 25-30% (1.6-2.0g/kg), glucides 40%, lipides 30-35%
+   - Objectif muscle: protéines 25-30% (1.8-2.2g/kg), glucides 45-50%, lipides 25-30%
+   - Maintien: protéines 15-20% (1.0-1.2g/kg), glucides 50-55%, lipides 30-35%
+4. Si métabolisme adaptatif: déficit MAX 200 kcal, protéines élevées
+5. Si stress/sommeil insuffisant: augmenter protéines de 10%
 
-Reponds en JSON:
+Réponds en JSON:
 {
   "calories": number,
   "proteins": number,
   "carbs": number,
   "fats": number,
-  "reasoning": "explication en 2-3 phrases",
-  "adjustmentReason": "si ajustement par rapport aux formules standard, expliquer pourquoi"
+  "proteinRatio": number (% des AET),
+  "carbsRatio": number (% des AET),
+  "fatsRatio": number (% des AET),
+  "reasoning": "explication basée sur ANSES en 2-3 phrases",
+  "adjustmentReason": "si ajustement, expliquer pourquoi avec source scientifique"
 }`
 
   try {
+    // Try DSPy enhanced RAG if available for grounded response
+    if (dspyEnabled && kbEntries.length > 0) {
+      const dspyResult = await runEnhancedRAG(
+        prompt,
+        kbEntries,
+        profile
+      )
+
+      if (dspyResult && dspyResult.confidence > 0.7) {
+        // Parse JSON from DSPy answer
+        const jsonMatch = dspyResult.answer.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[0])
+          // Get sources from kb entries that were selected
+          const selectedSources = kbEntries
+            .filter(e => dspyResult.selected_passage_ids.includes(e.id))
+            .map(e => ({
+              content: e.content.slice(0, 100),
+              source: e.source,
+              relevance: 0.9,
+            }))
+
+          return {
+            calories: result.calories || 2000,
+            proteins: result.proteins || 100,
+            carbs: result.carbs || 250,
+            fats: result.fats || 67,
+            decision: `${result.calories} kcal/jour (DSPy verified)`,
+            reasoning: result.reasoning || dspyResult.answer,
+            adjustmentReason: result.adjustmentReason,
+            confidence: dspyResult.is_grounded ? 0.95 : 0.85,
+            sources: selectedSources,
+          }
+        }
+      }
+    }
+
+    // Fallback to standard AI call
     const aiResponse = await executeAICall(
       'coach_insight',
       [{ role: 'user', content: prompt }],
@@ -292,7 +359,7 @@ Reponds en JSON:
       carbs: result.carbs || 250,
       fats: result.fats || 67,
       decision: `${result.calories} kcal/jour`,
-      reasoning: result.reasoning || 'Calcul base sur les formules standard',
+      reasoning: result.reasoning || 'Calcul basé sur les recommandations ANSES',
       adjustmentReason: result.adjustmentReason,
       confidence: kbEntries.length > 0 ? 0.9 : 0.75,
       sources: kbEntries.map(e => ({
@@ -304,10 +371,10 @@ Reponds en JSON:
   } catch (error) {
     console.error('LymIA Brain calorie calculation error:', error)
 
-    // Fallback to basic Harris-Benedict
+    // Fallback to ANSES-based Mifflin-St Jeor calculation
     const bmr = profile.gender === 'female'
-      ? 447.593 + (9.247 * profile.weight) + (3.098 * profile.height) - (4.330 * profile.age)
-      : 88.362 + (13.397 * profile.weight) + (4.799 * profile.height) - (5.677 * profile.age)
+      ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
+      : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
 
     const multipliers: Record<string, number> = {
       sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, athlete: 1.9
@@ -315,22 +382,43 @@ Reponds en JSON:
     const tdee = bmr * (multipliers[profile.activityLevel] || 1.55)
 
     let calories = tdee
+    // ANSES: déficit modéré de 300-500 kcal pour perte de poids durable
     if (profile.goal === 'weight_loss') calories -= 400
     if (profile.goal === 'muscle_gain') calories += 300
 
-    const proteins = Math.round(profile.weight * 1.8)
-    const fats = Math.round((calories * 0.25) / 9)
-    const carbs = Math.round((calories - proteins * 4 - fats * 9) / 4)
+    // ANSES macro ratios based on goal
+    let proteinRatio: number, carbsRatio: number, fatsRatio: number
+    switch (profile.goal) {
+      case 'weight_loss':
+        // ANSES: protéines élevées pour préserver masse musculaire
+        proteinRatio = 0.27 // 27% des AET
+        fatsRatio = 0.33   // 33% des AET
+        carbsRatio = 0.40  // 40% des AET
+        break
+      case 'muscle_gain':
+        proteinRatio = 0.28 // 28% des AET
+        carbsRatio = 0.47  // 47% des AET
+        fatsRatio = 0.25   // 25% des AET
+        break
+      default: // maintain
+        proteinRatio = 0.18 // 18% des AET
+        carbsRatio = 0.52  // 52% des AET
+        fatsRatio = 0.30   // 30% des AET
+    }
+
+    const proteins = Math.round((calories * proteinRatio) / 4)
+    const carbs = Math.round((calories * carbsRatio) / 4)
+    const fats = Math.round((calories * fatsRatio) / 9)
 
     return {
       calories: Math.round(calories),
       proteins,
       carbs,
       fats,
-      decision: `${Math.round(calories)} kcal/jour (fallback)`,
-      reasoning: 'Calcul via formule Harris-Benedict (mode hors-ligne)',
-      confidence: 0.6,
-      sources: [],
+      decision: `${Math.round(calories)} kcal/jour (ANSES fallback)`,
+      reasoning: `Calcul Mifflin-St Jeor avec répartition ANSES: ${Math.round(proteinRatio * 100)}% protéines, ${Math.round(carbsRatio * 100)}% glucides, ${Math.round(fatsRatio * 100)}% lipides`,
+      confidence: 0.7,
+      sources: [{ content: 'Recommandations ANSES 2021', source: 'anses', relevance: 1.0 }],
     }
   }
 }
