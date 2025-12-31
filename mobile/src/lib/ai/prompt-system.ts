@@ -2,18 +2,31 @@
  * LYM AI Prompt System - Centralized Prompt Engineering
  *
  * Architecture de prompts optimisée pour RAG + DSPy:
- * 1. System Prompts: Définissent le persona et les règles globales
- * 2. Task Prompts: Instructions spécifiques par fonctionnalité
- * 3. RAG Context Templates: Format d'injection des sources
- * 4. Output Schemas: Formats JSON stricts pour parsing fiable
+ * 1. Policy Layer: Règles de sécurité santé (priorité absolue)
+ * 2. System Prompts: Persona et règles globales
+ * 3. Task Prompts: Instructions spécifiques par fonctionnalité
+ * 4. RAG Context: Format d'injection des sources avec IDs traçables
+ * 5. Output Schemas: Formats JSON stricts pour parsing fiable
  *
  * Best Practices appliquées:
- * - Chain-of-Thought (CoT) pour raisonnement complexe
- * - Few-shot examples pour cohérence
+ * - Safety policies (TCA, grossesse, pathologies) - see safety-policies.ts
+ * - Citation validation (prevents hallucinated sources)
  * - Structured outputs avec JSON schemas
- * - Citations obligatoires depuis RAG
  * - Fallback gracieux si RAG indisponible
+ *
+ * @see safety-policies.ts for health guardrails and citation validation
  */
+
+import {
+  SAFETY_POLICY_PROMPT,
+  formatSourcesForPrompt,
+  detectHealthRedFlags,
+  postProcessResponse,
+  type RAGSource,
+} from './safety-policies'
+
+// Re-export safety utilities for convenience
+export { detectHealthRedFlags, postProcessResponse, type RAGSource } from './safety-policies'
 
 // ============= CORE PERSONA =============
 
@@ -35,6 +48,7 @@ export const LYMIA_PERSONA = {
 
 /**
  * System prompt de base pour toutes les interactions LymIA
+ * Includes safety policy layer for health guardrails
  */
 export const LYMIA_SYSTEM_PROMPT = `Tu es ${LYMIA_PERSONA.name}, ${LYMIA_PERSONA.role}.
 
@@ -46,13 +60,14 @@ IDENTITÉ:
 EXPERTISE:
 ${LYMIA_PERSONA.expertise.map(e => `- ${e}`).join('\n')}
 
-RÈGLES ABSOLUES:
-1. JAMAIS de conseil médical - renvoyer vers un professionnel de santé
-2. TOUJOURS personnaliser selon le profil utilisateur
-3. CITER les sources scientifiques (ANSES, EFSA, OMS, INSERM)
-4. ENCOURAGER sans culpabiliser
-5. Réponses CONCISES (max 3-4 phrases sauf si demandé autrement)
-6. Format Markdown pour la lisibilité`
+${SAFETY_POLICY_PROMPT}
+
+RÈGLES DE RÉPONSE:
+1. TOUJOURS personnaliser selon le profil utilisateur
+2. CITER les sources avec [numéro] quand fournies
+3. ENCOURAGER sans culpabiliser
+4. Réponses CONCISES (2-4 phrases max)
+5. Si tu n'as pas de source pour une affirmation santé, écris "selon les recommandations générales"`
 
 // ============= RAG CONTEXT TEMPLATES =============
 
