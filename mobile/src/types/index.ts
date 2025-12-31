@@ -589,3 +589,69 @@ export interface PaginatedResponse<T> {
   pageSize: number
   hasMore: boolean
 }
+
+// =============================================================================
+// NOTIFICATION TYPES
+// =============================================================================
+
+export type InsightCategory = 'nutrition' | 'wellness' | 'sport' | 'progress' | 'behavior'
+
+export type InsightSeverity = 'info' | 'warning' | 'celebration' | 'alert'
+
+export interface DailyInsight {
+  id: string
+  title: string // Max 50 chars
+  body: string // Max 150 chars
+  category: InsightCategory
+  severity: InsightSeverity
+  deepLink?: string // Route to open in app
+  source?: string // RAG source if available
+  confidence?: number
+  generatedAt: string
+}
+
+export interface NotificationPreferences {
+  dailyInsightsEnabled: boolean
+  preferredHour: number // 8-21, default 9
+  lastNotificationDate: string | null
+  lastNotificationId: string | null
+  notificationHistory: Array<{
+    id: string
+    title: string
+    sentAt: string
+  }>
+}
+
+// =============================================================================
+// SUPER AGENT TYPES
+// =============================================================================
+
+export type AgentType = 'behavior' | 'wellness' | 'coach' | 'nutrition' | 'sport'
+
+export interface AgentInsight {
+  agentType: AgentType
+  category: InsightCategory
+  severity: InsightSeverity
+  title: string
+  description: string
+  confidence: number
+  data?: Record<string, unknown>
+  sources?: string[]
+  timestamp: string
+}
+
+export interface SuperAgentAnalysis {
+  insights: AgentInsight[]
+  prioritizedInsight: AgentInsight | null
+  summary: string
+  shouldNotify: boolean
+  notificationPayload?: DailyInsight
+  analyzedAt: string
+}
+
+export interface EventTrigger {
+  type: 'streak_milestone' | 'goal_achieved' | 'pattern_detected' | 'alert' | 'celebration'
+  priority: number // 1-10, 10 being highest
+  data: Record<string, unknown>
+  triggeredAt: string
+}

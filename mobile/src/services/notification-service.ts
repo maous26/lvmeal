@@ -4,6 +4,7 @@
  * Fonctionnalités:
  * - Demande de permissions
  * - Envoi de notifications locales
+ * - Scheduling quotidien configurable
  * - Gestion du token push
  * - Anti-spam (1 notification/jour max)
  */
@@ -12,6 +13,7 @@ import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { DailyInsight, NotificationPreferences } from '../types'
 
 // Configuration des notifications
 Notifications.setNotificationHandler({
@@ -29,14 +31,24 @@ const STORAGE_KEYS = {
   LAST_NOTIFICATION_DATE: '@lym_last_notification_date',
   NOTIFICATION_HISTORY: '@lym_notification_history',
   PUSH_TOKEN: '@lym_push_token',
+  NOTIFICATION_PREFS: '@lym_notification_prefs',
+}
+
+// Default preferences
+const DEFAULT_PREFERENCES: NotificationPreferences = {
+  dailyInsightsEnabled: true,
+  preferredHour: 9, // 9 AM
+  lastNotificationDate: null,
+  lastNotificationId: null,
+  notificationHistory: [],
 }
 
 // Types
 export interface NotificationData {
   title: string
   body: string
-  category: 'nutrition' | 'wellness' | 'sport' | 'progress' | 'alert'
-  severity: 'info' | 'warning' | 'celebration'
+  category: 'nutrition' | 'wellness' | 'sport' | 'progress' | 'alert' | 'behavior'
+  severity: 'info' | 'warning' | 'celebration' | 'alert'
   deepLink?: string
   source?: string // Source RAG si disponible
 }
@@ -285,4 +297,208 @@ export async function setBadgeCount(count: number): Promise<void> {
 export async function resetNotificationHistory(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEYS.LAST_NOTIFICATION_DATE)
   await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATION_HISTORY)
+}
+
+// ============= PREFERENCES MANAGEMENT =============
+
+/**
+ * Get notification preferences from storage
+ */
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  try {
+    const stored = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_PREFS)
+    if (stored) {
+      return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) }
+    }
+  } catch (error) {
+    console.error('[Notifications] Failed to load preferences:', error)
+  }
+  return DEFAULT_PREFERENCES
+}
+
+/**
+ * Save notification preferences
+ */
+export async function saveNotificationPreferences(
+  prefs: Partial<NotificationPreferences>
+): Promise<void> {
+  try {
+    const current = await getNotificationPreferences()
+    const updated = { ...current, ...prefs }
+    await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_PREFS, JSON.stringify(updated))
+
+    // Reschedule if hour changed or enabled/disabled
+    if (prefs.dailyInsightsEnabled !== undefined || prefs.preferredHour !== undefined) {
+      if (updated.dailyInsightsEnabled) {
+        await scheduleDailyInsightNotification(updated.preferredHour)
+      } else {
+        await cancelAllNotifications()
+      }
+    }
+  } catch (error) {
+    console.error('[Notifications] Failed to save preferences:', error)
+  }
+}
+
+/**
+ * Toggle daily insights on/off
+ */
+export async function toggleDailyInsights(enabled: boolean): Promise<void> {
+  await saveNotificationPreferences({ dailyInsightsEnabled: enabled })
+}
+
+/**
+ * Update preferred notification hour
+ */
+export async function setPreferredHour(hour: number): Promise<void> {
+  // Clamp to reasonable hours (8 AM - 9 PM)
+  const clampedHour = Math.max(8, Math.min(21, hour))
+  await saveNotificationPreferences({ preferredHour: clampedHour })
+}
+
+// ============= SCHEDULING =============
+
+/**
+ * Schedule daily insight notification at preferred hour
+ */
+export async function scheduleDailyInsightNotification(hour: number): Promise<string | null> {
+  // Cancel existing scheduled notifications first
+  await cancelAllNotifications()
+
+  try {
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '💡 LymIA a un conseil pour toi',
+        body: "Ouvre l'app pour découvrir ton insight personnalisé du jour",
+        data: { type: 'daily_insight_trigger' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute: 0,
+      },
+    })
+
+    console.log('[Notifications] Scheduled daily notification:', { id, hour })
+    return id
+  } catch (error) {
+    console.error('[Notifications] Failed to schedule notification:', error)
+    return null
+  }
+}
+
+/**
+ * Get all scheduled notifications
+ */
+export async function getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  return await Notifications.getAllScheduledNotificationsAsync()
+}
+
+// ============= INSIGHT NOTIFICATIONS =============
+
+/**
+ * Send daily insight notification
+ */
+export async function sendInsightNotification(insight: DailyInsight): Promise<boolean> {
+  // Check if we already sent a notification today
+  const prefs = await getNotificationPreferences()
+  const today = new Date().toISOString().split('T')[0]
+
+  if (prefs.lastNotificationDate === today) {
+    console.log('[Notifications] Already sent notification today, skipping')
+    return false
+  }
+
+  // Determine emoji based on category/severity
+  const emoji = getInsightEmoji(insight.category, insight.severity)
+
+  const result = await sendNotification({
+    title: insight.title,
+    body: insight.body,
+    category: insight.category,
+    severity: insight.severity,
+    deepLink: insight.deepLink,
+    source: insight.source,
+  })
+
+  if (result) {
+    // Update preferences with last notification info
+    await saveNotificationPreferences({
+      lastNotificationDate: today,
+      lastNotificationId: insight.id,
+      notificationHistory: [
+        { id: insight.id, title: insight.title, sentAt: new Date().toISOString() },
+        ...prefs.notificationHistory.slice(0, 29), // Keep last 30
+      ],
+    })
+  }
+
+  return result
+}
+
+/**
+ * Get appropriate emoji for insight
+ */
+function getInsightEmoji(
+  category: DailyInsight['category'],
+  severity: DailyInsight['severity']
+): string {
+  if (severity === 'celebration') return '🎉'
+  if (severity === 'alert') return '⚠️'
+
+  switch (category) {
+    case 'nutrition':
+      return '🥗'
+    case 'wellness':
+      return '😴'
+    case 'sport':
+      return '💪'
+    case 'progress':
+      return '📈'
+    case 'behavior':
+      return '🧠'
+    default:
+      return '💡'
+  }
+}
+
+// ============= INITIALIZATION =============
+
+/**
+ * Initialize notifications on app start
+ */
+export async function initializeNotifications(): Promise<boolean> {
+  const granted = await requestNotificationPermissions()
+
+  if (granted) {
+    // Load preferences and schedule if enabled
+    const prefs = await getNotificationPreferences()
+    if (prefs.dailyInsightsEnabled) {
+      await scheduleDailyInsightNotification(prefs.preferredHour)
+    }
+  }
+
+  return granted
+}
+
+/**
+ * Check if notifications are enabled for this device
+ */
+export async function areNotificationsEnabled(): Promise<boolean> {
+  const { status } = await Notifications.getPermissionsAsync()
+  return status === 'granted'
+}
+
+/**
+ * Clear notification badge
+ */
+export async function clearBadge(): Promise<void> {
+  await setBadgeCount(0)
+}
+
+/**
+ * Dismiss all displayed notifications
+ */
+export async function dismissAllNotifications(): Promise<void> {
+  await Notifications.dismissAllNotificationsAsync()
 }

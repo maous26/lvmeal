@@ -287,10 +287,15 @@ def create_pipeline(model: str = "gpt-4o-mini") -> LYMRAGPipeline:
     """
     import os
 
-    # Configure DSPy with OpenAI
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is required")
+
+    # Configure DSPy with OpenAI using LM class (DSPy 2.4+)
+    # Format: 'openai/model-name' with api_key parameter
     lm = dspy.LM(
-        model=f"openai/{model}",
-        api_key=os.getenv("OPENAI_API_KEY"),
+        f"openai/{model}",
+        api_key=api_key,
         temperature=0.7,
         max_tokens=1000
     )

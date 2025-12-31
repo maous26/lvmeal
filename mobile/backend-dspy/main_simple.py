@@ -1,5 +1,6 @@
 """
-Simple FastAPI server for LYM DSPy RAG API.
+Simple FastAPI server for health checks.
+Used to verify Railway deployment works.
 """
 
 import os
@@ -30,7 +31,7 @@ async def health_check():
         "status": "healthy",
         "pipeline_ready": False,
         "openai_configured": bool(api_key),
-        "message": "Simple mode - DSPy temporarily disabled for stability"
+        "message": "Simple mode - DSPy disabled"
     }
 
 
