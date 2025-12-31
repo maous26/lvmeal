@@ -469,16 +469,11 @@ class MeditationTTSService {
       // Lire le contenu en ArrayBuffer puis convertir en base64
       const arrayBuffer = await response.arrayBuffer()
       const bytes = new Uint8Array(arrayBuffer)
-      let binary = ''
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i])
-      }
-      const audioBase64 = btoa(binary)
 
-      // Sauvegarder localement
+      // Sauvegarder localement (nouvelle API expo-file-system)
       if (!this.cacheDir) await this.initializeCache()
       const file = new File(this.cacheDir!, `${session.id}.wav`)
-      file.write(audioBase64, { encoding: 'base64' })
+      file.write(bytes)
 
       onProgress?.('ready')
       return file.uri

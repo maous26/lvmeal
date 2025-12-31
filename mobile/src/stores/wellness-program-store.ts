@@ -28,13 +28,12 @@ export interface WellnessPhaseConfig {
   focus: string
   objectives: string[]
   dailyPractices: {
-    meditationMinutes: number
-    breathingExercises: number // nombre de sessions
+    breathingExercises: number // nombre de sessions/jour
     gratitudeEntries: number
     sleepHours: number
   }
   weeklyGoals: {
-    mindfulnessMinutes: number
+    meditationSessions: number // sessions TTS audio par semaine (1)
     journalEntries: number
     digitalDetoxHours: number
     socialConnections: number
@@ -52,25 +51,24 @@ export const WELLNESS_PHASE_CONFIGS: Record<WellnessPhase, WellnessPhaseConfig> 
     objectives: [
       'Optimiser l\'hygiène de sommeil',
       'Maîtriser la respiration diaphragmatique',
+      'Écouter les méditations guidées (1/semaine)',
       'Créer une routine du soir apaisante',
-      'Réduire l\'exposition aux écrans le soir',
     ],
     dailyPractices: {
-      meditationMinutes: 5,
       breathingExercises: 2,
       gratitudeEntries: 1,
       sleepHours: 7.5,
     },
     weeklyGoals: {
-      mindfulnessMinutes: 35,
+      meditationSessions: 1,
       journalEntries: 3,
       digitalDetoxHours: 7,
       socialConnections: 2,
     },
     techniques: [
+      'Méditation guidée audio (1x/semaine)',
       'Respiration 4-7-8 (détente)',
       'Cohérence cardiaque (5-5)',
-      'Body scan avant sommeil',
       'Routine du soir sans écran',
     ],
   },
@@ -81,25 +79,24 @@ export const WELLNESS_PHASE_CONFIGS: Record<WellnessPhase, WellnessPhaseConfig> 
     durationWeeks: 3,
     focus: 'Méditation & Pleine Conscience',
     objectives: [
-      'Pratiquer la méditation guidée quotidienne',
+      'Écouter la méditation guidée de la semaine',
       'Développer l\'attention au moment présent',
       'Reconnaître les schémas de pensées automatiques',
       'Cultiver la bienveillance envers soi',
     ],
     dailyPractices: {
-      meditationMinutes: 10,
       breathingExercises: 2,
       gratitudeEntries: 2,
       sleepHours: 7.5,
     },
     weeklyGoals: {
-      mindfulnessMinutes: 70,
+      meditationSessions: 1,
       journalEntries: 5,
       digitalDetoxHours: 10,
       socialConnections: 3,
     },
     techniques: [
-      'Méditation de pleine conscience (MBSR)',
+      'Méditation guidée audio (1x/semaine)',
       'Scan corporel approfondi',
       'Marche méditative',
       'Moments de pause consciente',
@@ -112,28 +109,27 @@ export const WELLNESS_PHASE_CONFIGS: Record<WellnessPhase, WellnessPhaseConfig> 
     durationWeeks: 3,
     focus: 'Gestion du Stress & Routines',
     objectives: [
+      'Écouter la méditation guidée de la semaine',
       'Identifier les déclencheurs de stress',
       'Appliquer des techniques de régulation émotionnelle',
       'Établir des rituels matinaux et du soir',
-      'Équilibrer vie numérique et déconnexion',
     ],
     dailyPractices: {
-      meditationMinutes: 15,
       breathingExercises: 3,
       gratitudeEntries: 3,
       sleepHours: 8,
     },
     weeklyGoals: {
-      mindfulnessMinutes: 105,
+      meditationSessions: 1,
       journalEntries: 7,
       digitalDetoxHours: 14,
       socialConnections: 4,
     },
     techniques: [
+      'Méditation guidée audio (1x/semaine)',
       'Journaling émotionnel',
       'Technique STOP (stress instantané)',
       'Visualisation positive',
-      'Rituels d\'ancrage quotidiens',
     ],
   },
   harmony: {
@@ -143,27 +139,26 @@ export const WELLNESS_PHASE_CONFIGS: Record<WellnessPhase, WellnessPhaseConfig> 
     durationWeeks: 0, // Ongoing
     focus: 'Intégration & Maintenance',
     objectives: [
+      'Réécouter les méditations selon tes besoins',
       'Intégrer les pratiques dans la vie quotidienne',
-      'Adapter les routines selon les besoins',
       'Cultiver les relations sociales positives',
       'Maintenir l\'équilibre à long terme',
     ],
     dailyPractices: {
-      meditationMinutes: 15,
       breathingExercises: 2,
       gratitudeEntries: 3,
       sleepHours: 8,
     },
     weeklyGoals: {
-      mindfulnessMinutes: 105,
+      meditationSessions: 1,
       journalEntries: 7,
       digitalDetoxHours: 14,
       socialConnections: 5,
     },
     techniques: [
+      'Réécoute des méditations préférées',
       'Pratique libre personnalisée',
-      'Méditations avancées',
-      'Retraites mini (demi-journée)',
+      'Cohérence cardiaque quotidienne',
       'Partage et soutien communautaire',
     ],
   },
@@ -176,9 +171,7 @@ export interface WellnessDailyLog {
   sleepQuality?: 1 | 2 | 3 | 4 | 5
   sleepTime?: string // Heure du coucher
   wakeTime?: string // Heure du réveil
-  // Méditation & Respiration
-  meditationMinutes?: number
-  meditationType?: 'guided' | 'free' | 'body_scan' | 'breathing' | 'walking'
+  // Respiration (méditation TTS trackée dans meditation-store)
   breathingExercises?: number
   breathingType?: '4-7-8' | 'coherence' | 'diaphragmatic' | 'box'
   // État mental
@@ -205,12 +198,10 @@ export interface WellnessWeekSummary {
   // Moyennes
   avgSleepHours: number
   avgSleepQuality: number
-  avgMeditationMinutes: number
   avgMood: number
   avgStress: number
   avgEnergy: number
-  // Totaux
-  totalMeditationMinutes: number
+  // Totaux (méditation TTS trackée dans meditation-store)
   totalBreathingExercises: number
   totalGratitudeEntries: number
   totalDigitalDetoxMinutes: number
@@ -250,8 +241,8 @@ export interface WellnessProgramState {
   totalWeeksCompleted: number
   currentStreak: number
   longestStreak: number
-  totalMeditationMinutes: number
   totalBreathingExercises: number
+  // Note: méditation TTS trackée dans meditation-store (sessionsCompleted, totalMeditationMinutes)
 
   // Visibility logic (interaction with Metabolic program)
   isHiddenDueToMetabolic: boolean
@@ -287,7 +278,7 @@ export interface WellnessProgramState {
   // Stats
   getTotalStats: () => {
     totalDays: number
-    totalMeditationHours: number
+    totalBreathingExercises: number
     avgSleepQuality: number
     avgMood: number
     streakRecord: number
@@ -348,7 +339,6 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
       totalWeeksCompleted: 0,
       currentStreak: 0,
       longestStreak: 0,
-      totalMeditationMinutes: 0,
       totalBreathingExercises: 0,
       isHiddenDueToMetabolic: false,
       wasProposedAfterMetabolic: false,
@@ -367,7 +357,6 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           weekSummaries: [],
           totalWeeksCompleted: 0,
           currentStreak: 0,
-          totalMeditationMinutes: 0,
           totalBreathingExercises: 0,
           isHiddenDueToMetabolic: false,
         })
@@ -385,7 +374,7 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
 
       logDaily: (log) => {
         const today = getDateString()
-        const { dailyLogs, currentStreak, longestStreak, totalMeditationMinutes, totalBreathingExercises } = get()
+        const { dailyLogs, currentStreak, longestStreak, totalBreathingExercises } = get()
 
         const existingIndex = dailyLogs.findIndex(l => l.date === today)
         const existingLog = existingIndex >= 0 ? dailyLogs[existingIndex] : null
@@ -409,17 +398,14 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
         const newStreak = hadTodayLog ? currentStreak : (hasYesterdayLog ? currentStreak + 1 : 1)
         const newLongest = Math.max(longestStreak, newStreak)
 
-        // Update totals (only add new meditation/breathing, not replacing)
-        const prevMeditation = existingLog?.meditationMinutes || 0
+        // Update breathing totals
         const prevBreathing = existingLog?.breathingExercises || 0
-        const newMeditation = log.meditationMinutes || 0
         const newBreathing = log.breathingExercises || 0
 
         set({
           dailyLogs: updatedLogs,
           currentStreak: newStreak,
           longestStreak: newLongest,
-          totalMeditationMinutes: totalMeditationMinutes - prevMeditation + newMeditation,
           totalBreathingExercises: totalBreathingExercises - prevBreathing + newBreathing,
         })
       },
@@ -462,13 +448,11 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
         // Calculate averages
         const avgSleep = logs.reduce((sum, l) => sum + (l.sleepHours || 0), 0) / logs.length
         const avgSleepQuality = logs.reduce((sum, l) => sum + (l.sleepQuality || 3), 0) / logs.length
-        const avgMeditation = logs.reduce((sum, l) => sum + (l.meditationMinutes || 0), 0) / logs.length
         const avgMood = logs.reduce((sum, l) => sum + (l.moodLevel || 3), 0) / logs.length
         const avgStress = logs.reduce((sum, l) => sum + (l.stressLevel || 3), 0) / logs.length
         const avgEnergy = logs.reduce((sum, l) => sum + (l.energyLevel || 3), 0) / logs.length
 
-        // Calculate totals
-        const totalMeditation = logs.reduce((sum, l) => sum + (l.meditationMinutes || 0), 0)
+        // Calculate totals (méditation TTS trackée séparément dans meditation-store)
         const totalBreathing = logs.reduce((sum, l) => sum + (l.breathingExercises || 0), 0)
         const totalGratitude = logs.reduce((sum, l) => sum + (l.gratitudeEntries?.length || 0), 0)
         const totalDetox = logs.reduce((sum, l) => sum + (l.digitalDetoxMinutes || 0), 0)
@@ -487,11 +471,7 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           areasToImprove.push('Améliorer la durée de sommeil')
         }
 
-        if (totalMeditation >= config.weeklyGoals.mindfulnessMinutes) {
-          objectivesAchieved.push('Objectif méditation atteint')
-        } else {
-          areasToImprove.push('Augmenter le temps de méditation')
-        }
+        // Note: Objectif méditation vérifié via meditation-store.sessionsCompleted
 
         if (avgStress <= 2.5) {
           objectivesAchieved.push('Stress bien géré')
@@ -514,11 +494,9 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           phase: currentPhase,
           avgSleepHours: Math.round(avgSleep * 10) / 10,
           avgSleepQuality: Math.round(avgSleepQuality * 10) / 10,
-          avgMeditationMinutes: Math.round(avgMeditation),
           avgMood: Math.round(avgMood * 10) / 10,
           avgStress: Math.round(avgStress * 10) / 10,
           avgEnergy: Math.round(avgEnergy * 10) / 10,
-          totalMeditationMinutes: totalMeditation,
           totalBreathingExercises: totalBreathing,
           totalGratitudeEntries: totalGratitude,
           totalDigitalDetoxMinutes: totalDetox,
@@ -720,7 +698,7 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
       },
 
       getTotalStats: () => {
-        const { dailyLogs, longestStreak, totalMeditationMinutes } = get()
+        const { dailyLogs, longestStreak, totalBreathingExercises } = get()
 
         const logsWithSleep = dailyLogs.filter(l => l.sleepQuality)
         const avgSleepQuality = logsWithSleep.length > 0
@@ -734,7 +712,7 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
 
         return {
           totalDays: dailyLogs.length,
-          totalMeditationHours: Math.round(totalMeditationMinutes / 60 * 10) / 10,
+          totalBreathingExercises,
           avgSleepQuality: Math.round(avgSleepQuality * 10) / 10,
           avgMood: Math.round(avgMood * 10) / 10,
           streakRecord: longestStreak,

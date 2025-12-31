@@ -394,28 +394,23 @@ async function generateMeditationRecommendations(
     `méditation ${phaseConfig.focus} MBSR pleine conscience Jon Kabat-Zinn`
   )
 
-  // Phase-specific meditation
-  const targetMinutes = phaseConfig.dailyPractices.meditationMinutes
-  const avgMeditation = userData.recentLogs.filter(l => l.meditationMinutes).length > 0
-    ? userData.recentLogs.reduce((sum, l) => sum + (l.meditationMinutes || 0), 0) /
-      userData.recentLogs.filter(l => l.meditationMinutes).length
-    : 0
-
+  // Note: Méditations TTS trackées dans meditation-store (sessionsCompleted)
+  // Ici on recommande des pratiques complémentaires
   const source = meditationKB[0]?.source || 'MBSR'
 
-  // Main meditation for the phase
+  // Complementary meditation recommendations (main TTS sessions tracked in meditation-store)
   switch (userData.currentPhase) {
     case 'foundations':
       recommendations.push({
         id: `rec_med_foundations_${Date.now()}`,
         type: 'meditation',
-        title: 'Body Scan Débutant',
-        description: 'Allonge-toi et scanne ton corps de la tête aux pieds. Observe les sensations sans jugement.',
-        duration: targetMinutes,
+        title: 'Body Scan Rapide (5 min)',
+        description: 'Complément à ta méditation guidée hebdomadaire. Scanne ton corps avant de dormir.',
+        duration: 5,
         technique: 'Scan corporel progressif',
         scientificBasis: 'Le body scan réduit les tensions physiques et améliore la conscience corporelle (MBSR)',
         source: source.toUpperCase(),
-        priority: avgMeditation < targetMinutes ? 'high' : 'medium',
+        priority: 'medium',
         timeOfDay: 'evening',
       })
       break
@@ -424,13 +419,13 @@ async function generateMeditationRecommendations(
       recommendations.push({
         id: `rec_med_awareness_${Date.now()}`,
         type: 'meditation',
-        title: 'Méditation de Pleine Conscience',
-        description: 'Assieds-toi confortablement, concentre-toi sur ta respiration. Quand ton esprit s\'échappe, ramène-le doucement.',
-        duration: targetMinutes,
+        title: 'Pause Consciente (3 min)',
+        description: 'En complément de ta méditation guidée. Prends 3 min pour observer ta respiration.',
+        duration: 3,
         technique: 'Attention focalisée sur la respiration',
         scientificBasis: 'La méditation de pleine conscience réduit l\'anxiété de 58% (méta-analyse PubMed)',
         source: source.toUpperCase(),
-        priority: avgMeditation < targetMinutes ? 'high' : 'medium',
+        priority: 'medium',
         timeOfDay: 'morning',
       })
 
@@ -452,9 +447,9 @@ async function generateMeditationRecommendations(
       recommendations.push({
         id: `rec_med_balance_${Date.now()}`,
         type: 'meditation',
-        title: 'Méditation Loving-Kindness',
-        description: 'Envoie des pensées bienveillantes à toi-même, puis à tes proches, puis à tous les êtres.',
-        duration: targetMinutes,
+        title: 'Metta Express (5 min)',
+        description: 'En complément de ta méditation guidée. Envoie des pensées bienveillantes.',
+        duration: 5,
         technique: 'Metta Bhavana',
         scientificBasis: 'La méditation de bienveillance augmente les émotions positives et la connexion sociale',
         source: source.toUpperCase(),
@@ -467,9 +462,9 @@ async function generateMeditationRecommendations(
       recommendations.push({
         id: `rec_med_harmony_${Date.now()}`,
         type: 'meditation',
-        title: 'Pratique Libre',
-        description: 'Choisis la technique qui te convient aujourd\'hui. Tu as développé l\'intuition pour savoir ce dont tu as besoin.',
-        duration: targetMinutes,
+        title: 'Pratique Libre (5-10 min)',
+        description: 'Réécoute tes méditations préférées ou pratique en autonomie.',
+        duration: 10,
         technique: 'Auto-guidée',
         scientificBasis: 'L\'autonomie dans la pratique renforce l\'engagement à long terme',
         source: 'Expert',
@@ -575,7 +570,7 @@ async function generateDailyPlan(
       type: 'meditation',
       title: 'Body scan du soir',
       description: 'Détends chaque partie de ton corps avant de dormir pour un sommeil réparateur.',
-      duration: phaseConfig.dailyPractices.meditationMinutes,
+      duration: 5, // Complément rapide aux méditations TTS
       technique: 'Scan corporel',
       scientificBasis: 'Améliore la qualité du sommeil et réduit le temps d\'endormissement',
       source: 'MBSR',
@@ -740,9 +735,10 @@ export async function getQuickWellnessCheck(
     issues.push('humeur basse')
   }
 
-  // Check meditation
-  if (!todayLog.meditationMinutes || todayLog.meditationMinutes < phaseConfig.dailyPractices.meditationMinutes / 2) {
-    issues.push('méditation manquante')
+  // Note: Méditation TTS trackée séparément (dans meditation-store)
+  // On vérifie les exercices de respiration à la place
+  if (!todayLog.breathingExercises || todayLog.breathingExercises < phaseConfig.dailyPractices.breathingExercises / 2) {
+    issues.push('respiration manquante')
   }
 
   if (issues.length === 0) {
@@ -763,7 +759,7 @@ export async function getQuickWellnessCheck(
       'sommeil court': 'Essaie de te coucher plus tôt ce soir.',
       'stress élevé': 'Prends 5 min pour la cohérence cardiaque.',
       'humeur basse': 'Note 3 choses positives de ta journée.',
-      'méditation manquante': 'Même 5 min de méditation font la différence.',
+      'respiration manquante': 'Prends 5 min pour la cohérence cardiaque.',
     }
 
     return {

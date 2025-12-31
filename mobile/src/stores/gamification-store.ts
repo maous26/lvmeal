@@ -78,6 +78,11 @@ export const XP_REWARDS = {
   CONNECT_WEARABLE: 50,
   SYNC_WEARABLE: 5,
   WEEKLY_PROGRAM_COMPLETED: 100,
+
+  // Méditation TTS
+  MEDITATION_SESSION_COMPLETED: 40,
+  MEDITATION_FIRST_SESSION: 50,
+  MEDITATION_PROGRAM_COMPLETED: 200,
 } as const
 
 // =============================================================================
@@ -173,6 +178,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'tier_silver', name: 'Argent', description: 'Atteindre le tier Argent', icon: '🥈', xpReward: 0, condition: { type: 'tier', target: 500 } },
   { id: 'tier_gold', name: 'Or', description: 'Atteindre le tier Or', icon: '🥇', xpReward: 0, condition: { type: 'tier', target: 2000 } },
   { id: 'tier_diamond', name: 'Diamant', description: 'Atteindre le tier Diamant', icon: '💎', xpReward: 0, condition: { type: 'tier', target: 5000 } },
+
+  // Méditation (3)
+  { id: 'meditation_first', name: 'Première méditation', description: 'Compléter ta première méditation guidée', icon: '🧘', xpReward: 50, condition: { type: 'count', target: 1, metric: 'meditation_sessions' } },
+  { id: 'meditation_4', name: 'Mi-parcours', description: '4 méditations guidées complétées', icon: '🌙', xpReward: 100, condition: { type: 'count', target: 4, metric: 'meditation_sessions' } },
+  { id: 'meditation_8', name: 'Maître Zen', description: 'Programme de 8 méditations complété', icon: '🪷', xpReward: 300, condition: { type: 'count', target: 8, metric: 'meditation_sessions' } },
 ]
 
 // =============================================================================

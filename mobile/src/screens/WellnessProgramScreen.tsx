@@ -94,7 +94,6 @@ export default function WellnessProgramScreen() {
     currentWeek,
     currentStreak,
     longestStreak,
-    totalMeditationMinutes,
     dailyLogs,
     enroll,
     unenroll,
@@ -107,7 +106,7 @@ export default function WellnessProgramScreen() {
   } = useWellnessProgramStore()
 
   const { profile } = useUserStore()
-  const { totalMeditationMinutes: oralMeditationMinutes, sessionsCompleted } = useMeditationStore()
+  const { totalMeditationMinutes, sessionsCompleted } = useMeditationStore()
 
   const phaseConfig = getCurrentPhaseConfig()
   const todayLog = getTodayLog()
@@ -299,8 +298,8 @@ export default function WellnessProgramScreen() {
             <Text style={styles.sectionTitle}>Ce que tu obtiens</Text>
             <View style={styles.featuresList}>
               <View style={styles.featureItem}>
-                <Brain size={20} color={colors.secondary.primary} />
-                <Text style={styles.featureText}>Meditations guidees quotidiennes</Text>
+                <Headphones size={20} color={colors.secondary.primary} />
+                <Text style={styles.featureText}>8 meditations audio guidees (1 par semaine)</Text>
               </View>
               <View style={styles.featureItem}>
                 <Wind size={20} color={colors.accent.primary} />
@@ -436,7 +435,7 @@ export default function WellnessProgramScreen() {
         {/* Daily Practices */}
         <Text style={styles.sectionTitle}>Pratiques du jour</Text>
 
-        {/* Oral Meditations - NEW */}
+        {/* Méditations Guidées TTS */}
         <TouchableOpacity
           style={styles.oralMeditationCard}
           onPress={handleOpenMeditations}
@@ -455,75 +454,50 @@ export default function WellnessProgramScreen() {
               <View style={styles.oralMeditationInfo}>
                 <Text style={styles.oralMeditationTitle}>Meditations Guidees</Text>
                 <Text style={styles.oralMeditationSubtitle}>
-                  8 sessions audio generees par IA
+                  1 session par semaine • {sessionsCompleted > 0 ? `${sessionsCompleted} completee${sessionsCompleted > 1 ? 's' : ''}` : 'Commencer'}
                 </Text>
               </View>
               <ChevronRight size={24} color="rgba(255,255,255,0.7)" />
             </View>
+
+            {/* Progress indicator */}
+            <View style={styles.oralMeditationProgress}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => {
+                const isCompleted = sessionsCompleted >= week
+                const isCurrent = currentWeek === week && sessionsCompleted < week
+                return (
+                  <View
+                    key={week}
+                    style={[
+                      styles.oralMeditationDot,
+                      isCompleted && styles.oralMeditationDotCompleted,
+                      isCurrent && styles.oralMeditationDotCurrent,
+                    ]}
+                  >
+                    {isCompleted && <Check size={10} color="#FFFFFF" />}
+                  </View>
+                )
+              })}
+            </View>
+
             <View style={styles.oralMeditationStats}>
               <View style={styles.oralMeditationStat}>
-                <Text style={styles.oralMeditationStatValue}>{sessionsCompleted}</Text>
+                <Text style={styles.oralMeditationStatValue}>{sessionsCompleted}/8</Text>
                 <Text style={styles.oralMeditationStatLabel}>sessions</Text>
               </View>
               <View style={styles.oralMeditationStatDivider} />
               <View style={styles.oralMeditationStat}>
-                <Text style={styles.oralMeditationStatValue}>{Math.round(oralMeditationMinutes)}</Text>
+                <Text style={styles.oralMeditationStatValue}>{Math.round(totalMeditationMinutes)}</Text>
                 <Text style={styles.oralMeditationStatLabel}>minutes</Text>
               </View>
               <View style={styles.oralMeditationStatDivider} />
               <View style={styles.oralMeditationStat}>
-                <Text style={styles.oralMeditationStatValue}>{currentWeek}/8</Text>
-                <Text style={styles.oralMeditationStatLabel}>semaine</Text>
+                <Text style={styles.oralMeditationStatValue}>Sem {currentWeek}</Text>
+                <Text style={styles.oralMeditationStatLabel}>actuelle</Text>
               </View>
             </View>
           </LinearGradient>
         </TouchableOpacity>
-
-        {/* Quick meditation log - legacy */}
-        <Card style={styles.practiceCard}>
-          <View style={styles.practiceHeader}>
-            <View style={[styles.practiceIconBg, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-              <Brain size={20} color={colors.secondary.primary} />
-            </View>
-            <View style={styles.practiceInfo}>
-              <Text style={styles.practiceTitle}>Meditation libre</Text>
-              <Text style={styles.practiceGoal}>
-                Objectif: {phaseConfig.dailyPractices.meditationMinutes} min/jour
-              </Text>
-            </View>
-            <View style={styles.practiceValue}>
-              <Text style={[
-                styles.practiceValueText,
-                (todayLog?.meditationMinutes || 0) >= phaseConfig.dailyPractices.meditationMinutes && styles.practiceValueComplete
-              ]}>
-                {todayLog?.meditationMinutes || 0} min
-              </Text>
-            </View>
-          </View>
-          <ProgressBar
-            value={todayLog?.meditationMinutes || 0}
-            max={phaseConfig.dailyPractices.meditationMinutes}
-            color={colors.secondary.primary}
-            size="sm"
-          />
-          <View style={styles.practiceButtons}>
-            {[5, 10, 15, 20].map(mins => (
-              <TouchableOpacity
-                key={mins}
-                style={[
-                  styles.practiceButton,
-                  todayLog?.meditationMinutes === mins && styles.practiceButtonActive
-                ]}
-                onPress={() => handleQuickLog('meditationMinutes', mins)}
-              >
-                <Text style={[
-                  styles.practiceButtonText,
-                  todayLog?.meditationMinutes === mins && styles.practiceButtonTextActive
-                ]}>{mins}m</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Card>
 
         {/* Breathing Exercise */}
         <Card style={styles.practiceCard}>
@@ -1507,5 +1481,27 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  oralMeditationProgress: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  oralMeditationDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  oralMeditationDotCompleted: {
+    backgroundColor: '#10B981',
+  },
+  oralMeditationDotCurrent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 })

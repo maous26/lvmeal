@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { meditationTTSService, MEDITATION_SESSIONS, type MeditationSession, type MeditationStatus } from '../services/meditation-tts-service'
+import { useGamificationStore, XP_REWARDS } from './gamification-store'
 
 export interface MeditationProgress {
   sessionId: string
@@ -285,12 +286,33 @@ export const useMeditationStore = create<MeditationState>()(
 
         get().updateProgress(sessionId, 0, true)
 
+        const newSessionsCompleted = sessionsCompleted + 1
+
         set({
-          sessionsCompleted: sessionsCompleted + 1,
+          sessionsCompleted: newSessionsCompleted,
           currentStreak: newStreak,
           longestStreak: Math.max(longestStreak, newStreak),
           lastMeditationDate: today,
         })
+
+        // Gamification: ajouter XP et mettre à jour les métriques
+        const gamification = useGamificationStore.getState()
+
+        // XP pour la session complétée
+        gamification.addXP(XP_REWARDS.MEDITATION_SESSION_COMPLETED, 'meditation_session')
+
+        // Bonus première session
+        if (newSessionsCompleted === 1) {
+          gamification.addXP(XP_REWARDS.MEDITATION_FIRST_SESSION, 'meditation_first')
+        }
+
+        // Bonus programme complet (8 sessions)
+        if (newSessionsCompleted === 8) {
+          gamification.addXP(XP_REWARDS.MEDITATION_PROGRAM_COMPLETED, 'meditation_complete')
+        }
+
+        // Incrémenter la métrique pour les achievements
+        gamification.incrementMetric('meditation_sessions')
       },
 
       setStatus: (status) => set({ currentStatus: status }),
