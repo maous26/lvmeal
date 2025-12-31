@@ -102,6 +102,10 @@ export interface TierInfo {
   features: string[]     // Features unlocked
 }
 
+// AI credits are NOT tied to gamification tiers - they come from subscription
+// Free users get 3 credits/month after trial, Premium users get unlimited
+export const FREE_MONTHLY_AI_CREDITS = 3  // Frustratingly low to push to premium
+
 export const TIERS: Record<UserTier, TierInfo> = {
   bronze: {
     id: 'bronze',
@@ -110,8 +114,8 @@ export const TIERS: Record<UserTier, TierInfo> = {
     icon: '🥉',
     color: '#CD7F32',
     minXP: 0,
-    aiCredits: 0,
-    features: ['Suivi repas', 'Objectifs nutrition'],
+    aiCredits: 0,  // Not used - see FREE_MONTHLY_AI_CREDITS
+    features: ['Suivi repas', 'Objectifs nutrition', 'Statistiques de base'],
   },
   silver: {
     id: 'silver',
@@ -120,8 +124,8 @@ export const TIERS: Record<UserTier, TierInfo> = {
     icon: '🥈',
     color: '#C0C0C0',
     minXP: 500,
-    aiCredits: 5,
-    features: ['5 analyses photo IA/mois', 'Suggestions personnalisees'],
+    aiCredits: 0,  // Not used
+    features: ['Recettes personnalisees', 'Historique complet', 'Export donnees'],
   },
   gold: {
     id: 'gold',
@@ -130,8 +134,8 @@ export const TIERS: Record<UserTier, TierInfo> = {
     icon: '🥇',
     color: '#FFD700',
     minXP: 2000,
-    aiCredits: 20,
-    features: ['20 analyses photo IA/mois', 'Plans IA illimites', 'Coach vocal'],
+    aiCredits: 0,  // Not used
+    features: ['Badge exclusif', 'Acces prioritaire nouvelles features', 'Communaute VIP'],
   },
   diamond: {
     id: 'diamond',
@@ -139,9 +143,9 @@ export const TIERS: Record<UserTier, TierInfo> = {
     nameFr: 'Diamant',
     icon: '💎',
     color: '#B9F2FF',
-    minXP: 5000,
-    aiCredits: -1, // Unlimited
-    features: ['IA illimitee', 'Premium gratuit 1 mois', 'Acces beta features'],
+    minXP: 10000,
+    aiCredits: 0,  // Not used - even Diamond needs Premium for unlimited AI
+    features: ['Badge legendaire', '1 mois Premium offert', 'Acces beta features'],
   },
 }
 
@@ -208,6 +212,11 @@ const RANKING_THRESHOLDS = {
 // STATE INTERFACE
 // =============================================================================
 
+// Trial duration in days
+export const TRIAL_DURATION_DAYS = 7
+// Trial credits: enough to taste AI features, not enough to stay free
+export const TRIAL_AI_CREDITS = 15  // ~2/jour, pousse vers abonnement
+
 interface GamificationState {
   // Core stats
   totalXP: number
@@ -224,6 +233,12 @@ interface GamificationState {
   aiCreditsUsed: number
   currentMonth: string
 
+  // Trial period tracking
+  trialStartDate: string | null  // Date when user started (ISO string)
+
+  // Premium subscription (source of AI credits, not gamification)
+  isPremium: boolean  // True if user has active Premium subscription
+
   // Metrics
   metricsCount: Record<string, number>
 
@@ -237,6 +252,8 @@ interface GamificationState {
   setMetric: (metric: string, value: number) => void
   useAICredit: () => boolean
   checkAchievements: () => void
+  startTrial: () => void  // Initialize trial period
+  setPremium: (isPremium: boolean) => void  // Set premium status (from payment system)
 
   // Getters
   getTier: () => TierInfo
@@ -244,6 +261,8 @@ interface GamificationState {
   getTierProgress: () => { current: number; needed: number; percentage: number }
   getWeeklyRank: () => WeeklyRankEntry
   getAICreditsRemaining: () => number
+  isInTrialPeriod: () => boolean  // Check if user is in trial
+  getTrialDaysRemaining: () => number  // Days left in trial
   getStreakInfo: () => { current: number; longest: number; isActive: boolean; bonus: number }
   getAchievements: () => { achievement: Achievement; unlocked: boolean }[]
   getLevel: () => number
@@ -258,6 +277,9 @@ interface GamificationState {
     aiCredits: number
     achievementsUnlocked: number
     achievementsTotal: number
+    isInTrial: boolean
+    trialDaysRemaining: number
+    isPremium: boolean
   }
 }
 
@@ -277,6 +299,8 @@ export const useGamificationStore = create<GamificationState>()(
       currentWeek: getWeekKey(),
       aiCreditsUsed: 0,
       currentMonth: getMonthKey(),
+      trialStartDate: null,  // Will be set on first use
+      isPremium: false,  // Set by payment system
       metricsCount: {},
       unlockedAchievements: [],
 
@@ -372,13 +396,30 @@ export const useGamificationStore = create<GamificationState>()(
 
       useAICredit: () => {
         const state = get()
-        const tier = state.getTier()
         const remaining = state.getAICreditsRemaining()
 
+        // No credits remaining (trial or regular)
         if (remaining === 0) return false
 
+        // Consume credit
         set((s) => ({ aiCreditsUsed: s.aiCreditsUsed + 1 }))
         return true
+      },
+
+      startTrial: () => {
+        const state = get()
+        // Only start trial if not already started
+        if (!state.trialStartDate) {
+          set({ trialStartDate: new Date().toISOString() })
+        }
+      },
+
+      setPremium: (isPremium: boolean) => {
+        set({ isPremium })
+        // Reset credits when upgrading to premium
+        if (isPremium) {
+          set({ aiCreditsUsed: 0 })
+        }
       },
 
       checkAchievements: () => {
@@ -480,14 +521,46 @@ export const useGamificationStore = create<GamificationState>()(
 
       getAICreditsRemaining: () => {
         const state = get()
-        const tier = state.getTier()
 
-        // Check if new month
+        // Premium users = unlimited AI
+        if (state.isPremium) {
+          return 999
+        }
+
+        // Check if new month (reset credits)
         const thisMonth = getMonthKey()
         const used = state.currentMonth === thisMonth ? state.aiCreditsUsed : 0
 
-        if (tier.aiCredits === -1) return 999 // Unlimited
-        return Math.max(0, tier.aiCredits - used)
+        // During trial period: 15 credits to taste the features
+        if (state.isInTrialPeriod()) {
+          return Math.max(0, TRIAL_AI_CREDITS - used)
+        }
+
+        // Free users after trial: only 3 credits/month (frustrating, push to premium)
+        return Math.max(0, FREE_MONTHLY_AI_CREDITS - used)
+      },
+
+      isInTrialPeriod: () => {
+        const { trialStartDate } = get()
+        if (!trialStartDate) return false
+
+        const startDate = new Date(trialStartDate)
+        const now = new Date()
+        const daysPassed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+
+        return daysPassed < TRIAL_DURATION_DAYS
+      },
+
+      getTrialDaysRemaining: () => {
+        const { trialStartDate } = get()
+        if (!trialStartDate) return TRIAL_DURATION_DAYS  // Not started yet
+
+        const startDate = new Date(trialStartDate)
+        const now = new Date()
+        const daysPassed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        const remaining = TRIAL_DURATION_DAYS - daysPassed
+
+        return Math.max(0, remaining)
       },
 
       getStreakInfo: () => {
@@ -555,11 +628,14 @@ export const useGamificationStore = create<GamificationState>()(
           aiCredits: state.getAICreditsRemaining(),
           achievementsUnlocked: achievements.filter((a) => a.unlocked).length,
           achievementsTotal: achievements.length,
+          isInTrial: state.isInTrialPeriod(),
+          trialDaysRemaining: state.getTrialDaysRemaining(),
+          isPremium: state.isPremium,
         }
       },
     }),
     {
-      name: 'presence-gamification-v2',
+      name: 'presence-gamification-v4',  // Bump version for premium field
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         totalXP: state.totalXP,
@@ -571,6 +647,8 @@ export const useGamificationStore = create<GamificationState>()(
         currentWeek: state.currentWeek,
         aiCreditsUsed: state.aiCreditsUsed,
         currentMonth: state.currentMonth,
+        trialStartDate: state.trialStartDate,
+        isPremium: state.isPremium,  // Persist premium status
         metricsCount: state.metricsCount,
         unlockedAchievements: state.unlockedAchievements,
       }),

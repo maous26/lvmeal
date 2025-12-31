@@ -20,6 +20,7 @@ import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { useUserStore } from '../stores/user-store'
 import { useOnboardingStore } from '../stores/onboarding-store'
+import { useGamificationStore } from '../stores/gamification-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
@@ -196,6 +197,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   // User store for persistent profile storage
   const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
   const { setSignupDate } = useOnboardingStore()
+  const { startTrial } = useGamificationStore()
   const { enroll: enrollSportInitiation } = useSportInitiationStore()
 
   // Program stores for enrollment
@@ -375,6 +377,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       // Initialize the 7-day trial (signup date for progressive unlock)
       setSignupDate()
 
+      // Start the AI trial period (unlimited AI credits for 7 days)
+      startTrial()
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -387,7 +392,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex])
     }
-  }, [currentStep, stepIndex, steps, profile, setStoreProfile, setOnboarded, enrollSportInitiation, enrollMetabolicBoost, enrollWellnessProgram, onComplete])
+  }, [currentStep, stepIndex, steps, profile, setStoreProfile, setOnboarded, startTrial, enrollSportInitiation, enrollMetabolicBoost, enrollWellnessProgram, onComplete])
 
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1

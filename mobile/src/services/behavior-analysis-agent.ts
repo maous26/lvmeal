@@ -13,6 +13,7 @@
 
 import OpenAI from 'openai'
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry, type RAGQueryResult } from './supabase-client'
+import { aiRateLimiter, MODEL_CONFIG } from './ai-rate-limiter'
 import type {
   UserProfile,
   NutritionInfo,
@@ -458,14 +459,55 @@ Réponds en JSON:
 }`
 
   try {
+    // Check rate limit for behavior analysis (2 credits)
+    const rateCheck = aiRateLimiter.checkRateLimit('behavior_analysis', {
+      daysTracked: data.daysTracked,
+      goal: profile.goal,
+    })
+
+    // Return cached result if available
+    if (rateCheck.cached) {
+      const cachedResult = JSON.parse(rateCheck.cached)
+      return (cachedResult.insights || []).map((insight: {
+        type: string
+        title: string
+        message: string
+        dataPoints: Array<{ label: string; value: string | number; trend?: string }>
+        source: string
+      }, index: number) => ({
+        id: `insight_corr_${Date.now()}_${index}`,
+        type: insight.type as BehaviorInsight['type'],
+        title: insight.title,
+        message: insight.message,
+        dataPoints: insight.dataPoints || [],
+        sources: [insight.source || correlationKB[0]?.source || 'Expert'],
+        confidence: correlationKB.length > 0 ? 0.85 : 0.7,
+      }))
+    }
+
+    // Check if request is allowed
+    if (!rateCheck.allowed) {
+      console.warn(`BehaviorAgent: ${rateCheck.reason}`)
+      return insights // Return empty insights if not allowed
+    }
+
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: rateCheck.model, // Use rate-limited model
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.4,
       response_format: { type: 'json_object' },
     })
 
     const result = JSON.parse(response.choices[0].message.content || '{}')
+
+    // Consume credits after successful call
+    aiRateLimiter.consumeCredits('behavior_analysis')
+
+    // Cache the result
+    aiRateLimiter.cacheResponse('behavior_analysis', {
+      daysTracked: data.daysTracked,
+      goal: profile.goal,
+    }, JSON.stringify(result))
 
     return (result.insights || []).map((insight: {
       type: string

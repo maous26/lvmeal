@@ -16,6 +16,7 @@
 import OpenAI from 'openai'
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry } from './supabase-client'
 import { buildPhasePromptModifier, getPhaseContext, PhaseMessages } from './phase-context'
+import { aiRateLimiter, type AIRequestType } from './ai-rate-limiter'
 import type {
   UserProfile,
   NutritionInfo,
@@ -143,6 +144,59 @@ function buildKBContext(entries: KnowledgeBaseEntry[]): string {
   ).join('\n\n')
 }
 
+/**
+ * Execute OpenAI call with rate limiting and model selection
+ */
+async function executeAICall(
+  requestType: AIRequestType,
+  messages: Array<{ role: 'user' | 'system' | 'assistant'; content: string }>,
+  options: {
+    temperature?: number
+    responseFormat?: { type: 'json_object' | 'text' }
+    context?: Record<string, unknown>
+  } = {}
+): Promise<{ content: string; model: string; fromCache: boolean } | null> {
+  const { temperature = 0.7, responseFormat, context = {} } = options
+
+  // Check rate limit and get model to use
+  const rateCheck = aiRateLimiter.checkRateLimit(requestType, context)
+
+  // Return cached response if available
+  if (rateCheck.cached) {
+    return { content: rateCheck.cached, model: 'cache', fromCache: true }
+  }
+
+  // Check if request is allowed
+  if (!rateCheck.allowed) {
+    console.warn(`AI Rate limit: ${rateCheck.reason}`)
+    return null
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: rateCheck.model,
+      messages,
+      temperature,
+      ...(responseFormat && { response_format: responseFormat }),
+    })
+
+    const content = response.choices[0].message.content || ''
+
+    // Consume credits after successful call
+    aiRateLimiter.consumeCredits(requestType)
+
+    // Cache the response if applicable
+    if (Object.keys(context).length > 0) {
+      aiRateLimiter.cacheResponse(requestType, context, content)
+    }
+
+    return { content, model: rateCheck.model, fromCache: false }
+  } catch (error) {
+    console.error(`AI call error (${requestType}):`, error)
+    throw error
+  }
+}
+
 // ============= CORE BRAIN FUNCTIONS =============
 
 /**
@@ -207,14 +261,21 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    })
+    const aiResponse = await executeAICall(
+      'coach_insight',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.3,
+        responseFormat: { type: 'json_object' },
+        context: { goal: profile.goal, weight: profile.weight, activityLevel: profile.activityLevel },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResponse) {
+      throw new Error('Rate limit atteint')
+    }
+
+    const result = JSON.parse(aiResponse.content || '{}')
 
     return {
       calories: result.calories || 2000,
@@ -336,14 +397,28 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'meal_plan',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.7,
+        responseFormat: { type: 'json_object' },
+        context: { mealType, goal: profile.goal, hour: new Date().getHours() },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return {
+        mealType,
+        suggestions: [],
+        decision: 'Credits IA insuffisants',
+        reasoning: 'Essaie plus tard ou passe au niveau superieur',
+        confidence: 0,
+        sources: [],
+      }
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return {
       mealType,
@@ -454,14 +529,21 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.6,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'coach_insight',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.6,
+        responseFormat: { type: 'json_object' },
+        context: { topic, goal: profile.goal, streak: currentStreak },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return []
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return (result.advices || []).map((advice: {
       message: string
@@ -560,14 +642,29 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'wellness_advice',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.4,
+        responseFormat: { type: 'json_object' },
+        context: { programType, phase: programProgress.phase },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return {
+        shouldProgress: false,
+        adjustments: [],
+        nextPhaseReady: false,
+        decision: 'Credits IA insuffisants',
+        reasoning: 'Essaie plus tard',
+        confidence: 0,
+        sources: [],
+      }
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return {
       shouldProgress: result.shouldProgress || false,
@@ -750,14 +847,30 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'behavior_analysis',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.4,
+        responseFormat: { type: 'json_object' },
+        context: { focus, daysAnalyzed: history.dailyTotals.length },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return {
+        patterns: [],
+        recommendations: ['Credits IA insuffisants pour l\'analyse comportementale'],
+        alerts: [],
+        summary: 'Passe au niveau superieur pour cette fonctionnalite',
+        decision: 'Credits insuffisants',
+        reasoning: 'Requiert plus de credits',
+        confidence: 0,
+        sources: [],
+      }
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return {
       patterns: result.patterns || [],
@@ -883,14 +996,37 @@ Reponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'coach_insight',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.5,
+        responseFormat: { type: 'json_object' },
+        context: { period, goal: context.profile.goal },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return {
+        progressSummary: {
+          period: period === 'week' ? '7 jours' : period === 'month' ? '30 jours' : 'Total',
+          caloriesTrend,
+          proteinAdherence,
+          consistencyScore,
+          weightChange,
+        },
+        achievements: [],
+        areasToImprove: [],
+        nextSteps: ['Continue a enregistrer tes donnees'],
+        motivationalMessage: 'Credits IA insuffisants',
+        decision: 'Credits insuffisants',
+        reasoning: 'Essaie plus tard',
+        confidence: 0,
+        sources: [],
+      }
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return {
       progressSummary: {
@@ -964,15 +1100,24 @@ INSTRUCTIONS:
 - Sois bienveillant et encourageant`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
-      max_tokens: 300,
-    })
+    const aiResult = await executeAICall(
+      'chat',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.5,
+        context: { question: question.slice(0, 50) },
+      }
+    )
+
+    if (!aiResult) {
+      return {
+        answer: 'Credits IA insuffisants. Essaie plus tard.',
+        sources: [],
+      }
+    }
 
     return {
-      answer: response.choices[0].message.content || 'Je ne peux pas repondre pour le moment.',
+      answer: aiResult.content || 'Je ne peux pas repondre pour le moment.',
       sources: kbEntries.map(e => e.source),
     }
   } catch (error) {
@@ -1096,14 +1241,21 @@ Réponds en JSON:
 }`
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
-    })
+    const aiResult = await executeAICall(
+      'coach_insight',
+      [{ role: 'user', content: prompt }],
+      {
+        temperature: 0.7,
+        responseFormat: { type: 'json_object' },
+        context: { goal: profile.goal, hasWellnessData: !!wellnessData.sleepHours },
+      }
+    )
 
-    const result = JSON.parse(response.choices[0].message.content || '{}')
+    if (!aiResult) {
+      return generateStaticConnectedInsights(context)
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
 
     return (result.insights || []).map((insight: {
       message: string
