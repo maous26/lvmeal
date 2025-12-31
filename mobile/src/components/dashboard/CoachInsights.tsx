@@ -137,19 +137,32 @@ export function CoachInsights({ compact = false }: CoachInsightsProps) {
     }
   }
 
-  // Render feature badges (the connected features)
+  // Feature labels for better UX
+  const featureLabels: Record<string, string> = {
+    nutrition: 'Nutrition',
+    sport: 'Sport',
+    sleep: 'Sommeil',
+    stress: 'Stress',
+    hydration: 'Hydratation',
+    weight: 'Poids',
+  }
+
+  // Render feature badges with arrows showing correlation flow
   const renderFeatureBadges = (features: ConnectedInsight['linkedFeatures']) => (
     <View style={styles.featureBadges}>
       {features.map((feature, index) => {
         const IconComponent = featureIcons[feature] || Link2
         return (
           <React.Fragment key={feature}>
-            <View style={styles.featureBadge}>
-              <IconComponent size={12} color={colors.text.secondary} />
+            <View style={styles.featureBadgeEnhanced}>
+              <View style={styles.featureBadge}>
+                <IconComponent size={14} color={colors.text.secondary} />
+              </View>
+              <Text style={styles.featureBadgeLabel}>{featureLabels[feature] || feature}</Text>
             </View>
             {index < features.length - 1 && (
-              <View style={styles.featureConnector}>
-                <Link2 size={10} color={colors.text.muted} />
+              <View style={styles.featureArrow}>
+                <Text style={styles.arrowText}>→</Text>
               </View>
             )}
           </React.Fragment>
@@ -340,12 +353,29 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   featureBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.bg.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  featureBadgeEnhanced: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  featureBadgeLabel: {
+    ...typography.xs,
+    color: colors.text.muted,
+    fontSize: 9,
+  },
+  featureArrow: {
+    paddingHorizontal: spacing.xs,
+  },
+  arrowText: {
+    fontSize: 16,
+    color: colors.accent.primary,
+    fontWeight: '600',
   },
   featureConnector: {
     opacity: 0.5,

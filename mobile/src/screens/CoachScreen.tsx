@@ -14,6 +14,7 @@ import {
   SafeAreaView,
   Pressable,
   RefreshControl,
+  Linking,
 } from 'react-native'
 import {
   Sparkles,
@@ -28,6 +29,8 @@ import {
   Brain,
   Trophy,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Check,
   X,
   Lightbulb,
@@ -35,8 +38,12 @@ import {
   Bell,
   PartyPopper,
   ChefHat,
+  ExternalLink,
+  Link2,
+  Info,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
+import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
@@ -74,25 +81,54 @@ const sourceLabels: Record<string, string> = {
   has: 'HAS',
   expert: 'Expert LymIA',
   pubmed: 'PubMed',
+  lymia: 'LymIA',
+  RAG: 'Base scientifique',
+}
+
+// URLs des sources scientifiques
+const sourceUrls: Record<string, string> = {
+  anses: 'https://www.anses.fr/fr/content/les-références-nutritionnelles-en-vitamines-et-minéraux',
+  inserm: 'https://www.inserm.fr/dossier/nutrition-et-sante/',
+  has: 'https://www.has-sante.fr/jcms/fc_2875171/fr/toutes-les-recommandations-de-bonne-pratique',
+  pubmed: 'https://pubmed.ncbi.nlm.nih.gov/',
+}
+
+// Icônes pour les features liées
+const featureIcons: Record<string, typeof Apple> = {
+  nutrition: Apple,
+  sleep: Moon,
+  stress: Brain,
+  sport: Dumbbell,
+  wellness: Heart,
+  hydration: Droplets,
+  weight: TrendingUp,
 }
 
 interface ItemCardProps {
   item: CoachItem
   onRead: () => void
   onDismiss: () => void
+  onAction?: (route: string) => void
   colors: ReturnType<typeof useTheme>['colors']
 }
 
-function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
+function ItemCard({ item, onRead, onDismiss, onAction, colors }: ItemCardProps) {
+  const [expanded, setExpanded] = React.useState(false)
   const typeConf = typeConfig[item.type]
   const catConf = categoryConfig[item.category]
   const TypeIcon = typeConf.icon
   const CatIcon = catConf.icon
 
+  // Determine if card has expandable content
+  const hasExpandableContent = !!(item.reasoning || item.scientificBasis || item.dataPoints?.length || item.linkedFeatures?.length)
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     if (!item.isRead) {
       onRead()
+    }
+    if (hasExpandableContent) {
+      setExpanded(!expanded)
     }
   }
 
@@ -101,12 +137,30 @@ function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
     onDismiss()
   }
 
+  const handleSourcePress = () => {
+    const url = item.sourceUrl || (item.source ? sourceUrls[item.source.toLowerCase()] : null)
+    if (url) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      Linking.openURL(url)
+    }
+  }
+
+  const handleAction = () => {
+    if (item.actionRoute && onAction) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      onAction(item.actionRoute)
+    }
+  }
+
   // Couleur de bordure selon le type
   const borderColor = item.type === 'alert' && item.priority === 'high'
     ? colors.error
     : item.type === 'celebration'
     ? colors.success
     : typeConf.color
+
+  // Confidence indicator
+  const confidencePercent = item.confidence ? Math.round(item.confidence * 100) : null
 
   return (
     <Pressable
@@ -127,14 +181,50 @@ function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
           <Text style={[styles.typeLabel, { color: typeConf.color }]}>
             {typeConf.label}
           </Text>
+          {confidencePercent && (
+            <View style={[styles.confidenceBadge, { backgroundColor: `${colors.success}15` }]}>
+              <Text style={[styles.confidenceText, { color: colors.success }]}>
+                {confidencePercent}%
+              </Text>
+            </View>
+          )}
           {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: colors.accent.primary }]} />}
         </View>
-        <Pressable onPress={handleDismiss} style={styles.dismissButton} hitSlop={8}>
-          <X size={16} color={colors.text.tertiary} />
-        </Pressable>
+        <View style={styles.headerRight}>
+          {hasExpandableContent && (
+            expanded
+              ? <ChevronUp size={16} color={colors.text.tertiary} />
+              : <ChevronDown size={16} color={colors.text.tertiary} />
+          )}
+          <Pressable onPress={handleDismiss} style={styles.dismissButton} hitSlop={8}>
+            <X size={16} color={colors.text.tertiary} />
+          </Pressable>
+        </View>
       </View>
 
-      {/* Message avec icône catégorie (titre retiré car redondant) */}
+      {/* Linked Features (if any) - Visual connection */}
+      {item.linkedFeatures && item.linkedFeatures.length > 1 && (
+        <View style={styles.linkedFeaturesRow}>
+          {item.linkedFeatures.map((feature, index) => {
+            const FeatureIcon = featureIcons[feature] || Link2
+            return (
+              <React.Fragment key={feature}>
+                <View style={[styles.featureBadge, { backgroundColor: `${colors.accent.primary}10` }]}>
+                  <FeatureIcon size={12} color={colors.accent.primary} />
+                </View>
+                {index < item.linkedFeatures!.length - 1 && (
+                  <View style={styles.featureConnector}>
+                    <Link2 size={10} color={colors.text.muted} />
+                  </View>
+                )}
+              </React.Fragment>
+            )
+          })}
+          <Text style={[styles.linkedLabel, { color: colors.text.muted }]}>liés</Text>
+        </View>
+      )}
+
+      {/* Message avec icône catégorie */}
       <View style={styles.messageRow}>
         <View style={[styles.catIconContainer, { backgroundColor: catConf.bgColor }]}>
           <CatIcon size={18} color={colors.text.secondary} />
@@ -142,13 +232,71 @@ function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
         <Text style={[styles.itemMessage, { color: colors.text.primary }]}>{item.message}</Text>
       </View>
 
+      {/* Expanded content: Reasoning, Scientific Basis, DataPoints */}
+      {expanded && hasExpandableContent && (
+        <View style={[styles.expandedContent, { borderTopColor: colors.border.light }]}>
+          {/* Reasoning / WHY */}
+          {item.reasoning && (
+            <View style={styles.reasoningSection}>
+              <View style={styles.reasoningHeader}>
+                <Info size={14} color={colors.accent.primary} />
+                <Text style={[styles.reasoningTitle, { color: colors.accent.primary }]}>Pourquoi ?</Text>
+              </View>
+              <Text style={[styles.reasoningText, { color: colors.text.secondary }]}>
+                {item.reasoning}
+              </Text>
+            </View>
+          )}
+
+          {/* Scientific Basis */}
+          {item.scientificBasis && (
+            <View style={styles.scientificSection}>
+              <Text style={[styles.scientificLabel, { color: colors.text.tertiary }]}>Base scientifique:</Text>
+              <Text style={[styles.scientificText, { color: colors.text.secondary }]}>
+                {item.scientificBasis}
+              </Text>
+            </View>
+          )}
+
+          {/* Data Points */}
+          {item.dataPoints && item.dataPoints.length > 0 && (
+            <View style={styles.dataPointsSection}>
+              <Text style={[styles.dataPointsLabel, { color: colors.text.tertiary }]}>Données:</Text>
+              <View style={styles.dataPointsGrid}>
+                {item.dataPoints.map((dp, index) => (
+                  <View key={index} style={[styles.dataPoint, { backgroundColor: colors.bg.tertiary }]}>
+                    <Text style={[styles.dataPointValue, { color: colors.text.primary }]}>
+                      {dp.value}
+                      {dp.trend === 'up' && ' ↑'}
+                      {dp.trend === 'down' && ' ↓'}
+                    </Text>
+                    <Text style={[styles.dataPointLabel, { color: colors.text.tertiary }]}>
+                      {dp.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Footer: source + time + action */}
       <View style={styles.itemFooter}>
         <View style={styles.footerLeft}>
           {item.source && (
-            <Text style={[styles.sourceText, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
-              {sourceLabels[item.source] || item.source}
-            </Text>
+            <Pressable
+              onPress={handleSourcePress}
+              style={[styles.sourceButton, { backgroundColor: colors.bg.tertiary }]}
+              disabled={!item.sourceUrl && !sourceUrls[item.source.toLowerCase()]}
+            >
+              <Text style={[styles.sourceText, { color: colors.accent.primary }]}>
+                {sourceLabels[item.source.toLowerCase()] || item.source.toUpperCase()}
+              </Text>
+              {(item.sourceUrl || sourceUrls[item.source.toLowerCase()]) && (
+                <ExternalLink size={10} color={colors.accent.primary} />
+              )}
+            </Pressable>
           )}
           <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
             {formatTimeAgo(item.createdAt)}
@@ -156,7 +304,7 @@ function ItemCard({ item, onRead, onDismiss, colors }: ItemCardProps) {
         </View>
 
         {item.actionLabel && (
-          <Pressable style={styles.actionButton}>
+          <Pressable style={styles.actionButton} onPress={handleAction}>
             <Text style={[styles.actionText, { color: typeConf.color }]}>
               {item.actionLabel}
             </Text>
@@ -183,6 +331,7 @@ function formatTimeAgo(dateStr: string): string {
 
 export default function CoachScreen() {
   const { colors } = useTheme()
+  const navigation = useNavigation()
   const { items, unreadCount, generateItemsWithAI, markAsRead, markAllAsRead, dismissItem, setContext } = useCoachStore()
   const { profile, nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
@@ -190,6 +339,12 @@ export default function CoachScreen() {
   const { currentStreak, currentLevel, totalXP } = useGamificationStore()
 
   const [refreshing, setRefreshing] = React.useState(false)
+
+  // Handle action navigation
+  const handleAction = (route: string) => {
+    // @ts-ignore - Navigation typing
+    navigation.navigate(route)
+  }
 
   // Mettre à jour le contexte et générer des items avec AI (RAG)
   const updateContext = useCallback(async () => {
@@ -311,6 +466,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    onAction={handleAction}
                     colors={colors}
                   />
                 ))}
@@ -332,6 +488,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    onAction={handleAction}
                     colors={colors}
                   />
                 ))}
@@ -353,6 +510,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    onAction={handleAction}
                     colors={colors}
                   />
                 ))}
@@ -374,6 +532,7 @@ export default function CoachScreen() {
                     item={item}
                     onRead={() => markAsRead(item.id)}
                     onDismiss={() => dismissItem(item.id)}
+                    onAction={handleAction}
                     colors={colors}
                   />
                 ))}
@@ -492,6 +651,41 @@ const styles = StyleSheet.create({
   dismissButton: {
     padding: spacing.xs,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  confidenceBadge: {
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  confidenceText: {
+    ...typography.xs,
+    fontWeight: '600',
+  },
+  linkedFeaturesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingLeft: spacing.sm,
+  },
+  featureBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  featureConnector: {
+    opacity: 0.5,
+  },
+  linkedLabel: {
+    ...typography.xs,
+    marginLeft: spacing.xs,
+  },
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -521,11 +715,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  sourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
   sourceText: {
     ...typography.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
+    fontWeight: '600',
+  },
+  expandedContent: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+  },
+  reasoningSection: {
+    marginBottom: spacing.md,
+  },
+  reasoningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  reasoningTitle: {
+    ...typography.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  reasoningText: {
+    ...typography.sm,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  scientificSection: {
+    marginBottom: spacing.md,
+  },
+  scientificLabel: {
+    ...typography.xs,
+    marginBottom: spacing.xs,
+  },
+  scientificText: {
+    ...typography.sm,
+    lineHeight: 20,
+  },
+  dataPointsSection: {
+    marginBottom: spacing.sm,
+  },
+  dataPointsLabel: {
+    ...typography.xs,
+    marginBottom: spacing.sm,
+  },
+  dataPointsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  dataPoint: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  dataPointValue: {
+    ...typography.bodyMedium,
+    fontWeight: '700',
+  },
+  dataPointLabel: {
+    ...typography.xs,
+    marginTop: 2,
   },
   timeText: {
     ...typography.xs,

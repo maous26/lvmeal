@@ -52,12 +52,19 @@ export interface CoachItem {
   message: string
   priority: CoachItemPriority
   source?: string // ANSES, INSERM, etc.
+  sourceUrl?: string // URL vers la source scientifique
   data?: Record<string, unknown> // Données associées (graphiques, stats)
   actionLabel?: string
   actionRoute?: string // Navigation route
   isRead: boolean
   createdAt: string
   expiresAt?: string
+  // NEW: Gap-filling fields for better UX
+  reasoning?: string // WHY this recommendation (scientific basis)
+  confidence?: number // 0-1 confidence score
+  linkedFeatures?: string[] // Features linked (sleep, nutrition, sport...)
+  dataPoints?: Array<{ label: string; value: string | number; trend?: 'up' | 'down' | 'stable' }>
+  scientificBasis?: string // Short scientific explanation
 }
 
 export interface CoachContext {
@@ -665,6 +672,7 @@ function lymiaAdviceToCoachItem(advice: CoachingAdvice): CoachItem {
 
 /**
  * Convert BehaviorAnalysisAgent alert to CoachItem
+ * Enhanced with reasoning, confidence, and scientific basis
  */
 function behaviorAlertToCoachItem(alert: BehaviorAlert): CoachItem {
   const severityToPriority: Record<string, CoachItemPriority> = {
@@ -685,19 +693,25 @@ function behaviorAlertToCoachItem(alert: BehaviorAlert): CoachItem {
     type: 'alert',
     category: categoryMap[alert.category] || 'nutrition',
     title: alert.title,
-    message: `${alert.message} ${alert.recommendation}`,
+    message: alert.message,
     priority: severityToPriority[alert.severity] || 'medium',
     source: alert.scientificSource,
+    sourceUrl: alert.sourceUrl,
     actionLabel: alert.actionLabel,
     actionRoute: alert.actionRoute,
     isRead: false,
     createdAt: alert.createdAt,
     expiresAt: alert.expiresAt,
+    // NEW: Enhanced fields
+    reasoning: alert.recommendation,
+    confidence: alert.severity === 'alert' ? 0.95 : alert.severity === 'warning' ? 0.85 : 0.7,
+    linkedFeatures: [alert.category],
   }
 }
 
 /**
  * Convert BehaviorAnalysisAgent insight to CoachItem
+ * Enhanced with dataPoints and confidence visible to user
  */
 function behaviorInsightToCoachItem(insight: BehaviorInsight): CoachItem {
   const typeMap: Record<string, CoachItemType> = {
@@ -705,6 +719,18 @@ function behaviorInsightToCoachItem(insight: BehaviorInsight): CoachItem {
     trend: 'analysis',
     recommendation: 'tip',
     achievement: 'celebration',
+  }
+
+  // Extract linked features from dataPoints
+  const linkedFeatures: string[] = []
+  if (insight.type === 'correlation') {
+    // Correlations link multiple features
+    insight.dataPoints.forEach(dp => {
+      if (dp.label.toLowerCase().includes('sommeil')) linkedFeatures.push('sleep')
+      if (dp.label.toLowerCase().includes('stress')) linkedFeatures.push('stress')
+      if (dp.label.toLowerCase().includes('énergie')) linkedFeatures.push('wellness')
+      if (dp.label.toLowerCase().includes('calorie') || dp.label.toLowerCase().includes('protéine')) linkedFeatures.push('nutrition')
+    })
   }
 
   return {
@@ -718,11 +744,16 @@ function behaviorInsightToCoachItem(insight: BehaviorInsight): CoachItem {
     data: { dataPoints: insight.dataPoints },
     isRead: false,
     createdAt: new Date().toISOString(),
+    // NEW: Enhanced fields
+    confidence: insight.confidence,
+    dataPoints: insight.dataPoints,
+    linkedFeatures: linkedFeatures.length > 0 ? [...new Set(linkedFeatures)] : undefined,
   }
 }
 
 /**
  * Convert BehaviorAnalysisAgent pattern to CoachItem (positive patterns only)
+ * Enhanced with scientific basis visible
  */
 function behaviorPatternToCoachItem(pattern: BehaviorPattern): CoachItem | null {
   // Only convert positive patterns to celebrations
@@ -733,12 +764,16 @@ function behaviorPatternToCoachItem(pattern: BehaviorPattern): CoachItem | null 
     type: 'celebration',
     category: pattern.type as CoachItemCategory,
     title: pattern.name,
-    message: pattern.description + (pattern.scientificBasis ? ` (${pattern.scientificBasis})` : ''),
+    message: pattern.description,
     priority: 'low',
     source: pattern.source,
     isRead: false,
     createdAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    // NEW: Enhanced fields
+    scientificBasis: pattern.scientificBasis,
+    confidence: pattern.confidence,
+    linkedFeatures: [pattern.type],
   }
 }
 
