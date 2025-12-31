@@ -16,6 +16,7 @@ import {
   Activity,
   Utensils,
   Bell,
+  BellRing,
   Shield,
   HelpCircle,
   LogOut,
@@ -28,6 +29,9 @@ import {
   Edit3,
   Moon,
   Sun,
+  Sparkles,
+  AlertTriangle,
+  PartyPopper,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -42,6 +46,10 @@ import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { formatNumber } from '../lib/utils'
 import type { RootStackParamList } from '../navigation/RootNavigator'
+import {
+  scheduleDailyInsightNotification,
+  cancelDailyInsightNotification,
+} from '../services/daily-insight-service'
 
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
@@ -81,7 +89,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>()
   const { colors, isDark, toggleTheme } = useTheme()
-  const { profile, nutritionGoals, resetStore, setProfile } = useUserStore()
+  const { profile, nutritionGoals, resetStore, setProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
   const {
     isEnrolled: isSportInitiationEnrolled,
     enroll: enrollSportInitiation,
@@ -207,6 +215,26 @@ export default function ProfileScreen() {
   const handleToggleDarkMode = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     toggleTheme()
+  }
+
+  const handleToggleDailyInsights = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    updateNotificationPreferences({ dailyInsightsEnabled: value })
+    if (value) {
+      await scheduleDailyInsightNotification(9) // 9h par défaut
+    } else {
+      await cancelDailyInsightNotification()
+    }
+  }
+
+  const handleToggleAlerts = (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    updateNotificationPreferences({ alertsEnabled: value })
+  }
+
+  const handleToggleCelebrations = (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    updateNotificationPreferences({ celebrationsEnabled: value })
   }
 
   const handleToggleSportInitiation = () => {
@@ -562,6 +590,58 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
+        {/* Notifications Super Agent */}
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Notifications IA</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
+          {/* Daily Insights */}
+          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
+            <Sparkles size={20} color={colors.accent.primary} />
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Insights quotidiens</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Conseil personnalisé chaque matin</Text>
+            </View>
+            <Switch
+              value={notificationPreferences.dailyInsightsEnabled}
+              onValueChange={handleToggleDailyInsights}
+              trackColor={{ false: colors.bg.tertiary, true: colors.accent.light }}
+              thumbColor={notificationPreferences.dailyInsightsEnabled ? colors.accent.primary : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
+
+          {/* Alerts */}
+          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
+            <AlertTriangle size={20} color={colors.warning} />
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Alertes santé</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Notifications si anomalie détectée</Text>
+            </View>
+            <Switch
+              value={notificationPreferences.alertsEnabled}
+              onValueChange={handleToggleAlerts}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
+              thumbColor={notificationPreferences.alertsEnabled ? colors.warning : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
+
+          {/* Celebrations */}
+          <View style={styles.settingItem}>
+            <Award size={20} color={colors.success} />
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Célébrations</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Streaks, badges et objectifs atteints</Text>
+            </View>
+            <Switch
+              value={notificationPreferences.celebrationsEnabled}
+              onValueChange={handleToggleCelebrations}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
+              thumbColor={notificationPreferences.celebrationsEnabled ? colors.success : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
+        </Card>
+
         {/* Settings */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
@@ -581,12 +661,6 @@ export default function ProfileScreen() {
               ios_backgroundColor={colors.bg.tertiary}
             />
           </View>
-          <SettingItem
-            icon={<Bell size={20} color={colors.text.secondary} />}
-            label="Notifications"
-            onPress={() => handleSettingPress('notifications')}
-            colors={colors}
-          />
           <SettingItem
             icon={<Shield size={20} color={colors.text.secondary} />}
             label="Confidentialité"
@@ -643,7 +717,7 @@ function SettingItem({
       activeOpacity={0.7}
     >
       {icon}
-      <Text style={[styles.settingLabel, { color: colors.text.primary }]}>{label}</Text>
+      <Text style={[styles.settingLabel, { flex: 1, color: colors.text.primary }]}>{label}</Text>
       <ChevronRight size={20} color={colors.text.tertiary} />
     </TouchableOpacity>
   )
@@ -796,8 +870,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   settingLabel: {
-    flex: 1,
     ...typography.body,
+  },
+  notificationInfo: {
+    flex: 1,
+  },
+  notificationDescription: {
+    ...typography.caption,
+    marginTop: 2,
   },
   dangerZone: {
     alignItems: 'center',

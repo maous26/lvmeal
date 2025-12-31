@@ -15,6 +15,7 @@ import {
   requestNotificationPermissions,
   addNotificationResponseListener,
 } from './src/services/notification-service'
+import { initializeDailyInsightService } from './src/services/daily-insight-service'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -38,6 +39,12 @@ export default function App() {
         // Initialize notifications
         const notificationsEnabled = await requestNotificationPermissions()
         console.log('[App] Notifications enabled:', notificationsEnabled)
+
+        // Initialize Super Agent daily insight service
+        if (notificationsEnabled) {
+          await initializeDailyInsightService()
+          console.log('[App] Super Agent daily insights initialized')
+        }
 
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e) {

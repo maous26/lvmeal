@@ -1,0 +1,363 @@
+/**
+ * Daily Insight Service - Génération d'insights quotidiens via Super Agent
+ *
+ * Ce service est responsable de:
+ * - Collecter les données des 7 derniers jours
+ * - Appeler le Super Agent pour analyse
+ * - Générer l'insight le plus pertinent du jour
+ * - Programmer la notification locale
+ *
+ * Modes de fonctionnement:
+ * - Option A: Background Fetch (expo-background-fetch)
+ * - Option B: Local Scheduled Notification (plus fiable) ← CHOIX
+ */
+
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Notifications from 'expo-notifications'
+import {
+  SuperAgent,
+  type SuperAgentContext,
+  type DailyInsight,
+} from './super-agent'
+import { useUserStore } from '../stores/user-store'
+import { useMealsStore } from '../stores/meals-store'
+import { useWellnessStore } from '../stores/wellness-store'
+import { useGamificationStore } from '../stores/gamification-store'
+import type { UserProfile, NutritionInfo } from '../types'
+
+// ============= CONSTANTS =============
+
+const STORAGE_KEYS = {
+  LAST_INSIGHT_DATE: '@lym_last_insight_date',
+  LAST_INSIGHT_CONTENT: '@lym_last_insight_content',
+  SCHEDULED_NOTIFICATION_ID: '@lym_scheduled_notification_id',
+}
+
+const DEFAULT_NOTIFICATION_HOUR = 9 // 9h du matin par défaut
+
+// ============= TYPES =============
+
+export interface InsightGenerationResult {
+  success: boolean
+  insight?: DailyInsight
+  scheduled?: boolean
+  error?: string
+}
+
+// ============= DATA COLLECTION =============
+
+/**
+ * Collecte les données des 7 derniers jours pour l'analyse
+ */
+async function collectUserData(): Promise<SuperAgentContext | null> {
+  try {
+    // Récupérer les stores
+    const userState = useUserStore.getState()
+    const mealsState = useMealsStore.getState()
+    const wellnessState = useWellnessStore.getState()
+    const gamificationState = useGamificationStore.getState()
+
+    const profile = userState.profile as UserProfile | null
+    if (!profile) {
+      console.log('[DailyInsight] No profile found')
+      return null
+    }
+
+    // Calculer les dates pour les 7 derniers jours
+    const today = new Date().toISOString().split('T')[0]
+    const dates: string[] = []
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      dates.push(date.toISOString().split('T')[0])
+    }
+
+    // Collecter les repas depuis dailyData
+    const allMeals: import('../types').Meal[] = []
+    for (const date of dates) {
+      const dayData = mealsState.dailyData[date]
+      if (dayData?.meals) {
+        allMeals.push(...dayData.meals)
+      }
+    }
+
+    // Calculer la nutrition quotidienne
+    const weeklyNutrition: NutritionInfo[] = dates.map(date => {
+      const dayData = mealsState.dailyData[date]
+      if (!dayData?.meals || dayData.meals.length === 0) {
+        return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+      }
+      return dayData.meals.reduce(
+        (acc: NutritionInfo, meal: import('../types').Meal) => ({
+          calories: acc.calories + (meal.totalNutrition?.calories || 0),
+          proteins: acc.proteins + (meal.totalNutrition?.proteins || 0),
+          carbs: acc.carbs + (meal.totalNutrition?.carbs || 0),
+          fats: acc.fats + (meal.totalNutrition?.fats || 0),
+        }),
+        { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+      )
+    })
+
+    // Nutrition d'aujourd'hui
+    const todayNutrition = weeklyNutrition[0] || { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+
+    // Collecter les entrées wellness (convertir Record en array)
+    const wellnessEntriesRecord = wellnessState.entries || {}
+    const wellnessEntriesArray = Object.values(wellnessEntriesRecord) as import('../types').WellnessEntry[]
+    const recentWellness = wellnessEntriesArray.filter((w: import('../types').WellnessEntry) => dates.includes(w.date))
+    const todayWellness = recentWellness.find((w: import('../types').WellnessEntry) => w.date === today)
+
+    // Gamification
+    const streak = gamificationState.currentStreak || 0
+    const level = gamificationState.currentLevel || 1
+    const xp = gamificationState.totalXP || 0
+
+    // Calculer jours trackés
+    const daysWithMeals = dates.filter(date => {
+      const dayData = mealsState.dailyData[date]
+      return dayData?.meals && dayData.meals.length > 0
+    })
+    const daysWithWellness = recentWellness.map((w: import('../types').WellnessEntry) => w.date)
+    const daysTracked = new Set([...daysWithMeals, ...daysWithWellness]).size
+
+    const context: SuperAgentContext = {
+      profile,
+      meals: allMeals,
+      todayNutrition,
+      weeklyNutrition,
+      wellnessEntries: recentWellness,
+      todayWellness,
+      streak,
+      level,
+      xp,
+      daysTracked,
+    }
+
+    return context
+  } catch (error) {
+    console.error('[DailyInsight] Error collecting user data:', error)
+    return null
+  }
+}
+
+// ============= INSIGHT GENERATION =============
+
+/**
+ * Génère l'insight quotidien via le Super Agent
+ */
+export async function generateDailyInsight(): Promise<InsightGenerationResult> {
+  try {
+    console.log('[DailyInsight] Starting insight generation...')
+
+    // Vérifier si on a déjà généré aujourd'hui
+    const lastDate = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_DATE)
+    const today = new Date().toDateString()
+
+    if (lastDate === today) {
+      // Récupérer l'insight mis en cache
+      const cachedInsight = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT)
+      if (cachedInsight) {
+        console.log('[DailyInsight] Using cached insight')
+        return {
+          success: true,
+          insight: JSON.parse(cachedInsight),
+          scheduled: false,
+        }
+      }
+    }
+
+    // Collecter les données
+    const context = await collectUserData()
+    if (!context) {
+      return {
+        success: false,
+        error: 'No user data available',
+      }
+    }
+
+    // Appeler le Super Agent
+    const insight = await SuperAgent.generateDailyInsight(context)
+
+    if (!insight) {
+      console.log('[DailyInsight] No insight generated')
+      return {
+        success: false,
+        error: 'No insight generated',
+      }
+    }
+
+    // Mettre en cache
+    await AsyncStorage.setItem(STORAGE_KEYS.LAST_INSIGHT_DATE, today)
+    await AsyncStorage.setItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT, JSON.stringify(insight))
+
+    console.log('[DailyInsight] Insight generated:', insight.title)
+
+    return {
+      success: true,
+      insight,
+      scheduled: false,
+    }
+  } catch (error) {
+    console.error('[DailyInsight] Error generating insight:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+// ============= SCHEDULED NOTIFICATIONS =============
+
+/**
+ * Programme une notification quotidienne à l'heure préférée
+ */
+export async function scheduleDailyInsightNotification(
+  hour: number = DEFAULT_NOTIFICATION_HOUR
+): Promise<boolean> {
+  try {
+    console.log('[DailyInsight] Scheduling daily notification at', hour, 'h')
+
+    // Annuler la notification précédente si elle existe
+    const existingId = await AsyncStorage.getItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID)
+    if (existingId) {
+      await Notifications.cancelScheduledNotificationAsync(existingId)
+    }
+
+    // Calculer le trigger pour demain à l'heure spécifiée
+    const now = new Date()
+    const scheduledTime = new Date()
+    scheduledTime.setHours(hour, 0, 0, 0)
+
+    // Si l'heure est passée aujourd'hui, programmer pour demain
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1)
+    }
+
+    // Programmer la notification
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '💡 Ton insight du jour',
+        body: 'Ouvre l\'app pour découvrir ton conseil personnalisé',
+        data: {
+          type: 'daily_insight',
+          deepLink: 'Dashboard',
+        },
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute: 0,
+      },
+    })
+
+    await AsyncStorage.setItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID, notificationId)
+
+    console.log('[DailyInsight] Notification scheduled:', notificationId)
+    return true
+  } catch (error) {
+    console.error('[DailyInsight] Error scheduling notification:', error)
+    return false
+  }
+}
+
+/**
+ * Annule la notification quotidienne programmée
+ */
+export async function cancelDailyInsightNotification(): Promise<void> {
+  try {
+    const existingId = await AsyncStorage.getItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID)
+    if (existingId) {
+      await Notifications.cancelScheduledNotificationAsync(existingId)
+      await AsyncStorage.removeItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID)
+      console.log('[DailyInsight] Notification cancelled')
+    }
+  } catch (error) {
+    console.error('[DailyInsight] Error cancelling notification:', error)
+  }
+}
+
+/**
+ * Met à jour l'heure de la notification quotidienne
+ */
+export async function updateNotificationHour(hour: number): Promise<boolean> {
+  return scheduleDailyInsightNotification(hour)
+}
+
+// ============= INITIALIZATION =============
+
+/**
+ * Initialise le service d'insight quotidien
+ * À appeler au démarrage de l'app
+ */
+export async function initializeDailyInsightService(): Promise<void> {
+  try {
+    console.log('[DailyInsight] Initializing service...')
+
+    // Vérifier les préférences utilisateur
+    const userState = useUserStore.getState()
+    const prefs = userState.notificationPreferences
+
+    if (!prefs.dailyInsightsEnabled) {
+      console.log('[DailyInsight] Daily insights disabled by user')
+      return
+    }
+
+    // Programmer la notification quotidienne
+    // On utilise 9h par défaut, l'utilisateur pourra modifier dans les settings
+    await scheduleDailyInsightNotification(DEFAULT_NOTIFICATION_HOUR)
+
+    // Si on n'a pas encore d'insight aujourd'hui, en générer un
+    const lastDate = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_DATE)
+    const today = new Date().toDateString()
+
+    if (lastDate !== today) {
+      // Générer l'insight en arrière-plan (ne pas bloquer)
+      generateDailyInsight().catch(error => {
+        console.error('[DailyInsight] Background generation error:', error)
+      })
+    }
+
+    console.log('[DailyInsight] Service initialized')
+  } catch (error) {
+    console.error('[DailyInsight] Initialization error:', error)
+  }
+}
+
+/**
+ * Récupère le dernier insight généré
+ */
+export async function getLastDailyInsight(): Promise<DailyInsight | null> {
+  try {
+    const cached = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT)
+    return cached ? JSON.parse(cached) : null
+  } catch (error) {
+    console.error('[DailyInsight] Error getting last insight:', error)
+    return null
+  }
+}
+
+/**
+ * Force la régénération de l'insight (pour debug)
+ */
+export async function forceRegenerateInsight(): Promise<InsightGenerationResult> {
+  // Effacer le cache
+  await AsyncStorage.removeItem(STORAGE_KEYS.LAST_INSIGHT_DATE)
+  await AsyncStorage.removeItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT)
+
+  // Régénérer
+  return generateDailyInsight()
+}
+
+// ============= EXPORTS =============
+
+export const DailyInsightService = {
+  generateDailyInsight,
+  scheduleDailyInsightNotification,
+  cancelDailyInsightNotification,
+  updateNotificationHour,
+  initializeDailyInsightService,
+  getLastDailyInsight,
+  forceRegenerateInsight,
+}
+
+export default DailyInsightService
