@@ -26,6 +26,15 @@ import {
   extractSourcesFromCitations,
   kbEntriesToPassages,
 } from './dspy'
+import {
+  PromptSystem,
+  LYMIA_SYSTEM_PROMPT,
+  RAG_CONTEXT_TEMPLATE,
+  USER_CONTEXT_TEMPLATE,
+  WELLNESS_CONTEXT_TEMPLATE,
+  buildPrompt,
+  parseAIResponse,
+} from '../lib/ai/prompt-system'
 import type {
   UserProfile,
   NutritionInfo,
