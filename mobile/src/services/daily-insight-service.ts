@@ -208,13 +208,77 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
 // ============= SCHEDULED NOTIFICATIONS =============
 
 /**
+ * Génère l'insight ET envoie une notification avec le contenu réel
+ * Appelé quand l'app démarre ou quand le trigger quotidien se déclenche
+ */
+export async function generateAndNotifyInsight(): Promise<boolean> {
+  try {
+    console.log('[DailyInsight] Generating insight for notification...')
+
+    // Vérifier si on a déjà notifié aujourd'hui
+    const lastNotifDate = await AsyncStorage.getItem('@lym_last_insight_notif_date')
+    const today = new Date().toDateString()
+
+    if (lastNotifDate === today) {
+      console.log('[DailyInsight] Already notified today, skipping')
+      return false
+    }
+
+    // Générer l'insight
+    const result = await generateDailyInsight()
+    if (!result.success || !result.insight) {
+      console.log('[DailyInsight] No insight to notify')
+      return false
+    }
+
+    const insight = result.insight
+
+    // Emoji selon la catégorie et sévérité
+    const categoryEmoji: Record<string, string> = {
+      nutrition: '🥗',
+      wellness: '😴',
+      sport: '💪',
+      progress: '📈',
+    }
+    const emoji = insight.severity === 'celebration' ? '🎉' :
+                  insight.severity === 'warning' ? '⚠️' :
+                  categoryEmoji[insight.category] || '💡'
+
+    // Envoyer la notification avec le VRAI contenu
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `${emoji} ${insight.title}`,
+        body: insight.body,
+        data: {
+          type: 'daily_insight',
+          deepLink: 'Coach',
+          category: insight.category,
+        },
+        sound: true,
+      },
+      trigger: null, // Immédiat
+    })
+
+    // Marquer comme notifié aujourd'hui
+    await AsyncStorage.setItem('@lym_last_insight_notif_date', today)
+
+    console.log('[DailyInsight] Notification sent:', insight.title)
+    return true
+  } catch (error) {
+    console.error('[DailyInsight] Error generating/notifying insight:', error)
+    return false
+  }
+}
+
+/**
  * Programme une notification quotidienne à l'heure préférée
+ * Cette notification sert de "trigger" pour générer l'insight au bon moment
  */
 export async function scheduleDailyInsightNotification(
   hour: number = DEFAULT_NOTIFICATION_HOUR
 ): Promise<boolean> {
   try {
-    console.log('[DailyInsight] Scheduling daily notification at', hour, 'h')
+    console.log('[DailyInsight] Scheduling daily trigger at', hour, 'h')
 
     // Annuler la notification précédente si elle existe
     const existingId = await AsyncStorage.getItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID)
@@ -222,24 +286,16 @@ export async function scheduleDailyInsightNotification(
       await Notifications.cancelScheduledNotificationAsync(existingId)
     }
 
-    // Calculer le trigger pour demain à l'heure spécifiée
-    const now = new Date()
-    const scheduledTime = new Date()
-    scheduledTime.setHours(hour, 0, 0, 0)
-
-    // Si l'heure est passée aujourd'hui, programmer pour demain
-    if (scheduledTime <= now) {
-      scheduledTime.setDate(scheduledTime.getDate() + 1)
-    }
-
-    // Programmer la notification
+    // Programmer le trigger quotidien
+    // Note: Sur iOS/Android, cette notification servira de rappel
+    // Le contenu réel sera généré quand l'utilisateur ouvre l'app
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: '💡 Ton insight du jour',
-        body: 'Ouvre l\'app pour découvrir ton conseil personnalisé',
+        title: '💡 LymIA a un conseil pour toi',
+        body: 'Ouvre l\'app pour découvrir ton insight personnalisé',
         data: {
-          type: 'daily_insight',
-          deepLink: 'Dashboard',
+          type: 'daily_insight_trigger',
+          deepLink: 'Coach',
         },
         sound: true,
       },
@@ -252,7 +308,7 @@ export async function scheduleDailyInsightNotification(
 
     await AsyncStorage.setItem(STORAGE_KEYS.SCHEDULED_NOTIFICATION_ID, notificationId)
 
-    console.log('[DailyInsight] Notification scheduled:', notificationId)
+    console.log('[DailyInsight] Daily trigger scheduled:', notificationId)
     return true
   } catch (error) {
     console.error('[DailyInsight] Error scheduling notification:', error)
@@ -302,18 +358,19 @@ export async function initializeDailyInsightService(): Promise<void> {
       return
     }
 
-    // Programmer la notification quotidienne
-    // On utilise 9h par défaut, l'utilisateur pourra modifier dans les settings
+    // Programmer le trigger quotidien (rappel générique)
     await scheduleDailyInsightNotification(DEFAULT_NOTIFICATION_HOUR)
 
-    // Si on n'a pas encore d'insight aujourd'hui, en générer un
-    const lastDate = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_DATE)
-    const today = new Date().toDateString()
+    // Vérifier si c'est le bon moment pour envoyer une notification avec contenu réel
+    const now = new Date()
+    const currentHour = now.getHours()
 
-    if (lastDate !== today) {
-      // Générer l'insight en arrière-plan (ne pas bloquer)
-      generateDailyInsight().catch(error => {
-        console.error('[DailyInsight] Background generation error:', error)
+    // Si on est après l'heure de notification (9h par défaut) et avant 21h,
+    // et qu'on n'a pas encore notifié aujourd'hui, envoyer l'insight
+    if (currentHour >= DEFAULT_NOTIFICATION_HOUR && currentHour < 21) {
+      // Générer et notifier avec le contenu réel (en arrière-plan)
+      generateAndNotifyInsight().catch(error => {
+        console.error('[DailyInsight] Background notification error:', error)
       })
     }
 
@@ -352,6 +409,7 @@ export async function forceRegenerateInsight(): Promise<InsightGenerationResult>
 
 export const DailyInsightService = {
   generateDailyInsight,
+  generateAndNotifyInsight,
   scheduleDailyInsightNotification,
   cancelDailyInsightNotification,
   updateNotificationHour,

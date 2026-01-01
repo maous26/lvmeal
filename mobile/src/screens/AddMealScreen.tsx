@@ -1661,10 +1661,10 @@ export default function AddMealScreen() {
               >
                 <View style={styles.aiHeader}>
                   <Wand2 size={20} color={colors.accent.primary} />
-                  <Text style={styles.aiTitle}>Recette IA personnalisee</Text>
+                  <Text style={styles.aiTitle}>Repas IA personnalise</Text>
                 </View>
                 <Text style={styles.aiDescription}>
-                  LymIA vous suggere une recette adaptee a votre profil nutritionnel et votre solde calorique restant.
+                  LymIA vous suggere un repas adapte a votre profil nutritionnel et votre solde calorique restant.
                 </Text>
 
                 {/* Meal Type Selector */}
