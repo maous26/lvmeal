@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   View,
   Text,
@@ -7,33 +7,44 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Dimensions,
+  TextInput,
+  Alert,
 } from 'react-native'
-import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles } from 'lucide-react-native'
+import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, ChevronLeft } from 'lucide-react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
+import { useNavigation } from '@react-navigation/native'
 
 import { Card, Badge, ProgressBar, CircularProgress } from '../components/ui'
 import { GamificationPanel } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
+import { colors as staticColors, spacing, typography, radius, shadows } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore, TIERS, ACHIEVEMENTS } from '../stores/gamification-store'
-import { formatNumber, getDateKey } from '../lib/utils'
+import { formatNumber, getDateKey, generateId } from '../lib/utils'
+import type { WeightEntry } from '../types'
 
 const { width } = Dimensions.get('window')
 
 type TimeRange = '7d' | '30d' | '90d'
-type TabType = 'nutrition' | 'gamification'
+type WeightRange = '1W' | '1M' | '3M' | 'ALL'
+type TabType = 'weight' | 'nutrition' | 'gamification'
 
 export default function ProgressScreen() {
   const { colors } = useTheme()
+  const navigation = useNavigation()
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
-  const [activeTab, setActiveTab] = useState<TabType>('gamification')
-  const { profile, nutritionGoals } = useUserStore()
+  const [weightRange, setWeightRange] = useState<WeightRange>('1M')
+  const [activeTab, setActiveTab] = useState<TabType>('weight')
+  const [showAddWeight, setShowAddWeight] = useState(false)
+  const [newWeight, setNewWeight] = useState('')
+  const { profile, nutritionGoals, weightHistory, addWeightEntry } = useUserStore()
   const { dailyData } = useMealsStore()
   const {
     totalXP,
     currentStreak,
+    longestStreak,
     weeklyXP,
     getTier,
     getNextTier,
@@ -43,6 +54,92 @@ export default function ProgressScreen() {
     getAchievements,
     getAICreditsRemaining,
   } = useGamificationStore()
+
+  // Weight calculations
+  const sortedWeights = useMemo(() => {
+    return [...weightHistory].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+  }, [weightHistory])
+
+  const currentWeight = sortedWeights[0]?.weight || profile?.weight || null
+  const targetWeight = profile?.targetWeight
+
+  // Weight chart data
+  const weightChartData = useMemo(() => {
+    const sortedAsc = [...weightHistory].sort((a, b) =>
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+
+    if (sortedAsc.length === 0) return null
+
+    const now = new Date()
+    let filteredWeights = sortedAsc
+
+    switch (weightRange) {
+      case '1W':
+        filteredWeights = sortedAsc.filter(w =>
+          new Date(w.date) >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        )
+        break
+      case '1M':
+        filteredWeights = sortedAsc.filter(w =>
+          new Date(w.date) >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        )
+        break
+      case '3M':
+        filteredWeights = sortedAsc.filter(w =>
+          new Date(w.date) >= new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        )
+        break
+    }
+
+    return filteredWeights
+  }, [weightHistory, weightRange])
+
+  // Weight stats
+  const weightStats = useMemo(() => {
+    const current = sortedWeights[0]?.weight || profile?.weight || 0
+    const target = profile?.targetWeight
+    const start = profile?.weight || current
+
+    // Weekly change
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const weekAgoEntry = sortedWeights.find(w => new Date(w.date) <= weekAgo)
+    const weeklyChange = weekAgoEntry ? +(current - weekAgoEntry.weight).toFixed(1) : null
+
+    // Monthly change
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const monthAgoEntry = sortedWeights.find(w => new Date(w.date) <= monthAgo)
+    const monthlyChange = monthAgoEntry ? +(current - monthAgoEntry.weight).toFixed(1) : null
+
+    // Progress towards goal
+    const totalToLose = start - (target || start)
+    const lost = start - current
+    const progress = totalToLose !== 0 ? Math.min(100, Math.max(0, (lost / totalToLose) * 100)) : 0
+
+    return { current, target, start, weeklyChange, monthlyChange, progress }
+  }, [sortedWeights, profile])
+
+  // Add weight handler
+  const handleAddWeight = useCallback(() => {
+    const weight = parseFloat(newWeight)
+    if (isNaN(weight) || weight < 30 || weight > 300) {
+      Alert.alert('Erreur', 'Veuillez entrer un poids valide (30-300 kg)')
+      return
+    }
+
+    const entry: WeightEntry = {
+      id: generateId(),
+      date: new Date().toISOString(),
+      weight,
+    }
+
+    addWeightEntry(entry)
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    setNewWeight('')
+    setShowAddWeight(false)
+  }, [newWeight, addWeightEntry])
 
   const goals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
   const tier = getTier()
@@ -107,15 +204,15 @@ export default function ProgressScreen() {
           <Text style={[styles.title, { color: colors.text.primary }]}>Progres</Text>
         </View>
 
-        {/* Tab Selector */}
+        {/* Tab Selector - 3 tabs */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tab, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }, activeTab === 'gamification' && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary }]}
-            onPress={() => handleTabChange('gamification')}
+            style={[styles.tab, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }, activeTab === 'weight' && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary }]}
+            onPress={() => handleTabChange('weight')}
           >
-            <Trophy size={18} color={activeTab === 'gamification' ? '#FFFFFF' : colors.text.secondary} />
-            <Text style={[styles.tabText, { color: colors.text.secondary }, activeTab === 'gamification' && styles.tabTextActive]}>
-              Classement
+            <Scale size={18} color={activeTab === 'weight' ? '#FFFFFF' : colors.text.secondary} />
+            <Text style={[styles.tabText, { color: colors.text.secondary }, activeTab === 'weight' && styles.tabTextActive]}>
+              Poids
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -127,7 +224,241 @@ export default function ProgressScreen() {
               Nutrition
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }, activeTab === 'gamification' && { backgroundColor: colors.accent.primary, borderColor: colors.accent.primary }]}
+            onPress={() => handleTabChange('gamification')}
+          >
+            <Trophy size={18} color={activeTab === 'gamification' ? '#FFFFFF' : colors.text.secondary} />
+            <Text style={[styles.tabText, { color: colors.text.secondary }, activeTab === 'gamification' && styles.tabTextActive]}>
+              XP
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {/* WEIGHT TAB */}
+        {activeTab === 'weight' && (
+          <>
+            {/* Weight Stats Card */}
+            <View style={[styles.weightCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+              <View style={styles.weightHeader}>
+                <View style={styles.weightTitleRow}>
+                  <LinearGradient
+                    colors={[colors.accent.primary, colors.secondary.primary]}
+                    style={styles.weightIconGradient}
+                  >
+                    <Scale size={20} color="#FFFFFF" />
+                  </LinearGradient>
+                  <Text style={[styles.weightTitle, { color: colors.text.primary }]}>
+                    Évolution du poids
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.addWeightButton, { backgroundColor: colors.accent.light }]}
+                  onPress={() => setShowAddWeight(!showAddWeight)}
+                >
+                  <Plus size={18} color={colors.accent.primary} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Add weight input */}
+              {showAddWeight && (
+                <View style={[styles.addWeightRow, { borderColor: colors.border.light }]}>
+                  <TextInput
+                    style={[styles.weightInput, { color: colors.text.primary, borderColor: colors.border.medium, backgroundColor: colors.bg.secondary }]}
+                    placeholder="Poids (kg)"
+                    placeholderTextColor={colors.text.muted}
+                    keyboardType="decimal-pad"
+                    value={newWeight}
+                    onChangeText={setNewWeight}
+                    onSubmitEditing={handleAddWeight}
+                  />
+                  <TouchableOpacity
+                    style={[styles.saveWeightButton, { backgroundColor: colors.accent.primary }]}
+                    onPress={handleAddWeight}
+                  >
+                    <Text style={styles.saveWeightButtonText}>Enregistrer</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Current weight display */}
+              <View style={styles.currentWeightRow}>
+                <View style={styles.currentWeightMain}>
+                  <Text style={[styles.currentWeightValue, { color: colors.text.primary }]}>
+                    {weightStats.current} kg
+                  </Text>
+                  {weightStats.weeklyChange !== null && (
+                    <View style={styles.weightTrendBadge}>
+                      {weightStats.weeklyChange < 0 ? (
+                        <TrendingDown size={14} color={colors.success} />
+                      ) : weightStats.weeklyChange > 0 ? (
+                        <TrendingUp size={14} color={colors.warning} />
+                      ) : (
+                        <Minus size={14} color={colors.text.muted} />
+                      )}
+                      <Text style={[
+                        styles.weightTrendText,
+                        { color: weightStats.weeklyChange < 0 ? colors.success : weightStats.weeklyChange > 0 ? colors.warning : colors.text.muted }
+                      ]}>
+                        {weightStats.weeklyChange > 0 ? '+' : ''}{weightStats.weeklyChange} kg
+                      </Text>
+                      <Text style={[styles.weightTrendPeriod, { color: colors.text.muted }]}>
+                        cette semaine
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {targetWeight && (
+                  <View style={styles.targetWeightBox}>
+                    <Text style={[styles.targetWeightLabel, { color: colors.text.muted }]}>Objectif</Text>
+                    <Text style={[styles.targetWeightValue, { color: colors.accent.primary }]}>{targetWeight} kg</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Progress bar towards goal */}
+              {targetWeight && (
+                <View style={styles.weightProgressSection}>
+                  <View style={styles.weightProgressHeader}>
+                    <Text style={[styles.weightProgressLabel, { color: colors.text.muted }]}>
+                      Progression vers l'objectif
+                    </Text>
+                    <Text style={[styles.weightProgressPercent, { color: colors.accent.primary }]}>
+                      {Math.round(weightStats.progress)}%
+                    </Text>
+                  </View>
+                  <View style={[styles.weightProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
+                    <LinearGradient
+                      colors={[colors.accent.primary, colors.secondary.primary]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[styles.weightProgressFill, { width: `${weightStats.progress}%` }]}
+                    />
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Weight Range Selector */}
+            <View style={styles.weightRangeSelector}>
+              {(['1W', '1M', '3M', 'ALL'] as WeightRange[]).map((range) => (
+                <TouchableOpacity
+                  key={range}
+                  style={[
+                    styles.weightRangeButton,
+                    { backgroundColor: colors.bg.elevated },
+                    weightRange === range && { backgroundColor: colors.accent.primary }
+                  ]}
+                  onPress={() => setWeightRange(range)}
+                >
+                  <Text style={[
+                    styles.weightRangeButtonText,
+                    { color: weightRange === range ? '#FFFFFF' : colors.text.muted }
+                  ]}>
+                    {range === 'ALL' ? 'Tout' : range === '1W' ? '7j' : range === '1M' ? '30j' : '90j'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Weight Chart - Simple visual */}
+            <Card style={[styles.weightChartCard, { marginHorizontal: spacing.default }]}>
+              {weightChartData && weightChartData.length > 0 ? (
+                <View style={styles.simpleChart}>
+                  {/* Find min/max for scaling */}
+                  {(() => {
+                    const weights = weightChartData.map(w => w.weight)
+                    const minW = Math.min(...weights) - 1
+                    const maxW = Math.max(...weights) + 1
+                    const range = maxW - minW || 1
+
+                    // Show max 10 points
+                    const step = Math.max(1, Math.floor(weightChartData.length / 10))
+                    const displayData = weightChartData.filter((_, i) =>
+                      i % step === 0 || i === weightChartData.length - 1
+                    )
+
+                    return (
+                      <>
+                        <View style={styles.chartYAxis}>
+                          <Text style={[styles.chartYLabel, { color: colors.text.muted }]}>{maxW.toFixed(0)}</Text>
+                          <Text style={[styles.chartYLabel, { color: colors.text.muted }]}>{minW.toFixed(0)}</Text>
+                        </View>
+                        <View style={styles.chartBars}>
+                          {displayData.map((entry, idx) => {
+                            const height = ((entry.weight - minW) / range) * 100
+                            const isLast = idx === displayData.length - 1
+                            return (
+                              <View key={entry.id} style={styles.chartBarWrapper}>
+                                <View style={[styles.chartBarContainer, { backgroundColor: colors.bg.secondary }]}>
+                                  <LinearGradient
+                                    colors={isLast ? [colors.accent.primary, colors.secondary.primary] : [colors.accent.muted, colors.accent.muted]}
+                                    style={[styles.chartBarFill, { height: `${height}%` }]}
+                                  />
+                                </View>
+                                <Text style={[styles.chartBarLabel, { color: colors.text.tertiary }]}>
+                                  {new Date(entry.date).getDate()}/{new Date(entry.date).getMonth() + 1}
+                                </Text>
+                              </View>
+                            )
+                          })}
+                        </View>
+                      </>
+                    )
+                  })()}
+                </View>
+              ) : (
+                <View style={styles.emptyWeightChart}>
+                  <Scale size={40} color={colors.text.muted} />
+                  <Text style={[styles.emptyChartTitle, { color: colors.text.muted }]}>
+                    Pas encore de données
+                  </Text>
+                  <Text style={[styles.emptyChartSubtitle, { color: colors.text.tertiary }]}>
+                    Ajoute ta première pesée pour voir ton évolution
+                  </Text>
+                </View>
+              )}
+            </Card>
+
+            {/* Weight History */}
+            {sortedWeights.length > 0 && (
+              <>
+                <Text style={[styles.sectionTitle, { color: colors.text.secondary, marginTop: spacing.lg }]}>
+                  Historique récent
+                </Text>
+                <Card style={[styles.historyCard, { marginHorizontal: spacing.default }]}>
+                  {sortedWeights.slice(0, 5).map((entry, idx) => (
+                    <View
+                      key={entry.id}
+                      style={[
+                        styles.historyItem,
+                        idx < Math.min(4, sortedWeights.length - 1) && { borderBottomColor: colors.border.light, borderBottomWidth: 1 }
+                      ]}
+                    >
+                      <Text style={[styles.historyDate, { color: colors.text.secondary }]}>
+                        {new Date(entry.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </Text>
+                      <Text style={[styles.historyWeight, { color: colors.text.primary }]}>
+                        {entry.weight} kg
+                      </Text>
+                      {idx > 0 && sortedWeights[idx - 1] && (
+                        <View style={styles.historyChange}>
+                          {entry.weight < sortedWeights[idx - 1].weight ? (
+                            <TrendingDown size={12} color={colors.success} />
+                          ) : entry.weight > sortedWeights[idx - 1].weight ? (
+                            <TrendingUp size={12} color={colors.warning} />
+                          ) : (
+                            <Minus size={12} color={colors.text.muted} />
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                </Card>
+              </>
+            )}
+          </>
+        )}
 
         {activeTab === 'gamification' ? (
           <>
@@ -857,6 +1188,226 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   macroItem: {
+    alignItems: 'center',
+  },
+
+  // Weight Tab Styles
+  weightCard: {
+    marginHorizontal: spacing.default,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+  },
+  weightHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  weightTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  weightIconGradient: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  weightTitle: {
+    ...typography.h4,
+    fontWeight: '600',
+  },
+  addWeightButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addWeightRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+  },
+  weightInput: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    ...typography.body,
+  },
+  saveWeightButton: {
+    height: 44,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveWeightButtonText: {
+    color: '#FFFFFF',
+    ...typography.bodyMedium,
+    fontWeight: '600',
+  },
+  currentWeightRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  currentWeightMain: {
+    flex: 1,
+  },
+  currentWeightValue: {
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -1,
+  },
+  weightTrendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  weightTrendText: {
+    ...typography.smallMedium,
+    fontWeight: '600',
+  },
+  weightTrendPeriod: {
+    ...typography.caption,
+  },
+  targetWeightBox: {
+    alignItems: 'flex-end',
+    padding: spacing.sm,
+    borderRadius: radius.md,
+  },
+  targetWeightLabel: {
+    ...typography.caption,
+  },
+  targetWeightValue: {
+    ...typography.h4,
+    fontWeight: '700',
+  },
+  weightProgressSection: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+  },
+  weightProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  weightProgressLabel: {
+    ...typography.small,
+  },
+  weightProgressPercent: {
+    ...typography.smallMedium,
+    fontWeight: '600',
+  },
+  weightProgressTrack: {
+    height: 8,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  weightProgressFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
+  weightRangeSelector: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.default,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  weightRangeButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    alignItems: 'center',
+  },
+  weightRangeButtonText: {
+    ...typography.smallMedium,
+  },
+  weightChartCard: {
+    marginBottom: spacing.lg,
+  },
+  simpleChart: {
+    flexDirection: 'row',
+    height: 160,
+  },
+  chartYAxis: {
+    width: 30,
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  chartYLabel: {
+    ...typography.caption,
+    fontSize: 10,
+  },
+  chartBars: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    paddingBottom: 20,
+  },
+  chartBarWrapper: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  chartBarContainer: {
+    width: 16,
+    height: 120,
+    borderRadius: radius.sm,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  chartBarFill: {
+    width: '100%',
+    borderRadius: radius.sm,
+  },
+  chartBarLabel: {
+    ...typography.caption,
+    fontSize: 9,
+    marginTop: 4,
+  },
+  emptyWeightChart: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  emptyChartTitle: {
+    ...typography.bodyMedium,
+  },
+  emptyChartSubtitle: {
+    ...typography.small,
+    textAlign: 'center',
+  },
+  historyCard: {
+    marginBottom: spacing.lg,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  historyDate: {
+    ...typography.body,
+    flex: 1,
+  },
+  historyWeight: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+    marginRight: spacing.sm,
+  },
+  historyChange: {
+    width: 20,
     alignItems: 'center',
   },
 })

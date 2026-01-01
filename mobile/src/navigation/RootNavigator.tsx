@@ -13,6 +13,7 @@ import MeditationPlayerScreen from '../screens/MeditationPlayerScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import WeightScreen from '../screens/WeightScreen'
+import ProgressScreen from '../screens/ProgressScreen'
 import PaywallScreen from '../screens/PaywallScreen'
 import MealSourceSettingsScreen from '../screens/MealSourceSettingsScreen'
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
@@ -47,6 +48,7 @@ export type RootStackParamList = {
   Achievements: undefined
   Settings: undefined
   WeightHistory: undefined
+  Progress: undefined
   WellnessCheckin: undefined
   SportSession: { sessionId?: string }
   Plan: undefined
@@ -158,6 +160,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="WeightHistory"
             component={WeightScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="Progress"
+            component={ProgressScreen}
             options={{
               animation: 'slide_from_right',
             }}

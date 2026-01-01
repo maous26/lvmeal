@@ -28,6 +28,7 @@ import {
   Sun,
   Pin,
   Database,
+  TrendingUp,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -414,6 +415,27 @@ export default function ProfileScreen() {
             </View>
           </View>
         </Card>
+
+        {/* Progress Link */}
+        <TouchableOpacity
+          style={[styles.progressLink, { backgroundColor: colors.bg.elevated }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            navigation.navigate('Progress')
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.progressLinkIcon, { backgroundColor: colors.accent.light }]}>
+            <TrendingUp size={22} color={colors.accent.primary} />
+          </View>
+          <View style={styles.progressLinkInfo}>
+            <Text style={[styles.progressLinkTitle, { color: colors.text.primary }]}>Mes Progrès</Text>
+            <Text style={[styles.progressLinkSubtitle, { color: colors.text.tertiary }]}>
+              Poids, nutrition, XP et badges
+            </Text>
+          </View>
+          <ChevronRight size={20} color={colors.accent.primary} />
+        </TouchableOpacity>
 
         {/* Daily Targets */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Objectifs journaliers</Text>
@@ -909,5 +931,32 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Progress Link
+  progressLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  progressLinkIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressLinkInfo: {
+    flex: 1,
+  },
+  progressLinkTitle: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+  },
+  progressLinkSubtitle: {
+    ...typography.small,
+    marginTop: 2,
   },
 })

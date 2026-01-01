@@ -24,7 +24,6 @@ import {
   Flame,
   Trophy,
   Sparkles,
-  Scale,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
@@ -38,6 +37,7 @@ import { Card } from '../components/ui'
 import {
   CaloricBalance,
   ProgramsWidget,
+  ProgressWidget,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows } from '../constants/theme'
@@ -176,7 +176,7 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
-  const { profile, nutritionGoals, weightHistory } = useUserStore()
+  const { profile, nutritionGoals } = useUserStore()
   const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
@@ -318,23 +318,13 @@ export default function HomeScreen() {
     navigation.navigate('Calendar')
   }
 
-  const handleNavigateToWeight = () => {
+  const handleNavigateToProgress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     // @ts-ignore
-    navigation.navigate('WeightHistory')
+    navigation.navigate('Progress')
   }
 
   const currentDayIndex = getCurrentDayIndex()
-
-  // Weight tracking
-  const sortedWeights = [...weightHistory].sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
-  const currentWeight = sortedWeights[0]?.weight || profile?.weight || null
-  const previousWeight = sortedWeights[1]?.weight
-  const weightTrend = currentWeight && previousWeight
-    ? (currentWeight - previousWeight).toFixed(1)
-    : null
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -595,35 +585,8 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Weight Widget */}
-        <TouchableOpacity
-          style={[styles.weightSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}
-          onPress={handleNavigateToWeight}
-          activeOpacity={0.7}
-        >
-          <View style={styles.weightLeft}>
-            <View style={[styles.weightIconContainer, { backgroundColor: colors.accent.light }]}>
-              <Scale size={22} color={colors.accent.primary} />
-            </View>
-            <View>
-              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Suivi du poids</Text>
-              <Text style={[styles.weightSubtitle, { color: colors.text.tertiary }]}>
-                {currentWeight ? `${currentWeight} kg` : 'Non renseigné'}
-                {weightTrend && (
-                  <Text style={{ color: Number(weightTrend) > 0 ? colors.warning : colors.success }}>
-                    {' '}({Number(weightTrend) > 0 ? '+' : ''}{weightTrend} kg)
-                  </Text>
-                )}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.weightRight}>
-            <Text style={[styles.weightCta, { color: colors.accent.primary }]}>
-              Enregistrer
-            </Text>
-            <ChevronRight size={18} color={colors.accent.primary} />
-          </View>
-        </TouchableOpacity>
+        {/* Progress Widget - replaces Weight Widget */}
+        <ProgressWidget onPress={handleNavigateToProgress} />
 
         {/* Bottom Spacer */}
         <View style={styles.bottomSpacer} />
@@ -973,40 +936,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-  },
-  // Weight Section
-  weightSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  weightLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  weightIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weightSubtitle: {
-    ...typography.small,
-    marginTop: 2,
-  },
-  weightRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  weightCta: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
   },
   // Bottom
   bottomSpacer: {
