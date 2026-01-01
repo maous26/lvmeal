@@ -37,7 +37,18 @@ export interface HealthPermissionStatus {
   steps: boolean
   sleep: boolean
   calories: boolean
+  weight: boolean
+  bodyFat: boolean
   isAvailable: boolean
+}
+
+// Weight data from smart scale via Health platforms
+export interface ScaleWeightData {
+  weight: number // kg
+  bodyFatPercent?: number // Bio-impedance estimation
+  bmi?: number // Calculated or from scale
+  date: string
+  sourceName?: string // e.g., "Withings", "Xiaomi Mi Fit"
 }
 
 // HealthKit permissions (iOS)
@@ -47,6 +58,8 @@ const healthKitPermissions: HealthKitPermissions = {
       AppleHealthKit.Constants.Permissions.Steps,
       AppleHealthKit.Constants.Permissions.SleepAnalysis,
       AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
+      AppleHealthKit.Constants.Permissions.Weight,
+      AppleHealthKit.Constants.Permissions.BodyFatPercentage,
     ],
     write: [],
   },
@@ -57,6 +70,8 @@ const healthConnectPermissions = [
   { accessType: 'read', recordType: 'Steps' },
   { accessType: 'read', recordType: 'SleepSession' },
   { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
+  { accessType: 'read', recordType: 'Weight' },
+  { accessType: 'read', recordType: 'BodyFat' },
 ] as const
 
 /**
@@ -88,6 +103,8 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
     steps: false,
     sleep: false,
     calories: false,
+    weight: false,
+    bodyFat: false,
     isAvailable: false,
   }
 
@@ -106,6 +123,8 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
           steps: true,
           sleep: true,
           calories: true,
+          weight: true,
+          bodyFat: true,
           isAvailable: true,
         })
       })
@@ -123,6 +142,8 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
       result.steps = grantedPermissions.some((p: any) => p.recordType === 'Steps')
       result.sleep = grantedPermissions.some((p: any) => p.recordType === 'SleepSession')
       result.calories = grantedPermissions.some((p: any) => p.recordType === 'ActiveCaloriesBurned')
+      result.weight = grantedPermissions.some((p: any) => p.recordType === 'Weight')
+      result.bodyFat = grantedPermissions.some((p: any) => p.recordType === 'BodyFat')
 
       return result
     } catch (error) {
@@ -362,9 +383,214 @@ export async function getStepsForDateRange(
   return 0
 }
 
+/**
+ * Get weight data from connected smart scale (via Health platform)
+ * Fetches weight and body fat % for a date range
+ */
+export async function getWeightDataFromScale(
+  startDate: Date,
+  endDate: Date = new Date()
+): Promise<ScaleWeightData[]> {
+  const isAvailable = await isHealthAvailable()
+  if (!isAvailable) return []
+
+  if (Platform.OS === 'ios') {
+    return getWeightDataIOS(startDate, endDate)
+  } else if (Platform.OS === 'android') {
+    return getWeightDataAndroid(startDate, endDate)
+  }
+
+  return []
+}
+
+/**
+ * iOS: Get weight data from HealthKit
+ */
+async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWeightData[]> {
+  try {
+    // Get weight samples
+    const weightSamples = await new Promise<any[]>((resolve) => {
+      AppleHealthKit.getWeightSamples(
+        {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          ascending: false,
+          limit: 100,
+        },
+        (error, results) => {
+          if (error || !results) {
+            console.log('[HealthService] Weight samples error:', error)
+            resolve([])
+            return
+          }
+          resolve(results)
+        }
+      )
+    })
+
+    // Get body fat samples
+    const bodyFatSamples = await new Promise<any[]>((resolve) => {
+      AppleHealthKit.getBodyFatPercentageSamples(
+        {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          ascending: false,
+          limit: 100,
+        },
+        (error, results) => {
+          if (error || !results) {
+            resolve([])
+            return
+          }
+          resolve(results)
+        }
+      )
+    })
+
+    // Combine weight with body fat data (match by date)
+    const weightData: ScaleWeightData[] = weightSamples.map((sample) => {
+      const sampleDate = new Date(sample.startDate).toISOString().split('T')[0]
+
+      // Find matching body fat sample for same day
+      const matchingBodyFat = bodyFatSamples.find((bf) => {
+        const bfDate = new Date(bf.startDate).toISOString().split('T')[0]
+        return bfDate === sampleDate
+      })
+
+      return {
+        weight: sample.value,
+        bodyFatPercent: matchingBodyFat?.value,
+        date: sample.startDate,
+        sourceName: sample.sourceName || 'Apple Health',
+      }
+    })
+
+    return weightData
+  } catch (error) {
+    console.log('[HealthService] iOS weight error:', error)
+    return []
+  }
+}
+
+/**
+ * Android: Get weight data from Health Connect
+ */
+async function getWeightDataAndroid(startDate: Date, endDate: Date): Promise<ScaleWeightData[]> {
+  try {
+    // Get weight records
+    let weightRecords: any[] = []
+    try {
+      const result = await readHealthConnectRecords('Weight', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+        },
+      })
+      weightRecords = result.records || []
+    } catch (e) {
+      console.log('[HealthService] Weight read error:', e)
+    }
+
+    // Get body fat records
+    let bodyFatRecords: any[] = []
+    try {
+      const result = await readHealthConnectRecords('BodyFat', {
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+        },
+      })
+      bodyFatRecords = result.records || []
+    } catch (e) {
+      console.log('[HealthService] Body fat read error:', e)
+    }
+
+    // Combine weight with body fat data
+    const weightData: ScaleWeightData[] = weightRecords.map((record) => {
+      const recordDate = new Date(record.time).toISOString().split('T')[0]
+
+      // Find matching body fat record for same day
+      const matchingBodyFat = bodyFatRecords.find((bf) => {
+        const bfDate = new Date(bf.time).toISOString().split('T')[0]
+        return bfDate === recordDate
+      })
+
+      return {
+        weight: record.weight?.inKilograms || record.mass?.inKilograms || 0,
+        bodyFatPercent: matchingBodyFat?.percentage,
+        date: record.time,
+        sourceName: record.metadata?.dataOrigin || 'Health Connect',
+      }
+    })
+
+    return weightData
+  } catch (error) {
+    console.log('[HealthService] Android weight error:', error)
+    return []
+  }
+}
+
+/**
+ * Get the latest weight entry from connected scale
+ */
+export async function getLatestWeightFromScale(): Promise<ScaleWeightData | null> {
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const data = await getWeightDataFromScale(thirtyDaysAgo)
+  return data.length > 0 ? data[0] : null
+}
+
+/**
+ * Get list of popular compatible smart scales
+ */
+export function getCompatibleScales(): Array<{ name: string; brand: string }> {
+  return [
+    { name: 'Body+', brand: 'Withings' },
+    { name: 'Body Cardio', brand: 'Withings' },
+    { name: 'Body Scan', brand: 'Withings' },
+    { name: 'Mi Body Composition Scale 2', brand: 'Xiaomi' },
+    { name: 'Smart Scale P2 Pro', brand: 'eufy' },
+    { name: 'ES-CS20M', brand: 'Renpho' },
+    { name: 'Elis Solar', brand: 'Renpho' },
+    { name: 'Aria Air', brand: 'Fitbit' },
+    { name: 'Index S2', brand: 'Garmin' },
+    { name: 'Body Analysis Scale', brand: 'Omron' },
+    { name: 'Smart Body Analyzer', brand: 'QardioBase' },
+  ]
+}
+
+/**
+ * Get platform-specific setup instructions
+ */
+export function getScaleSetupInstructions(): string[] {
+  if (Platform.OS === 'ios') {
+    return [
+      "1. Configurez votre balance avec l'app du fabricant (Withings, Mi Fit, etc.)",
+      "2. Dans l'app de la balance, activez la synchronisation avec Apple Santé",
+      '3. Pesez-vous - les données seront envoyées automatiquement',
+      '4. Revenez ici et appuyez sur Synchroniser',
+    ]
+  } else if (Platform.OS === 'android') {
+    return [
+      '1. Installez Google Health Connect depuis le Play Store',
+      "2. Configurez votre balance avec l'app du fabricant",
+      "3. Dans l'app de la balance, activez Health Connect",
+      '4. Pesez-vous et revenez ici pour synchroniser',
+    ]
+  }
+  return ["L'intégration santé n'est pas disponible sur cette plateforme."]
+}
+
 export default {
   isHealthAvailable,
   requestHealthPermissions,
   getTodayHealthData,
   getStepsForDateRange,
+  getWeightDataFromScale,
+  getLatestWeightFromScale,
+  getCompatibleScales,
+  getScaleSetupInstructions,
 }

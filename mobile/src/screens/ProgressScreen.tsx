@@ -10,10 +10,12 @@ import {
   TextInput,
   Alert,
 } from 'react-native'
-import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, ChevronLeft } from 'lucide-react-native'
+import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, ChevronLeft, Settings, Bluetooth } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../navigation/RootNavigator'
 
 import { Card, Badge, ProgressBar, CircularProgress } from '../components/ui'
 import { GamificationPanel } from '../components/dashboard'
@@ -31,9 +33,11 @@ type TimeRange = '7d' | '30d' | '90d'
 type WeightRange = '1W' | '1M' | '3M' | 'ALL'
 type TabType = 'weight' | 'nutrition' | 'gamification'
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>
+
 export default function ProgressScreen() {
   const { colors } = useTheme()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp>()
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
   const [weightRange, setWeightRange] = useState<WeightRange>('1M')
   const [activeTab, setActiveTab] = useState<TabType>('weight')
@@ -252,12 +256,23 @@ export default function ProgressScreen() {
                     Évolution du poids
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={[styles.addWeightButton, { backgroundColor: colors.accent.light }]}
-                  onPress={() => setShowAddWeight(!showAddWeight)}
-                >
-                  <Plus size={18} color={colors.accent.primary} />
-                </TouchableOpacity>
+                <View style={styles.weightHeaderButtons}>
+                  <TouchableOpacity
+                    style={[styles.scaleSettingsButton, { backgroundColor: colors.bg.secondary }]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                      navigation.navigate('ScaleSettings')
+                    }}
+                  >
+                    <Bluetooth size={16} color={colors.accent.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.addWeightButton, { backgroundColor: colors.accent.light }]}
+                    onPress={() => setShowAddWeight(!showAddWeight)}
+                  >
+                    <Plus size={18} color={colors.accent.primary} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Add weight input */}
@@ -435,12 +450,35 @@ export default function ProgressScreen() {
                         idx < Math.min(4, sortedWeights.length - 1) && { borderBottomColor: colors.border.light, borderBottomWidth: 1 }
                       ]}
                     >
-                      <Text style={[styles.historyDate, { color: colors.text.secondary }]}>
-                        {new Date(entry.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                      </Text>
-                      <Text style={[styles.historyWeight, { color: colors.text.primary }]}>
-                        {entry.weight} kg
-                      </Text>
+                      <View style={styles.historyLeft}>
+                        <Text style={[styles.historyDate, { color: colors.text.secondary }]}>
+                          {new Date(entry.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        </Text>
+                        {entry.source === 'scale' && (
+                          <View style={[styles.historySourceBadge, { backgroundColor: colors.accent.light }]}>
+                            <Bluetooth size={10} color={colors.accent.primary} />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.historyMetrics}>
+                        <Text style={[styles.historyWeight, { color: colors.text.primary }]}>
+                          {entry.weight} kg
+                        </Text>
+                        {(entry.bodyFatPercent || entry.bmi) && (
+                          <View style={styles.historyExtraMetrics}>
+                            {entry.bodyFatPercent && (
+                              <Text style={[styles.historyExtraMetric, { color: colors.text.tertiary }]}>
+                                {entry.bodyFatPercent.toFixed(1)}% MG
+                              </Text>
+                            )}
+                            {entry.bmi && (
+                              <Text style={[styles.historyExtraMetric, { color: colors.text.tertiary }]}>
+                                IMC {entry.bmi.toFixed(1)}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      </View>
                       {idx > 0 && sortedWeights[idx - 1] && (
                         <View style={styles.historyChange}>
                           {entry.weight < sortedWeights[idx - 1].weight ? (
@@ -1220,6 +1258,18 @@ const styles = StyleSheet.create({
     ...typography.h4,
     fontWeight: '600',
   },
+  weightHeaderButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  scaleSettingsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   addWeightButton: {
     width: 36,
     height: 36,
@@ -1397,14 +1447,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
   },
+  historyLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
+  },
   historyDate: {
     ...typography.body,
-    flex: 1,
+  },
+  historySourceBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyMetrics: {
+    alignItems: 'flex-end',
+    marginRight: spacing.sm,
   },
   historyWeight: {
     ...typography.bodyMedium,
     fontWeight: '600',
-    marginRight: spacing.sm,
+  },
+  historyExtraMetrics: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: 2,
+  },
+  historyExtraMetric: {
+    ...typography.caption,
+    fontSize: 10,
   },
   historyChange: {
     width: 20,

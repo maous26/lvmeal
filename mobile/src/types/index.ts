@@ -144,7 +144,27 @@ export interface WeightEntry {
   date: string
   weight: number
   note?: string
-  source?: 'manual' | 'device'
+  source?: 'manual' | 'scale' | 'health_app'
+  // Body composition from smart scale (optional - only reliable metrics)
+  bodyFatPercent?: number // Bio-impedance estimation (with disclaimer)
+  bmi?: number // Calculated: weight / (height/100)²
+}
+
+// Health platform integration types
+export type HealthPlatform = 'apple_health' | 'google_health_connect' | 'none'
+
+export interface HealthPermissions {
+  weight: boolean
+  bodyFatPercentage: boolean
+  bmi: boolean
+}
+
+export interface HealthSyncStatus {
+  platform: HealthPlatform
+  isConnected: boolean
+  lastSyncDate: string | null
+  permissions: HealthPermissions
+  error?: string
 }
 
 // =============================================================================
