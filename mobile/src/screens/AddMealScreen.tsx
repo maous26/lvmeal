@@ -46,6 +46,7 @@ import {
   CalendarDays,
   CalendarRange,
   Percent,
+  RefreshCw,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -259,6 +260,7 @@ export default function AddMealScreen() {
   const [selectedMealType, setSelectedMealType] = useState<MealType>(type as MealType)
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [suggestedRecipe, setSuggestedRecipe] = useState<AIRecipe | null>(null)
+  const [generationMode, setGenerationMode] = useState<'suggestion' | 'plan'>('suggestion')
   const [planDuration, setPlanDuration] = useState<1 | 3 | 7>(1)
   const [calorieReduction, setCalorieReduction] = useState(false)
   const [lastMealSource, setLastMealSource] = useState<{ source: MealSource; label: string; confidence: number } | null>(null)
@@ -588,8 +590,9 @@ export default function AddMealScreen() {
         fats: consumed.fats,
       }
 
-      // Use RAG for single meal generation (1 day mode)
-      if (planDuration === 1) {
+      // Mode suggestion = single meal, Mode plan = full day(s) plan
+      if (generationMode === 'suggestion') {
+        // Single meal suggestion
         const result = await generateSingleMealWithRAG({
           mealType: selectedMealType,
           userProfile: profile as UserProfile,
@@ -607,7 +610,7 @@ export default function AddMealScreen() {
 
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
-          // Create Recipe object and show detail modal
+          // Create Recipe object for adding to meal log
           const aiRecipe: Recipe = {
             id: result.recipe.id,
             title: result.recipe.title,
@@ -636,13 +639,24 @@ export default function AddMealScreen() {
             isFavorite: false,
             source: result.source === 'ai' ? 'ai' : result.source,
           }
+          // Set the suggested recipe to display in the same modal
+          setSuggestedRecipe({
+            title: result.recipe.title,
+            description: result.recipe.description,
+            ingredients: result.recipe.ingredients,
+            instructions: result.recipe.instructions,
+            nutrition: result.recipe.nutrition,
+            prepTime: result.recipe.prepTime,
+            servings: result.recipe.servings,
+            imageUrl: result.recipe.imageUrl,
+          })
+          // Also set selectedRecipe for adding to meal log
           setSelectedRecipe(aiRecipe)
-          setShowRecipeDetailModal(true)
         } else {
           Alert.alert('Aucun resultat', result.error || 'Impossible de trouver un repas correspondant.')
         }
       } else {
-        // Multi-day plan generation (3 or 7 days)
+        // Full plan generation (1, 3 or 7 days)
         const result = await generateFlexibleMealPlanWithRAG({
           userProfile: profile as UserProfile,
           dailyCalories: nutritionGoals.calories,
@@ -1718,6 +1732,36 @@ export default function AddMealScreen() {
             </View>
 
             <ScrollView style={styles.recipeModalScroll} showsVerticalScrollIndicator={false}>
+              {/* Mode Selector: Suggestion vs Plan */}
+              <View style={styles.modeSelector}>
+                <TouchableOpacity
+                  style={[styles.modeTab, generationMode === 'suggestion' && styles.modeTabActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    setGenerationMode('suggestion')
+                    setSuggestedRecipe(null)
+                  }}
+                >
+                  <Sparkles size={18} color={generationMode === 'suggestion' ? '#FFFFFF' : colors.text.secondary} />
+                  <Text style={[styles.modeTabText, generationMode === 'suggestion' && styles.modeTabTextActive]}>
+                    Suggestion
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeTab, generationMode === 'plan' && styles.modeTabActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    setGenerationMode('plan')
+                    setSuggestedRecipe(null)
+                  }}
+                >
+                  <CalendarDays size={18} color={generationMode === 'plan' ? '#FFFFFF' : colors.text.secondary} />
+                  <Text style={[styles.modeTabText, generationMode === 'plan' && styles.modeTabTextActive]}>
+                    Plan repas
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* AI Suggestion Card */}
               <LinearGradient
                 colors={[`${colors.accent.primary}15`, `${colors.secondary.primary}15`]}
@@ -1725,37 +1769,66 @@ export default function AddMealScreen() {
               >
                 <View style={styles.aiHeader}>
                   <Sparkles size={20} color={colors.warning} />
-                  <Text style={styles.aiTitle}>Plan repas personnalise</Text>
+                  <Text style={styles.aiTitle}>
+                    {generationMode === 'suggestion' ? 'Suggestion de repas' : 'Plan repas personnalise'}
+                  </Text>
                 </View>
                 <Text style={styles.aiDescription}>
-                  LymIA genere un plan repas adapte a ton profil nutritionnel, tes preferences et ton solde calorique.
+                  {generationMode === 'suggestion'
+                    ? 'LymIA te suggere un repas adapte a ton profil et tes besoins caloriques du moment.'
+                    : 'LymIA genere un plan repas complet adapte a ton profil nutritionnel.'}
                 </Text>
 
-                {/* Duration Selector */}
-                <Text style={styles.mealTypeLabel}>Duree du plan</Text>
-                <View style={styles.mealTypeRow}>
-                  {([1, 3, 7] as const).map((duration) => {
-                    const icons = { 1: Calendar, 3: CalendarDays, 7: CalendarRange }
-                    const labels = { 1: '1 jour', 3: '3 jours', 7: '7 jours' }
-                    const Icon = icons[duration]
-                    const isSelected = planDuration === duration
-                    return (
-                      <TouchableOpacity
-                        key={duration}
-                        style={[styles.durationChip, isSelected && styles.durationChipActive]}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                          setPlanDuration(duration)
-                        }}
-                      >
-                        <Icon size={16} color={isSelected ? '#FFFFFF' : colors.text.secondary} />
-                        <Text style={[styles.durationText, isSelected && styles.durationTextActive]}>
-                          {labels[duration]}
-                        </Text>
-                      </TouchableOpacity>
-                    )
-                  })}
-                </View>
+                {/* Plan Duration Selector (only for plan mode) */}
+                {generationMode === 'plan' && (
+                  <>
+                    <Text style={styles.mealTypeLabel}>Duree du plan</Text>
+                    <View style={styles.mealTypeRow}>
+                      {([1, 3, 7] as const).map((duration) => {
+                        const icons = { 1: Calendar, 3: CalendarDays, 7: CalendarRange }
+                        const labels = { 1: '1 jour', 3: '3 jours', 7: '7 jours' }
+                        const Icon = icons[duration]
+                        const isSelected = planDuration === duration
+                        return (
+                          <TouchableOpacity
+                            key={duration}
+                            style={[styles.durationChip, isSelected && styles.durationChipActive]}
+                            onPress={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                              setPlanDuration(duration)
+                            }}
+                          >
+                            <Icon size={16} color={isSelected ? '#FFFFFF' : colors.text.secondary} />
+                            <Text style={[styles.durationText, isSelected && styles.durationTextActive]}>
+                              {labels[duration]}
+                            </Text>
+                          </TouchableOpacity>
+                        )
+                      })}
+                    </View>
+                  </>
+                )}
+
+                {/* Meal Type Selector (only for suggestion mode) */}
+                {generationMode === 'suggestion' && (
+                  <>
+                    <Text style={styles.mealTypeLabel}>Pour quel repas ?</Text>
+                    <View style={styles.mealTypeRow}>
+                      {mealTypeOptions.map((option) => (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={[styles.mealTypeChip, selectedMealType === option.id && styles.mealTypeChipActive]}
+                          onPress={() => setSelectedMealType(option.id)}
+                        >
+                          <Text style={styles.mealTypeEmoji}>{option.icon}</Text>
+                          <Text style={[styles.mealTypeText, selectedMealType === option.id && styles.mealTypeTextActive]}>
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
 
                 {/* Calorie Reduction Toggle */}
                 <TouchableOpacity
@@ -1778,27 +1851,6 @@ export default function AddMealScreen() {
                     {calorieReduction && <Check size={14} color="#FFFFFF" />}
                   </View>
                 </TouchableOpacity>
-
-                {/* Meal Type Selector (only for 1 day) */}
-                {planDuration === 1 && (
-                  <>
-                    <Text style={[styles.mealTypeLabel, { marginTop: spacing.lg }]}>Pour quel repas ?</Text>
-                    <View style={styles.mealTypeRow}>
-                      {mealTypeOptions.map((option) => (
-                        <TouchableOpacity
-                          key={option.id}
-                          style={[styles.mealTypeChip, selectedMealType === option.id && styles.mealTypeChipActive]}
-                          onPress={() => setSelectedMealType(option.id)}
-                        >
-                          <Text style={styles.mealTypeEmoji}>{option.icon}</Text>
-                          <Text style={[styles.mealTypeText, selectedMealType === option.id && styles.mealTypeTextActive]}>
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                )}
 
                 {/* RAG Info Card */}
                 <View style={styles.ragInfoCard}>
@@ -1831,12 +1883,118 @@ export default function AddMealScreen() {
                     <>
                       <Sparkles size={22} color="#FFFFFF" />
                       <Text style={styles.generateButtonText}>
-                        Generer {planDuration === 1 ? 'un repas' : `${planDuration} jours de repas`}
+                        {generationMode === 'suggestion'
+                          ? 'Suggerer un repas'
+                          : `Generer ${planDuration} jour${planDuration > 1 ? 's' : ''} de repas`}
                       </Text>
                     </>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
+
+              {/* Generated Recipe Display (only in suggestion mode) */}
+              {suggestedRecipe && generationMode === 'suggestion' && (
+                <View style={styles.suggestedRecipeCard}>
+                  {/* Recipe Header */}
+                  <View style={styles.suggestedRecipeHeader}>
+                    <View style={styles.suggestedRecipeSourceBadge}>
+                      <Database size={12} color="#FFFFFF" />
+                      <Text style={styles.suggestedRecipeSourceText}>
+                        {lastMealSource?.label || 'LymIA'}
+                      </Text>
+                    </View>
+                    <Text style={styles.suggestedRecipeConfidence}>
+                      {lastMealSource ? `${Math.round(lastMealSource.confidence * 100)}%` : ''}
+                    </Text>
+                  </View>
+
+                  {/* Recipe Image or Placeholder */}
+                  {suggestedRecipe.imageUrl ? (
+                    <Image
+                      source={{ uri: suggestedRecipe.imageUrl }}
+                      style={styles.suggestedRecipeImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={[colors.accent.primary, colors.secondary.primary]}
+                      style={styles.suggestedRecipeImagePlaceholder}
+                    >
+                      <ChefHat size={48} color="#FFFFFF" />
+                    </LinearGradient>
+                  )}
+
+                  {/* Recipe Info */}
+                  <Text style={styles.suggestedRecipeTitle}>{suggestedRecipe.title}</Text>
+                  {suggestedRecipe.description && (
+                    <Text style={styles.suggestedRecipeDescription} numberOfLines={2}>
+                      {suggestedRecipe.description}
+                    </Text>
+                  )}
+
+                  {/* Recipe Meta */}
+                  <View style={styles.suggestedRecipeMeta}>
+                    <View style={styles.suggestedRecipeMetaItem}>
+                      <Clock size={14} color={colors.text.secondary} />
+                      <Text style={styles.suggestedRecipeMetaText}>{suggestedRecipe.prepTime} min</Text>
+                    </View>
+                    <View style={styles.suggestedRecipeMetaItem}>
+                      <Users size={14} color={colors.text.secondary} />
+                      <Text style={styles.suggestedRecipeMetaText}>{suggestedRecipe.servings} pers.</Text>
+                    </View>
+                    <View style={styles.suggestedRecipeMetaItem}>
+                      <Flame size={14} color={colors.nutrients.calories} />
+                      <Text style={styles.suggestedRecipeMetaText}>{suggestedRecipe.nutrition.calories} kcal</Text>
+                    </View>
+                  </View>
+
+                  {/* Nutrition Summary */}
+                  <View style={styles.suggestedRecipeNutrition}>
+                    <View style={[styles.nutritionPill, { backgroundColor: `${colors.nutrients.proteins}20` }]}>
+                      <Text style={[styles.nutritionPillText, { color: colors.nutrients.proteins }]}>
+                        P: {suggestedRecipe.nutrition.proteins}g
+                      </Text>
+                    </View>
+                    <View style={[styles.nutritionPill, { backgroundColor: `${colors.nutrients.carbs}20` }]}>
+                      <Text style={[styles.nutritionPillText, { color: colors.nutrients.carbs }]}>
+                        G: {suggestedRecipe.nutrition.carbs}g
+                      </Text>
+                    </View>
+                    <View style={[styles.nutritionPill, { backgroundColor: `${colors.nutrients.fats}20` }]}>
+                      <Text style={[styles.nutritionPillText, { color: colors.nutrients.fats }]}>
+                        L: {suggestedRecipe.nutrition.fats}g
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <View style={styles.suggestedRecipeActions}>
+                    <TouchableOpacity
+                      style={styles.suggestedRecipeSecondaryButton}
+                      onPress={() => {
+                        setSuggestedRecipe(null)
+                        handleAISuggest()
+                      }}
+                    >
+                      <RefreshCw size={16} color={colors.accent.primary} />
+                      <Text style={styles.suggestedRecipeSecondaryButtonText}>Autre suggestion</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.suggestedRecipePrimaryButton}
+                      onPress={() => {
+                        if (selectedRecipe) {
+                          handleAddRecipeToMeal()
+                          setSuggestedRecipe(null)
+                          setShowAIRecipeModal(false)
+                        }
+                      }}
+                    >
+                      <Plus size={16} color="#FFFFFF" />
+                      <Text style={styles.suggestedRecipePrimaryButtonText}>Ajouter ce repas</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
 
               <View style={{ height: spacing['3xl'] }} />
             </ScrollView>
@@ -2968,6 +3126,158 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  // Mode Selector styles
+  modeSelector: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.default,
+    marginTop: spacing.default,
+    marginBottom: spacing.md,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radius.lg,
+    padding: spacing.xs,
+  },
+  modeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+  },
+  modeTabActive: {
+    backgroundColor: colors.accent.primary,
+  },
+  modeTabText: {
+    ...typography.body,
+    color: colors.text.secondary,
+    fontWeight: '500',
+  },
+  modeTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // Suggested Recipe Card styles
+  suggestedRecipeCard: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radius.lg,
+    marginTop: spacing.lg,
+    marginHorizontal: spacing.default,
+    padding: spacing.default,
+    ...shadows.sm,
+  },
+  suggestedRecipeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  suggestedRecipeSourceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.accent.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    gap: spacing.xs,
+  },
+  suggestedRecipeSourceText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  suggestedRecipeConfidence: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '600',
+  },
+  suggestedRecipeImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  suggestedRecipeImagePlaceholder: {
+    width: '100%',
+    height: 180,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suggestedRecipeTitle: {
+    ...typography.h3,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  suggestedRecipeDescription: {
+    ...typography.body,
+    color: colors.text.secondary,
+    marginBottom: spacing.md,
+  },
+  suggestedRecipeMeta: {
+    flexDirection: 'row',
+    gap: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  suggestedRecipeMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  suggestedRecipeMetaText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  suggestedRecipeNutrition: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  nutritionPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+  },
+  nutritionPillText: {
+    ...typography.caption,
+    fontWeight: '600',
+  },
+  suggestedRecipeActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  suggestedRecipeSecondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.accent.primary,
+    gap: spacing.xs,
+  },
+  suggestedRecipeSecondaryButtonText: {
+    ...typography.body,
+    color: colors.accent.primary,
+    fontWeight: '600',
+  },
+  suggestedRecipePrimaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.accent.primary,
+    gap: spacing.xs,
+  },
+  suggestedRecipePrimaryButtonText: {
+    ...typography.body,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   // Discover styles
   discoverSearchRow: {

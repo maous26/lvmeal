@@ -16,6 +16,7 @@ import {
   type MealSource,
   type SourcedMeal,
   type RAGContext,
+  type OFFProduct,
 } from './rag-service'
 
 // Re-export MealSource for consumers
@@ -30,6 +31,82 @@ import {
 import { generatePlanMeal, type AIRecipe } from './ai-service'
 import type { UserProfile, MealType, NutritionInfo, Recipe } from '../types'
 import type { PlannedMealItem } from '../stores/meal-plan-store'
+
+// CIQUAL data type
+interface CIQUALFood {
+  id: string
+  code: string
+  name: string
+  groupCode: string
+  groupName: string
+  subGroupCode: string
+  subGroupName: string
+  nutrition: NutritionInfo & {
+    fiber?: number
+    sugar?: number
+    sodium?: number
+    saturatedFat?: number
+  }
+  serving: number
+  servingUnit: string
+  source: string
+}
+
+// Cache for CIQUAL data
+let ciqualCache: CIQUALFood[] | null = null
+
+/**
+ * Load CIQUAL data from bundled JSON
+ */
+async function loadCIQUALData(): Promise<CIQUALFood[]> {
+  if (ciqualCache) return ciqualCache
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const data = require('../data/ciqual.json') as CIQUALFood[]
+    ciqualCache = data
+    console.log(`[CIQUAL] Loaded ${data.length} foods`)
+    return data
+  } catch (error) {
+    console.warn('[CIQUAL] Failed to load:', error)
+    return []
+  }
+}
+
+/**
+ * Search CIQUAL foods by name and meal type
+ */
+function searchCIQUALByMealType(
+  foods: CIQUALFood[],
+  mealType: MealType,
+  targetCalories: number
+): CIQUALFood[] {
+  // Map meal types to relevant CIQUAL group names
+  const mealTypeGroups: Record<MealType, string[]> = {
+    breakfast: ['céréales', 'lait', 'yaourt', 'fruit', 'jus', 'pain', 'biscuit', 'confiture'],
+    lunch: ['plat', 'viande', 'poisson', 'légume', 'riz', 'pâtes', 'salade'],
+    snack: ['fruit', 'yaourt', 'biscuit', 'compote', 'barre'],
+    dinner: ['soupe', 'légume', 'poisson', 'viande', 'plat', 'salade'],
+  }
+
+  const keywords = mealTypeGroups[mealType] || []
+
+  return foods.filter(food => {
+    const name = food.name.toLowerCase()
+    const group = (food.groupName || '').toLowerCase()
+    const subGroup = (food.subGroupName || '').toLowerCase()
+
+    // Check if matches any keyword
+    const matchesKeyword = keywords.some(kw =>
+      name.includes(kw) || group.includes(kw) || subGroup.includes(kw)
+    )
+
+    // Check calories are reasonable
+    const calories = food.nutrition.calories
+    const caloriesOk = calories > 50 && calories <= targetCalories + 100
+
+    return matchesKeyword && caloriesOk
+  })
+}
 
 // ============= TYPES =============
 
@@ -560,7 +637,8 @@ export async function generateSingleMealWithRAG(params: {
 }
 
 /**
- * Generate a multi-day meal plan with flexible duration
+ * Intelligent meal plan agent that combines multiple sources
+ * Based on user profile, preferences, and nutritional needs
  */
 export async function generateFlexibleMealPlanWithRAG(params: {
   userProfile: UserProfile
@@ -571,101 +649,95 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 }): Promise<GeneratedMealPlan & { days: number }> {
   const { userProfile, dailyCalories, days, calorieReduction = false, preferences } = params
 
-  // Adjust calories if reduction mode
+  console.log(`[Agent] ===== MEAL PLAN GENERATION =====`)
+  console.log(`[Agent] Days: ${days}, Calories: ${dailyCalories}, Reduction: ${calorieReduction}`)
+  console.log(`[Agent] User goal: ${userProfile.goal}, Diet: ${userProfile.dietType || 'standard'}`)
+
   const adjustedCalories = calorieReduction ? Math.round(dailyCalories * 0.9) : dailyCalories
 
-  // Ensure static recipes are loaded
-  await loadStaticRecipes()
+  // Load all data sources in parallel
+  const [gustarRecipes, ciqualFoods] = await Promise.all([
+    loadStaticRecipes(),
+    loadCIQUALData(),
+  ])
+
+  console.log(`[Agent] Sources loaded - Gustar: ${gustarRecipes.length}, CIQUAL: ${ciqualFoods.length}`)
 
   const mealTargets = calculateMealTargets(adjustedCalories)
   const meals: PlannedMealItem[] = []
-  const existingMealNames: string[] = []
+  const usedIds = new Set<string>()
 
-  // Track source usage
-  const sourceBreakdown = {
-    gustar: 0,
-    off: 0,
-    ciqual: 0,
-    ai: 0,
-  }
+  const sourceBreakdown = { gustar: 0, off: 0, ciqual: 0, ai: 0 }
 
-  // Generate meals for each day
+  // Determine source distribution based on user profile
+  const sourceStrategy = determineSourceStrategy(userProfile)
+  console.log(`[Agent] Strategy: ${JSON.stringify(sourceStrategy)}`)
+
   for (let dayIndex = 0; dayIndex < days; dayIndex++) {
-    console.log(`[RAG] Generating meals for day ${dayIndex + 1}/${days}...`)
+    console.log(`[Agent] Generating day ${dayIndex + 1}/${days}`)
 
     for (const mealType of MEAL_TYPES_ORDER) {
-      const isCheatMeal =
-        preferences?.includeCheatMeal &&
-        preferences?.cheatMealDay === dayIndex &&
-        preferences?.cheatMealType === mealType
+      const targetCalories = mealTargets[mealType]
 
-      const slot: MealSlot = {
+      // Agent decides which source to use based on strategy and context
+      const sourceDecision = agentDecideSource(
+        mealType,
+        sourceStrategy,
         dayIndex,
-        mealType,
-        targetCalories: isCheatMeal
-          ? Math.round(mealTargets[mealType] * 1.5)
-          : mealTargets[mealType],
-        isCheatMeal,
+        meals.filter(m => m.dayIndex === dayIndex)
+      )
+
+      let plannedMeal: PlannedMealItem | null = null
+
+      // Try primary source
+      switch (sourceDecision.primary) {
+        case 'gustar':
+          plannedMeal = selectFromGustar(gustarRecipes, mealType, targetCalories, userProfile, usedIds)
+          if (plannedMeal) sourceBreakdown.gustar++
+          break
+
+        case 'ciqual':
+          plannedMeal = selectFromCIQUAL(ciqualFoods, mealType, targetCalories, userProfile, usedIds)
+          if (plannedMeal) sourceBreakdown.ciqual++
+          break
+
+        case 'off':
+          plannedMeal = await selectFromOFF(mealType, targetCalories, userProfile, usedIds)
+          if (plannedMeal) sourceBreakdown.off++
+          break
       }
 
-      // Build consumed nutrition for this day
-      const consumed: NutritionInfo = {
-        calories: 0,
-        proteins: 0,
-        carbs: 0,
-        fats: 0,
-      }
-
-      meals
-        .filter(m => m.dayIndex === dayIndex)
-        .forEach(m => {
-          consumed.calories += m.nutrition.calories
-          consumed.proteins += m.nutrition.proteins
-          consumed.carbs += m.nutrition.carbs
-          consumed.fats += m.nutrition.fats
-        })
-
-      const ragContext = buildRAGContext({
-        userProfile,
-        mealType,
-        day: dayIndex,
-        dailyTarget: adjustedCalories,
-        consumed,
-        existingMeals: existingMealNames,
-      })
-
-      if (preferences?.preferQuick && ragContext.preferences) {
-        ragContext.preferences.preferHomemade = false
-      }
-
-      try {
-        const sourcedMeal = await getRAGMeal(ragContext)
-
-        if (sourcedMeal) {
-          const mealName = sourcedMeal.recipe?.title ||
-            sourcedMeal.aiRecipe?.title ||
-            sourcedMeal.offProduct?.name ||
-            `${mealType} jour ${dayIndex + 1}`
-
-          const plannedMeal = sourcedMealToPlannedItem(sourcedMeal, slot, mealName)
-          meals.push(plannedMeal)
-          existingMealNames.push(mealName)
-
-          if (sourcedMeal.source === 'gustar') sourceBreakdown.gustar++
-          else if (sourcedMeal.source === 'off') sourceBreakdown.off++
-          else if (sourcedMeal.source === 'ciqual') sourceBreakdown.ciqual++
-          else if (sourcedMeal.source === 'ai') sourceBreakdown.ai++
-
-          console.log(`  [${sourcedMeal.source}] ${mealType}: ${mealName} (${sourcedMeal.nutrition.calories} kcal)`)
+      // Fallback to other sources if primary failed
+      if (!plannedMeal && sourceDecision.fallback) {
+        for (const fallback of sourceDecision.fallback) {
+          if (fallback === 'gustar' && !plannedMeal) {
+            plannedMeal = selectFromGustar(gustarRecipes, mealType, targetCalories, userProfile, usedIds)
+            if (plannedMeal) sourceBreakdown.gustar++
+          }
+          if (fallback === 'ciqual' && !plannedMeal) {
+            plannedMeal = selectFromCIQUAL(ciqualFoods, mealType, targetCalories, userProfile, usedIds)
+            if (plannedMeal) sourceBreakdown.ciqual++
+          }
+          if (fallback === 'off' && !plannedMeal) {
+            plannedMeal = await selectFromOFF(mealType, targetCalories, userProfile, usedIds)
+            if (plannedMeal) sourceBreakdown.off++
+          }
+          if (plannedMeal) break
         }
-      } catch (error) {
-        console.error(`  Error generating ${mealType}:`, error)
       }
 
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 50))
+      if (plannedMeal) {
+        plannedMeal.dayIndex = dayIndex
+        plannedMeal.mealType = mealType
+        meals.push(plannedMeal)
+        console.log(`  [${plannedMeal.source}] ${mealType}: ${plannedMeal.name} (${plannedMeal.nutrition.calories} kcal)`)
+      }
     }
   }
+
+  console.log(`[Agent] ===== GENERATION COMPLETE =====`)
+  console.log(`[Agent] Total meals: ${meals.length}`)
+  console.log(`[Agent] Sources: G=${sourceBreakdown.gustar} C=${sourceBreakdown.ciqual} O=${sourceBreakdown.off}`)
 
   const totalNutrition = meals.reduce(
     (acc, meal) => ({
@@ -683,6 +755,328 @@ export async function generateFlexibleMealPlanWithRAG(params: {
     totalNutrition,
     generatedAt: new Date().toISOString(),
     days,
+  }
+}
+
+/**
+ * Agent determines source strategy based on user profile
+ */
+function determineSourceStrategy(profile: UserProfile): {
+  gustar: number  // Weight 0-1
+  ciqual: number
+  off: number
+} {
+  // Default balanced strategy
+  let strategy = { gustar: 0.5, ciqual: 0.3, off: 0.2 }
+
+  // Adjust based on goal
+  if (profile.goal === 'weight_loss') {
+    // Prefer CIQUAL for precise calorie data
+    strategy = { gustar: 0.3, ciqual: 0.5, off: 0.2 }
+  } else if (profile.goal === 'muscle_gain') {
+    // Prefer Gustar for complete recipes with proteins
+    strategy = { gustar: 0.6, ciqual: 0.3, off: 0.1 }
+  } else if (profile.goal === 'health') {
+    // Balanced with more variety
+    strategy = { gustar: 0.4, ciqual: 0.4, off: 0.2 }
+  }
+
+  // Adjust based on diet type
+  if (profile.dietType === 'vegetarian' || profile.dietType === 'vegan') {
+    // More CIQUAL for plant-based foods
+    strategy.ciqual += 0.1
+    strategy.gustar -= 0.1
+  }
+
+  return strategy
+}
+
+/**
+ * Agent decides which source to use for a specific meal
+ * Intelligently combines Gustar (recipes), CIQUAL (nutrition data), and OFF (commercial products)
+ */
+function agentDecideSource(
+  mealType: MealType,
+  strategy: { gustar: number; ciqual: number; off: number },
+  dayIndex: number,
+  dayMeals: PlannedMealItem[]
+): { primary: MealSource; fallback: MealSource[] } {
+  // Count sources used today to ensure variety
+  const todaySources = dayMeals.map(m => m.source)
+  const gustarCount = todaySources.filter(s => s === 'gustar').length
+  const ciqualCount = todaySources.filter(s => s === 'manual').length // CIQUAL/OFF stored as manual
+  const offCount = ciqualCount // Both use 'manual' source
+
+  // Meal-type preferences with OFF integration
+  const mealTypePreference: Record<MealType, { primary: MealSource; fallback: MealSource[] }> = {
+    breakfast: {
+      primary: 'gustar',  // Gustar has good breakfast recipes
+      fallback: ['off', 'ciqual'], // OFF for quick options (céréales, yaourt)
+    },
+    lunch: {
+      primary: 'gustar',  // Complete homemade meals
+      fallback: ['off', 'ciqual'], // OFF for sandwiches, salads
+    },
+    snack: {
+      primary: 'off',     // OFF is best for snacks (barres, compotes)
+      fallback: ['ciqual', 'gustar'],
+    },
+    dinner: {
+      primary: 'gustar',  // Complete dinner recipes
+      fallback: ['ciqual', 'off'],
+    },
+  }
+
+  // If one source is overused, switch to another for variety
+  if (gustarCount >= 2) {
+    // Vary between CIQUAL and OFF
+    if (dayIndex % 2 === 0 || mealType === 'snack') {
+      return { primary: 'off', fallback: ['ciqual', 'gustar'] }
+    }
+    return { primary: 'ciqual', fallback: ['off', 'gustar'] }
+  }
+  if (offCount >= 2) {
+    return { primary: 'gustar', fallback: ['ciqual', 'off'] }
+  }
+
+  // Apply strategy weights with some randomness
+  const rand = Math.random()
+  const gustarThreshold = strategy.gustar
+  const ciqualThreshold = gustarThreshold + strategy.ciqual
+
+  if (rand < gustarThreshold) {
+    return mealTypePreference[mealType].primary === 'gustar'
+      ? mealTypePreference[mealType]
+      : { primary: 'gustar', fallback: ['off', 'ciqual'] }
+  } else if (rand < ciqualThreshold) {
+    return { primary: 'ciqual', fallback: ['gustar', 'off'] }
+  } else {
+    return { primary: 'off', fallback: ['gustar', 'ciqual'] }
+  }
+}
+
+/**
+ * Select meal from Gustar recipes
+ */
+function selectFromGustar(
+  recipes: StaticEnrichedRecipe[],
+  mealType: MealType,
+  targetCalories: number,
+  profile: UserProfile,
+  usedIds: Set<string>
+): PlannedMealItem | null {
+  const recipesForType = getStaticRecipesByMealType(mealType)
+
+  const suitable = recipesForType
+    .filter(r => !usedIds.has(r.id))
+    .filter(r => r.nutrition.calories <= targetCalories + 150 && r.nutrition.calories >= targetCalories * 0.5)
+    .filter(r => {
+      if (!profile.allergies?.length) return true
+      const content = `${r.titleFr} ${r.ingredientsFr.map(i => i.name).join(' ')}`.toLowerCase()
+      return !profile.allergies.some(a => content.includes(a.toLowerCase()))
+    })
+
+  if (suitable.length === 0) return null
+
+  // Sort by calorie match
+  suitable.sort((a, b) => {
+    const diffA = Math.abs(a.nutrition.calories - targetCalories)
+    const diffB = Math.abs(b.nutrition.calories - targetCalories)
+    return diffA - diffB
+  })
+
+  // Pick from top 3 for variety
+  const selected = suitable[Math.floor(Math.random() * Math.min(3, suitable.length))]
+  usedIds.add(selected.id)
+
+  const recipe = staticToRecipe(selected)
+
+  return {
+    id: generateMealId(),
+    dayIndex: 0,
+    mealType,
+    name: recipe.title,
+    description: recipe.description,
+    nutrition: selected.nutrition,
+    ingredients: recipe.ingredients.map(ing => ({
+      name: ing.name,
+      amount: `${ing.amount} ${ing.unit}`,
+      calories: 0,
+    })),
+    instructions: recipe.instructions,
+    prepTime: recipe.prepTime || 30,
+    servings: recipe.servings || 1,
+    imageUrl: recipe.imageUrl,
+    isCheatMeal: false,
+    isValidated: false,
+    source: 'gustar',
+    sourceRecipeId: recipe.id,
+  }
+}
+
+/**
+ * Select meal from Open Food Facts
+ */
+async function selectFromOFF(
+  mealType: MealType,
+  targetCalories: number,
+  profile: UserProfile,
+  usedIds: Set<string>
+): Promise<PlannedMealItem | null> {
+  // Search terms by meal type
+  const searchTerms: Record<MealType, string[]> = {
+    breakfast: ['céréales petit déjeuner', 'muesli', 'yaourt nature', 'pain complet', 'flocons avoine'],
+    lunch: ['salade composée', 'sandwich', 'wrap', 'plat préparé', 'taboulé'],
+    snack: ['barre céréales', 'compote', 'fruit sec', 'biscuit', 'yaourt'],
+    dinner: ['soupe légumes', 'plat cuisiné', 'légumes vapeur', 'poisson'],
+  }
+
+  const terms = searchTerms[mealType] || ['aliment']
+  const randomTerm = terms[Math.floor(Math.random() * terms.length)]
+
+  console.log(`[OFF] Searching for "${randomTerm}" (${mealType})...`)
+
+  try {
+    const products = await searchOFF(randomTerm, 20)
+
+    if (products.length === 0) {
+      console.log('[OFF] No products found')
+      return null
+    }
+
+    // Filter by calories, nutriscore, and unused
+    const suitable = products
+      .filter(p => !usedIds.has(p.code))
+      .filter(p => {
+        const calOk = p.nutrition.calories <= targetCalories + 100 && p.nutrition.calories >= targetCalories * 0.3
+        const scoreOk = !p.nutriscore || ['a', 'b', 'c'].includes(p.nutriscore)
+        return calOk && scoreOk
+      })
+      .filter(p => {
+        // Check allergies
+        if (!profile.allergies?.length) return true
+        const name = p.name.toLowerCase()
+        return !profile.allergies.some(a => name.includes(a.toLowerCase()))
+      })
+
+    if (suitable.length === 0) {
+      console.log('[OFF] No suitable products after filtering')
+      return null
+    }
+
+    // Sort by calorie match and nutriscore
+    suitable.sort((a, b) => {
+      // Prefer better nutriscore
+      const scoreOrder: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4, unknown: 5 }
+      const scoreA = scoreOrder[a.nutriscore || 'unknown'] || 5
+      const scoreB = scoreOrder[b.nutriscore || 'unknown'] || 5
+      if (scoreA !== scoreB) return scoreA - scoreB
+
+      // Then by calorie match
+      const diffA = Math.abs(a.nutrition.calories - targetCalories)
+      const diffB = Math.abs(b.nutrition.calories - targetCalories)
+      return diffA - diffB
+    })
+
+    // Pick from top 3 for variety
+    const selected = suitable[Math.floor(Math.random() * Math.min(3, suitable.length))]
+    usedIds.add(selected.code)
+
+    console.log(`[OFF] Selected: ${selected.name} (${selected.nutrition.calories} kcal, Nutriscore ${selected.nutriscore || '?'})`)
+
+    // Calculate portion to match target if needed
+    const portionMultiplier = selected.nutrition.calories > 0
+      ? Math.min(2, Math.max(0.5, targetCalories / selected.nutrition.calories))
+      : 1
+    const adjustedPortion = Math.round(selected.portion * portionMultiplier)
+
+    return {
+      id: generateMealId(),
+      dayIndex: 0,
+      mealType,
+      name: selected.name,
+      description: selected.brand
+        ? `${selected.brand} - ${adjustedPortion}g (Nutriscore ${selected.nutriscore?.toUpperCase() || '?'})`
+        : `${adjustedPortion}g - Open Food Facts`,
+      nutrition: {
+        calories: Math.round(selected.nutrition.calories * portionMultiplier),
+        proteins: Math.round(selected.nutrition.proteins * portionMultiplier),
+        carbs: Math.round(selected.nutrition.carbs * portionMultiplier),
+        fats: Math.round(selected.nutrition.fats * portionMultiplier),
+      },
+      ingredients: [{
+        name: selected.name,
+        amount: `${adjustedPortion}g`,
+        calories: Math.round(selected.nutrition.calories * portionMultiplier)
+      }],
+      instructions: ['Prêt à consommer'],
+      prepTime: 0,
+      servings: 1,
+      imageUrl: selected.imageUrl,
+      isCheatMeal: false,
+      isValidated: false,
+      source: 'manual', // OFF products stored as manual
+    }
+  } catch (error) {
+    console.error('[OFF] Search error:', error)
+    return null
+  }
+}
+
+/**
+ * Select meal from CIQUAL foods
+ */
+function selectFromCIQUAL(
+  foods: CIQUALFood[],
+  mealType: MealType,
+  targetCalories: number,
+  profile: UserProfile,
+  usedIds: Set<string>
+): PlannedMealItem | null {
+  const suitable = searchCIQUALByMealType(foods, mealType, targetCalories)
+    .filter(f => !usedIds.has(f.id))
+    .filter(f => {
+      if (!profile.allergies?.length) return true
+      const name = f.name.toLowerCase()
+      return !profile.allergies.some(a => name.includes(a.toLowerCase()))
+    })
+
+  if (suitable.length === 0) return null
+
+  // Sort by calorie match
+  suitable.sort((a, b) => {
+    const diffA = Math.abs(a.nutrition.calories - targetCalories)
+    const diffB = Math.abs(b.nutrition.calories - targetCalories)
+    return diffA - diffB
+  })
+
+  // Pick from top 5 for variety
+  const selected = suitable[Math.floor(Math.random() * Math.min(5, suitable.length))]
+  usedIds.add(selected.id)
+
+  // Calculate portion to match target calories
+  const portionMultiplier = targetCalories / selected.nutrition.calories
+  const portionGrams = Math.round(selected.serving * portionMultiplier)
+
+  return {
+    id: generateMealId(),
+    dayIndex: 0,
+    mealType,
+    name: selected.name,
+    description: `${portionGrams}g - Source CIQUAL (ANSES)`,
+    nutrition: {
+      calories: Math.round(selected.nutrition.calories * portionMultiplier),
+      proteins: Math.round(selected.nutrition.proteins * portionMultiplier),
+      carbs: Math.round(selected.nutrition.carbs * portionMultiplier),
+      fats: Math.round(selected.nutrition.fats * portionMultiplier),
+    },
+    ingredients: [{ name: selected.name, amount: `${portionGrams}g`, calories: Math.round(selected.nutrition.calories * portionMultiplier) }],
+    instructions: ['Preparer selon vos preferences'],
+    prepTime: 10,
+    servings: 1,
+    isCheatMeal: false,
+    isValidated: false,
+    source: 'manual', // CIQUAL stored as manual
   }
 }
 
