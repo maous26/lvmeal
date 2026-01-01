@@ -678,7 +678,8 @@ export default function AddMealScreen() {
       }
     } catch (error) {
       console.error('RAG meal generation error:', error)
-      Alert.alert('Erreur', 'Impossible de generer une suggestion. Reessayez.')
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+      Alert.alert('Erreur', `Impossible de generer une suggestion: ${errorMessage}`)
     } finally {
       setIsSuggesting(false)
     }

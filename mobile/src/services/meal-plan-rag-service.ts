@@ -472,10 +472,15 @@ export async function generateSingleMealWithRAG(params: {
   consumed: NutritionInfo
   calorieReduction?: boolean
 }): Promise<SingleMealResult> {
+  console.log('[RAG] ===== generateSingleMealWithRAG START =====')
+  console.log('[RAG] Params:', JSON.stringify({ mealType: params.mealType, calorieReduction: params.calorieReduction }))
+
   const { mealType, userProfile, consumed, calorieReduction = false } = params
 
   // Ensure static recipes are loaded
-  await loadStaticRecipes()
+  console.log('[RAG] Loading static recipes...')
+  const recipes = await loadStaticRecipes()
+  console.log('[RAG] Static recipes loaded:', recipes.length)
 
   // Calculate target calories for this meal
   const dailyTarget = userProfile.nutritionalNeeds?.calories || 2000
@@ -484,7 +489,10 @@ export async function generateSingleMealWithRAG(params: {
   const mealTargets = calculateMealTargets(adjustedTarget)
   const targetCalories = mealTargets[mealType]
 
-  // Build RAG context
+  console.log('[RAG] Daily target:', dailyTarget, '| Adjusted:', adjustedTarget, '| Meal target:', targetCalories)
+
+  // Build RAG context with explicit target calories override
+  // This ensures we use meal-type based ratio, not remaining-based calculation
   const ragContext = buildRAGContext({
     userProfile,
     mealType,
@@ -492,6 +500,7 @@ export async function generateSingleMealWithRAG(params: {
     dailyTarget: adjustedTarget,
     consumed,
     existingMeals: [],
+    overrideTargetCalories: targetCalories, // Use calculated meal target, not remaining-based
   })
 
   console.log(`[RAG] Generating ${mealType} with target ${targetCalories} kcal (reduction: ${calorieReduction})`)

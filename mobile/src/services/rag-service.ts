@@ -568,9 +568,11 @@ export function decideMealSource(context: RAGContext): MealSourceDecision {
  * Get meal from Gustar (pre-enriched recipes)
  */
 async function getMealFromGustar(context: RAGContext): Promise<SourcedMeal | null> {
+  console.log('[RAG:Gustar] Loading static recipes...')
   await loadStaticRecipes()
 
   const { mealType, targetCalories, userProfile } = context
+  console.log(`[RAG:Gustar] Filtering for ${mealType}, target ${targetCalories} kcal`)
 
   // Filter recipes by meal type and calories
   const recipes = filterStaticRecipes({
@@ -579,12 +581,17 @@ async function getMealFromGustar(context: RAGContext): Promise<SourcedMeal | nul
     limit: 10,
   })
 
+  console.log(`[RAG:Gustar] Filtered recipes: ${recipes.length}`)
+
   if (recipes.length === 0) {
     // Fallback: get any recipe for this meal type
+    console.log(`[RAG:Gustar] No filtered recipes, trying fallback by meal type`)
     const fallback = getStaticRecipesByMealType(mealType)
+    console.log(`[RAG:Gustar] Fallback recipes: ${fallback.length}`)
     if (fallback.length === 0) return null
 
     const recipe = fallback[Math.floor(Math.random() * fallback.length)]
+    console.log(`[RAG:Gustar] Using fallback: ${recipe.titleFr}`)
     return {
       source: 'gustar',
       recipe: staticToRecipe(recipe),
@@ -608,6 +615,7 @@ async function getMealFromGustar(context: RAGContext): Promise<SourcedMeal | nul
   })
 
   const best = allergyFree[0] || sorted[0]
+  console.log(`[RAG:Gustar] Selected: ${best.titleFr} (${best.nutrition.calories} kcal)`)
 
   return {
     source: 'gustar',
@@ -687,50 +695,66 @@ async function getMealFromAI(context: RAGContext): Promise<SourcedMeal | null> {
  * Get a meal using RAG source selection
  */
 export async function getRAGMeal(context: RAGContext): Promise<SourcedMeal | null> {
+  console.log('[RAG] === getRAGMeal START ===')
+  console.log(`[RAG] Context: mealType=${context.mealType}, targetCalories=${context.targetCalories}`)
+
   const decision = decideMealSource(context)
 
-  console.log(`RAG: ${decision.source} selected (${Math.round(decision.confidence * 100)}%) - ${decision.reason}`)
+  console.log(`[RAG] Source decision: ${decision.source} (${Math.round(decision.confidence * 100)}%) - ${decision.reason}`)
 
   // Try primary source
   let meal: SourcedMeal | null = null
 
-  switch (decision.source) {
-    case 'gustar':
-      meal = await getMealFromGustar(context)
-      break
-    case 'off':
-      meal = await getMealFromOFF(context)
-      break
-    case 'ciqual':
-      // CIQUAL needs knowledge base - fallback to OFF for now
-      meal = await getMealFromOFF(context)
-      break
-    case 'ai':
-      meal = await getMealFromAI(context)
-      break
+  try {
+    switch (decision.source) {
+      case 'gustar':
+        meal = await getMealFromGustar(context)
+        break
+      case 'off':
+        meal = await getMealFromOFF(context)
+        break
+      case 'ciqual':
+        // CIQUAL needs knowledge base - fallback to OFF for now
+        meal = await getMealFromOFF(context)
+        break
+      case 'ai':
+        meal = await getMealFromAI(context)
+        break
+    }
+    console.log(`[RAG] Primary source result: ${meal ? 'SUCCESS' : 'NULL'}`)
+  } catch (error) {
+    console.error(`[RAG] Primary source error:`, error)
   }
 
   // Try fallbacks if primary failed
   if (!meal && decision.fallbackSources.length > 0) {
-    for (const fallback of decision.fallbackSources) {
-      console.log(`RAG: Trying fallback source: ${fallback}`)
+    console.log(`[RAG] Trying fallbacks: ${decision.fallbackSources.join(', ')}`)
 
-      switch (fallback) {
-        case 'gustar':
-          meal = await getMealFromGustar(context)
-          break
-        case 'off':
-          meal = await getMealFromOFF(context)
-          break
-        case 'ai':
-          meal = await getMealFromAI(context)
-          break
+    for (const fallback of decision.fallbackSources) {
+      console.log(`[RAG] Trying fallback: ${fallback}`)
+
+      try {
+        switch (fallback) {
+          case 'gustar':
+            meal = await getMealFromGustar(context)
+            break
+          case 'off':
+            meal = await getMealFromOFF(context)
+            break
+          case 'ai':
+            meal = await getMealFromAI(context)
+            break
+        }
+        console.log(`[RAG] Fallback ${fallback} result: ${meal ? 'SUCCESS' : 'NULL'}`)
+      } catch (error) {
+        console.error(`[RAG] Fallback ${fallback} error:`, error)
       }
 
       if (meal) break
     }
   }
 
+  console.log(`[RAG] === getRAGMeal END === Result: ${meal ? meal.source : 'NULL'}`)
   return meal
 }
 
@@ -844,11 +868,11 @@ export function buildRAGContext(params: {
   dailyTarget: number
   consumed: NutritionInfo
   existingMeals: string[]
+  overrideTargetCalories?: number // Optional override to bypass remaining-based calculation
 }): RAGContext {
-  const { userProfile, mealType, day, dailyTarget, consumed, existingMeals } = params
+  const { userProfile, mealType, day, dailyTarget, consumed, existingMeals, overrideTargetCalories } = params
 
-  // Calculate remaining calories for this meal
-  const remaining = dailyTarget - consumed.calories
+  // Calculate target calories for this meal
   const mealRatios: Record<string, number> = {
     breakfast: 0.25,
     lunch: 0.35,
@@ -856,7 +880,17 @@ export function buildRAGContext(params: {
     dinner: 0.3,
   }
 
-  const targetCalories = Math.max(100, Math.round(remaining * (mealRatios[mealType] || 0.25)))
+  let targetCalories: number
+  if (overrideTargetCalories !== undefined) {
+    // Use override if provided (for single meal generation)
+    targetCalories = overrideTargetCalories
+  } else {
+    // Calculate from remaining calories (for meal plan generation)
+    const remaining = dailyTarget - consumed.calories
+    targetCalories = Math.max(100, Math.round(remaining * (mealRatios[mealType] || 0.25)))
+  }
+
+  console.log(`[RAG:Context] mealType=${mealType}, daily=${dailyTarget}, consumed=${consumed.calories}, override=${overrideTargetCalories}, final target=${targetCalories}`)
 
   return {
     userProfile,
