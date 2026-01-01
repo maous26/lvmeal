@@ -14,6 +14,9 @@ import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import WeightScreen from '../screens/WeightScreen'
 import PaywallScreen from '../screens/PaywallScreen'
+import MealSourceSettingsScreen from '../screens/MealSourceSettingsScreen'
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
+import MealInputSettingsScreen from '../screens/MealInputSettingsScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
@@ -55,6 +58,9 @@ export type RootStackParamList = {
   EditProfile: undefined
   Calendar: undefined
   Paywall: undefined
+  MealSourceSettings: undefined
+  NotificationSettings: undefined
+  MealInputSettings: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -162,6 +168,27 @@ export default function RootNavigator() {
             options={{
               animation: 'slide_from_bottom',
               presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
+            name="MealSourceSettings"
+            component={MealSourceSettingsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="NotificationSettings"
+            component={NotificationSettingsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="MealInputSettings"
+            component={MealInputSettingsScreen}
+            options={{
+              animation: 'slide_from_right',
             }}
           />
         </>

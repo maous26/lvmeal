@@ -10,12 +10,10 @@ import {
   Switch,
 } from 'react-native'
 import {
-  User,
   Target,
   Scale,
   Activity,
   Utensils,
-  Bell,
   BellRing,
   Shield,
   HelpCircle,
@@ -28,21 +26,14 @@ import {
   Edit3,
   Moon,
   Sun,
-  Sparkles,
-  AlertTriangle,
-  PartyPopper,
   Pin,
-  RotateCcw,
   Database,
-  ChefHat,
-  ShoppingCart,
-  Leaf,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
-import { Card, Badge, ProgressBar, Button } from '../components/ui'
+import { Card, Button } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -51,13 +42,8 @@ import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { formatNumber } from '../lib/utils'
 import type { RootStackParamList } from '../navigation/RootNavigator'
 import {
-  scheduleDailyInsightNotification,
-  cancelDailyInsightNotification,
-} from '../services/daily-insight-service'
-import {
   useMealInputPreferencesStore,
   ALL_INPUT_METHODS,
-  DEFAULT_PINNED_METHODS,
 } from '../stores/meal-input-preferences-store'
 import type { MealSourcePreference } from '../types'
 
@@ -234,45 +220,6 @@ export default function ProfileScreen() {
   const handleToggleDarkMode = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     toggleTheme()
-  }
-
-  const handleToggleDailyInsights = async (value: boolean) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    updateNotificationPreferences({ dailyInsightsEnabled: value })
-    if (value) {
-      await scheduleDailyInsightNotification(9) // 9h par défaut
-    } else {
-      await cancelDailyInsightNotification()
-    }
-  }
-
-  const handleToggleAlerts = (value: boolean) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    updateNotificationPreferences({ alertsEnabled: value })
-  }
-
-  const handleToggleCelebrations = (value: boolean) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    updateNotificationPreferences({ celebrationsEnabled: value })
-  }
-
-  const handleResetMealInputPreferences = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    Alert.alert(
-      'Réinitialiser',
-      'Remettre les méthodes d\'ajout par défaut ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Réinitialiser',
-          style: 'destructive',
-          onPress: () => {
-            resetMealInputPreferences()
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          },
-        },
-      ]
-    )
   }
 
   // Get pinned methods labels for display
@@ -559,138 +506,75 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Notifications Super Agent */}
-        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Notifications IA</Text>
-        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
-          {/* Daily Insights */}
-          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
-            <Sparkles size={20} color={colors.accent.primary} />
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Insights quotidiens</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Conseil personnalisé chaque matin</Text>
-            </View>
-            <Switch
-              value={notificationPreferences.dailyInsightsEnabled}
-              onValueChange={handleToggleDailyInsights}
-              trackColor={{ false: colors.bg.tertiary, true: colors.accent.light }}
-              thumbColor={notificationPreferences.dailyInsightsEnabled ? colors.accent.primary : colors.text.tertiary}
-              ios_backgroundColor={colors.bg.tertiary}
-            />
-          </View>
-
-          {/* Alerts */}
-          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
-            <AlertTriangle size={20} color={colors.warning} />
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Alertes santé</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Notifications si anomalie détectée</Text>
-            </View>
-            <Switch
-              value={notificationPreferences.alertsEnabled}
-              onValueChange={handleToggleAlerts}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
-              thumbColor={notificationPreferences.alertsEnabled ? colors.warning : colors.text.tertiary}
-              ios_backgroundColor={colors.bg.tertiary}
-            />
-          </View>
-
-          {/* Celebrations */}
-          <View style={styles.settingItem}>
-            <Award size={20} color={colors.success} />
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Célébrations</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>Streaks, badges et objectifs atteints</Text>
-            </View>
-            <Switch
-              value={notificationPreferences.celebrationsEnabled}
-              onValueChange={handleToggleCelebrations}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
-              thumbColor={notificationPreferences.celebrationsEnabled ? colors.success : colors.text.tertiary}
-              ios_backgroundColor={colors.bg.tertiary}
-            />
-          </View>
-        </Card>
-
-        {/* Meal Input Methods */}
-        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Ajouter un repas</Text>
-        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
-          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
-            <Pin size={20} color={colors.accent.primary} />
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Méthodes épinglées</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]} numberOfLines={1}>
-                {pinnedMethodsLabels}
-              </Text>
-            </View>
-            <Text style={[styles.pinnedCount, { color: colors.text.muted }]}>
-              {pinnedMethods.length}/4
-            </Text>
-          </View>
+        {/* Settings - Consolidated */}
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated, marginBottom: spacing.lg }}>
+          {/* Meal Source Settings */}
           <TouchableOpacity
-            style={styles.settingItem}
-            onPress={handleResetMealInputPreferences}
+            style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              navigation.navigate('MealSourceSettings')
+            }}
             activeOpacity={0.7}
           >
-            <RotateCcw size={20} color={colors.text.secondary} />
-            <Text style={[styles.settingLabel, { flex: 1, color: colors.text.primary }]}>
-              Réinitialiser par défaut
-            </Text>
+            <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
+              <Database size={20} color={colors.accent.primary} />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Sources de repas</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                {mealSourceLabels[profile?.mealSourcePreference || 'balanced'].label}
+              </Text>
+            </View>
+            <ChevronRight size={20} color={colors.text.tertiary} />
+          </TouchableOpacity>
+
+          {/* Notification Settings */}
+          <TouchableOpacity
+            style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              navigation.navigate('NotificationSettings')
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+              <BellRing size={20} color={colors.warning} />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Notifications IA</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                Insights, alertes et célébrations
+              </Text>
+            </View>
+            <ChevronRight size={20} color={colors.text.tertiary} />
+          </TouchableOpacity>
+
+          {/* Meal Input Settings */}
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              navigation.navigate('MealInputSettings')
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+              <Pin size={20} color={colors.success} />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Ajouter un repas</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                {pinnedMethodsLabels} ({pinnedMethods.length}/4)
+              </Text>
+            </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
         </Card>
 
-        {/* Meal Source Preference for AI Generation */}
-        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Génération IA</Text>
-        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
-          <View style={[styles.settingItem, { paddingBottom: 8 }]}>
-            <Sparkles size={20} color={colors.accent.primary} />
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Source des repas</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                D'où viennent les suggestions du Repas IA
-              </Text>
-            </View>
-          </View>
-          <View style={styles.sourcePreferenceGrid}>
-            {(Object.keys(mealSourceLabels) as MealSourcePreference[]).map((key) => {
-              const pref = mealSourceLabels[key]
-              const isSelected = (profile?.mealSourcePreference || 'balanced') === key
-              const IconComponent = key === 'fresh' ? Leaf : key === 'recipes' ? ChefHat : key === 'quick' ? ShoppingCart : Database
-              return (
-                <TouchableOpacity
-                  key={key}
-                  style={[
-                    styles.sourcePreferenceItem,
-                    { borderColor: isSelected ? colors.accent.primary : colors.border.light },
-                    isSelected && { backgroundColor: colors.accent.light },
-                  ]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                    updateProfile({ mealSourcePreference: key })
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <IconComponent
-                    size={20}
-                    color={isSelected ? colors.accent.primary : colors.text.secondary}
-                  />
-                  <Text style={[
-                    styles.sourcePreferenceLabel,
-                    { color: isSelected ? colors.accent.primary : colors.text.primary }
-                  ]}>
-                    {pref.label}
-                  </Text>
-                  <Text style={[styles.sourcePreferenceDesc, { color: colors.text.tertiary }]} numberOfLines={2}>
-                    {pref.description}
-                  </Text>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
-        </Card>
-
-        {/* Settings */}
-        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
+        {/* App Settings */}
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Application</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
           {/* Dark Mode Toggle */}
           <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
@@ -1017,5 +901,13 @@ const styles = StyleSheet.create({
   },
   programItemDisabled: {
     opacity: 0.6,
+  },
+  // Settings icon container
+  settingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })
