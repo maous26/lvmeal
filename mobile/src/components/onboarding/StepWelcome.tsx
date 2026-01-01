@@ -5,19 +5,21 @@ import { OnboardingBenefits } from './OnboardingBenefits'
 
 interface StepWelcomeProps {
   onStart: () => void
-  onQuickStart?: () => void
 }
 
 type WelcomePhase = 'hero' | 'benefits'
 
-export function StepWelcome({ onStart, onQuickStart }: StepWelcomeProps) {
+/**
+ * Welcome step = Marketing screens (Hero + Benefits carousel)
+ * After this, the user goes to setup-choice to pick quick or full onboarding
+ */
+export function StepWelcome({ onStart }: StepWelcomeProps) {
   const [phase, setPhase] = useState<WelcomePhase>('hero')
 
   if (phase === 'hero') {
     return (
       <OnboardingHero
         onGetStarted={() => setPhase('benefits')}
-        onQuickStart={onQuickStart}
       />
     )
   }

@@ -567,3 +567,47 @@ export async function listMeditationAudios(): Promise<string[]> {
     return []
   }
 }
+
+// ============================================================================
+// SUPABASE CLIENT - Direct Access for Auth
+// ============================================================================
+
+/**
+ * Get Supabase client with guaranteed non-null return
+ * Use this for auth operations where client must exist
+ */
+export function getSupabaseClientRequired(): SupabaseClient {
+  const client = getSupabaseClient()
+  if (!client) {
+    throw new Error('Supabase client not configured')
+  }
+  return client
+}
+
+/**
+ * Lazy-initialized supabase client for auth
+ * Returns a proxy that safely handles unconfigured state
+ */
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    const client = getSupabaseClient()
+    if (!client) {
+      // Return a mock that returns failed promises for auth operations
+      if (prop === 'auth') {
+        return {
+          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+          signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: { message: 'Supabase non configuré' } }),
+          signUp: () => Promise.resolve({ data: { user: null, session: null }, error: { message: 'Supabase non configuré' } }),
+          signOut: () => Promise.resolve({ error: null }),
+          getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+          updateUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase non configuré' } }),
+          signInWithIdToken: () => Promise.resolve({ data: { user: null, session: null }, error: { message: 'Supabase non configuré' } }),
+        }
+      }
+      console.warn('Supabase not configured - operation skipped')
+      return undefined
+    }
+    // Use unknown first to allow dynamic property access
+    return (client as unknown as Record<string, unknown>)[prop as string]
+  },
+})

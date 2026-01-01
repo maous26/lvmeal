@@ -1,0 +1,728 @@
+/**
+ * Cloud Sync Service - Backup & Restore for LYM App
+ *
+ * Handles user data synchronization with Supabase:
+ * - Profile data
+ * - Meals & nutrition history
+ * - Weight history
+ * - Gamification progress (XP, achievements, streaks)
+ * - Wellness data
+ * - Meal plans
+ *
+ * Features:
+ * - Automatic sync on data changes
+ * - Conflict resolution (last-write-wins)
+ * - Offline support with queue
+ * - Restore on new device
+ */
+
+import { getSupabaseClient, isSupabaseConfigured } from './supabase-client'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { UserProfile, WeightEntry, NutritionInfo } from '../types'
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface CloudUserData {
+  id: string
+  user_id: string
+  // Profile
+  profile: Partial<UserProfile>
+  // Nutrition goals
+  nutrition_goals: {
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+    sportCaloriesBonus?: number
+  } | null
+  // Settings
+  notification_preferences: {
+    dailyInsightsEnabled: boolean
+    alertsEnabled: boolean
+    celebrationsEnabled: boolean
+    lastNotificationDate: string | null
+  }
+  // Timestamps
+  created_at: string
+  updated_at: string
+  last_sync_at: string
+}
+
+export interface CloudWeightEntry {
+  id: string
+  user_id: string
+  date: string
+  weight: number
+  body_fat_percent?: number
+  muscle_mass?: number
+  bmi?: number
+  source: 'manual' | 'scale' | 'healthkit'
+  notes?: string
+  created_at: string
+}
+
+export interface CloudMealEntry {
+  id: string
+  user_id: string
+  date: string
+  meal_type: 'breakfast' | 'lunch' | 'snack' | 'dinner'
+  items: Array<{
+    name: string
+    quantity: number
+    unit: string
+    calories: number
+    proteins: number
+    carbs: number
+    fats: number
+    source?: string
+  }>
+  total_calories: number
+  total_proteins: number
+  total_carbs: number
+  total_fats: number
+  photo_url?: string
+  notes?: string
+  created_at: string
+}
+
+export interface CloudGamificationData {
+  id: string
+  user_id: string
+  // XP
+  total_xp: number
+  weekly_xp: number
+  weekly_xp_reset_date: string
+  // Streaks
+  current_streak: number
+  longest_streak: number
+  last_activity_date: string
+  // Achievements
+  unlocked_achievements: string[]
+  // AI Credits
+  ai_credits_remaining: number
+  is_premium: boolean
+  // Timestamps
+  updated_at: string
+}
+
+export interface CloudWellnessData {
+  id: string
+  user_id: string
+  date: string
+  // Sleep
+  sleep_hours?: number
+  sleep_quality?: number
+  // Energy & Stress
+  energy_level?: number
+  stress_level?: number
+  // Mood
+  mood?: string
+  // Notes
+  notes?: string
+  created_at: string
+}
+
+export interface SyncStatus {
+  lastSyncAt: string | null
+  pendingChanges: number
+  isOnline: boolean
+  isSyncing: boolean
+  lastError: string | null
+}
+
+export interface SyncQueueItem {
+  id: string
+  type: 'profile' | 'weight' | 'meal' | 'gamification' | 'wellness'
+  action: 'upsert' | 'delete'
+  data: unknown
+  timestamp: string
+  retries: number
+}
+
+// Data returned when restoring from cloud
+export interface CloudRestoreData {
+  profile: CloudUserData | null
+  weights: CloudWeightEntry[]
+  meals: CloudMealEntry[]
+  gamification: CloudGamificationData | null
+  wellness: CloudWellnessData[]
+}
+
+// ============================================================================
+// SYNC QUEUE MANAGEMENT
+// ============================================================================
+
+const SYNC_QUEUE_KEY = 'lym-sync-queue'
+const LAST_SYNC_KEY = 'lym-last-sync'
+const USER_ID_KEY = 'lym-cloud-user-id'
+
+let syncQueue: SyncQueueItem[] = []
+let isSyncing = false
+
+/**
+ * Load sync queue from storage
+ */
+async function loadSyncQueue(): Promise<void> {
+  try {
+    const stored = await AsyncStorage.getItem(SYNC_QUEUE_KEY)
+    if (stored) {
+      syncQueue = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('[CloudSync] Failed to load sync queue:', error)
+  }
+}
+
+/**
+ * Save sync queue to storage
+ */
+async function saveSyncQueue(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(syncQueue))
+  } catch (error) {
+    console.error('[CloudSync] Failed to save sync queue:', error)
+  }
+}
+
+/**
+ * Add item to sync queue
+ */
+export function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries'>): void {
+  const queueItem: SyncQueueItem = {
+    ...item,
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: new Date().toISOString(),
+    retries: 0,
+  }
+  syncQueue.push(queueItem)
+  saveSyncQueue()
+
+  // Try to sync immediately if online
+  processSyncQueue()
+}
+
+// ============================================================================
+// USER AUTHENTICATION
+// ============================================================================
+
+/**
+ * Get or create anonymous user ID for cloud sync
+ * In production, replace with proper Supabase Auth
+ */
+export async function getCloudUserId(): Promise<string | null> {
+  try {
+    let userId = await AsyncStorage.getItem(USER_ID_KEY)
+
+    if (!userId) {
+      // Generate anonymous user ID
+      // In production, use Supabase Auth for proper authentication
+      userId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await AsyncStorage.setItem(USER_ID_KEY, userId)
+      console.log('[CloudSync] Created new anonymous user:', userId)
+    }
+
+    return userId
+  } catch (error) {
+    console.error('[CloudSync] Failed to get user ID:', error)
+    return null
+  }
+}
+
+/**
+ * Sign in with email (Supabase Auth)
+ */
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<{ success: boolean; user?: { id: string; email: string }; error?: string }> {
+  const client = getSupabaseClient()
+  if (!client) {
+    return { success: false, error: 'Supabase not configured' }
+  }
+
+  try {
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (data.user) {
+      await AsyncStorage.setItem(USER_ID_KEY, data.user.id)
+      return {
+        success: true,
+        user: { id: data.user.id, email: data.user.email || email },
+      }
+    }
+
+    return { success: false, error: 'Unknown error' }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+}
+
+/**
+ * Sign up with email (Supabase Auth)
+ */
+export async function signUpWithEmail(
+  email: string,
+  password: string
+): Promise<{ success: boolean; user?: { id: string; email: string }; error?: string }> {
+  const client = getSupabaseClient()
+  if (!client) {
+    return { success: false, error: 'Supabase not configured' }
+  }
+
+  try {
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    if (data.user) {
+      await AsyncStorage.setItem(USER_ID_KEY, data.user.id)
+      return {
+        success: true,
+        user: { id: data.user.id, email: data.user.email || email },
+      }
+    }
+
+    return { success: false, error: 'Unknown error' }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+}
+
+/**
+ * Sign out
+ */
+export async function signOut(): Promise<void> {
+  const client = getSupabaseClient()
+  if (client) {
+    await client.auth.signOut()
+  }
+  // Keep anonymous ID for local data
+}
+
+/**
+ * Get current auth session
+ */
+export async function getAuthSession() {
+  const client = getSupabaseClient()
+  if (!client) return null
+
+  const { data } = await client.auth.getSession()
+  return data.session
+}
+
+// ============================================================================
+// SYNC OPERATIONS
+// ============================================================================
+
+/**
+ * Sync profile data to cloud
+ */
+export async function syncProfile(profile: Partial<UserProfile>, nutritionGoals: CloudUserData['nutrition_goals'], notificationPrefs: CloudUserData['notification_preferences']): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const { error } = await client
+      .from('user_data')
+      .upsert({
+        user_id: userId,
+        profile,
+        nutrition_goals: nutritionGoals,
+        notification_preferences: notificationPrefs,
+        updated_at: new Date().toISOString(),
+        last_sync_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Profile sync error:', error)
+      return false
+    }
+
+    await AsyncStorage.setItem(LAST_SYNC_KEY, new Date().toISOString())
+    console.log('[CloudSync] Profile synced successfully')
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Profile sync failed:', error)
+    return false
+  }
+}
+
+/**
+ * Sync weight entry to cloud
+ */
+export async function syncWeightEntry(entry: WeightEntry): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const { error } = await client
+      .from('weight_entries')
+      .upsert({
+        id: entry.id,
+        user_id: userId,
+        date: entry.date,
+        weight: entry.weight,
+        body_fat_percent: entry.bodyFatPercent,
+        bmi: entry.bmi,
+        source: entry.source || 'manual',
+        notes: entry.note,
+        created_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Weight sync error:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Weight sync failed:', error)
+    return false
+  }
+}
+
+/**
+ * Sync meal entry to cloud
+ */
+export async function syncMealEntry(date: string, mealType: string, items: CloudMealEntry['items'], totals: NutritionInfo): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const mealId = `${userId}_${date}_${mealType}`
+
+    const { error } = await client
+      .from('meal_entries')
+      .upsert({
+        id: mealId,
+        user_id: userId,
+        date,
+        meal_type: mealType,
+        items,
+        total_calories: totals.calories,
+        total_proteins: totals.proteins,
+        total_carbs: totals.carbs,
+        total_fats: totals.fats,
+        created_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Meal sync error:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Meal sync failed:', error)
+    return false
+  }
+}
+
+/**
+ * Sync gamification data to cloud
+ */
+export async function syncGamification(data: Omit<CloudGamificationData, 'id' | 'user_id' | 'updated_at'>): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const { error } = await client
+      .from('gamification_data')
+      .upsert({
+        user_id: userId,
+        ...data,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Gamification sync error:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Gamification sync failed:', error)
+    return false
+  }
+}
+
+/**
+ * Sync wellness data to cloud
+ */
+export async function syncWellness(date: string, data: Partial<CloudWellnessData>): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const wellnessId = `${userId}_${date}`
+
+    const { error } = await client
+      .from('wellness_entries')
+      .upsert({
+        id: wellnessId,
+        user_id: userId,
+        date,
+        ...data,
+        created_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Wellness sync error:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Wellness sync failed:', error)
+    return false
+  }
+}
+
+// ============================================================================
+// RESTORE OPERATIONS
+// ============================================================================
+
+/**
+ * Restore all user data from cloud
+ */
+export async function restoreFromCloud(): Promise<{
+  profile: CloudUserData | null
+  weights: CloudWeightEntry[]
+  meals: CloudMealEntry[]
+  gamification: CloudGamificationData | null
+  wellness: CloudWellnessData[]
+} | null> {
+  const client = getSupabaseClient()
+  if (!client) return null
+
+  const userId = await getCloudUserId()
+  if (!userId) return null
+
+  try {
+    // Fetch all data in parallel
+    const [profileRes, weightsRes, mealsRes, gamificationRes, wellnessRes] = await Promise.all([
+      client.from('user_data').select('*').eq('user_id', userId).single(),
+      client.from('weight_entries').select('*').eq('user_id', userId).order('date', { ascending: false }),
+      client.from('meal_entries').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(100),
+      client.from('gamification_data').select('*').eq('user_id', userId).single(),
+      client.from('wellness_entries').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(30),
+    ])
+
+    return {
+      profile: profileRes.data as CloudUserData | null,
+      weights: (weightsRes.data || []) as CloudWeightEntry[],
+      meals: (mealsRes.data || []) as CloudMealEntry[],
+      gamification: gamificationRes.data as CloudGamificationData | null,
+      wellness: (wellnessRes.data || []) as CloudWellnessData[],
+    }
+  } catch (error) {
+    console.error('[CloudSync] Restore failed:', error)
+    return null
+  }
+}
+
+/**
+ * Get last sync timestamp
+ */
+export async function getLastSyncTime(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(LAST_SYNC_KEY)
+  } catch {
+    return null
+  }
+}
+
+// ============================================================================
+// SYNC QUEUE PROCESSING
+// ============================================================================
+
+/**
+ * Process pending sync queue
+ */
+export async function processSyncQueue(): Promise<void> {
+  if (isSyncing || syncQueue.length === 0) return
+  if (!isSupabaseConfigured()) return
+
+  isSyncing = true
+  console.log(`[CloudSync] Processing ${syncQueue.length} pending items`)
+
+  const processedIds: string[] = []
+
+  for (const item of syncQueue) {
+    try {
+      let success = false
+
+      switch (item.type) {
+        case 'profile':
+          success = await syncProfile(
+            (item.data as { profile: Partial<UserProfile> }).profile,
+            (item.data as { nutritionGoals: CloudUserData['nutrition_goals'] }).nutritionGoals,
+            (item.data as { notificationPrefs: CloudUserData['notification_preferences'] }).notificationPrefs
+          )
+          break
+        case 'weight':
+          success = await syncWeightEntry(item.data as WeightEntry)
+          break
+        // Add other cases as needed
+      }
+
+      if (success) {
+        processedIds.push(item.id)
+      } else {
+        item.retries++
+        if (item.retries >= 3) {
+          console.warn(`[CloudSync] Item ${item.id} failed after 3 retries, removing`)
+          processedIds.push(item.id)
+        }
+      }
+    } catch (error) {
+      console.error(`[CloudSync] Error processing item ${item.id}:`, error)
+      item.retries++
+    }
+  }
+
+  // Remove processed items
+  syncQueue = syncQueue.filter(item => !processedIds.includes(item.id))
+  await saveSyncQueue()
+
+  isSyncing = false
+  console.log(`[CloudSync] Queue processing complete. ${syncQueue.length} items remaining`)
+}
+
+/**
+ * Get current sync status
+ */
+export async function getSyncStatus(): Promise<SyncStatus> {
+  await loadSyncQueue()
+
+  return {
+    lastSyncAt: await getLastSyncTime(),
+    pendingChanges: syncQueue.length,
+    isOnline: isSupabaseConfigured(),
+    isSyncing,
+    lastError: null,
+  }
+}
+
+// ============================================================================
+// FULL BACKUP & RESTORE
+// ============================================================================
+
+/**
+ * Create a full local backup
+ */
+export async function createLocalBackup(): Promise<string> {
+  const keys = [
+    'presence-user',
+    'presence-meals',
+    'presence-gamification',
+    'presence-wellness',
+    'presence-meal-plan',
+    'presence-meditation',
+    'presence-coach',
+  ]
+
+  const backupData: Record<string, unknown> = {}
+
+  for (const key of keys) {
+    try {
+      const value = await AsyncStorage.getItem(key)
+      if (value) {
+        backupData[key] = JSON.parse(value)
+      }
+    } catch (error) {
+      console.warn(`[CloudSync] Could not backup ${key}:`, error)
+    }
+  }
+
+  const backup = {
+    version: '1.0.0',
+    createdAt: new Date().toISOString(),
+    data: backupData,
+  }
+
+  return JSON.stringify(backup, null, 2)
+}
+
+/**
+ * Restore from local backup
+ */
+export async function restoreLocalBackup(backupJson: string): Promise<boolean> {
+  try {
+    const backup = JSON.parse(backupJson)
+
+    if (!backup.version || !backup.data) {
+      throw new Error('Invalid backup format')
+    }
+
+    for (const [key, value] of Object.entries(backup.data)) {
+      await AsyncStorage.setItem(key, JSON.stringify(value))
+    }
+
+    console.log('[CloudSync] Local backup restored successfully')
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Restore failed:', error)
+    return false
+  }
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+/**
+ * Initialize cloud sync service
+ */
+export async function initCloudSync(): Promise<void> {
+  await loadSyncQueue()
+
+  // Process any pending items
+  if (syncQueue.length > 0) {
+    processSyncQueue()
+  }
+
+  console.log('[CloudSync] Service initialized')
+}
+
+// Auto-initialize when module loads
+loadSyncQueue()
