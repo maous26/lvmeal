@@ -198,6 +198,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const [profile, setProfile] = useState<Partial<UserProfile>>({})
   const [loading, setLoading] = useState(false)
   const [isQuickMode, setIsQuickMode] = useState(false)
+  // Store quick profile temporarily before cloud-sync
+  const [pendingQuickProfile, setPendingQuickProfile] = useState<Partial<UserProfile> | null>(null)
 
   // Theme
   const { colors } = useTheme()
@@ -362,14 +364,22 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   // Handle cloud sync completion (connected or skipped)
   const handleCloudSyncComplete = useCallback(async (connected: boolean) => {
-    // User connected with Google - finalize
-    await finalizeOnboarding()
-  }, [finalizeOnboarding])
+    // User connected with Google - finalize based on mode
+    if (pendingQuickProfile) {
+      await finalizeQuickSetup()
+    } else {
+      await finalizeOnboarding()
+    }
+  }, [pendingQuickProfile, finalizeQuickSetup, finalizeOnboarding])
 
   const handleCloudSyncSkip = useCallback(async () => {
-    // User skipped cloud sync - finalize anyway
-    await finalizeOnboarding()
-  }, [finalizeOnboarding])
+    // User skipped cloud sync - finalize anyway based on mode
+    if (pendingQuickProfile) {
+      await finalizeQuickSetup()
+    } else {
+      await finalizeOnboarding()
+    }
+  }, [pendingQuickProfile, finalizeQuickSetup, finalizeOnboarding])
 
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1
@@ -380,22 +390,31 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const needs = useMemo(() => calculateNeeds(profile), [profile])
 
-  // Handle quick setup completion
-  const handleQuickSetupComplete = useCallback(async (quickProfile: Partial<UserProfile>) => {
-    setLoading(true)
-
+  // Handle quick setup completion - go to cloud-sync before finalizing
+  const handleQuickSetupComplete = useCallback((quickProfile: Partial<UserProfile>) => {
     // Calculate nutritional needs with quick profile
     const needs = calculateNeeds(quickProfile)
 
-    const finalProfile: Partial<UserProfile> = {
+    const profileWithNeeds: Partial<UserProfile> = {
       ...quickProfile,
       nutritionalNeeds: needs,
       quickSetupCompleted: true,
       onboardingCompleted: false, // Can complete full onboarding later
     }
 
+    // Store temporarily and go to cloud-sync
+    setPendingQuickProfile(profileWithNeeds)
+    setCurrentStep('cloud-sync')
+  }, [])
+
+  // Finalize quick setup (called after cloud-sync)
+  const finalizeQuickSetup = useCallback(async () => {
+    if (!pendingQuickProfile) return
+
+    setLoading(true)
+
     // Save to Zustand store
-    setStoreProfile(finalProfile)
+    setStoreProfile(pendingQuickProfile)
     setOnboarded(true)
 
     // Initialize the 7-day trial
@@ -405,8 +424,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     await new Promise(resolve => setTimeout(resolve, 300))
 
     setLoading(false)
+    setPendingQuickProfile(null)
     onComplete()
-  }, [setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
+  }, [pendingQuickProfile, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
 
   // Switch from quick mode to full onboarding
   const handleSwitchToFull = useCallback(() => {
@@ -493,14 +513,17 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     )
   }
 
+  // Don't show back button for first operational step (basic-info) - can't go back to setup-choice
+  const showBackButton = currentStep !== 'basic-info' && stepIndex > 2
+
   return (
     <OnboardingLayout
-      step={stepIndex}
-      totalSteps={steps.length - 1}
+      step={stepIndex - 2} // Subtract 2 for welcome and setup-choice which have their own layout
+      totalSteps={steps.length - 3} // Subtract welcome, setup-choice, and cloud-sync
       title={config.title}
       subtitle={config.subtitle}
       valueProposition={config.valueProposition}
-      onBack={stepIndex > 1 ? handleBack : undefined}
+      onBack={showBackButton ? handleBack : undefined}
       onNext={handleNext}
       nextLabel={currentStep === 'analysis' ? 'C\'est parti !' : 'Continuer'}
       nextDisabled={!canProceed}
