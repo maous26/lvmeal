@@ -23,7 +23,6 @@ import {
   ChevronRight,
   Award,
   Flame,
-  Dumbbell,
   Zap,
   Heart,
   Edit3,
@@ -41,7 +40,6 @@ import { Card, Badge, ProgressBar, Button } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
-import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { formatNumber } from '../lib/utils'
@@ -91,14 +89,6 @@ export default function ProfileScreen() {
   const { colors, isDark, toggleTheme } = useTheme()
   const { profile, nutritionGoals, resetStore, setProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
   const {
-    isEnrolled: isSportInitiationEnrolled,
-    enroll: enrollSportInitiation,
-    unenroll: unenrollSportInitiation,
-    currentPhase: sportPhase,
-    currentWeek: sportWeek,
-  } = useSportInitiationStore()
-
-  const {
     isEnrolled: isMetabolicEnrolled,
     enroll: enrollMetabolic,
     unenroll: unenrollMetabolic,
@@ -114,28 +104,16 @@ export default function ProfileScreen() {
     currentWeek: wellnessWeek,
   } = useWellnessProgramStore()
 
-  // Profile conditions
-  const isMuscleGain = profile?.goal === 'muscle_gain'
-
-  // Program exclusion rules - ALL programs always visible but some may be disabled
-  // - Sport: disabled if muscle_gain OR if Metabolic is active
-  // - Metabolic: disabled if Sport OR Wellness is active (exclusive program)
+  // Program exclusion rules
+  // - Metabolic: disabled if Wellness is active (exclusive program)
   // - Wellness: disabled if Metabolic is active
-  const canToggleSport = !isMuscleGain && !isMetabolicEnrolled
-  const canToggleMetabolic = !isSportInitiationEnrolled && !isWellnessEnrolled
+  const canToggleMetabolic = !isWellnessEnrolled
   const canToggleWellness = !isMetabolicEnrolled
 
   // Blocking reasons for UI feedback
-  const sportBlockedReason = isMuscleGain
-    ? 'Non disponible pour la prise de masse'
-    : isMetabolicEnrolled
-      ? 'Désactivez le programme Métabolisme d\'abord'
-      : null
-  const metabolicBlockedReason = isSportInitiationEnrolled
-    ? 'Désactivez le programme Sport d\'abord'
-    : isWellnessEnrolled
-      ? 'Désactivez le programme Bien-être d\'abord'
-      : null
+  const metabolicBlockedReason = isWellnessEnrolled
+    ? 'Désactivez le programme Bien-être d\'abord'
+    : null
   const wellnessBlockedReason = isMetabolicEnrolled
     ? 'Désactivez le programme Métabolisme d\'abord'
     : null
@@ -235,51 +213,6 @@ export default function ProfileScreen() {
   const handleToggleCelebrations = (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     updateNotificationPreferences({ celebrationsEnabled: value })
-  }
-
-  const handleToggleSportInitiation = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    if (isSportInitiationEnrolled) {
-      Alert.alert(
-        'Quitter le programme',
-        'Êtes-vous sûr de vouloir quitter le programme d\'initiation sportive ? Votre progression sera conservée.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Quitter',
-            style: 'destructive',
-            onPress: () => {
-              unenrollSportInitiation()
-              if (profile) {
-                setProfile({ ...profile, sportInitiationActive: false })
-              }
-            },
-          },
-        ]
-      )
-    } else {
-      Alert.alert(
-        'Rejoindre le programme',
-        'Le programme d\'initiation sportive vous accompagne pour reprendre le sport en douceur sur 12 semaines.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Commencer',
-            onPress: () => {
-              enrollSportInitiation({
-                fitnessLevel: 'sedentary',
-                hasHealthConditions: false,
-                preferredActivities: ['walking', 'stretching'],
-                availableMinutesPerDay: 15,
-              })
-              if (profile) {
-                setProfile({ ...profile, sportInitiationActive: true })
-              }
-            },
-          },
-        ]
-      )
-    }
   }
 
   const handleToggleMetabolic = () => {
@@ -499,39 +432,10 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
-        {/* Programs - Always show all 3, disable switches when blocked */}
+        {/* Programs - 2 programs: Métabolisme and Bien-être */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Programmes</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
-          {/* Sport - disabled if muscle_gain or Metabolic active */}
-          <TouchableOpacity
-            style={[styles.programItem, styles.programItemBorder, { borderBottomColor: colors.border.light }, !canToggleSport && !isSportInitiationEnrolled && styles.programItemDisabled]}
-            onPress={canToggleSport || isSportInitiationEnrolled ? handleToggleSportInitiation : undefined}
-            activeOpacity={canToggleSport || isSportInitiationEnrolled ? 0.7 : 1}
-          >
-            <View style={[styles.programIcon, isSportInitiationEnrolled && styles.programIconActive]}>
-              <Dumbbell size={20} color={isSportInitiationEnrolled ? '#FFFFFF' : colors.success} />
-            </View>
-            <View style={styles.programInfo}>
-              <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleSport && !isSportInitiationEnrolled && { color: colors.text.muted }]}>
-                Initiation Sportive
-              </Text>
-              <Text style={[styles.programDescription, { color: colors.text.tertiary }]}>
-                {isSportInitiationEnrolled
-                  ? `Phase ${sportPhase} - Semaine ${sportWeek}`
-                  : sportBlockedReason || 'Programme pour reprendre le sport'}
-              </Text>
-            </View>
-            <Switch
-              value={isSportInitiationEnrolled}
-              onValueChange={handleToggleSportInitiation}
-              disabled={!canToggleSport && !isSportInitiationEnrolled}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
-              thumbColor={isSportInitiationEnrolled ? colors.success : colors.text.tertiary}
-              ios_backgroundColor={colors.bg.tertiary}
-            />
-          </TouchableOpacity>
-
-          {/* Métabolisme - disabled if Sport or Wellness active */}
+          {/* Métabolisme - disabled if Wellness active */}
           <TouchableOpacity
             style={[styles.programItem, styles.programItemBorder, { borderBottomColor: colors.border.light }, !canToggleMetabolic && !isMetabolicEnrolled && styles.programItemDisabled]}
             onPress={canToggleMetabolic || isMetabolicEnrolled ? handleToggleMetabolic : undefined}

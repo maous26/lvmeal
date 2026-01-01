@@ -23,7 +23,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
-  Droplets,
   Trophy,
   Sparkles,
   Bell,
@@ -182,7 +181,7 @@ export default function HomeScreen() {
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
   const { profile, nutritionGoals, weightHistory } = useUserStore()
-  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal, updateWaterIntake } = useMealsStore()
+  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
     dailyBalances,
@@ -334,11 +333,6 @@ export default function HomeScreen() {
     navigation.navigate('WellnessProgram')
   }
 
-  const handleNavigateToSportInitiation = () => {
-    // @ts-ignore
-    navigation.navigate('SportInitiation')
-  }
-
   const handleNavigateToCalendar = () => {
     // @ts-ignore
     navigation.navigate('Calendar')
@@ -357,7 +351,6 @@ export default function HomeScreen() {
   }
 
   const currentDayIndex = getCurrentDayIndex()
-  const hydrationProgress = Math.min((todayData.hydration / 2500) * 100, 100)
 
   // Weight tracking
   const sortedWeights = [...weightHistory].sort((a, b) =>
@@ -505,135 +498,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Hydration Widget - Cool design */}
-        <View style={[styles.hydrationSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
-          <LinearGradient
-            colors={['rgba(56, 189, 248, 0.08)', 'rgba(14, 165, 233, 0.04)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.hydrationGradientBg}
-          >
-            <View style={styles.hydrationHeader}>
-              <View style={styles.hydrationLeft}>
-                <LinearGradient
-                  colors={['#38BDF8', '#0EA5E9']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.hydrationIconGradient}
-                >
-                  <Droplets size={22} color="#FFFFFF" />
-                </LinearGradient>
-                <View>
-                  <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Hydratation</Text>
-                  <Text style={[styles.hydrationSubtitle, { color: colors.text.tertiary }]}>
-                    Objectif : 2,5L par jour
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Water glasses visualization */}
-            <View style={styles.hydrationGlasses}>
-              {[...Array(8)].map((_, index) => {
-                const glassAmount = 313 // 2500ml / 8 glasses
-                const filled = todayData.hydration >= glassAmount * (index + 1)
-                const partial = !filled && todayData.hydration > glassAmount * index
-                const partialPercent = partial
-                  ? ((todayData.hydration - glassAmount * index) / glassAmount) * 100
-                  : 0
-
-                return (
-                  <View key={index} style={styles.glassContainer}>
-                    <View style={[styles.glass, { backgroundColor: colors.border.light }]}>
-                      {filled ? (
-                        <LinearGradient
-                          colors={['#38BDF8', '#0EA5E9']}
-                          start={{ x: 0, y: 1 }}
-                          end={{ x: 0, y: 0 }}
-                          style={styles.glassFilled}
-                        />
-                      ) : partial ? (
-                        <LinearGradient
-                          colors={['#38BDF8', '#0EA5E9']}
-                          start={{ x: 0, y: 1 }}
-                          end={{ x: 0, y: 0 }}
-                          style={[styles.glassPartial, { height: `${partialPercent}%` }]}
-                        />
-                      ) : null}
-                    </View>
-                  </View>
-                )
-              })}
-            </View>
-
-            {/* Quick add buttons */}
-            <View style={styles.hydrationQuickAdd}>
-              <TouchableOpacity
-                style={[styles.hydrationQuickButton, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                  updateWaterIntake(250)
-                }}
-                activeOpacity={0.7}
-              >
-                <Droplets size={16} color="#0EA5E9" />
-                <Text style={styles.hydrationQuickButtonText}>+250ml</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.hydrationQuickButton, { backgroundColor: 'rgba(56, 189, 248, 0.25)' }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  updateWaterIntake(500)
-                }}
-                activeOpacity={0.7}
-              >
-                <Droplets size={18} color="#0EA5E9" />
-                <Text style={[styles.hydrationQuickButtonText, { fontWeight: '700' }]}>+500ml</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.hydrationQuickButton, styles.hydrationRemoveButton]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                  updateWaterIntake(-250)
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.hydrationRemoveButtonText}>-250ml</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Stats row */}
-            <View style={styles.hydrationStats}>
-              <View style={styles.hydrationStatItem}>
-                <Text style={[styles.hydrationStatValue, { color: colors.info }]}>
-                  {(todayData.hydration / 1000).toFixed(1)}L
-                </Text>
-                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
-                  consommé
-                </Text>
-              </View>
-              <View style={[styles.hydrationStatDivider, { backgroundColor: colors.border.light }]} />
-              <View style={styles.hydrationStatItem}>
-                <Text style={[styles.hydrationStatValue, { color: colors.text.primary }]}>
-                  {Math.max(0, (2500 - todayData.hydration) / 1000).toFixed(1)}L
-                </Text>
-                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
-                  restant
-                </Text>
-              </View>
-              <View style={[styles.hydrationStatDivider, { backgroundColor: colors.border.light }]} />
-              <View style={styles.hydrationStatItem}>
-                <Text style={[styles.hydrationStatValue, { color: hydrationProgress >= 100 ? colors.success : colors.text.primary }]}>
-                  {Math.round(hydrationProgress)}%
-                </Text>
-                <Text style={[styles.hydrationStatLabel, { color: colors.text.tertiary }]}>
-                  objectif
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-
         {/* Meals Section */}
         <View style={[styles.mealsSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
           <View style={styles.mealsSectionHeader}>
@@ -775,7 +639,6 @@ export default function HomeScreen() {
             Mes programmes
           </Text>
           <ProgramsSection
-            onSportPress={handleNavigateToSportInitiation}
             onMetabolicPress={handleNavigateToMetabolicBoost}
             onWellnessPress={handleNavigateToWellness}
           />
@@ -1037,120 +900,6 @@ const styles = StyleSheet.create({
   macroProgressFill: {
     height: '100%',
     borderRadius: radius.full,
-  },
-  // Hydration Section
-  hydrationSection: {
-    borderRadius: radius.xl,
-    marginBottom: spacing.lg,
-    overflow: 'hidden',
-  },
-  hydrationGradientBg: {
-    padding: spacing.lg,
-    borderRadius: radius.xl,
-  },
-  hydrationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  hydrationLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  hydrationIconGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0EA5E9',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  hydrationSubtitle: {
-    ...typography.small,
-    marginTop: 2,
-  },
-  hydrationGlasses: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.xs,
-  },
-  glassContainer: {
-    alignItems: 'center',
-  },
-  glass: {
-    width: 28,
-    height: 36,
-    borderRadius: 6,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-  },
-  glassFilled: {
-    width: '100%',
-    height: '100%',
-  },
-  glassPartial: {
-    width: '100%',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  hydrationStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  hydrationStatItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  hydrationStatValue: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  hydrationStatLabel: {
-    ...typography.caption,
-    marginTop: 2,
-  },
-  hydrationStatDivider: {
-    width: 1,
-    height: 30,
-  },
-  hydrationQuickAdd: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  hydrationQuickButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-  },
-  hydrationQuickButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0EA5E9',
-  },
-  hydrationRemoveButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  },
-  hydrationRemoveButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#EF4444',
   },
   // Meals Section
   mealsSection: {

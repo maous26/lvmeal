@@ -36,7 +36,6 @@ import { Card, Badge } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
-import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { getDateKey } from '../lib/utils'
 import type { MealType } from '../types'
 
@@ -64,9 +63,7 @@ interface DayData {
   hasMeals: boolean
   mealCount: number
   hasMetabolicLog: boolean
-  hasSportLog: boolean
   metabolicSteps?: number
-  sportWorkout?: boolean
 }
 
 export default function CalendarScreen() {
@@ -76,7 +73,6 @@ export default function CalendarScreen() {
 
   const { dailyData, getMealsForDate } = useMealsStore()
   const { dailyLogs: metabolicLogs, isEnrolled: metabolicEnrolled } = useMetabolicBoostStore()
-  const { dailyLogs: sportLogs, isEnrolled: sportEnrolled } = useSportInitiationStore()
 
   // Generate calendar days for current month
   const calendarDays = useMemo(() => {
@@ -108,7 +104,6 @@ export default function CalendarScreen() {
       const dateKey = getDateKey(currentDate)
       const dayData = dailyData[dateKey]
       const metabolicLog = metabolicLogs.find(l => l.date === dateKey)
-      const sportLog = sportLogs.find(l => l.date === dateKey)
 
       days.push({
         date: new Date(currentDate),
@@ -118,16 +113,14 @@ export default function CalendarScreen() {
         hasMeals: dayData?.meals && dayData.meals.length > 0,
         mealCount: dayData?.meals?.length || 0,
         hasMetabolicLog: !!metabolicLog,
-        hasSportLog: !!sportLog,
         metabolicSteps: metabolicLog?.steps,
-        sportWorkout: sportLog?.workoutCompleted,
       })
 
       currentDate.setDate(currentDate.getDate() + 1)
     }
 
     return days
-  }, [currentMonth, dailyData, metabolicLogs, sportLogs])
+  }, [currentMonth, dailyData, metabolicLogs])
 
   // Get selected day details
   const selectedDayDetails = useMemo(() => {
@@ -135,17 +128,15 @@ export default function CalendarScreen() {
 
     const meals = getMealsForDate(selectedDate)
     const metabolicLog = metabolicLogs.find(l => l.date === selectedDate)
-    const sportLog = sportLogs.find(l => l.date === selectedDate)
     const dayData = dailyData[selectedDate]
 
     return {
       meals,
       metabolicLog,
-      sportLog,
       hydration: dayData?.hydration || 0,
       totalCalories: dayData?.totalNutrition?.calories || 0,
     }
-  }, [selectedDate, getMealsForDate, metabolicLogs, sportLogs, dailyData])
+  }, [selectedDate, getMealsForDate, metabolicLogs, dailyData])
 
   const goToPreviousMonth = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -244,9 +235,6 @@ export default function CalendarScreen() {
                 {day.hasMetabolicLog && metabolicEnrolled && (
                   <View style={[styles.indicator, styles.indicatorMetabolic]} />
                 )}
-                {day.hasSportLog && sportEnrolled && (
-                  <View style={[styles.indicator, styles.indicatorSport]} />
-                )}
               </View>
             </TouchableOpacity>
           ))}
@@ -262,12 +250,6 @@ export default function CalendarScreen() {
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.indicatorMetabolic]} />
               <Text style={styles.legendText}>Métabolique</Text>
-            </View>
-          )}
-          {sportEnrolled && (
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, styles.indicatorSport]} />
-              <Text style={styles.legendText}>Sport</Text>
             </View>
           )}
         </View>
@@ -345,35 +327,6 @@ export default function CalendarScreen() {
                       <Dumbbell size={16} color={colors.accent.primary} />
                       <Text style={styles.statValue}>{selectedDayDetails.metabolicLog.walkingMinutes}</Text>
                       <Text style={styles.statLabel}>min marche</Text>
-                    </View>
-                  )}
-                </View>
-              </Card>
-            )}
-
-            {/* Sport Log */}
-            {sportEnrolled && selectedDayDetails.sportLog && (
-              <Card style={styles.detailCard}>
-                <View style={styles.detailCardHeader}>
-                  <Dumbbell size={18} color={colors.success} />
-                  <Text style={styles.detailCardTitle}>Initiation Sportive</Text>
-                  {selectedDayDetails.sportLog.workoutCompleted && (
-                    <Badge variant="success" size="sm">Séance faite</Badge>
-                  )}
-                </View>
-                <View style={styles.statsGrid}>
-                  {selectedDayDetails.sportLog.steps !== undefined && (
-                    <View style={styles.statItem}>
-                      <Footprints size={16} color={colors.success} />
-                      <Text style={styles.statValue}>{selectedDayDetails.sportLog.steps}</Text>
-                      <Text style={styles.statLabel}>pas</Text>
-                    </View>
-                  )}
-                  {selectedDayDetails.sportLog.activeMinutes !== undefined && (
-                    <View style={styles.statItem}>
-                      <Flame size={16} color={colors.warning} />
-                      <Text style={styles.statValue}>{selectedDayDetails.sportLog.activeMinutes}</Text>
-                      <Text style={styles.statLabel}>min actives</Text>
                     </View>
                   )}
                 </View>

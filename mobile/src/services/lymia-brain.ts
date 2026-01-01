@@ -1506,14 +1506,12 @@ function generateStaticConnectedInsights(context: UserContext): ConnectedInsight
     })
   }
 
-  // Good sleep → Sport opportunity
+  // Good sleep → Celebrate good energy
   if (wellnessData.sleepHours !== undefined && wellnessData.sleepHours >= 7 && wellnessData.energyLevel !== undefined && wellnessData.energyLevel >= 4) {
     insights.push({
-      id: `static_sleep_sport_${Date.now()}`,
-      message: `Bonne nuit + énergie → journée idéale pour une séance sport !`,
-      linkedFeatures: ['sleep', 'sport'],
-      actionLabel: 'Programme sport',
-      actionRoute: 'SportInitiation',
+      id: `static_sleep_energy_${Date.now()}`,
+      message: `Bonne nuit + énergie → journée idéale pour atteindre tes objectifs !`,
+      linkedFeatures: ['sleep', 'nutrition'],
       priority: 'low',
       icon: 'celebration',
     })

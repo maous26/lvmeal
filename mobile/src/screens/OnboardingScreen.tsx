@@ -10,12 +10,10 @@ import {
   StepCooking,
   StepLifestyle,
   StepMetabolism,
-  StepSportInitiation,
   StepMetabolicProgram,
   StepWellnessProgram,
   StepAnalysis,
 } from '../components/onboarding'
-import { useSportInitiationStore } from '../stores/sport-initiation-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { useUserStore } from '../stores/user-store'
@@ -24,7 +22,7 @@ import { useGamificationStore } from '../stores/gamification-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
-type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'sport-initiation' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
+type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valueProposition?: string }> = {
   welcome: { title: '', subtitle: '' },
@@ -37,11 +35,6 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     title: 'Comment tu bouges ?',
     subtitle: 'TON ACTIVITÉ',
     valueProposition: "Ton niveau d'activité influence directement tes besoins énergétiques. On adapte tout à ton rythme de vie réel.",
-  },
-  'sport-initiation': {
-    title: 'Envie de bouger plus ?',
-    subtitle: 'PROGRAMME SPORT',
-    valueProposition: "Un programme progressif et bienveillant pour reprendre le sport en douceur, à ton rythme.",
   },
   goal: {
     title: 'Ton objectif principal',
@@ -198,7 +191,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
   const { setSignupDate } = useOnboardingStore()
   const { startTrial } = useGamificationStore()
-  const { enroll: enrollSportInitiation } = useSportInitiationStore()
 
   // Program stores for enrollment
   const { enroll: enrollMetabolicBoost } = useMetabolicBoostStore()
@@ -208,13 +200,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   // ORDRE DE PRIORITÉ:
   // 1. Diagnostic métabolisme d'ABORD (après cooking)
   // 2. metabolic-program: si métabolisme adaptatif détecté (après metabolism)
-  // 3. sport-initiation: APRÈS métabolisme, si sédentaire ET PAS prise de masse ET (pas adaptatif OU refusé métabo)
-  // 4. wellness-program: proposé à TOUS sauf si métabo accepté (après sport si présent, sinon après metabolism/metabolic-program)
-  //
-  // EXCLUSIONS:
-  // - Sport et Métabo sont mutuellement exclusifs
-  // - Métabo et Bien-être sont mutuellement exclusifs
-  // - Pas de sport pour objectif prise de masse (muscle_gain)
+  // 3. wellness-program: proposé à TOUS sauf si métabo accepté
   const steps = useMemo(() => {
     let dynamicSteps = [...baseSteps]
 
@@ -224,46 +210,16 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'metabolic-program' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
     }
 
-    // 2. Sport-initiation: seulement pour sédentaires, PAS pour prise de masse
-    //    Doit venir APRÈS le diagnostic métabolisme
-    //    - Si adaptatif: seulement si refusé métabo (les 2 sont exclusifs)
-    //    - Si standard: proposer après metabolism
-    const isSedentary = profile.activityLevel === 'sedentary'
-    const isMuscleGain = profile.goal === 'muscle_gain'
-    const canProposeSport = isSedentary && !isMuscleGain
-
-    if (canProposeSport) {
-      if (profile.metabolismProfile === 'adaptive') {
-        // Utilisateur avec métabolisme adaptatif - proposer sport seulement s'il a REFUSÉ métabo
-        if (profile.wantsMetabolicProgram === false) {
-          const metabolicProgramIndex = dynamicSteps.indexOf('metabolic-program')
-          if (metabolicProgramIndex !== -1) {
-            dynamicSteps = [...dynamicSteps.slice(0, metabolicProgramIndex + 1), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(metabolicProgramIndex + 1)]
-          }
-        }
-      } else {
-        // Métabolisme standard - proposer sport après metabolism step
-        const metabolismIndex = dynamicSteps.indexOf('metabolism') + 1
-        dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'sport-initiation' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
-      }
-    }
-
-    // 3. Wellness-program: proposé à TOUS sauf si métabo accepté
-    //    - Si adaptatif et accepté métabo: NE PAS proposer (exclusif)
-    //    - Si adaptatif et refusé métabo: proposer après sport (si présent) ou après metabolic-program
-    //    - Si standard: proposer après sport (si présent) ou après metabolism
+    // 2. Wellness-program: proposé à TOUS sauf si métabo accepté
     const shouldProposeWellness = profile.metabolismProfile !== 'adaptive' || profile.wantsMetabolicProgram === false
 
     if (shouldProposeWellness) {
-      const sportIndex = dynamicSteps.indexOf('sport-initiation')
       const metabolicIndex = dynamicSteps.indexOf('metabolic-program')
       const metabolismIndex = dynamicSteps.indexOf('metabolism')
 
-      // Trouver le bon point d'insertion (après sport > après metabolic-program > après metabolism)
+      // Trouver le bon point d'insertion (après metabolic-program > après metabolism)
       let insertAfter = -1
-      if (sportIndex !== -1) {
-        insertAfter = sportIndex
-      } else if (metabolicIndex !== -1) {
+      if (metabolicIndex !== -1) {
         insertAfter = metabolicIndex
       } else if (metabolismIndex !== -1) {
         insertAfter = metabolismIndex
@@ -275,7 +231,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
 
     return dynamicSteps
-  }, [profile.activityLevel, profile.goal, profile.metabolismProfile, profile.wantsMetabolicProgram])
+  }, [profile.metabolismProfile, profile.wantsMetabolicProgram])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
@@ -288,9 +244,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return !!(profile.firstName && profile.age && profile.height && profile.weight)
       case 'activity':
         return !!profile.activityLevel
-      case 'sport-initiation':
-        // Must make a choice (yes or no)
-        return profile.wantsSportInitiation !== undefined
       case 'goal':
         return !!profile.goal
       case 'diet':
@@ -344,20 +297,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         // sportProgram will be generated by the sport store when starting
       }
 
-      // If user wants sport initiation program, enroll them
-      // Note: Sport blocks Metabolic program
-      if (profile.wantsSportInitiation) {
-        finalProfile.sportInitiationActive = true
-        enrollSportInitiation({
-          fitnessLevel: 'sedentary',
-          hasHealthConditions: false,
-          preferredActivities: ['walking', 'stretching'],
-          availableMinutesPerDay: 15,
-        })
-      }
-
       // If user wants metabolic boost program, enroll them
-      // Note: Metabolic blocks both Sport and Wellness
       if (profile.wantsMetabolicProgram) {
         finalProfile.metabolicProgramActive = true
         enrollMetabolicBoost()
@@ -392,7 +332,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex])
     }
-  }, [currentStep, stepIndex, steps, profile, setStoreProfile, setOnboarded, startTrial, enrollSportInitiation, enrollMetabolicBoost, enrollWellnessProgram, onComplete])
+  }, [currentStep, stepIndex, steps, profile, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete])
 
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1
@@ -411,8 +351,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return <StepBasicInfo data={profile} onChange={setProfile} />
       case 'activity':
         return <StepActivity data={profile} onChange={setProfile} />
-      case 'sport-initiation':
-        return <StepSportInitiation data={profile} onChange={setProfile} />
       case 'goal':
         return <StepGoal data={profile} onChange={setProfile} />
       case 'diet':

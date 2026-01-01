@@ -1,7 +1,7 @@
 /**
  * ProgramsSection - Section regroupant les programmes optionnels
  *
- * Affiche les 3 programmes (Sport, Métabolisme, Bien-être) de manière
+ * Affiche les 2 programmes (Métabolisme, Bien-être) de manière
  * compacte et horizontale pour une meilleure clarté sur la homepage.
  *
  * LOGIQUE D'AFFICHAGE BIEN-ÊTRE:
@@ -14,7 +14,6 @@ import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
-  Dumbbell,
   Zap,
   Heart,
   Sparkles,
@@ -25,22 +24,13 @@ import {
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius } from '../../constants/theme'
-import { useSportInitiationStore, type SportPhase } from '../../stores/sport-initiation-store'
 import { useMetabolicBoostStore, type MetabolicPhase } from '../../stores/metabolic-boost-store'
 import { useWellnessProgramStore, type WellnessPhase } from '../../stores/wellness-program-store'
 import { useUserStore } from '../../stores/user-store'
 
 interface ProgramsSectionProps {
-  onSportPress?: () => void
   onMetabolicPress?: () => void
   onWellnessPress?: () => void
-}
-
-const sportPhaseLabels: Record<SportPhase, string> = {
-  activation: 'Activation',
-  movement: 'Mouvement',
-  strengthening: 'Renforcement',
-  autonomy: 'Autonomie',
 }
 
 const metabolicPhaseLabels: Record<MetabolicPhase, string> = {
@@ -58,18 +48,10 @@ const wellnessPhaseLabels: Record<WellnessPhase, string> = {
 }
 
 export function ProgramsSection({
-  onSportPress,
   onMetabolicPress,
   onWellnessPress,
 }: ProgramsSectionProps) {
   const { profile } = useUserStore()
-
-  const {
-    isEnrolled: isSportEnrolled,
-    currentPhase: sportPhase,
-    currentWeek: sportWeek,
-    currentStreak: sportStreak,
-  } = useSportInitiationStore()
 
   const {
     isEnrolled: isMetabolicEnrolled,
@@ -89,42 +71,23 @@ export function ProgramsSection({
     proposeAfterMetabolic,
   } = useWellnessProgramStore()
 
-  const isSedentary = profile?.activityLevel === 'sedentary'
   const isAdaptive = profile?.metabolismProfile === 'adaptive'
-  const isMuscleGain = profile?.goal === 'muscle_gain'
 
   // Metabolic program is completed when in full_program phase
   const isMetabolicCompleted = isMetabolicEnrolled && metabolicPhase === 'full_program'
 
-  // ============================================================================
-  // PROGRAM EXCLUSION RULES:
-  // - Sport: blocks Metabolic (not Wellness), NOT for muscle_gain
-  // - Metabolic: blocks Sport AND Wellness
-  // - Wellness: blocks Metabolic (not Sport)
-  // ============================================================================
-
-  // Show Sport if:
-  // - User is NOT pursuing muscle gain AND
-  // - User is NOT enrolled in Metabolic program (unless completed)
-  // - OR already enrolled in Sport
-  const showSport = !isMuscleGain && (!isMetabolicEnrolled || isMetabolicCompleted)
-
   // Show Metabolic if:
-  // - User is NOT enrolled in Sport program AND
   // - User is NOT enrolled in Wellness program
   // - OR already enrolled in Metabolic
-  const showMetabolic = (!isSportEnrolled && !isWellnessEnrolled) || isMetabolicEnrolled
+  const showMetabolic = !isWellnessEnrolled || isMetabolicEnrolled
 
   // Show Wellness if:
   // - User is NOT enrolled in Metabolic program (unless completed)
   // - OR already enrolled in Wellness
   const showWellness = shouldShowProgram(isMetabolicEnrolled, isMetabolicCompleted) || isWellnessEnrolled
 
-  // Can user JOIN Sport? (blocked by active Metabolic, not for muscle_gain)
-  const canJoinSport = !isMuscleGain && (!isMetabolicEnrolled || isMetabolicCompleted)
-
-  // Can user JOIN Metabolic? (blocked by Sport OR Wellness)
-  const canJoinMetabolic = !isSportEnrolled && !isWellnessEnrolled
+  // Can user JOIN Metabolic? (blocked by Wellness)
+  const canJoinMetabolic = !isWellnessEnrolled
 
   // Can user JOIN Wellness? (blocked by active Metabolic)
   const canJoinWellness = !isMetabolicEnrolled || isMetabolicCompleted
@@ -137,22 +100,19 @@ export function ProgramsSection({
   }, [isMetabolicCompleted, isWellnessEnrolled, proposeAfterMetabolic])
 
   // Check if at least one program should be displayed
-  // Either user qualifies for it OR is already enrolled
-  const hasRelevantPrograms = showSport || isSportEnrolled || showMetabolic || isMetabolicEnrolled || showWellness || isWellnessEnrolled
+  const hasRelevantPrograms = showMetabolic || isMetabolicEnrolled || showWellness || isWellnessEnrolled
 
   // If no relevant programs, don't show the section
   if (!hasRelevantPrograms) {
     return null
   }
 
+  const metabolicProgress = getProgressPercentage()
   const wellnessProgress = getWellnessProgress()
 
-  const handlePress = (type: 'sport' | 'metabolic' | 'wellness') => {
+  const handlePress = (type: 'metabolic' | 'wellness') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     switch (type) {
-      case 'sport':
-        onSportPress?.()
-        break
       case 'metabolic':
         onMetabolicPress?.()
         break
@@ -162,59 +122,11 @@ export function ProgramsSection({
     }
   }
 
-  const metabolicProgress = getProgressPercentage()
-
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Mes Programmes</Text>
       <View style={styles.cardsRow}>
-        {/* Sport Initiation - NOT for muscle_gain, blocked by Metabolic */}
-        {(showSport || isSportEnrolled) && (
-          <Pressable
-            style={styles.programCard}
-            onPress={() => handlePress('sport')}
-          >
-            <LinearGradient
-              colors={['#10B981', '#059669']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconGradient}
-            >
-              <Dumbbell size={20} color="#FFFFFF" />
-            </LinearGradient>
-
-            <Text style={styles.programTitle} numberOfLines={1}>Sport</Text>
-
-            {isSportEnrolled ? (
-              <>
-                <View style={styles.statusBadge}>
-                  <Text style={[styles.statusText, { color: colors.success }]}>
-                    {sportPhaseLabels[sportPhase]}
-                  </Text>
-                </View>
-                <View style={styles.statsRow}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>S{sportWeek}</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Flame size={10} color={colors.warning} />
-                    <Text style={styles.statValue}>{sportStreak}j</Text>
-                  </View>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.programSubtitle} numberOfLines={1}>9 semaines</Text>
-                <View style={styles.joinButton}>
-                  <Text style={styles.joinText}>Rejoindre</Text>
-                </View>
-              </>
-            )}
-          </Pressable>
-        )}
-
-        {/* Metabolic Boost - Blocked by Sport AND Wellness */}
+        {/* Metabolic Boost - blocked by Wellness */}
         {(showMetabolic || isMetabolicEnrolled) && (
           <Pressable
             style={styles.programCard}
@@ -229,7 +141,7 @@ export function ProgramsSection({
               <Zap size={20} color="#FFFFFF" />
             </LinearGradient>
 
-            <Text style={styles.programTitle} numberOfLines={1}>Métabo</Text>
+            <Text style={styles.programTitle} numberOfLines={1}>Métabolique</Text>
 
             {isMetabolicEnrolled ? (
               <>
@@ -240,8 +152,7 @@ export function ProgramsSection({
                 </View>
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <TrendingUp size={10} color={colors.success} />
-                    <Text style={styles.statValue}>{metabolicProgress}%</Text>
+                    <Text style={styles.statValue}>S{metabolicWeek}</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
@@ -249,25 +160,36 @@ export function ProgramsSection({
                     <Text style={styles.statValue}>{metabolicStreak}j</Text>
                   </View>
                 </View>
+                {/* Progress bar */}
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressBar}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        { width: `${metabolicProgress}%`, backgroundColor: colors.warning },
+                      ]}
+                    />
+                  </View>
+                </View>
               </>
             ) : (
               <>
-                <Text style={styles.programSubtitle} numberOfLines={1}>9 semaines</Text>
-                <View style={[styles.joinButton, styles.joinButtonMetabolic]}>
-                  <Text style={[styles.joinText, styles.joinTextMetabolic]}>Rejoindre</Text>
+                <Text style={styles.programSubtitle} numberOfLines={1}>12 semaines</Text>
+                <View style={styles.joinButton}>
+                  <Sparkles size={12} color={colors.warning} />
+                  <Text style={[styles.joinText, { color: colors.warning }]}>
+                    {canJoinMetabolic ? 'Rejoindre' : 'Bloqué'}
+                  </Text>
                 </View>
               </>
             )}
           </Pressable>
         )}
 
-        {/* Wellness Program - Blocked by Metabolic only (can combine with Sport) */}
+        {/* Wellness Program - blocked by active Metabolic */}
         {(showWellness || isWellnessEnrolled) && (
           <Pressable
-            style={[
-              styles.programCard,
-              isMetabolicCompleted && !isWellnessEnrolled && styles.programCardHighlighted,
-            ]}
+            style={styles.programCard}
             onPress={() => handlePress('wellness')}
           >
             <LinearGradient
@@ -290,31 +212,34 @@ export function ProgramsSection({
                 </View>
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <TrendingUp size={10} color={colors.success} />
-                    <Text style={styles.statValue}>{wellnessProgress}%</Text>
+                    <Text style={styles.statValue}>S{wellnessWeek}</Text>
                   </View>
                   <View style={styles.statDivider} />
                   <View style={styles.statItem}>
-                    <Moon size={10} color={colors.secondary.primary} />
+                    <Star size={10} color={colors.secondary.primary} />
                     <Text style={styles.statValue}>{wellnessStreak}j</Text>
                   </View>
                 </View>
-              </>
-            ) : isMetabolicCompleted ? (
-              // Special promotion after metabolic completion
-              <>
-                <Text style={styles.programSubtitle} numberOfLines={1}>8 semaines</Text>
-                <View style={[styles.joinButton, styles.joinButtonWellness]}>
-                  <Star size={10} color={colors.secondary.primary} />
-                  <Text style={[styles.joinText, styles.joinTextWellness]}>Découvrir</Text>
+                {/* Progress bar */}
+                <View style={styles.progressContainer}>
+                  <View style={styles.progressBar}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        { width: `${wellnessProgress}%`, backgroundColor: colors.secondary.primary },
+                      ]}
+                    />
+                  </View>
                 </View>
               </>
             ) : (
-              // Normal state - available to join
               <>
                 <Text style={styles.programSubtitle} numberOfLines={1}>8 semaines</Text>
-                <View style={[styles.joinButton, styles.joinButtonWellness]}>
-                  <Text style={[styles.joinText, styles.joinTextWellness]}>Rejoindre</Text>
+                <View style={styles.joinButton}>
+                  <Moon size={12} color={colors.secondary.primary} />
+                  <Text style={[styles.joinText, { color: colors.secondary.primary }]}>
+                    {canJoinWellness ? 'Rejoindre' : 'Bloqué'}
+                  </Text>
                 </View>
               </>
             )}
@@ -327,42 +252,24 @@ export function ProgramsSection({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
-    width: '100%',
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    ...typography.smallMedium,
-    color: colors.text.tertiary,
-    marginBottom: spacing.sm,
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+    marginBottom: spacing.md,
   },
   cardsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    width: '100%',
+    gap: spacing.md,
   },
   programCard: {
     flex: 1,
-    minWidth: 0,
-    flexShrink: 1,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
+    borderRadius: radius.xl,
+    padding: spacing.md,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.light,
-  },
-  programCardDisabled: {
-    opacity: 0.6,
-  },
-  programCardHighlighted: {
-    borderColor: colors.secondary.primary,
-    borderWidth: 2,
-    shadowColor: colors.secondary.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    minWidth: 100,
   },
   iconGradient: {
     width: 44,
@@ -371,94 +278,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
   },
   programTitle: {
-    ...typography.caption,
-    fontWeight: '600',
+    ...typography.smallMedium,
     color: colors.text.primary,
+    marginBottom: 2,
     textAlign: 'center',
   },
   programSubtitle: {
     ...typography.caption,
-    color: colors.text.muted,
-    textAlign: 'center',
-    marginTop: 2,
+    color: colors.text.tertiary,
+    marginBottom: spacing.sm,
   },
   statusBadge: {
-    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
   },
   statusText: {
-    fontSize: 10,
+    ...typography.caption,
     fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.xs,
     gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
   },
+  statValue: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    fontWeight: '600',
+  },
   statDivider: {
     width: 1,
     height: 10,
     backgroundColor: colors.border.light,
+    marginHorizontal: 2,
   },
-  statValue: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.text.secondary,
+  progressContainer: {
+    width: '100%',
+    paddingHorizontal: spacing.xs,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: colors.border.light,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   joinButton: {
-    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: colors.bg.secondary,
     borderRadius: radius.full,
-  },
-  joinButtonMetabolic: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
   },
   joinText: {
-    fontSize: 10,
+    ...typography.caption,
     fontWeight: '600',
-    color: colors.success,
-  },
-  joinTextMetabolic: {
-    color: colors.warning,
-  },
-  joinButtonWellness: {
-    backgroundColor: 'rgba(139, 92, 246, 0.12)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  joinTextWellness: {
-    color: colors.secondary.primary,
-  },
-  comingSoonBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    backgroundColor: colors.bg.tertiary,
-    borderRadius: radius.full,
-  },
-  comingSoonText: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: colors.text.muted,
   },
 })
-
-export default ProgramsSection
