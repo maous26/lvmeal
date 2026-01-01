@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics'
 import {
   Home,
   Bot,
-  TrendingUp,
+  Layers,
   User,
   BookOpen,
 } from 'lucide-react-native'
@@ -14,7 +14,7 @@ import {
 import HomeScreen from '../screens/HomeScreen'
 import RecipesScreen from '../screens/RecipesScreen'
 import CoachScreen from '../screens/CoachScreen'
-import ProgressScreen from '../screens/ProgressScreen'
+import ProgramsScreen from '../screens/ProgramsScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 
 import { colors, shadows } from '../constants/theme'
@@ -100,12 +100,12 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Progress"
-        component={ProgressScreen}
+        name="Programs"
+        component={ProgramsScreen}
         options={{
-          tabBarLabel: 'Progrès',
+          tabBarLabel: 'Programmes',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={TrendingUp} focused={focused} color={color} />
+            <TabIcon Icon={Layers} focused={focused} color={color} />
           ),
         }}
       />

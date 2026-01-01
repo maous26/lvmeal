@@ -2,7 +2,7 @@
  * ProgramsSection - Cartes programmes élégantes et minimalistes
  */
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { ChevronRight } from 'lucide-react-native'
@@ -33,25 +33,11 @@ export function ProgramsSection({
     isEnrolled: isWellnessEnrolled,
     currentWeek: wellnessWeek,
     getProgressPercentage: getWellnessProgress,
-    shouldShowProgram,
-    proposeAfterMetabolic,
   } = useWellnessProgramStore()
 
-  const isMetabolicCompleted = isMetabolicEnrolled && getProgressPercentage() >= 100
-  const showMetabolic = !isWellnessEnrolled || isMetabolicEnrolled
-  const showWellness = shouldShowProgram(isMetabolicEnrolled, isMetabolicCompleted) || isWellnessEnrolled
-
-  useEffect(() => {
-    if (isMetabolicCompleted && !isWellnessEnrolled) {
-      proposeAfterMetabolic()
-    }
-  }, [isMetabolicCompleted, isWellnessEnrolled, proposeAfterMetabolic])
-
-  const hasRelevantPrograms = showMetabolic || showWellness
-
-  if (!hasRelevantPrograms) {
-    return null
-  }
+  // Les deux programmes peuvent cohabiter - toujours afficher les deux
+  const showMetabolic = true
+  const showWellness = true
 
   const metabolicProgress = getProgressPercentage()
   const wellnessProgress = getWellnessProgress()

@@ -610,22 +610,8 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
         })
       },
 
-      shouldShowProgram: (isMetabolicEnrolled, isMetabolicCompleted) => {
-        const { isEnrolled, wasProposedAfterMetabolic } = get()
-
-        // Always show if already enrolled in wellness
-        if (isEnrolled) return true
-
-        // Hide if user is in metabolic program
-        if (isMetabolicEnrolled && !isMetabolicCompleted) return false
-
-        // Show if metabolic is completed (propose wellness)
-        if (isMetabolicCompleted) return true
-
-        // Show if was proposed after metabolic completion
-        if (wasProposedAfterMetabolic) return true
-
-        // Default: show (for users not in metabolic)
+      shouldShowProgram: (_isMetabolicEnrolled, _isMetabolicCompleted) => {
+        // Les deux programmes peuvent cohabiter - toujours afficher Wellness
         return true
       },
 
