@@ -5,12 +5,13 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import * as SplashScreen from 'expo-splash-screen'
+import * as ExpoSplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 
 import { RootNavigator } from './src/navigation'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
+import { SplashScreen } from './src/components/SplashScreen'
 import { clearFoodSearchCache } from './src/services/food-search'
 import {
   requestNotificationPermissions,
@@ -29,11 +30,12 @@ Sentry.init({
   enabled: !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true',
 })
 
-// Keep splash screen visible while loading fonts
-SplashScreen.preventAutoHideAsync()
+// Keep native splash screen visible while loading fonts
+ExpoSplashScreen.preventAutoHideAsync()
 
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -110,11 +112,17 @@ export default Sentry.wrap(function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady && fontsLoaded) {
-      await SplashScreen.hideAsync()
+      await ExpoSplashScreen.hideAsync()
     }
   }, [appIsReady, fontsLoaded])
 
-  if (!appIsReady || !fontsLoaded) {
+  // Show animated splash screen while app is loading
+  if (!appIsReady || !fontsLoaded || showSplash) {
+    // Hide native splash and show our animated one
+    if (appIsReady && fontsLoaded) {
+      ExpoSplashScreen.hideAsync()
+      return <SplashScreen onFinish={() => setShowSplash(false)} />
+    }
     return null
   }
 
