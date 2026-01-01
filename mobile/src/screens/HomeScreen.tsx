@@ -17,7 +17,6 @@ import { useNavigation } from '@react-navigation/native'
 import {
   Calendar,
   ChevronDown,
-  ChevronUp,
   Plus,
   X,
   ChevronLeft,
@@ -38,9 +37,8 @@ import * as Haptics from 'expo-haptics'
 
 import { Card } from '../components/ui'
 import {
-  QuickActionsWidget,
   CaloricBalance,
-  ProgramsSection,
+  ProgramsWidget,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows } from '../constants/theme'
@@ -52,7 +50,6 @@ import { useOnboardingStore, FEATURE_DISCOVERY_MESSAGES } from '../stores/onboar
 import FeatureDiscoveryModal from '../components/onboarding/FeatureDiscoveryModal'
 import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/utils'
 import type { MealType } from '../types'
-import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
 const { width } = Dimensions.get('window')
 
@@ -200,7 +197,6 @@ export default function HomeScreen() {
     hasSeenPaywall,
   } = useOnboardingStore()
 
-  const [isPlanExpanded, setIsPlanExpanded] = useState(false)
   const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set())
   const [discoveryModalVisible, setDiscoveryModalVisible] = useState(false)
   const [currentDiscoveryFeature, setCurrentDiscoveryFeature] = useState<{
@@ -318,21 +314,6 @@ export default function HomeScreen() {
     navigation.navigate('Profile', { screen: 'Achievements' })
   }
 
-  const handleNavigateToPlan = (options: { duration: 1 | 3 | 7; calorieReduction: boolean; complexity: RecipeComplexity }) => {
-    // @ts-ignore
-    navigation.navigate('WeeklyPlan', options)
-  }
-
-  const handleNavigateToMetabolicBoost = () => {
-    // @ts-ignore
-    navigation.navigate('MetabolicBoost')
-  }
-
-  const handleNavigateToWellness = () => {
-    // @ts-ignore
-    navigation.navigate('WellnessProgram')
-  }
-
   const handleNavigateToCalendar = () => {
     // @ts-ignore
     navigation.navigate('Calendar')
@@ -342,12 +323,6 @@ export default function HomeScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     // @ts-ignore
     navigation.navigate('WeightHistory')
-  }
-
-  const togglePlanExpanded = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-    setIsPlanExpanded(!isPlanExpanded)
   }
 
   const currentDayIndex = getCurrentDayIndex()
@@ -603,46 +578,11 @@ export default function HomeScreen() {
           })}
         </View>
 
-        {/* Plan Repas IA */}
-        <View style={[styles.planSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
-          <TouchableOpacity style={styles.planHeader} onPress={togglePlanExpanded}>
-            <View style={styles.planHeaderLeft}>
-              <LinearGradient
-                colors={['#A855F7', '#7C3AED']}
-                style={styles.planIconContainer}
-              >
-                <Sparkles size={18} color="#FFFFFF" />
-              </LinearGradient>
-              <View>
-                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Plan Repas IA</Text>
-                <Text style={[styles.planSubtitle, { color: colors.text.tertiary }]}>
-                  Recettes personnalisées
-                </Text>
-              </View>
-            </View>
-            {isPlanExpanded ? (
-              <ChevronUp size={20} color={colors.text.secondary} />
-            ) : (
-              <ChevronDown size={20} color={colors.text.secondary} />
-            )}
-          </TouchableOpacity>
-          {isPlanExpanded && (
-            <View style={styles.planContent}>
-              <QuickActionsWidget onPlanPress={handleNavigateToPlan} />
-            </View>
-          )}
-        </View>
-
-        {/* Programs Section */}
-        <View style={[styles.programsSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
-            Mes programmes
-          </Text>
-          <ProgramsSection
-            onMetabolicPress={handleNavigateToMetabolicBoost}
-            onWellnessPress={handleNavigateToWellness}
-          />
-        </View>
+        {/* Programs Widget - Compact summary, navigates to Programs tab */}
+        <ProgramsWidget onPress={() => {
+          // @ts-ignore
+          navigation.navigate('Programs')
+        }} />
 
         {/* Caloric Balance */}
         <View style={[styles.balanceSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
@@ -1034,41 +974,6 @@ const styles = StyleSheet.create({
   },
   addMoreText: {
     ...typography.smallMedium,
-  },
-  // Plan Section
-  planSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  planHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  planHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  planIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  planSubtitle: {
-    ...typography.caption,
-  },
-  planContent: {
-    marginTop: spacing.lg,
-  },
-  // Programs Section
-  programsSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
   },
   // Balance Section
   balanceSection: {

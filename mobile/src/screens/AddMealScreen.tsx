@@ -150,7 +150,7 @@ const inputMethods = [
   { id: 'photo', label: 'Photo', icon: Camera, color: '#E11D48', bgColor: '#FFF1F2' },
   { id: 'voice', label: 'Vocal', icon: Mic, color: '#8B5CF6', bgColor: '#F3E8FF' },
   { id: 'barcode', label: 'Code-barres', icon: Barcode, color: colors.success, bgColor: '#ECFDF5' },
-  { id: 'ai-recipe', label: 'Recette IA', icon: Sparkles, color: '#F59E0B', bgColor: '#FFFBEB' },
+  { id: 'ai-meal', label: 'Repas IA', icon: Sparkles, color: '#F59E0B', bgColor: '#FFFBEB' },
   { id: 'discover-recipes', label: 'Decouvrir', icon: Globe, color: '#06B6D4', bgColor: '#ECFEFF' },
   { id: 'favorites', label: 'Mes favoris', icon: Heart, color: '#EC4899', bgColor: '#FDF2F8' },
 ]
@@ -515,7 +515,7 @@ export default function AddMealScreen() {
       case 'barcode':
         setShowBarcodeScanner(true)
         break
-      case 'ai-recipe':
+      case 'ai-meal':
         setShowAIRecipeModal(true)
         break
       case 'discover-recipes':
