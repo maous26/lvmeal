@@ -98,7 +98,7 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
 ]
 
 // Méthodes épinglées par défaut (les 3 plus essentielles)
-export const DEFAULT_PINNED_METHODS: MealInputMethod[] = ['search', 'photo', 'voice']
+export const DEFAULT_PINNED_METHODS: MealInputMethod[] = ['search', 'photo', 'barcode']
 
 // Limites
 export const MIN_PINNED_METHODS = 1
