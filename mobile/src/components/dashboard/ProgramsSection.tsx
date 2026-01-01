@@ -1,32 +1,29 @@
 /**
- * ProgramsSection - Section regroupant les programmes optionnels
+ * ProgramsSection - Section premium des programmes de bien-être
  *
- * Affiche les 2 programmes (Métabolisme, Bien-être) de manière
- * compacte et horizontale pour une meilleure clarté sur la homepage.
- *
- * LOGIQUE D'AFFICHAGE BIEN-ÊTRE:
- * - Caché si l'utilisateur est inscrit au programme Métabolisme (non terminé)
- * - Proposé une fois le programme Métabolisme terminé (phase full_program)
- * - Toujours visible si l'utilisateur n'est pas inscrit au Métabolisme
+ * Affiche les 2 programmes (Métabolisme, Bien-être) avec un design
+ * professionnel et des métriques claires de progression.
  */
 
 import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import Svg, { Circle } from 'react-native-svg'
 import {
   Zap,
   Heart,
   Sparkles,
-  TrendingUp,
   Flame,
   Moon,
   Star,
+  ChevronRight,
+  Lock,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
-import { colors, spacing, typography, radius } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { spacing, typography, radius } from '../../constants/theme'
 import { useMetabolicBoostStore, type MetabolicPhase } from '../../stores/metabolic-boost-store'
 import { useWellnessProgramStore, type WellnessPhase } from '../../stores/wellness-program-store'
-import { useUserStore } from '../../stores/user-store'
 
 interface ProgramsSectionProps {
   onMetabolicPress?: () => void
@@ -47,11 +44,58 @@ const wellnessPhaseLabels: Record<WellnessPhase, string> = {
   harmony: 'Harmonie',
 }
 
+// Mini circular progress component
+function MiniCircularProgress({
+  progress,
+  size = 44,
+  strokeWidth = 4,
+  color,
+  bgColor,
+}: {
+  progress: number
+  size?: number
+  strokeWidth?: number
+  color: string
+  bgColor: string
+}) {
+  const center = size / 2
+  const r = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * r
+  const strokeDashoffset = circumference * (1 - progress / 100)
+
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }], position: 'absolute' }}>
+        <Circle
+          cx={center}
+          cy={center}
+          r={r}
+          stroke={bgColor}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+        />
+        <Circle
+          cx={center}
+          cy={center}
+          r={r}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          fill="transparent"
+        />
+      </Svg>
+      <Text style={[styles.progressText, { color }]}>{Math.round(progress)}%</Text>
+    </View>
+  )
+}
+
 export function ProgramsSection({
   onMetabolicPress,
   onWellnessPress,
 }: ProgramsSectionProps) {
-  const { profile } = useUserStore()
+  const { colors } = useTheme()
 
   const {
     isEnrolled: isMetabolicEnrolled,
@@ -71,25 +115,15 @@ export function ProgramsSection({
     proposeAfterMetabolic,
   } = useWellnessProgramStore()
 
-  const isAdaptive = profile?.metabolismProfile === 'adaptive'
-
   // Metabolic program is completed when in full_program phase
   const isMetabolicCompleted = isMetabolicEnrolled && metabolicPhase === 'full_program'
 
-  // Show Metabolic if:
-  // - User is NOT enrolled in Wellness program
-  // - OR already enrolled in Metabolic
+  // Show logic
   const showMetabolic = !isWellnessEnrolled || isMetabolicEnrolled
-
-  // Show Wellness if:
-  // - User is NOT enrolled in Metabolic program (unless completed)
-  // - OR already enrolled in Wellness
   const showWellness = shouldShowProgram(isMetabolicEnrolled, isMetabolicCompleted) || isWellnessEnrolled
 
-  // Can user JOIN Metabolic? (blocked by Wellness)
+  // Can join logic
   const canJoinMetabolic = !isWellnessEnrolled
-
-  // Can user JOIN Wellness? (blocked by active Metabolic)
   const canJoinWellness = !isMetabolicEnrolled || isMetabolicCompleted
 
   // Propose wellness after metabolic completion
@@ -99,10 +133,8 @@ export function ProgramsSection({
     }
   }, [isMetabolicCompleted, isWellnessEnrolled, proposeAfterMetabolic])
 
-  // Check if at least one program should be displayed
   const hasRelevantPrograms = showMetabolic || isMetabolicEnrolled || showWellness || isWellnessEnrolled
 
-  // If no relevant programs, don't show the section
   if (!hasRelevantPrograms) {
     return null
   }
@@ -124,122 +156,207 @@ export function ProgramsSection({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Mes Programmes</Text>
       <View style={styles.cardsRow}>
-        {/* Metabolic Boost - blocked by Wellness */}
+        {/* Metabolic Boost Program */}
         {(showMetabolic || isMetabolicEnrolled) && (
           <Pressable
-            style={styles.programCard}
+            style={({ pressed }) => [
+              styles.programCard,
+              { backgroundColor: colors.bg.elevated },
+              pressed && styles.cardPressed,
+            ]}
             onPress={() => handlePress('metabolic')}
           >
-            <LinearGradient
-              colors={['#F59E0B', '#D97706']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconGradient}
-            >
-              <Zap size={20} color="#FFFFFF" />
-            </LinearGradient>
+            {/* Header with gradient icon */}
+            <View style={styles.cardHeader}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconGradient}
+              >
+                <Zap size={18} color="#FFFFFF" />
+              </LinearGradient>
+              {isMetabolicEnrolled ? (
+                <MiniCircularProgress
+                  progress={metabolicProgress}
+                  color="#F59E0B"
+                  bgColor={colors.border.light}
+                />
+              ) : (
+                <View style={[styles.statusBadge, { backgroundColor: canJoinMetabolic ? 'rgba(245, 158, 11, 0.15)' : colors.bg.tertiary }]}>
+                  {canJoinMetabolic ? (
+                    <Sparkles size={12} color="#F59E0B" />
+                  ) : (
+                    <Lock size={12} color={colors.text.muted} />
+                  )}
+                </View>
+              )}
+            </View>
 
-            <Text style={styles.programTitle} numberOfLines={1}>Métabolique</Text>
+            {/* Title & Phase */}
+            <Text style={[styles.programTitle, { color: colors.text.primary }]}>
+              Métabolique
+            </Text>
 
             {isMetabolicEnrolled ? (
               <>
-                <View style={styles.statusBadge}>
-                  <Text style={[styles.statusText, { color: colors.warning }]}>
+                <View style={[styles.phaseBadge, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+                  <Text style={[styles.phaseText, { color: '#D97706' }]}>
                     {metabolicPhaseLabels[metabolicPhase]}
                   </Text>
                 </View>
-                <View style={styles.statsRow}>
+
+                {/* Stats */}
+                <View style={styles.statsContainer}>
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>S{metabolicWeek}</Text>
+                    <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                      S{metabolicWeek}
+                    </Text>
+                    <Text style={[styles.statLabel, { color: colors.text.muted }]}>
+                      semaine
+                    </Text>
                   </View>
-                  <View style={styles.statDivider} />
+                  <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
                   <View style={styles.statItem}>
-                    <Flame size={10} color={colors.warning} />
-                    <Text style={styles.statValue}>{metabolicStreak}j</Text>
+                    <View style={styles.streakRow}>
+                      <Flame size={12} color="#F59E0B" />
+                      <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                        {metabolicStreak}
+                      </Text>
+                    </View>
+                    <Text style={[styles.statLabel, { color: colors.text.muted }]}>
+                      jours
+                    </Text>
                   </View>
                 </View>
-                {/* Progress bar */}
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${metabolicProgress}%`, backgroundColor: colors.warning },
-                      ]}
-                    />
-                  </View>
+
+                {/* Continue CTA */}
+                <View style={[styles.ctaButton, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+                  <Text style={[styles.ctaText, { color: '#D97706' }]}>Continuer</Text>
+                  <ChevronRight size={14} color="#D97706" />
                 </View>
               </>
             ) : (
               <>
-                <Text style={styles.programSubtitle} numberOfLines={1}>12 semaines</Text>
-                <View style={styles.joinButton}>
-                  <Sparkles size={12} color={colors.warning} />
-                  <Text style={[styles.joinText, { color: colors.warning }]}>
+                <Text style={[styles.programDuration, { color: colors.text.tertiary }]}>
+                  12 semaines • Relance ton métabolisme
+                </Text>
+
+                <View style={[
+                  styles.ctaButton,
+                  { backgroundColor: canJoinMetabolic ? 'rgba(245, 158, 11, 0.12)' : colors.bg.tertiary }
+                ]}>
+                  <Text style={[
+                    styles.ctaText,
+                    { color: canJoinMetabolic ? '#D97706' : colors.text.muted }
+                  ]}>
                     {canJoinMetabolic ? 'Rejoindre' : 'Bloqué'}
                   </Text>
+                  {canJoinMetabolic && <ChevronRight size={14} color="#D97706" />}
                 </View>
               </>
             )}
           </Pressable>
         )}
 
-        {/* Wellness Program - blocked by active Metabolic */}
+        {/* Wellness Program */}
         {(showWellness || isWellnessEnrolled) && (
           <Pressable
-            style={styles.programCard}
+            style={({ pressed }) => [
+              styles.programCard,
+              { backgroundColor: colors.bg.elevated },
+              pressed && styles.cardPressed,
+            ]}
             onPress={() => handlePress('wellness')}
           >
-            <LinearGradient
-              colors={['#8B5CF6', '#7C3AED']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconGradient}
-            >
-              <Heart size={20} color="#FFFFFF" />
-            </LinearGradient>
+            {/* Header with gradient icon */}
+            <View style={styles.cardHeader}>
+              <LinearGradient
+                colors={['#8B5CF6', '#7C3AED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconGradient}
+              >
+                <Heart size={18} color="#FFFFFF" />
+              </LinearGradient>
+              {isWellnessEnrolled ? (
+                <MiniCircularProgress
+                  progress={wellnessProgress}
+                  color="#8B5CF6"
+                  bgColor={colors.border.light}
+                />
+              ) : (
+                <View style={[styles.statusBadge, { backgroundColor: canJoinWellness ? 'rgba(139, 92, 246, 0.15)' : colors.bg.tertiary }]}>
+                  {canJoinWellness ? (
+                    <Moon size={12} color="#8B5CF6" />
+                  ) : (
+                    <Lock size={12} color={colors.text.muted} />
+                  )}
+                </View>
+              )}
+            </View>
 
-            <Text style={styles.programTitle} numberOfLines={1}>Bien-être</Text>
+            {/* Title & Phase */}
+            <Text style={[styles.programTitle, { color: colors.text.primary }]}>
+              Bien-être
+            </Text>
 
             {isWellnessEnrolled ? (
               <>
-                <View style={styles.statusBadge}>
-                  <Text style={[styles.statusText, { color: colors.secondary.primary }]}>
+                <View style={[styles.phaseBadge, { backgroundColor: 'rgba(139, 92, 246, 0.12)' }]}>
+                  <Text style={[styles.phaseText, { color: '#7C3AED' }]}>
                     {wellnessPhaseLabels[wellnessPhase]}
                   </Text>
                 </View>
-                <View style={styles.statsRow}>
+
+                {/* Stats */}
+                <View style={styles.statsContainer}>
                   <View style={styles.statItem}>
-                    <Text style={styles.statValue}>S{wellnessWeek}</Text>
+                    <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                      S{wellnessWeek}
+                    </Text>
+                    <Text style={[styles.statLabel, { color: colors.text.muted }]}>
+                      semaine
+                    </Text>
                   </View>
-                  <View style={styles.statDivider} />
+                  <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
                   <View style={styles.statItem}>
-                    <Star size={10} color={colors.secondary.primary} />
-                    <Text style={styles.statValue}>{wellnessStreak}j</Text>
+                    <View style={styles.streakRow}>
+                      <Star size={12} color="#8B5CF6" />
+                      <Text style={[styles.statValue, { color: colors.text.primary }]}>
+                        {wellnessStreak}
+                      </Text>
+                    </View>
+                    <Text style={[styles.statLabel, { color: colors.text.muted }]}>
+                      jours
+                    </Text>
                   </View>
                 </View>
-                {/* Progress bar */}
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${wellnessProgress}%`, backgroundColor: colors.secondary.primary },
-                      ]}
-                    />
-                  </View>
+
+                {/* Continue CTA */}
+                <View style={[styles.ctaButton, { backgroundColor: 'rgba(139, 92, 246, 0.12)' }]}>
+                  <Text style={[styles.ctaText, { color: '#7C3AED' }]}>Continuer</Text>
+                  <ChevronRight size={14} color="#7C3AED" />
                 </View>
               </>
             ) : (
               <>
-                <Text style={styles.programSubtitle} numberOfLines={1}>8 semaines</Text>
-                <View style={styles.joinButton}>
-                  <Moon size={12} color={colors.secondary.primary} />
-                  <Text style={[styles.joinText, { color: colors.secondary.primary }]}>
+                <Text style={[styles.programDuration, { color: colors.text.tertiary }]}>
+                  8 semaines • Équilibre corps & esprit
+                </Text>
+
+                <View style={[
+                  styles.ctaButton,
+                  { backgroundColor: canJoinWellness ? 'rgba(139, 92, 246, 0.12)' : colors.bg.tertiary }
+                ]}>
+                  <Text style={[
+                    styles.ctaText,
+                    { color: canJoinWellness ? '#7C3AED' : colors.text.muted }
+                  ]}>
                     {canJoinWellness ? 'Rejoindre' : 'Bloqué'}
                   </Text>
+                  {canJoinWellness && <ChevronRight size={14} color="#7C3AED" />}
                 </View>
               </>
             )}
@@ -252,12 +369,7 @@ export function ProgramsSection({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.bodyMedium,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   cardsRow: {
     flexDirection: 'row',
@@ -265,85 +377,101 @@ const styles = StyleSheet.create({
   },
   programCard: {
     flex: 1,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.xl,
     padding: spacing.md,
-    alignItems: 'center',
-    minWidth: 100,
+    minHeight: 180,
+  },
+  cardPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm,
   },
   iconGradient: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  programTitle: {
-    ...typography.smallMedium,
-    color: colors.text.primary,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  programSubtitle: {
-    ...typography.caption,
-    color: colors.text.tertiary,
-    marginBottom: spacing.sm,
   },
   statusBadge: {
-    marginBottom: spacing.xs,
-  },
-  statusText: {
-    ...typography.caption,
-    fontWeight: '600',
-  },
-  statsRow: {
-    flexDirection: 'row',
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: 'center',
-    gap: spacing.xs,
+    justifyContent: 'center',
+  },
+  programTitle: {
+    ...typography.bodyMedium,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  phaseBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.full,
     marginBottom: spacing.sm,
   },
-  statItem: {
+  phaseText: {
+    ...typography.caption,
+    fontWeight: '600',
+  },
+  programDuration: {
+    ...typography.caption,
+    marginBottom: spacing.md,
+    lineHeight: 18,
+  },
+  statsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    marginBottom: spacing.md,
   },
-  statValue: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    fontWeight: '600',
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
   },
   statDivider: {
     width: 1,
-    height: 10,
-    backgroundColor: colors.border.light,
-    marginHorizontal: 2,
+    height: 24,
+    marginHorizontal: spacing.xs,
   },
-  progressContainer: {
-    width: '100%',
-    paddingHorizontal: spacing.xs,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: colors.border.light,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  joinButton: {
+  streakRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    backgroundColor: colors.bg.secondary,
-    borderRadius: radius.full,
+    gap: 3,
   },
-  joinText: {
+  statValue: {
+    ...typography.bodyMedium,
+    fontWeight: '700',
+  },
+  statLabel: {
     ...typography.caption,
+    fontSize: 10,
+    marginTop: 1,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    gap: 4,
+    marginTop: 'auto',
+  },
+  ctaText: {
+    ...typography.smallMedium,
     fontWeight: '600',
+  },
+  progressText: {
+    ...typography.caption,
+    fontWeight: '700',
+    fontSize: 11,
   },
 })

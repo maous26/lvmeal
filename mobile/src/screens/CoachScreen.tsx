@@ -757,7 +757,10 @@ interface MeditationsTabProps {
 
 function MeditationsTab({ colors }: MeditationsTabProps) {
   const navigation = useNavigation()
-  const { totalMeditationMinutes, sessionsCompleted } = useMeditationStore()
+  const { totalMeditationMinutes, sessionsCompleted, currentStreak, longestStreak } = useMeditationStore()
+
+  const TOTAL_SESSIONS = 8
+  const progressPercent = Math.round((sessionsCompleted / TOTAL_SESSIONS) * 100)
 
   const handleOpenMeditations = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -790,46 +793,73 @@ function MeditationsTab({ colors }: MeditationsTabProps) {
             <View style={styles.meditationHeaderInfo}>
               <Text style={styles.meditationTitle}>Méditations Guidées</Text>
               <Text style={styles.meditationSubtitle}>
-                Programme de 8 semaines
+                Programme de 8 semaines • {progressPercent}% complété
               </Text>
             </View>
             <ChevronRight size={24} color="rgba(255,255,255,0.7)" />
           </View>
 
-          {/* Progress dots */}
-          <View style={styles.meditationProgress}>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => {
-              const isCompleted = sessionsCompleted >= week
-              return (
-                <View
-                  key={week}
-                  style={[
-                    styles.meditationDot,
-                    isCompleted && styles.meditationDotCompleted,
-                  ]}
-                >
-                  {isCompleted && <Check size={12} color="#FFFFFF" />}
-                </View>
-              )
-            })}
+          {/* Progress bar with week labels */}
+          <View style={styles.meditationProgressContainer}>
+            <View style={styles.meditationProgressLabels}>
+              <Text style={styles.meditationProgressLabel}>Semaine 1</Text>
+              <Text style={styles.meditationProgressLabel}>Semaine 8</Text>
+            </View>
+            <View style={styles.meditationProgress}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => {
+                const isCompleted = sessionsCompleted >= week
+                const isCurrent = sessionsCompleted === week - 1
+                return (
+                  <View
+                    key={week}
+                    style={[
+                      styles.meditationDot,
+                      isCompleted && styles.meditationDotCompleted,
+                      isCurrent && styles.meditationDotCurrent,
+                    ]}
+                  >
+                    {isCompleted ? (
+                      <Check size={12} color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.meditationDotNumber}>{week}</Text>
+                    )}
+                  </View>
+                )
+              })}
+            </View>
           </View>
 
           {/* Stats */}
           <View style={styles.meditationStats}>
             <View style={styles.meditationStat}>
-              <Text style={styles.meditationStatValue}>{sessionsCompleted}/8</Text>
-              <Text style={styles.meditationStatLabel}>sessions</Text>
+              <Text style={styles.meditationStatValue}>{sessionsCompleted}</Text>
+              <Text style={styles.meditationStatLabel}>sur {TOTAL_SESSIONS} sessions</Text>
             </View>
             <View style={styles.meditationStatDivider} />
             <View style={styles.meditationStat}>
               <Text style={styles.meditationStatValue}>{Math.round(totalMeditationMinutes)}</Text>
-              <Text style={styles.meditationStatLabel}>minutes</Text>
+              <Text style={styles.meditationStatLabel}>minutes totales</Text>
             </View>
             <View style={styles.meditationStatDivider} />
             <View style={styles.meditationStat}>
-              <Text style={styles.meditationStatValue}>{sessionsCompleted > 0 ? '🧘' : '▶️'}</Text>
-              <Text style={styles.meditationStatLabel}>{sessionsCompleted > 0 ? 'en cours' : 'commencer'}</Text>
+              <View style={styles.meditationStreakRow}>
+                <Flame size={14} color="#FCD34D" />
+                <Text style={styles.meditationStatValue}>{currentStreak}</Text>
+              </View>
+              <Text style={styles.meditationStatLabel}>jours de suite</Text>
             </View>
+          </View>
+
+          {/* CTA */}
+          <View style={styles.meditationCTA}>
+            <Text style={styles.meditationCTAText}>
+              {sessionsCompleted === 0
+                ? 'Commencer le programme'
+                : sessionsCompleted >= TOTAL_SESSIONS
+                  ? 'Programme terminé ✓'
+                  : 'Continuer la session ' + (sessionsCompleted + 1)}
+            </Text>
+            <ChevronRight size={16} color="#FFFFFF" />
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -1599,33 +1629,66 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.8)',
   },
+  meditationProgressContainer: {
+    marginBottom: spacing.md,
+  },
+  meditationProgressLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  meditationProgressLabel: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '500',
+  },
   meditationProgress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    gap: spacing.xs,
   },
   meditationDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   meditationDotCompleted: {
     backgroundColor: '#10B981',
+    borderColor: '#10B981',
+  },
+  meditationDotCurrent: {
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  meditationDotNumber: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   meditationStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: spacing.md,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.15)',
+    marginBottom: spacing.md,
   },
   meditationStat: {
     alignItems: 'center',
     flex: 1,
+  },
+  meditationStreakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   meditationStatValue: {
     fontSize: 20,
@@ -1633,9 +1696,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   meditationStatLabel: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.6)',
     marginTop: 2,
+    textAlign: 'center',
+  },
+  meditationCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    gap: spacing.xs,
+  },
+  meditationCTAText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   meditationStatDivider: {
     width: 1,
