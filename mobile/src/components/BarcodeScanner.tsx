@@ -15,6 +15,8 @@ import * as Haptics from 'expo-haptics'
 
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { lookupBarcode } from '../services/food-search'
+import { analytics } from '../services/analytics-service'
+import { errorReporting } from '../services/error-reporting-service'
 import type { FoodItem } from '../types'
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
@@ -62,18 +64,27 @@ export default function BarcodeScanner({
     setLastScannedCode(barcode)
     setIsScanning(false)
     setIsLookingUp(true)
+    const startTime = Date.now()
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
+    // Track barcode scan started
+    analytics.track('barcode_scan_started')
+
     try {
       const food = await lookupBarcode(barcode)
+      const durationMs = Date.now() - startTime
 
       if (food) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        analytics.trackAIFeature('barcode_scan', true, durationMs)
         onFoodFound(food)
         onClose()
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+        analytics.trackAIFeature('barcode_scan', false, durationMs, {
+          error_type: 'product_not_found',
+        })
         Alert.alert(
           'Produit non trouve',
           `Le code-barres ${barcode} n'a pas ete trouve dans la base Open Food Facts.`,
@@ -95,8 +106,13 @@ export default function BarcodeScanner({
         )
       }
     } catch (error) {
+      const durationMs = Date.now() - startTime
       console.error('Barcode lookup error:', error)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      errorReporting.captureFeatureError('barcode_scan', error)
+      analytics.trackAIFeature('barcode_scan', false, durationMs, {
+        error_type: 'exception',
+      })
       Alert.alert(
         'Erreur',
         'Une erreur est survenue lors de la recherche du produit.',

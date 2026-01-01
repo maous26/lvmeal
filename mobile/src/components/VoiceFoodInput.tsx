@@ -19,6 +19,8 @@ import * as Haptics from 'expo-haptics'
 import { Card, Button, Badge } from './ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { analyzeFoodDescription, hasOpenAIApiKey, type AnalyzedFood } from '../services/ai-service'
+import { analytics } from '../services/analytics-service'
+import { errorReporting } from '../services/error-reporting-service'
 import type { FoodItem, NutritionInfo } from '../types'
 
 interface VoiceFoodInputProps {
@@ -83,24 +85,43 @@ export default function VoiceFoodInput({
     setIsAnalyzing(true)
     setError(null)
     setIsEditing(false)
+    const startTime = Date.now()
+
+    // Track voice input started
+    analytics.track('voice_input_started')
 
     try {
       const result = await analyzeFoodDescription(transcript)
+      const durationMs = Date.now() - startTime
 
       if (result.success && result.foods.length > 0) {
         setAnalyzedFoods(result.foods)
         setSelectedFoods(new Set(result.foods.map((_, i) => i)))
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        analytics.trackAIFeature('voice_input', true, durationMs, {
+          foods_count: result.foods.length,
+        })
       } else if (result.foods.length === 0) {
         setError('Aucun aliment identifie dans votre description')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+        analytics.trackAIFeature('voice_input', false, durationMs, {
+          error_type: 'no_foods_detected',
+        })
       } else {
         setError(result.error || 'Erreur lors de l\'analyse')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+        analytics.trackAIFeature('voice_input', false, durationMs, {
+          error_type: 'analysis_failed',
+        })
       }
     } catch (err) {
+      const durationMs = Date.now() - startTime
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      errorReporting.captureFeatureError('voice_input', err)
+      analytics.trackAIFeature('voice_input', false, durationMs, {
+        error_type: 'exception',
+      })
     } finally {
       setIsAnalyzing(false)
     }

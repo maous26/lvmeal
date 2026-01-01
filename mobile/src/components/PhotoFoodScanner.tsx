@@ -41,6 +41,8 @@ import * as Haptics from 'expo-haptics'
 import { Card, Button } from './ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { analyzeFood, hasOpenAIApiKey, type AnalyzedFood } from '../services/ai-service'
+import { analytics } from '../services/analytics-service'
+import { errorReporting } from '../services/error-reporting-service'
 import type { FoodItem, NutritionInfo } from '../types'
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
@@ -541,9 +543,14 @@ export default function PhotoFoodScanner({
 
     setIsAnalyzing(true)
     setError(null)
+    const startTime = Date.now()
+
+    // Track scan started
+    analytics.track('photo_scan_started')
 
     try {
       const result = await analyzeFood(base64)
+      const durationMs = Date.now() - startTime
 
       if (result.success && result.foods.length > 0) {
         // Animate image transition
@@ -561,16 +568,32 @@ export default function PhotoFoodScanner({
         setSelectedFoods(new Set(result.foods.map((_, i) => i)))
         setShowResults(true)
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+        // Track success
+        analytics.trackAIFeature('photo_scan', true, durationMs, {
+          foods_count: result.foods.length,
+        })
       } else if (result.foods.length === 0) {
         setError('Aucun aliment détecté dans cette image')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+        analytics.trackAIFeature('photo_scan', false, durationMs, {
+          error_type: 'no_foods_detected',
+        })
       } else {
         setError(result.error || "Erreur lors de l'analyse")
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+        analytics.trackAIFeature('photo_scan', false, durationMs, {
+          error_type: 'analysis_failed',
+        })
       }
     } catch (err) {
+      const durationMs = Date.now() - startTime
       setError(err instanceof Error ? err.message : 'Erreur inconnue')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      errorReporting.captureFeatureError('photo_scan', err)
+      analytics.trackAIFeature('photo_scan', false, durationMs, {
+        error_type: 'exception',
+      })
     } finally {
       setIsAnalyzing(false)
     }

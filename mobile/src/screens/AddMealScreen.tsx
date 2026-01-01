@@ -73,6 +73,8 @@ import PhotoFoodScanner from '../components/PhotoFoodScanner'
 import VoiceFoodInput from '../components/VoiceFoodInput'
 import RecipeDiscovery from '../components/RecipeDiscovery'
 import { MealInputMethodsGrid } from '../components/MealInputMethodsGrid'
+import { analytics } from '../services/analytics-service'
+import { errorReporting } from '../services/error-reporting-service'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -329,9 +331,17 @@ export default function AddMealScreen() {
           sources: result.sources,
           total: result.total,
         })
+
+        // Track search
+        analytics.track('food_search', {
+          query: searchQuery,
+          results_count: result.products.length,
+          source: searchSource,
+        })
       } catch (error) {
         console.error('Search error:', error)
         setSearchResults([])
+        errorReporting.captureFeatureError('food_search', error as Error)
       } finally {
         setIsSearching(false)
       }
@@ -503,6 +513,18 @@ export default function AddMealScreen() {
 
     addMeal(selectedMealType, mealItems)
     addXP(15, 'Repas enregistre')
+
+    // Track meal logged
+    const totalCalories = mealItems.reduce((sum, item) => {
+      return sum + (item.food.nutrition.calories || 0) * item.quantity
+    }, 0)
+    analytics.trackMealLogged(
+      selectedMealType,
+      activeMethod === 'search' ? 'search' : 'manual',
+      mealItems[0]?.food.source as 'off' | 'ciqual' | 'gustar' | 'ai' | undefined,
+      Math.round(totalCalories)
+    )
+
     navigation.goBack()
   }
 

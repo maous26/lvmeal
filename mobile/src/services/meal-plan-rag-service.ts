@@ -33,6 +33,8 @@ import { dspyClient } from './dspy/client'
 import { profileToDSPyContext } from './dspy/integration'
 import { getOptimizedMealPrompt, type MealGenerationContext } from './dspy/meal-prompts'
 import type { DSPyPassage } from './dspy/types'
+import { analytics } from './analytics-service'
+import { errorReporting } from './error-reporting-service'
 import type { UserProfile, MealType, NutritionInfo, Recipe } from '../types'
 import type { PlannedMealItem } from '../stores/meal-plan-store'
 
@@ -557,6 +559,8 @@ export async function generateSingleMealWithRAG(params: {
   console.log('[RAG] ===== generateSingleMealWithRAG START =====')
   console.log('[RAG] Params:', JSON.stringify({ mealType: params.mealType, calorieReduction: params.calorieReduction }))
 
+  const startTime = Date.now()
+
   const { mealType, userProfile, consumed, calorieReduction = false } = params
 
   // Ensure static recipes are loaded
@@ -636,6 +640,15 @@ export async function generateSingleMealWithRAG(params: {
 
     console.log(`[RAG] Success: ${recipe.title} from ${sourcedMeal.source} (${Math.round(sourcedMeal.confidence * 100)}%)`)
 
+    // Track AI meal generation success
+    const durationMs = Date.now() - startTime
+    analytics.trackAIFeature('ai_meal', true, durationMs, {
+      meal_type: mealType,
+      food_source: sourcedMeal.source,
+      confidence_score: Math.round(sourcedMeal.confidence * 100),
+      calories: sourcedMeal.nutrition.calories,
+    })
+
     return {
       success: true,
       recipe,
@@ -645,6 +658,12 @@ export async function generateSingleMealWithRAG(params: {
     }
   } catch (error) {
     console.error('[RAG] Error generating meal:', error)
+    const durationMs = Date.now() - startTime
+    errorReporting.captureFeatureError('ai_meal_generation', error)
+    analytics.trackAIFeature('ai_meal', false, durationMs, {
+      meal_type: mealType,
+      error_type: 'exception',
+    })
     return {
       success: false,
       recipe: null,
@@ -847,6 +866,7 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 }): Promise<GeneratedMealPlan & { days: number; dspyUsed?: boolean; promptOptimization?: { preference: string; confidence: number } }> {
   const { userProfile, dailyCalories, days, calorieReduction = false, preferences, useDSPy = true } = params
 
+  const startTime = Date.now()
   console.log(`[Agent] ===== MEAL PLAN GENERATION =====`)
   console.log(`[Agent] Days: ${days}, Calories: ${dailyCalories}, Reduction: ${calorieReduction}, DSPy: ${useDSPy}`)
   console.log(`[Agent] User goal: ${userProfile.goal}, Diet: ${userProfile.dietType || 'standard'}`)
@@ -1009,6 +1029,18 @@ export async function generateFlexibleMealPlanWithRAG(params: {
     }),
     { calories: 0, proteins: 0, carbs: 0, fats: 0 }
   )
+
+  // Track meal plan generation
+  const durationMs = Date.now() - startTime
+  analytics.trackAIFeature('meal_plan', true, durationMs, {
+    plan_duration_days: days,
+    meals_count: meals.length,
+    source_gustar: sourceBreakdown.gustar,
+    source_ciqual: sourceBreakdown.ciqual,
+    source_off: sourceBreakdown.off,
+    dspy_used: dspyUsedCount > 0,
+    calories: totalNutrition.calories,
+  })
 
   return {
     meals,

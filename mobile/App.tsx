@@ -17,6 +17,8 @@ import {
 } from './src/services/notification-service'
 import { initializeDailyInsightService } from './src/services/daily-insight-service'
 import { loadStaticRecipes } from './src/services/static-recipes'
+import { analytics } from './src/services/analytics-service'
+import { errorReporting } from './src/services/error-reporting-service'
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
@@ -34,6 +36,13 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
+        // Initialize error reporting first (to catch init errors)
+        errorReporting.initialize()
+
+        // Initialize analytics
+        await analytics.initialize()
+        analytics.track('app_opened')
+
         // OPTIMIZATION: Pre-load static recipes in parallel with other init tasks
         // This prevents latency during meal plan generation
         const preloadPromises = [
@@ -59,6 +68,7 @@ export default function App() {
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e) {
         console.warn(e)
+        errorReporting.captureException(e, { feature: 'app_init' })
       } finally {
         setAppIsReady(true)
       }
@@ -72,6 +82,12 @@ export default function App() {
     const subscription = addNotificationResponseListener((response) => {
       const data = response.notification.request.content.data
       console.log('[App] Notification tapped:', data)
+
+      // Track notification tap
+      analytics.track('notification_tapped', {
+        type: data?.type as string,
+        deepLink: data?.deepLink as string,
+      })
 
       // Handle deep links from notifications
       if (data?.deepLink) {
