@@ -1806,23 +1806,36 @@ export default function AddMealScreen() {
                     Sources intelligentes: Gustar, Open Food Facts, CIQUAL, IA
                   </Text>
                 </View>
+              </LinearGradient>
 
-                <Button variant="primary" size="lg" fullWidth onPress={handleAISuggest} disabled={isSuggesting} style={{ marginTop: spacing.lg }}>
+              {/* Generate Button - Prominent CTA outside the gradient card */}
+              <TouchableOpacity
+                style={[styles.generateButton, isSuggesting && styles.generateButtonDisabled]}
+                onPress={handleAISuggest}
+                disabled={isSuggesting}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={isSuggesting ? ['#9CA3AF', '#6B7280'] : ['#F59E0B', '#D97706']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.generateButtonGradient}
+                >
                   {isSuggesting ? (
                     <>
                       <ActivityIndicator size="small" color="#FFFFFF" />
-                      <Text style={styles.buttonText}>Generation en cours...</Text>
+                      <Text style={styles.generateButtonText}>Generation en cours...</Text>
                     </>
                   ) : (
                     <>
-                      <Sparkles size={18} color="#FFFFFF" />
-                      <Text style={styles.buttonText}>
+                      <Sparkles size={22} color="#FFFFFF" />
+                      <Text style={styles.generateButtonText}>
                         Generer {planDuration === 1 ? 'un repas' : `${planDuration} jours de repas`}
                       </Text>
                     </>
                   )}
-                </Button>
-              </LinearGradient>
+                </LinearGradient>
+              </TouchableOpacity>
 
               <View style={{ height: spacing['3xl'] }} />
             </ScrollView>
@@ -2930,6 +2943,30 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
     flex: 1,
+  },
+  generateButton: {
+    marginHorizontal: spacing.default,
+    marginTop: spacing.xl,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    ...shadows.lg,
+    elevation: 8,
+  },
+  generateButtonDisabled: {
+    opacity: 0.7,
+  },
+  generateButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.sm,
+  },
+  generateButtonText: {
+    ...typography.h3,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   // Discover styles
   discoverSearchRow: {
