@@ -42,6 +42,10 @@ import {
   Flame,
   Dumbbell,
   ExternalLink,
+  Calendar,
+  CalendarDays,
+  CalendarRange,
+  Percent,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -248,6 +252,8 @@ export default function AddMealScreen() {
   const [selectedMealType, setSelectedMealType] = useState<MealType>(type as MealType)
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [suggestedRecipe, setSuggestedRecipe] = useState<AIRecipe | null>(null)
+  const [planDuration, setPlanDuration] = useState<1 | 3 | 7>(1)
+  const [calorieReduction, setCalorieReduction] = useState(false)
 
   // Discover Modal state
   const [showDiscoverModal, setShowDiscoverModal] = useState(false)
@@ -1649,7 +1655,7 @@ export default function AddMealScreen() {
               <TouchableOpacity style={styles.recipeModalCloseButton} onPress={() => setShowAIRecipeModal(false)}>
                 <X size={24} color={colors.text.primary} />
               </TouchableOpacity>
-              <Text style={styles.recipeModalTitle}>Suggestion intelligente</Text>
+              <Text style={styles.recipeModalTitle}>Plan Repas IA</Text>
               <View style={{ width: 40 }} />
             </View>
 
@@ -1660,31 +1666,83 @@ export default function AddMealScreen() {
                 style={styles.aiCard}
               >
                 <View style={styles.aiHeader}>
-                  <Wand2 size={20} color={colors.accent.primary} />
-                  <Text style={styles.aiTitle}>Repas IA personnalise</Text>
+                  <Sparkles size={20} color={colors.warning} />
+                  <Text style={styles.aiTitle}>Plan repas personnalise</Text>
                 </View>
                 <Text style={styles.aiDescription}>
-                  LymIA vous suggere un repas adapte a votre profil nutritionnel et votre solde calorique restant.
+                  LymIA genere un plan repas adapte a ton profil nutritionnel, tes preferences et ton solde calorique.
                 </Text>
 
-                {/* Meal Type Selector */}
-                <Text style={styles.mealTypeLabel}>Pour quel repas ?</Text>
+                {/* Duration Selector */}
+                <Text style={styles.mealTypeLabel}>Duree du plan</Text>
                 <View style={styles.mealTypeRow}>
-                  {mealTypeOptions.map((option) => (
-                    <TouchableOpacity
-                      key={option.id}
-                      style={[styles.mealTypeChip, selectedMealType === option.id && styles.mealTypeChipActive]}
-                      onPress={() => setSelectedMealType(option.id)}
-                    >
-                      <Text style={styles.mealTypeEmoji}>{option.icon}</Text>
-                      <Text style={[styles.mealTypeText, selectedMealType === option.id && styles.mealTypeTextActive]}>
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {([1, 3, 7] as const).map((duration) => {
+                    const icons = { 1: Calendar, 3: CalendarDays, 7: CalendarRange }
+                    const labels = { 1: '1 jour', 3: '3 jours', 7: '7 jours' }
+                    const Icon = icons[duration]
+                    const isSelected = planDuration === duration
+                    return (
+                      <TouchableOpacity
+                        key={duration}
+                        style={[styles.durationChip, isSelected && styles.durationChipActive]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                          setPlanDuration(duration)
+                        }}
+                      >
+                        <Icon size={16} color={isSelected ? '#FFFFFF' : colors.text.secondary} />
+                        <Text style={[styles.durationText, isSelected && styles.durationTextActive]}>
+                          {labels[duration]}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  })}
                 </View>
 
-                <Button variant="primary" size="lg" fullWidth onPress={handleAISuggest} disabled={isSuggesting}>
+                {/* Calorie Reduction Toggle */}
+                <TouchableOpacity
+                  style={[styles.reductionToggle, calorieReduction && styles.reductionToggleActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    setCalorieReduction(!calorieReduction)
+                  }}
+                >
+                  <View style={styles.reductionLeft}>
+                    <Percent size={16} color={calorieReduction ? colors.success : colors.text.secondary} />
+                    <View>
+                      <Text style={[styles.reductionTitle, calorieReduction && styles.reductionTitleActive]}>
+                        Mode economie -10%
+                      </Text>
+                      <Text style={styles.reductionSubtitle}>Accumule des calories pour un repas plaisir</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.reductionCheck, calorieReduction && styles.reductionCheckActive]}>
+                    {calorieReduction && <Check size={14} color="#FFFFFF" />}
+                  </View>
+                </TouchableOpacity>
+
+                {/* Meal Type Selector (only for 1 day) */}
+                {planDuration === 1 && (
+                  <>
+                    <Text style={[styles.mealTypeLabel, { marginTop: spacing.lg }]}>Pour quel repas ?</Text>
+                    <View style={styles.mealTypeRow}>
+                      {mealTypeOptions.map((option) => (
+                        <TouchableOpacity
+                          key={option.id}
+                          style={[styles.mealTypeChip, selectedMealType === option.id && styles.mealTypeChipActive]}
+                          onPress={() => setSelectedMealType(option.id)}
+                        >
+                          <Text style={styles.mealTypeEmoji}>{option.icon}</Text>
+                          <Text style={[styles.mealTypeText, selectedMealType === option.id && styles.mealTypeTextActive]}>
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                <Button variant="primary" size="lg" fullWidth onPress={handleAISuggest} disabled={isSuggesting} style={{ marginTop: spacing.xl }}>
                   {isSuggesting ? (
                     <>
                       <ActivityIndicator size="small" color="#FFFFFF" />
@@ -1693,7 +1751,9 @@ export default function AddMealScreen() {
                   ) : (
                     <>
                       <Sparkles size={18} color="#FFFFFF" />
-                      <Text style={styles.buttonText}>Generer une recette</Text>
+                      <Text style={styles.buttonText}>
+                        Generer {planDuration === 1 ? 'un repas' : `${planDuration} jours de repas`}
+                      </Text>
                     </>
                   )}
                 </Button>
@@ -2716,6 +2776,75 @@ const styles = StyleSheet.create({
   },
   mealTypeTextActive: {
     color: '#FFFFFF',
+  },
+  // Duration chip styles
+  durationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.full,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  durationChipActive: {
+    backgroundColor: colors.accent.primary,
+  },
+  durationText: {
+    ...typography.caption,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  durationTextActive: {
+    color: '#FFFFFF',
+  },
+  // Reduction toggle styles
+  reductionToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  reductionToggleActive: {
+    backgroundColor: `${colors.success}15`,
+    borderColor: colors.success,
+  },
+  reductionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  reductionTitle: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  reductionTitleActive: {
+    color: colors.success,
+  },
+  reductionSubtitle: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
+  reductionCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.bg.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reductionCheckActive: {
+    backgroundColor: colors.success,
   },
   buttonText: {
     ...typography.bodyMedium,
