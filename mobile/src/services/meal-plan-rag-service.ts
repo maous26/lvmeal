@@ -29,6 +29,9 @@ import {
   type StaticEnrichedRecipe,
 } from './static-recipes'
 import { generatePlanMeal, type AIRecipe } from './ai-service'
+import { dspyClient } from './dspy/client'
+import { profileToDSPyContext } from './dspy/integration'
+import type { DSPyPassage } from './dspy/types'
 import type { UserProfile, MealType, NutritionInfo, Recipe } from '../types'
 import type { PlannedMealItem } from '../stores/meal-plan-store'
 
@@ -636,8 +639,184 @@ export async function generateSingleMealWithRAG(params: {
   }
 }
 
+// ============= DSPY INTEGRATION =============
+
+/**
+ * Build meal context passages for DSPy
+ * Converts available meals to DSPy passages for intelligent selection
+ */
+function buildMealPassages(
+  gustarRecipes: StaticEnrichedRecipe[],
+  ciqualFoods: CIQUALFood[],
+  mealType: MealType,
+  targetCalories: number
+): DSPyPassage[] {
+  const passages: DSPyPassage[] = []
+
+  // Add Gustar recipes as passages
+  const recipesForType = getStaticRecipesByMealType(mealType)
+  recipesForType.slice(0, 10).forEach((recipe, idx) => {
+    passages.push({
+      id: `gustar-${recipe.id}`,
+      content: `Recette: ${recipe.titleFr}. ${recipe.descriptionFr}. Calories: ${recipe.nutrition.calories}kcal, Protéines: ${recipe.nutrition.proteins}g, Glucides: ${recipe.nutrition.carbs}g, Lipides: ${recipe.nutrition.fats}g. Temps: ${recipe.prepTime}min. Ingrédients: ${recipe.ingredientsFr.map(i => i.name).join(', ')}.`,
+      source: 'gustar',
+      similarity: 1 - Math.abs(recipe.nutrition.calories - targetCalories) / targetCalories,
+    })
+  })
+
+  // Add CIQUAL foods as passages
+  const ciqualForType = searchCIQUALByMealType(ciqualFoods, mealType, targetCalories)
+  ciqualForType.slice(0, 10).forEach((food, idx) => {
+    passages.push({
+      id: `ciqual-${food.id}`,
+      content: `Aliment CIQUAL: ${food.name}. Catégorie: ${food.groupName}. Calories: ${food.nutrition.calories}kcal/100g, Protéines: ${food.nutrition.proteins}g, Glucides: ${food.nutrition.carbs}g, Lipides: ${food.nutrition.fats}g. Source officielle ANSES.`,
+      source: 'ciqual',
+      similarity: 1 - Math.abs(food.nutrition.calories - targetCalories) / targetCalories,
+    })
+  })
+
+  return passages
+}
+
+/**
+ * Use DSPy to intelligently select the best meal
+ * Returns the selected meal ID and reasoning
+ */
+async function selectMealWithDSPy(
+  passages: DSPyPassage[],
+  userProfile: UserProfile,
+  mealType: MealType,
+  targetCalories: number,
+  existingMeals: string[]
+): Promise<{ selectedId: string | null; reasoning: string; confidence: number }> {
+  try {
+    // Check if DSPy is available
+    const isEnabled = await dspyClient.isEnabled()
+    if (!isEnabled) {
+      console.log('[DSPy] Not available, using fallback selection')
+      return { selectedId: null, reasoning: 'DSPy non disponible', confidence: 0 }
+    }
+
+    // Build the question for DSPy
+    const question = `Quel est le meilleur ${getMealTypeFrench(mealType)} pour un utilisateur avec objectif "${userProfile.goal}", régime "${userProfile.dietType || 'omnivore'}", cible ${targetCalories} calories? Éviter: ${existingMeals.slice(-5).join(', ') || 'aucun'}.`
+
+    // Build user context for DSPy
+    const dspyContext = profileToDSPyContext(userProfile, {
+      targetCalories,
+      caloriesToday: 0,
+      recentPatterns: existingMeals.slice(-5),
+    })
+
+    // Run DSPy pipeline
+    const result = await dspyClient.runPipeline(question, passages, dspyContext, true)
+
+    if (result && result.selected_passage_ids.length > 0) {
+      console.log(`[DSPy] Selected: ${result.selected_passage_ids[0]} (confidence: ${result.confidence})`)
+      return {
+        selectedId: result.selected_passage_ids[0],
+        reasoning: result.selection_rationale,
+        confidence: result.confidence,
+      }
+    }
+
+    return { selectedId: null, reasoning: 'Aucune sélection DSPy', confidence: 0 }
+  } catch (error) {
+    console.error('[DSPy] Selection error:', error)
+    return { selectedId: null, reasoning: 'Erreur DSPy', confidence: 0 }
+  }
+}
+
+/**
+ * Get French label for meal type
+ */
+function getMealTypeFrench(mealType: MealType): string {
+  const labels: Record<MealType, string> = {
+    breakfast: 'petit-déjeuner',
+    lunch: 'déjeuner',
+    snack: 'collation',
+    dinner: 'dîner',
+  }
+  return labels[mealType]
+}
+
+/**
+ * Convert DSPy selection to PlannedMealItem
+ */
+function dspySelectionToMeal(
+  selectedId: string,
+  gustarRecipes: StaticEnrichedRecipe[],
+  ciqualFoods: CIQUALFood[],
+  mealType: MealType,
+  targetCalories: number,
+  userProfile: UserProfile
+): PlannedMealItem | null {
+  // Parse the selected ID
+  const [source, ...idParts] = selectedId.split('-')
+  const id = idParts.join('-')
+
+  if (source === 'gustar') {
+    const recipe = gustarRecipes.find(r => r.id === id)
+    if (recipe) {
+      const converted = staticToRecipe(recipe)
+      return {
+        id: generateMealId(),
+        dayIndex: 0,
+        mealType,
+        name: converted.title,
+        description: converted.description,
+        nutrition: recipe.nutrition,
+        ingredients: converted.ingredients.map(ing => ({
+          name: ing.name,
+          amount: `${ing.amount} ${ing.unit}`,
+          calories: 0,
+        })),
+        instructions: converted.instructions,
+        prepTime: converted.prepTime || 30,
+        servings: converted.servings || 1,
+        imageUrl: converted.imageUrl,
+        isCheatMeal: false,
+        isValidated: false,
+        source: 'gustar',
+        sourceRecipeId: recipe.id,
+      }
+    }
+  }
+
+  if (source === 'ciqual') {
+    const food = ciqualFoods.find(f => f.id === id)
+    if (food) {
+      const portionMultiplier = targetCalories / food.nutrition.calories
+      const portionGrams = Math.round(food.serving * portionMultiplier)
+
+      return {
+        id: generateMealId(),
+        dayIndex: 0,
+        mealType,
+        name: food.name,
+        description: `${portionGrams}g - Source CIQUAL (ANSES)`,
+        nutrition: {
+          calories: Math.round(food.nutrition.calories * portionMultiplier),
+          proteins: Math.round(food.nutrition.proteins * portionMultiplier),
+          carbs: Math.round(food.nutrition.carbs * portionMultiplier),
+          fats: Math.round(food.nutrition.fats * portionMultiplier),
+        },
+        ingredients: [{ name: food.name, amount: `${portionGrams}g`, calories: Math.round(food.nutrition.calories * portionMultiplier) }],
+        instructions: ['Préparer selon vos préférences'],
+        prepTime: 10,
+        servings: 1,
+        isCheatMeal: false,
+        isValidated: false,
+        source: 'manual',
+      }
+    }
+  }
+
+  return null
+}
+
 /**
  * Intelligent meal plan agent that combines multiple sources
+ * Uses DSPy for intelligent selection when available
  * Based on user profile, preferences, and nutritional needs
  */
 export async function generateFlexibleMealPlanWithRAG(params: {
@@ -646,28 +825,32 @@ export async function generateFlexibleMealPlanWithRAG(params: {
   days: 1 | 3 | 7
   calorieReduction?: boolean
   preferences?: MealPlanConfig['preferences']
-}): Promise<GeneratedMealPlan & { days: number }> {
-  const { userProfile, dailyCalories, days, calorieReduction = false, preferences } = params
+  useDSPy?: boolean // Enable DSPy for intelligent selection
+}): Promise<GeneratedMealPlan & { days: number; dspyUsed?: boolean }> {
+  const { userProfile, dailyCalories, days, calorieReduction = false, preferences, useDSPy = true } = params
 
   console.log(`[Agent] ===== MEAL PLAN GENERATION =====`)
-  console.log(`[Agent] Days: ${days}, Calories: ${dailyCalories}, Reduction: ${calorieReduction}`)
+  console.log(`[Agent] Days: ${days}, Calories: ${dailyCalories}, Reduction: ${calorieReduction}, DSPy: ${useDSPy}`)
   console.log(`[Agent] User goal: ${userProfile.goal}, Diet: ${userProfile.dietType || 'standard'}`)
 
   const adjustedCalories = calorieReduction ? Math.round(dailyCalories * 0.9) : dailyCalories
 
-  // Load all data sources in parallel
-  const [gustarRecipes, ciqualFoods] = await Promise.all([
+  // Load all data sources in parallel + check DSPy availability
+  const [gustarRecipes, ciqualFoods, dspyEnabled] = await Promise.all([
     loadStaticRecipes(),
     loadCIQUALData(),
+    useDSPy ? dspyClient.isEnabled() : Promise.resolve(false),
   ])
 
-  console.log(`[Agent] Sources loaded - Gustar: ${gustarRecipes.length}, CIQUAL: ${ciqualFoods.length}`)
+  console.log(`[Agent] Sources loaded - Gustar: ${gustarRecipes.length}, CIQUAL: ${ciqualFoods.length}, DSPy: ${dspyEnabled}`)
 
   const mealTargets = calculateMealTargets(adjustedCalories)
   const meals: PlannedMealItem[] = []
   const usedIds = new Set<string>()
+  const existingMealNames: string[] = []
 
   const sourceBreakdown = { gustar: 0, off: 0, ciqual: 0, ai: 0 }
+  let dspyUsedCount = 0
 
   // Determine source distribution based on user profile
   const sourceStrategy = determineSourceStrategy(userProfile)
@@ -678,51 +861,93 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 
     for (const mealType of MEAL_TYPES_ORDER) {
       const targetCalories = mealTargets[mealType]
-
-      // Agent decides which source to use based on strategy and context
-      const sourceDecision = agentDecideSource(
-        mealType,
-        sourceStrategy,
-        dayIndex,
-        meals.filter(m => m.dayIndex === dayIndex)
-      )
-
       let plannedMeal: PlannedMealItem | null = null
 
-      // Try primary source
-      switch (sourceDecision.primary) {
-        case 'gustar':
-          plannedMeal = selectFromGustar(gustarRecipes, mealType, targetCalories, userProfile, usedIds)
-          if (plannedMeal) sourceBreakdown.gustar++
-          break
+      // Try DSPy intelligent selection first if available
+      if (dspyEnabled) {
+        console.log(`  [DSPy] Attempting intelligent selection for ${mealType}...`)
 
-        case 'ciqual':
-          plannedMeal = selectFromCIQUAL(ciqualFoods, mealType, targetCalories, userProfile, usedIds)
-          if (plannedMeal) sourceBreakdown.ciqual++
-          break
+        // Build passages from available meals
+        const passages = buildMealPassages(gustarRecipes, ciqualFoods, mealType, targetCalories)
 
-        case 'off':
-          plannedMeal = await selectFromOFF(mealType, targetCalories, userProfile, usedIds)
-          if (plannedMeal) sourceBreakdown.off++
-          break
+        // Use DSPy to select the best meal
+        const dspyResult = await selectMealWithDSPy(
+          passages,
+          userProfile,
+          mealType,
+          targetCalories,
+          existingMealNames
+        )
+
+        if (dspyResult.selectedId && dspyResult.confidence > 0.5) {
+          // Convert DSPy selection to PlannedMealItem
+          plannedMeal = dspySelectionToMeal(
+            dspyResult.selectedId,
+            gustarRecipes,
+            ciqualFoods,
+            mealType,
+            targetCalories,
+            userProfile
+          )
+
+          if (plannedMeal) {
+            dspyUsedCount++
+            // Track source
+            if (dspyResult.selectedId.startsWith('gustar')) {
+              sourceBreakdown.gustar++
+            } else if (dspyResult.selectedId.startsWith('ciqual')) {
+              sourceBreakdown.ciqual++
+            }
+            console.log(`  [DSPy] Selected: ${plannedMeal.name} (confidence: ${dspyResult.confidence})`)
+          }
+        }
       }
 
-      // Fallback to other sources if primary failed
-      if (!plannedMeal && sourceDecision.fallback) {
-        for (const fallback of sourceDecision.fallback) {
-          if (fallback === 'gustar' && !plannedMeal) {
+      // Fallback to strategy-based selection if DSPy didn't work
+      if (!plannedMeal) {
+        // Agent decides which source to use based on strategy and context
+        const sourceDecision = agentDecideSource(
+          mealType,
+          sourceStrategy,
+          dayIndex,
+          meals.filter(m => m.dayIndex === dayIndex)
+        )
+
+        // Try primary source
+        switch (sourceDecision.primary) {
+          case 'gustar':
             plannedMeal = selectFromGustar(gustarRecipes, mealType, targetCalories, userProfile, usedIds)
             if (plannedMeal) sourceBreakdown.gustar++
-          }
-          if (fallback === 'ciqual' && !plannedMeal) {
+            break
+
+          case 'ciqual':
             plannedMeal = selectFromCIQUAL(ciqualFoods, mealType, targetCalories, userProfile, usedIds)
             if (plannedMeal) sourceBreakdown.ciqual++
-          }
-          if (fallback === 'off' && !plannedMeal) {
+            break
+
+          case 'off':
             plannedMeal = await selectFromOFF(mealType, targetCalories, userProfile, usedIds)
             if (plannedMeal) sourceBreakdown.off++
+            break
+        }
+
+        // Fallback to other sources if primary failed
+        if (!plannedMeal && sourceDecision.fallback) {
+          for (const fallback of sourceDecision.fallback) {
+            if (fallback === 'gustar' && !plannedMeal) {
+              plannedMeal = selectFromGustar(gustarRecipes, mealType, targetCalories, userProfile, usedIds)
+              if (plannedMeal) sourceBreakdown.gustar++
+            }
+            if (fallback === 'ciqual' && !plannedMeal) {
+              plannedMeal = selectFromCIQUAL(ciqualFoods, mealType, targetCalories, userProfile, usedIds)
+              if (plannedMeal) sourceBreakdown.ciqual++
+            }
+            if (fallback === 'off' && !plannedMeal) {
+              plannedMeal = await selectFromOFF(mealType, targetCalories, userProfile, usedIds)
+              if (plannedMeal) sourceBreakdown.off++
+            }
+            if (plannedMeal) break
           }
-          if (plannedMeal) break
         }
       }
 
@@ -730,10 +955,14 @@ export async function generateFlexibleMealPlanWithRAG(params: {
         plannedMeal.dayIndex = dayIndex
         plannedMeal.mealType = mealType
         meals.push(plannedMeal)
+        existingMealNames.push(plannedMeal.name)
+        usedIds.add(plannedMeal.sourceRecipeId || plannedMeal.id)
         console.log(`  [${plannedMeal.source}] ${mealType}: ${plannedMeal.name} (${plannedMeal.nutrition.calories} kcal)`)
       }
     }
   }
+
+  console.log(`[Agent] DSPy used for ${dspyUsedCount}/${days * 4} meals`)
 
   console.log(`[Agent] ===== GENERATION COMPLETE =====`)
   console.log(`[Agent] Total meals: ${meals.length}`)
@@ -755,6 +984,7 @@ export async function generateFlexibleMealPlanWithRAG(params: {
     totalNutrition,
     generatedAt: new Date().toISOString(),
     days,
+    dspyUsed: dspyUsedCount > 0,
   }
 }
 
