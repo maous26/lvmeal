@@ -42,6 +42,14 @@
           "icon": "./assets/notification-icon.png",
           "color": "#0077B6"
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "lym"
+        }
       ]
     ],
     "extra": {

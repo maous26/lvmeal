@@ -1,5 +1,6 @@
 import "./global.css"
 
+import * as Sentry from '@sentry/react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -20,10 +21,18 @@ import { loadStaticRecipes } from './src/services/static-recipes'
 import { analytics } from './src/services/analytics-service'
 import { errorReporting } from './src/services/error-reporting-service'
 
+// Initialize Sentry
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  debug: __DEV__,
+  environment: __DEV__ ? 'development' : 'production',
+  enabled: !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true',
+})
+
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync()
 
-export default function App() {
+export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
 
   const [fontsLoaded] = useFonts({
@@ -122,4 +131,4 @@ export default function App() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )
-}
+});
