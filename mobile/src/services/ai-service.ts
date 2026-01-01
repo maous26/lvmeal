@@ -223,7 +223,7 @@ export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResu
               type: 'image_url',
               image_url: {
                 url: imageUrl,
-                detail: 'low',
+                detail: 'auto', // Upgraded from 'low' for better recognition accuracy
               },
             },
             {

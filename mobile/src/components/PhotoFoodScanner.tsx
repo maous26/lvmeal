@@ -32,6 +32,9 @@ import {
   Droplet,
   Minus,
   Plus,
+  ChevronDown,
+  ChevronUp,
+  Settings2,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -463,6 +466,7 @@ export default function PhotoFoodScanner({
   const [globalFatLevel, setGlobalFatLevel] = useState(1) // 0=Light, 1=Normal, 2=Riche
   const [error, setError] = useState<string | null>(null)
   const [showResults, setShowResults] = useState(false)
+  const [showDetails, setShowDetails] = useState(false) // Toggle for detailed view vs quick view
 
   const cameraRef = useRef<CameraView>(null)
   const imageScaleAnim = useRef(new Animated.Value(1)).current
@@ -477,6 +481,7 @@ export default function PhotoFoodScanner({
     setError(null)
     setIsAnalyzing(false)
     setShowResults(false)
+    setShowDetails(false)
     imageScaleAnim.setValue(1)
     imageOpacityAnim.setValue(1)
   }
@@ -759,7 +764,7 @@ export default function PhotoFoodScanner({
               </TouchableOpacity>
             </View>
 
-            {/* Results */}
+            {/* Results - Simplified Quick-Add View */}
             {showResults && !isAnalyzing && (
               <View style={styles.resultsContainer}>
                 <ScrollView
@@ -767,50 +772,100 @@ export default function PhotoFoodScanner({
                   contentContainerStyle={styles.resultsContent}
                   showsVerticalScrollIndicator={false}
                 >
-                  {/* Header with meal title */}
-                  <View style={styles.resultsHeader}>
-                    <View style={styles.resultsHeaderIcon}>
-                      <Sparkles size={20} color="#10B981" />
+                  {/* Quick Summary Card */}
+                  <View style={styles.quickSummaryCard}>
+                    <View style={styles.quickSummaryHeader}>
+                      <View style={styles.resultsHeaderIcon}>
+                        <Sparkles size={20} color="#10B981" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.resultsTitle}>
+                          {mealTitle || 'Repas analysé'}
+                        </Text>
+                        <Text style={styles.resultsSubtitle}>
+                          {analyzedFoods.length} ingrédient{analyzedFoods.length > 1 ? 's' : ''} détecté{analyzedFoods.length > 1 ? 's' : ''}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.resultsTitle}>
-                        {mealTitle || 'Repas analysé'}
-                      </Text>
-                      <Text style={styles.resultsSubtitle}>
-                        {analyzedFoods.length} ingrédient{analyzedFoods.length > 1 ? 's' : ''} • Ajustez si besoin
-                      </Text>
+
+                    {/* Quick Nutrition Display */}
+                    <View style={styles.quickNutritionGrid}>
+                      <View style={styles.quickNutritionMain}>
+                        <Flame size={24} color={PASTEL.calories} />
+                        <Text style={styles.quickCaloriesValue}>{Math.round(totalNutrition.calories)}</Text>
+                        <Text style={styles.quickCaloriesUnit}>kcal</Text>
+                      </View>
+                      <View style={styles.quickMacroRow}>
+                        <View style={styles.quickMacroItem}>
+                          <Text style={[styles.quickMacroValue, { color: '#5A9BD5' }]}>{Math.round(totalNutrition.proteins)}g</Text>
+                          <Text style={styles.quickMacroLabel}>Prot.</Text>
+                        </View>
+                        <View style={styles.quickMacroItem}>
+                          <Text style={[styles.quickMacroValue, { color: '#E8B730' }]}>{Math.round(totalNutrition.carbs)}g</Text>
+                          <Text style={styles.quickMacroLabel}>Gluc.</Text>
+                        </View>
+                        <View style={styles.quickMacroItem}>
+                          <Text style={[styles.quickMacroValue, { color: '#BA68C8' }]}>{Math.round(totalNutrition.fats)}g</Text>
+                          <Text style={styles.quickMacroLabel}>Lip.</Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
 
-                  {/* Food items */}
-                  {analyzedFoods.map((food, index) => (
-                    <FoodResultItem
-                      key={index}
-                      food={food}
-                      isSelected={selectedFoods.has(index)}
-                      onToggle={() => toggleFoodSelection(index)}
-                      delay={index * 100}
-                    />
-                  ))}
+                  {/* Toggle Details Button */}
+                  <TouchableOpacity
+                    style={styles.toggleDetailsButton}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                      setShowDetails(!showDetails)
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Settings2 size={16} color={PASTEL.textSecondary} />
+                    <Text style={styles.toggleDetailsText}>
+                      {showDetails ? 'Masquer les détails' : 'Ajuster les détails'}
+                    </Text>
+                    {showDetails ? (
+                      <ChevronUp size={16} color={PASTEL.textSecondary} />
+                    ) : (
+                      <ChevronDown size={16} color={PASTEL.textSecondary} />
+                    )}
+                  </TouchableOpacity>
 
-                  {/* Global fat adjuster */}
-                  <GlobalFatAdjuster
-                    fatLevel={globalFatLevel}
-                    onFatLevelChange={setGlobalFatLevel}
-                  />
+                  {/* Detailed View (collapsed by default) */}
+                  {showDetails && (
+                    <>
+                      {/* Food items */}
+                      {analyzedFoods.map((food, index) => (
+                        <FoodResultItem
+                          key={index}
+                          food={food}
+                          isSelected={selectedFoods.has(index)}
+                          onToggle={() => toggleFoodSelection(index)}
+                          delay={index * 100}
+                        />
+                      ))}
 
-                  {/* Nutrition summary */}
-                  {selectedFoods.size > 0 && (
-                    <NutritionSummary
-                      nutrition={totalNutrition}
-                      foodCount={selectedFoods.size}
-                    />
+                      {/* Global fat adjuster */}
+                      <GlobalFatAdjuster
+                        fatLevel={globalFatLevel}
+                        onFatLevelChange={setGlobalFatLevel}
+                      />
+
+                      {/* Nutrition summary */}
+                      {selectedFoods.size > 0 && (
+                        <NutritionSummary
+                          nutrition={totalNutrition}
+                          foodCount={selectedFoods.size}
+                        />
+                      )}
+                    </>
                   )}
 
-                  <View style={{ height: 100 }} />
+                  <View style={{ height: 120 }} />
                 </ScrollView>
 
-                {/* Confirm button */}
+                {/* Quick-Add Button Bar */}
                 {selectedFoods.size > 0 && (
                   <View style={styles.confirmBar}>
                     <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
@@ -822,7 +877,7 @@ export default function PhotoFoodScanner({
                       >
                         <Check size={22} color="#FFFFFF" strokeWidth={3} />
                         <Text style={styles.confirmText}>
-                          Ajouter ce repas
+                          Ajouter rapidement
                         </Text>
                       </LinearGradient>
                     </TouchableOpacity>
@@ -1493,5 +1548,87 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#EF4444',
+  },
+
+  // Quick Summary Card styles
+  quickSummaryCard: {
+    backgroundColor: PASTEL.card,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: PASTEL.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  quickSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  quickNutritionGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  quickNutritionMain: {
+    alignItems: 'center',
+    backgroundColor: PASTEL.calories + '20',
+    borderRadius: 16,
+    padding: 16,
+    minWidth: 100,
+  },
+  quickCaloriesValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: PASTEL.calories,
+    marginTop: 4,
+  },
+  quickCaloriesUnit: {
+    fontSize: 13,
+    color: PASTEL.textSecondary,
+    marginTop: -2,
+  },
+  quickMacroRow: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  quickMacroItem: {
+    alignItems: 'center',
+  },
+  quickMacroValue: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  quickMacroLabel: {
+    fontSize: 12,
+    color: PASTEL.textSecondary,
+    marginTop: 2,
+  },
+
+  // Toggle Details Button
+  toggleDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: PASTEL.bg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: PASTEL.border,
+    borderStyle: 'dashed',
+  },
+  toggleDetailsText: {
+    fontSize: 14,
+    color: PASTEL.textSecondary,
+    fontWeight: '500',
   },
 })

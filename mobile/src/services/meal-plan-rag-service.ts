@@ -31,6 +31,7 @@ import {
 import { generatePlanMeal, type AIRecipe } from './ai-service'
 import { dspyClient } from './dspy/client'
 import { profileToDSPyContext } from './dspy/integration'
+import { getOptimizedMealPrompt, type MealGenerationContext } from './dspy/meal-prompts'
 import type { DSPyPassage } from './dspy/types'
 import type { UserProfile, MealType, NutritionInfo, Recipe } from '../types'
 import type { PlannedMealItem } from '../stores/meal-plan-store'
@@ -545,6 +546,7 @@ export const SOURCE_LABELS: Record<MealSource, string> = {
 /**
  * Generate a single meal using RAG for the "Repas IA" feature
  * This replaces the direct OpenAI call with intelligent source selection
+ * Now uses DSPy-optimized prompts based on user's source preference
  */
 export async function generateSingleMealWithRAG(params: {
   mealType: MealType
@@ -570,6 +572,21 @@ export async function generateSingleMealWithRAG(params: {
   const targetCalories = mealTargets[mealType]
 
   console.log('[RAG] Daily target:', dailyTarget, '| Adjusted:', adjustedTarget, '| Meal target:', targetCalories)
+
+  // Get DSPy-optimized prompts based on user's source preference
+  const sourcePreference = userProfile.mealSourcePreference || 'balanced'
+  const promptContext: MealGenerationContext = {
+    mealType,
+    targetCalories,
+    userGoal: userProfile.goal || 'maintain',
+    dietType: userProfile.dietType,
+    allergies: userProfile.allergies,
+    existingMeals: [],
+    sourcePreference,
+  }
+
+  const optimizedPrompts = await getOptimizedMealPrompt(promptContext)
+  console.log(`[RAG] DSPy prompts optimized for "${sourcePreference}" (confidence: ${optimizedPrompts.confidence})`)
 
   // Build RAG context with explicit target calories override
   // This ensures we use meal-type based ratio, not remaining-based calculation
@@ -817,6 +834,7 @@ function dspySelectionToMeal(
 /**
  * Intelligent meal plan agent that combines multiple sources
  * Uses DSPy for intelligent selection when available
+ * Now uses DSPy-optimized prompts based on user's source preference
  * Based on user profile, preferences, and nutritional needs
  */
 export async function generateFlexibleMealPlanWithRAG(params: {
@@ -826,7 +844,7 @@ export async function generateFlexibleMealPlanWithRAG(params: {
   calorieReduction?: boolean
   preferences?: MealPlanConfig['preferences']
   useDSPy?: boolean // Enable DSPy for intelligent selection
-}): Promise<GeneratedMealPlan & { days: number; dspyUsed?: boolean }> {
+}): Promise<GeneratedMealPlan & { days: number; dspyUsed?: boolean; promptOptimization?: { preference: string; confidence: number } }> {
   const { userProfile, dailyCalories, days, calorieReduction = false, preferences, useDSPy = true } = params
 
   console.log(`[Agent] ===== MEAL PLAN GENERATION =====`)
@@ -834,6 +852,20 @@ export async function generateFlexibleMealPlanWithRAG(params: {
   console.log(`[Agent] User goal: ${userProfile.goal}, Diet: ${userProfile.dietType || 'standard'}`)
 
   const adjustedCalories = calorieReduction ? Math.round(dailyCalories * 0.9) : dailyCalories
+  const sourcePreference = userProfile.mealSourcePreference || 'balanced'
+
+  // Get DSPy-optimized prompts for the generation (using lunch as reference for overall strategy)
+  const promptContext: MealGenerationContext = {
+    mealType: 'lunch',
+    targetCalories: Math.round(adjustedCalories * 0.35), // Lunch ratio
+    userGoal: userProfile.goal || 'maintain',
+    dietType: userProfile.dietType,
+    allergies: userProfile.allergies,
+    existingMeals: [],
+    sourcePreference,
+  }
+  const optimizedPrompts = await getOptimizedMealPrompt(promptContext)
+  console.log(`[Agent] DSPy prompts optimized for "${sourcePreference}" (confidence: ${optimizedPrompts.confidence})`)
 
   // Load all data sources in parallel + check DSPy availability
   const [gustarRecipes, ciqualFoods, dspyEnabled] = await Promise.all([
@@ -852,9 +884,9 @@ export async function generateFlexibleMealPlanWithRAG(params: {
   const sourceBreakdown = { gustar: 0, off: 0, ciqual: 0, ai: 0 }
   let dspyUsedCount = 0
 
-  // Determine source distribution based on user profile
+  // Determine source distribution based on user profile (uses mealSourcePreference)
   const sourceStrategy = determineSourceStrategy(userProfile)
-  console.log(`[Agent] Strategy: ${JSON.stringify(sourceStrategy)}`)
+  console.log(`[Agent] Strategy for "${sourcePreference}": ${JSON.stringify(sourceStrategy)}`)
 
   for (let dayIndex = 0; dayIndex < days; dayIndex++) {
     console.log(`[Agent] Generating day ${dayIndex + 1}/${days}`)
@@ -985,6 +1017,10 @@ export async function generateFlexibleMealPlanWithRAG(params: {
     generatedAt: new Date().toISOString(),
     days,
     dspyUsed: dspyUsedCount > 0,
+    promptOptimization: {
+      preference: sourcePreference,
+      confidence: optimizedPrompts.confidence,
+    },
   }
 }
 

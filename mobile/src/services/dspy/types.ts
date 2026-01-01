@@ -7,7 +7,7 @@
 // ============= USER CONTEXT =============
 
 export interface DSPyUserContext {
-  goal: 'weight_loss' | 'maintain' | 'muscle_gain'
+  goal: 'weight_loss' | 'maintain' | 'maintenance' | 'muscle_gain' | 'health' | 'energy'
   age?: number
   weight?: number
   activity_level?: string

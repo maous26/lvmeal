@@ -33,6 +33,10 @@ import {
   PartyPopper,
   Pin,
   RotateCcw,
+  Database,
+  ChefHat,
+  ShoppingCart,
+  Leaf,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -55,6 +59,31 @@ import {
   ALL_INPUT_METHODS,
   DEFAULT_PINNED_METHODS,
 } from '../stores/meal-input-preferences-store'
+import type { MealSourcePreference } from '../types'
+
+// Labels for meal source preferences
+const mealSourceLabels: Record<MealSourcePreference, { label: string; description: string; icon: 'Leaf' | 'ChefHat' | 'ShoppingCart' | 'Database' }> = {
+  fresh: {
+    label: 'Produits frais',
+    description: 'Priorité aux fruits, légumes, viandes (CIQUAL)',
+    icon: 'Leaf',
+  },
+  recipes: {
+    label: 'Recettes maison',
+    description: 'Priorité aux plats élaborés (Gustar)',
+    icon: 'ChefHat',
+  },
+  quick: {
+    label: 'Rapide & pratique',
+    description: 'Priorité aux produits du commerce (OFF)',
+    icon: 'ShoppingCart',
+  },
+  balanced: {
+    label: 'Équilibré',
+    description: 'Mix intelligent de toutes les sources',
+    icon: 'Database',
+  },
+}
 
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
@@ -94,7 +123,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>()
   const { colors, isDark, toggleTheme } = useTheme()
-  const { profile, nutritionGoals, resetStore, setProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
+  const { profile, nutritionGoals, resetStore, setProfile, updateProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
   const {
     isEnrolled: isMetabolicEnrolled,
     enroll: enrollMetabolic,
@@ -610,6 +639,56 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
+        {/* Meal Source Preference for AI Generation */}
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Génération IA</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
+          <View style={[styles.settingItem, { paddingBottom: 8 }]}>
+            <Sparkles size={20} color={colors.accent.primary} />
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Source des repas</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                D'où viennent les suggestions du Repas IA
+              </Text>
+            </View>
+          </View>
+          <View style={styles.sourcePreferenceGrid}>
+            {(Object.keys(mealSourceLabels) as MealSourcePreference[]).map((key) => {
+              const pref = mealSourceLabels[key]
+              const isSelected = (profile?.mealSourcePreference || 'balanced') === key
+              const IconComponent = key === 'fresh' ? Leaf : key === 'recipes' ? ChefHat : key === 'quick' ? ShoppingCart : Database
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={[
+                    styles.sourcePreferenceItem,
+                    { borderColor: isSelected ? colors.accent.primary : colors.border.light },
+                    isSelected && { backgroundColor: colors.accent.light },
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    updateProfile({ mealSourcePreference: key })
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <IconComponent
+                    size={20}
+                    color={isSelected ? colors.accent.primary : colors.text.secondary}
+                  />
+                  <Text style={[
+                    styles.sourcePreferenceLabel,
+                    { color: isSelected ? colors.accent.primary : colors.text.primary }
+                  ]}>
+                    {pref.label}
+                  </Text>
+                  <Text style={[styles.sourcePreferenceDesc, { color: colors.text.tertiary }]} numberOfLines={2}>
+                    {pref.description}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </Card>
+
         {/* Settings */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
@@ -850,6 +929,32 @@ const styles = StyleSheet.create({
   pinnedCount: {
     ...typography.small,
     fontWeight: '500',
+  },
+  // Source Preference Grid
+  sourcePreferenceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: spacing.sm,
+    paddingTop: 0,
+    gap: spacing.sm,
+  },
+  sourcePreferenceItem: {
+    width: '48%',
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  sourcePreferenceLabel: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sourcePreferenceDesc: {
+    ...typography.caption,
+    textAlign: 'center',
+    lineHeight: 16,
   },
   dangerZone: {
     alignItems: 'center',
