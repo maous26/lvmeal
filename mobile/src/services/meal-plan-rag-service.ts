@@ -760,32 +760,35 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 
 /**
  * Agent determines source strategy based on user profile
+ * CIQUAL = source la plus saine (données officielles ANSES)
+ * Gustar = recettes maison complètes
+ * OFF = produits commerciaux (pratique mais moins sain)
  */
 function determineSourceStrategy(profile: UserProfile): {
   gustar: number  // Weight 0-1
   ciqual: number
   off: number
 } {
-  // Default balanced strategy
-  let strategy = { gustar: 0.5, ciqual: 0.3, off: 0.2 }
+  // CIQUAL prioritaire par défaut (source la plus saine - données ANSES)
+  let strategy = { gustar: 0.35, ciqual: 0.50, off: 0.15 }
 
   // Adjust based on goal
   if (profile.goal === 'weight_loss') {
-    // Prefer CIQUAL for precise calorie data
-    strategy = { gustar: 0.3, ciqual: 0.5, off: 0.2 }
+    // CIQUAL encore plus prioritaire pour données caloriques précises
+    strategy = { gustar: 0.25, ciqual: 0.60, off: 0.15 }
   } else if (profile.goal === 'muscle_gain') {
-    // Prefer Gustar for complete recipes with proteins
-    strategy = { gustar: 0.6, ciqual: 0.3, off: 0.1 }
+    // Plus de Gustar pour recettes protéinées, mais CIQUAL reste important
+    strategy = { gustar: 0.45, ciqual: 0.45, off: 0.10 }
   } else if (profile.goal === 'health') {
-    // Balanced with more variety
-    strategy = { gustar: 0.4, ciqual: 0.4, off: 0.2 }
+    // Maximum CIQUAL pour optimiser la santé
+    strategy = { gustar: 0.30, ciqual: 0.55, off: 0.15 }
   }
 
   // Adjust based on diet type
   if (profile.dietType === 'vegetarian' || profile.dietType === 'vegan') {
-    // More CIQUAL for plant-based foods
-    strategy.ciqual += 0.1
-    strategy.gustar -= 0.1
+    // CIQUAL a beaucoup d'aliments végétaux
+    strategy.ciqual += 0.10
+    strategy.off -= 0.10
   }
 
   return strategy
@@ -793,7 +796,7 @@ function determineSourceStrategy(profile: UserProfile): {
 
 /**
  * Agent decides which source to use for a specific meal
- * Intelligently combines Gustar (recipes), CIQUAL (nutrition data), and OFF (commercial products)
+ * Priorité: CIQUAL (sain) > Gustar (recettes) > OFF (commercial)
  */
 function agentDecideSource(
   mealType: MealType,
@@ -804,54 +807,51 @@ function agentDecideSource(
   // Count sources used today to ensure variety
   const todaySources = dayMeals.map(m => m.source)
   const gustarCount = todaySources.filter(s => s === 'gustar').length
-  const ciqualCount = todaySources.filter(s => s === 'manual').length // CIQUAL/OFF stored as manual
-  const offCount = ciqualCount // Both use 'manual' source
+  const manualCount = todaySources.filter(s => s === 'manual').length // CIQUAL/OFF stored as manual
 
-  // Meal-type preferences with OFF integration
+  // Meal-type preferences - CIQUAL prioritaire, OFF en dernier recours
   const mealTypePreference: Record<MealType, { primary: MealSource; fallback: MealSource[] }> = {
     breakfast: {
-      primary: 'gustar',  // Gustar has good breakfast recipes
-      fallback: ['off', 'ciqual'], // OFF for quick options (céréales, yaourt)
+      primary: 'ciqual',  // CIQUAL pour petit-déj sain (fruits, céréales, laitage)
+      fallback: ['gustar', 'off'],
     },
     lunch: {
-      primary: 'gustar',  // Complete homemade meals
-      fallback: ['off', 'ciqual'], // OFF for sandwiches, salads
+      primary: 'gustar',  // Recettes complètes pour le déjeuner
+      fallback: ['ciqual', 'off'],
     },
     snack: {
-      primary: 'off',     // OFF is best for snacks (barres, compotes)
-      fallback: ['ciqual', 'gustar'],
+      primary: 'ciqual',  // CIQUAL pour snacks sains (fruits, yaourt nature)
+      fallback: ['gustar', 'off'],
     },
     dinner: {
-      primary: 'gustar',  // Complete dinner recipes
+      primary: 'gustar',  // Recettes complètes pour le dîner
       fallback: ['ciqual', 'off'],
     },
   }
 
-  // If one source is overused, switch to another for variety
+  // If Gustar is overused, switch to CIQUAL (pas OFF)
   if (gustarCount >= 2) {
-    // Vary between CIQUAL and OFF
-    if (dayIndex % 2 === 0 || mealType === 'snack') {
-      return { primary: 'off', fallback: ['ciqual', 'gustar'] }
-    }
-    return { primary: 'ciqual', fallback: ['off', 'gustar'] }
+    return { primary: 'ciqual', fallback: ['gustar', 'off'] }
   }
-  if (offCount >= 2) {
+  // If CIQUAL/OFF (manual) is overused, switch to Gustar
+  if (manualCount >= 2) {
     return { primary: 'gustar', fallback: ['ciqual', 'off'] }
   }
 
   // Apply strategy weights with some randomness
   const rand = Math.random()
-  const gustarThreshold = strategy.gustar
-  const ciqualThreshold = gustarThreshold + strategy.ciqual
+  const ciqualThreshold = strategy.ciqual  // CIQUAL first
+  const gustarThreshold = ciqualThreshold + strategy.gustar
 
-  if (rand < gustarThreshold) {
-    return mealTypePreference[mealType].primary === 'gustar'
-      ? mealTypePreference[mealType]
-      : { primary: 'gustar', fallback: ['off', 'ciqual'] }
-  } else if (rand < ciqualThreshold) {
+  if (rand < ciqualThreshold) {
+    // CIQUAL sélectionné
     return { primary: 'ciqual', fallback: ['gustar', 'off'] }
+  } else if (rand < gustarThreshold) {
+    // Gustar sélectionné - utiliser les préférences par type de repas
+    return mealTypePreference[mealType]
   } else {
-    return { primary: 'off', fallback: ['gustar', 'ciqual'] }
+    // OFF en dernier (produits commerciaux)
+    return { primary: 'off', fallback: ['ciqual', 'gustar'] }
   }
 }
 
