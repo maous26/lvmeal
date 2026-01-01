@@ -28,6 +28,13 @@ export interface CookingPreferences {
   quickMealsOnly: boolean // prefers <20min recipes
 }
 
+// Préférence de source pour la génération de repas IA
+export type MealSourcePreference = 'fresh' | 'recipes' | 'quick' | 'balanced'
+// fresh = Produits frais (CIQUAL prioritaire - fruits, légumes, viandes, poissons)
+// recipes = Plats élaborés (Gustar prioritaire - recettes maison complètes)
+// quick = Snacks/Rapide (OFF prioritaire - produits du commerce pratiques)
+// balanced = Équilibré (mix intelligent des 3 sources)
+
 export type MealSource = 'manual' | 'photo' | 'voice' | 'barcode' | 'ai' | 'recipe' | 'plan'
 
 // =============================================================================
@@ -125,6 +132,7 @@ export interface UserProfile {
   wantsWellnessProgram?: boolean // For wellness/stress management
   wellnessProgramActive?: boolean // Whether wellness program is active
   cookingPreferences?: CookingPreferences
+  mealSourcePreference?: MealSourcePreference // Préférence pour la génération de repas IA
   onboardingCompleted?: boolean
   createdAt?: string
   updatedAt?: string

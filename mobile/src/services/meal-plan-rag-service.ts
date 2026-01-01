@@ -760,43 +760,74 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 
 /**
  * Agent determines source strategy based on user profile
- * CIQUAL = source la plus saine (données officielles ANSES)
- * Gustar = recettes maison complètes
- * OFF = produits commerciaux (pratique mais moins sain)
+ *
+ * Sources:
+ * - CIQUAL = Produits frais, données officielles ANSES (fruits, légumes, viandes, poissons)
+ * - Gustar = Recettes maison complètes avec instructions
+ * - OFF = Produits commerciaux pratiques (snacks, plats préparés)
+ *
+ * User preferences (mealSourcePreference):
+ * - 'fresh' = Priorité produits frais (CIQUAL)
+ * - 'recipes' = Priorité plats élaborés (Gustar)
+ * - 'quick' = Priorité snacks/rapide (OFF)
+ * - 'balanced' = Mix équilibré intelligent
  */
 function determineSourceStrategy(profile: UserProfile): {
   gustar: number  // Weight 0-1
   ciqual: number
   off: number
 } {
-  // CIQUAL prioritaire par défaut (source la plus saine - données ANSES)
-  let strategy = { gustar: 0.35, ciqual: 0.50, off: 0.15 }
+  // Check user's meal source preference first
+  const preference = profile.mealSourcePreference || 'balanced'
 
-  // Adjust based on goal
-  if (profile.goal === 'weight_loss') {
-    // CIQUAL encore plus prioritaire pour données caloriques précises
-    strategy = { gustar: 0.25, ciqual: 0.60, off: 0.15 }
-  } else if (profile.goal === 'muscle_gain') {
-    // Plus de Gustar pour recettes protéinées, mais CIQUAL reste important
-    strategy = { gustar: 0.45, ciqual: 0.45, off: 0.10 }
-  } else if (profile.goal === 'health') {
-    // Maximum CIQUAL pour optimiser la santé
-    strategy = { gustar: 0.30, ciqual: 0.55, off: 0.15 }
+  // Base strategy selon la préférence utilisateur
+  let strategy: { gustar: number; ciqual: number; off: number }
+
+  switch (preference) {
+    case 'fresh':
+      // Produits frais - CIQUAL prioritaire (fruits, légumes, viandes, poissons)
+      strategy = { gustar: 0.20, ciqual: 0.70, off: 0.10 }
+      break
+    case 'recipes':
+      // Plats élaborés - Gustar prioritaire (recettes maison complètes)
+      strategy = { gustar: 0.65, ciqual: 0.25, off: 0.10 }
+      break
+    case 'quick':
+      // Snacks/Rapide - OFF prioritaire (produits du commerce pratiques)
+      strategy = { gustar: 0.20, ciqual: 0.30, off: 0.50 }
+      break
+    case 'balanced':
+    default:
+      // Équilibré - mix intelligent, CIQUAL légèrement prioritaire (plus sain)
+      strategy = { gustar: 0.35, ciqual: 0.50, off: 0.15 }
+      break
   }
 
-  // Adjust based on diet type
-  if (profile.dietType === 'vegetarian' || profile.dietType === 'vegan') {
-    // CIQUAL a beaucoup d'aliments végétaux
+  // Ajustements fins selon l'objectif (modifications mineures)
+  if (profile.goal === 'weight_loss' && preference === 'balanced') {
+    // Perte de poids + balanced = plus de CIQUAL pour précision calorique
     strategy.ciqual += 0.10
+    strategy.off -= 0.10
+  } else if (profile.goal === 'muscle_gain' && preference === 'balanced') {
+    // Prise de muscle + balanced = plus de Gustar pour recettes protéinées
+    strategy.gustar += 0.10
     strategy.off -= 0.10
   }
 
+  // Ajustement pour régime végétarien/vegan
+  if (profile.dietType === 'vegetarian' || profile.dietType === 'vegan') {
+    // CIQUAL a beaucoup d'aliments végétaux de qualité
+    strategy.ciqual = Math.min(0.80, strategy.ciqual + 0.10)
+    strategy.off = Math.max(0.05, strategy.off - 0.10)
+  }
+
+  console.log(`[Agent] Strategy for preference="${preference}": G=${strategy.gustar} C=${strategy.ciqual} O=${strategy.off}`)
   return strategy
 }
 
 /**
  * Agent decides which source to use for a specific meal
- * Priorité: CIQUAL (sain) > Gustar (recettes) > OFF (commercial)
+ * Respecte la stratégie calculée depuis les préférences utilisateur
  */
 function agentDecideSource(
   mealType: MealType,
@@ -809,49 +840,44 @@ function agentDecideSource(
   const gustarCount = todaySources.filter(s => s === 'gustar').length
   const manualCount = todaySources.filter(s => s === 'manual').length // CIQUAL/OFF stored as manual
 
-  // Meal-type preferences - CIQUAL prioritaire, OFF en dernier recours
-  const mealTypePreference: Record<MealType, { primary: MealSource; fallback: MealSource[] }> = {
-    breakfast: {
-      primary: 'ciqual',  // CIQUAL pour petit-déj sain (fruits, céréales, laitage)
-      fallback: ['gustar', 'off'],
-    },
-    lunch: {
-      primary: 'gustar',  // Recettes complètes pour le déjeuner
-      fallback: ['ciqual', 'off'],
-    },
-    snack: {
-      primary: 'ciqual',  // CIQUAL pour snacks sains (fruits, yaourt nature)
-      fallback: ['gustar', 'off'],
-    },
-    dinner: {
-      primary: 'gustar',  // Recettes complètes pour le dîner
-      fallback: ['ciqual', 'off'],
-    },
-  }
+  // Determine dominant source from strategy
+  const dominantSource: MealSource =
+    strategy.ciqual >= strategy.gustar && strategy.ciqual >= strategy.off ? 'ciqual' :
+    strategy.gustar >= strategy.off ? 'gustar' : 'off'
 
-  // If Gustar is overused, switch to CIQUAL (pas OFF)
+  // Build fallback order based on strategy weights
+  const sortedSources: MealSource[] = [
+    { source: 'ciqual' as MealSource, weight: strategy.ciqual },
+    { source: 'gustar' as MealSource, weight: strategy.gustar },
+    { source: 'off' as MealSource, weight: strategy.off },
+  ]
+    .sort((a, b) => b.weight - a.weight)
+    .map(s => s.source)
+
+  // If Gustar is overused, switch to next preferred source
   if (gustarCount >= 2) {
-    return { primary: 'ciqual', fallback: ['gustar', 'off'] }
+    const fallback = sortedSources.filter(s => s !== 'gustar')
+    return { primary: fallback[0], fallback: [...fallback.slice(1), 'gustar'] }
   }
   // If CIQUAL/OFF (manual) is overused, switch to Gustar
-  if (manualCount >= 2) {
-    return { primary: 'gustar', fallback: ['ciqual', 'off'] }
+  if (manualCount >= 3) {
+    return { primary: 'gustar', fallback: sortedSources.filter(s => s !== 'gustar') }
   }
 
   // Apply strategy weights with some randomness
   const rand = Math.random()
-  const ciqualThreshold = strategy.ciqual  // CIQUAL first
-  const gustarThreshold = ciqualThreshold + strategy.gustar
+  const firstThreshold = sortedSources[0] === 'ciqual' ? strategy.ciqual :
+                         sortedSources[0] === 'gustar' ? strategy.gustar : strategy.off
+  const secondWeight = sortedSources[1] === 'ciqual' ? strategy.ciqual :
+                       sortedSources[1] === 'gustar' ? strategy.gustar : strategy.off
+  const secondThreshold = firstThreshold + secondWeight
 
-  if (rand < ciqualThreshold) {
-    // CIQUAL sélectionné
-    return { primary: 'ciqual', fallback: ['gustar', 'off'] }
-  } else if (rand < gustarThreshold) {
-    // Gustar sélectionné - utiliser les préférences par type de repas
-    return mealTypePreference[mealType]
+  if (rand < firstThreshold) {
+    return { primary: sortedSources[0], fallback: sortedSources.slice(1) }
+  } else if (rand < secondThreshold) {
+    return { primary: sortedSources[1], fallback: [sortedSources[0], sortedSources[2]] }
   } else {
-    // OFF en dernier (produits commerciaux)
-    return { primary: 'off', fallback: ['ciqual', 'gustar'] }
+    return { primary: sortedSources[2], fallback: [sortedSources[0], sortedSources[1]] }
   }
 }
 
