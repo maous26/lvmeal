@@ -25,6 +25,7 @@ interface UserState {
   profile: Partial<UserProfile> | null
   isLoading: boolean
   isOnboarded: boolean
+  hasSeenCoachWelcome: boolean // Track if user has seen coach welcome modal
   weightHistory: WeightEntry[]
   nutritionGoals: NutritionGoals | null
   lastRAGUpdate: string | null // Track when RAG last calculated needs
@@ -37,6 +38,7 @@ interface UserState {
   resetStore: () => void
   addWeightEntry: (entry: WeightEntry) => void
   setOnboarded: (value: boolean) => void
+  setHasSeenCoachWelcome: (value: boolean) => void
   calculateNeeds: () => NutritionalNeeds | null
   // NEW: RAG-powered personalized calculation
   calculatePersonalizedNeeds: (weeklyNutrition?: NutritionInfo, wellnessData?: UserContext['wellnessData']) => Promise<NutritionGoals | null>
@@ -116,6 +118,7 @@ export const useUserStore = create<UserState>()(
       profile: null,
       isLoading: false,
       isOnboarded: false,
+      hasSeenCoachWelcome: false,
       weightHistory: [],
       nutritionGoals: null,
       lastRAGUpdate: null,
@@ -152,11 +155,11 @@ export const useUserStore = create<UserState>()(
       },
 
       clearProfile: () => {
-        set({ profile: null, isOnboarded: false, weightHistory: [], nutritionGoals: null })
+        set({ profile: null, isOnboarded: false, hasSeenCoachWelcome: false, weightHistory: [], nutritionGoals: null })
       },
 
       resetStore: () => {
-        set({ profile: null, isOnboarded: false, weightHistory: [], nutritionGoals: null })
+        set({ profile: null, isOnboarded: false, hasSeenCoachWelcome: false, weightHistory: [], nutritionGoals: null })
       },
 
       addWeightEntry: (entry) => {
@@ -168,6 +171,10 @@ export const useUserStore = create<UserState>()(
 
       setOnboarded: (value) => {
         set({ isOnboarded: value })
+      },
+
+      setHasSeenCoachWelcome: (value) => {
+        set({ hasSeenCoachWelcome: value })
       },
 
       calculateNeeds: () => {

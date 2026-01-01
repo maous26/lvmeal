@@ -133,6 +133,7 @@ export interface UserProfile {
   wellnessProgramActive?: boolean // Whether wellness program is active
   cookingPreferences?: CookingPreferences
   mealSourcePreference?: MealSourcePreference // Préférence pour la génération de repas IA
+  quickSetupCompleted?: boolean // User completed quick onboarding (can complete full later)
   onboardingCompleted?: boolean
   createdAt?: string
   updatedAt?: string

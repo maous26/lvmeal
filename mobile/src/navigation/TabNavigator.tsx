@@ -19,6 +19,7 @@ import ProfileScreen from '../screens/ProfileScreen'
 
 import { colors, shadows } from '../constants/theme'
 import { useCoachStore } from '../stores/coach-store'
+import { useUserStore } from '../stores/user-store'
 
 const Tab = createBottomTabNavigator()
 
@@ -46,6 +47,10 @@ const TabIcon = ({
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
   const unreadCount = useCoachStore((state) => state.unreadCount)
+  const hasSeenCoachWelcome = useUserStore((state) => state.hasSeenCoachWelcome)
+
+  // Add 1 to badge count if welcome message hasn't been seen
+  const coachBadgeCount = unreadCount + (hasSeenCoachWelcome ? 0 : 1)
 
   return (
     <Tab.Navigator
@@ -95,7 +100,7 @@ export default function TabNavigator() {
         options={{
           tabBarLabel: 'Coach',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={Bot} focused={focused} color={color} badge={unreadCount} />
+            <TabIcon Icon={Bot} focused={focused} color={color} badge={coachBadgeCount} />
           ),
         }}
       />

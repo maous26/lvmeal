@@ -13,6 +13,7 @@ import {
   StepMetabolicProgram,
   StepWellnessProgram,
   StepAnalysis,
+  StepQuickSetup,
 } from '../components/onboarding'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
@@ -22,10 +23,11 @@ import { useGamificationStore } from '../stores/gamification-store'
 import { colors } from '../constants/theme'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
-type OnboardingStep = 'welcome' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
+type OnboardingStep = 'welcome' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valueProposition?: string }> = {
   welcome: { title: '', subtitle: '' },
+  'quick-setup': { title: '', subtitle: '' }, // Has its own layout
   'basic-info': {
     title: 'Faisons connaissance',
     subtitle: 'TON PROFIL',
@@ -186,6 +188,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
   const [profile, setProfile] = useState<Partial<UserProfile>>({})
   const [loading, setLoading] = useState(false)
+  const [isQuickMode, setIsQuickMode] = useState(false)
 
   // User store for persistent profile storage
   const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
@@ -343,10 +346,63 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const needs = useMemo(() => calculateNeeds(profile), [profile])
 
+  // Handle quick setup completion
+  const handleQuickSetupComplete = useCallback(async (quickProfile: Partial<UserProfile>) => {
+    setLoading(true)
+
+    // Calculate nutritional needs with quick profile
+    const needs = calculateNeeds(quickProfile)
+
+    const finalProfile: Partial<UserProfile> = {
+      ...quickProfile,
+      nutritionalNeeds: needs,
+      quickSetupCompleted: true,
+      onboardingCompleted: false, // Can complete full onboarding later
+    }
+
+    // Save to Zustand store
+    setStoreProfile(finalProfile)
+    setOnboarded(true)
+
+    // Initialize the 7-day trial
+    setSignupDate()
+    startTrial()
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+
+    setLoading(false)
+    onComplete()
+  }, [setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
+
+  // Switch from quick mode to full onboarding
+  const handleSwitchToFull = useCallback(() => {
+    setIsQuickMode(false)
+    setCurrentStep('basic-info')
+  }, [])
+
+  // Enter quick setup mode
+  const handleEnterQuickMode = useCallback(() => {
+    setIsQuickMode(true)
+    setCurrentStep('quick-setup')
+  }, [])
+
   const renderStep = () => {
     switch (currentStep) {
       case 'welcome':
-        return <StepWelcome onStart={handleNext} />
+        return (
+          <StepWelcome
+            onStart={handleNext}
+            onQuickStart={handleEnterQuickMode}
+          />
+        )
+      case 'quick-setup':
+        return (
+          <StepQuickSetup
+            onComplete={handleQuickSetupComplete}
+            onBack={() => setCurrentStep('welcome')}
+            onSwitchToFull={handleSwitchToFull}
+          />
+        )
       case 'basic-info':
         return <StepBasicInfo data={profile} onChange={setProfile} />
       case 'activity':
@@ -372,8 +428,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
   }
 
-  // Welcome step has its own full-screen layout
-  if (currentStep === 'welcome') {
+  // Welcome and Quick Setup steps have their own full-screen layout
+  if (currentStep === 'welcome' || currentStep === 'quick-setup') {
     return renderStep()
   }
 

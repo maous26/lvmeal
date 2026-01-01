@@ -13,6 +13,7 @@ export { StepMetabolism } from './StepMetabolism'
 export { StepMetabolicProgram } from './StepMetabolicProgram'
 export { StepWellnessProgram } from './StepWellnessProgram'
 export { StepAnalysis } from './StepAnalysis'
+export { StepQuickSetup } from './StepQuickSetup'
 
 // Progressive Unlock Components
 export { default as FeatureDiscoveryModal } from './FeatureDiscoveryModal'

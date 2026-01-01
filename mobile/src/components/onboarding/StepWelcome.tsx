@@ -5,15 +5,21 @@ import { OnboardingBenefits } from './OnboardingBenefits'
 
 interface StepWelcomeProps {
   onStart: () => void
+  onQuickStart?: () => void
 }
 
 type WelcomePhase = 'hero' | 'benefits'
 
-export function StepWelcome({ onStart }: StepWelcomeProps) {
+export function StepWelcome({ onStart, onQuickStart }: StepWelcomeProps) {
   const [phase, setPhase] = useState<WelcomePhase>('hero')
 
   if (phase === 'hero') {
-    return <OnboardingHero onGetStarted={() => setPhase('benefits')} />
+    return (
+      <OnboardingHero
+        onGetStarted={() => setPhase('benefits')}
+        onQuickStart={onQuickStart}
+      />
+    )
   }
 
   return (

@@ -10,7 +10,7 @@ import {
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ChevronRight } from 'lucide-react-native'
+import { ChevronRight, Zap } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
 
@@ -18,9 +18,10 @@ const { width, height } = Dimensions.get('window')
 
 interface OnboardingHeroProps {
   onGetStarted: () => void
+  onQuickStart?: () => void
 }
 
-export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
+export function OnboardingHero({ onGetStarted, onQuickStart }: OnboardingHeroProps) {
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
 
@@ -101,6 +102,23 @@ export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
         <Text style={[styles.microCopy, { color: colors.text.muted }]}>
           2 minutes pour configurer ton profil
         </Text>
+
+        {/* Quick Start Option */}
+        {onQuickStart && (
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              onQuickStart()
+            }}
+            activeOpacity={0.7}
+            style={[styles.quickStartButton, { borderColor: colors.border.default }]}
+          >
+            <Zap size={18} color={colors.accent.primary} />
+            <Text style={[styles.quickStartText, { color: colors.text.secondary }]}>
+              Pressé ? <Text style={{ color: colors.accent.primary, fontWeight: '600' }}>Mode rapide (30s)</Text>
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   )
@@ -199,6 +217,20 @@ const styles = StyleSheet.create({
     ...typography.caption,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  quickStartButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  quickStartText: {
+    ...typography.small,
   },
 })
 

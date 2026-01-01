@@ -24,7 +24,6 @@ import {
   Flame,
   Trophy,
   Sparkles,
-  Bell,
   Scale,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
@@ -360,20 +359,12 @@ export default function HomeScreen() {
               <Text style={[styles.userName, { color: colors.text.primary }]}>{userName}</Text>
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={[styles.headerIconButton, { backgroundColor: colors.bg.secondary }]}
-              onPress={() => {}}
-            >
-              <Bell size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.headerIconButton, { backgroundColor: colors.accent.light }]}
-              onPress={handleNavigateToCalendar}
-            >
-              <Calendar size={20} color={colors.accent.primary} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.headerIconButton, { backgroundColor: colors.accent.light }]}
+            onPress={handleNavigateToCalendar}
+          >
+            <Calendar size={20} color={colors.accent.primary} />
+          </TouchableOpacity>
         </View>
 
         {/* Stats Row - 2 cards only */}
@@ -697,10 +688,6 @@ const styles = StyleSheet.create({
   userName: {
     ...typography.h4,
     fontWeight: '700',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: spacing.sm,
   },
   headerIconButton: {
     width: 40,

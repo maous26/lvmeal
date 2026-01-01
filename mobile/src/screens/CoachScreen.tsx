@@ -40,6 +40,7 @@ import {
   PartyPopper,
   ExternalLink,
   Bot,
+  TrendingUp,
 } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
@@ -52,6 +53,133 @@ import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
+
+// ============= WELCOME CARD COMPONENT =============
+
+interface WelcomeCardProps {
+  firstName: string
+  onDismiss: () => void
+  colors: ReturnType<typeof useTheme>['colors']
+}
+
+function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
+  return (
+    <View style={[welcomeStyles.card, { backgroundColor: colors.bg.elevated }]}>
+      {/* Header with dismiss */}
+      <View style={welcomeStyles.header}>
+        <LinearGradient
+          colors={[staticColors.accent.primary, staticColors.secondary.primary]}
+          style={welcomeStyles.avatar}
+        >
+          <Sparkles size={24} color="#FFFFFF" />
+        </LinearGradient>
+        <TouchableOpacity
+          onPress={onDismiss}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <X size={20} color={colors.text.muted} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Welcome message */}
+      <Text style={[welcomeStyles.greeting, { color: colors.accent.primary }]}>
+        Salut {firstName} ! 👋
+      </Text>
+      <Text style={[welcomeStyles.title, { color: colors.text.primary }]}>
+        Je suis LymIA, ton coach nutrition
+      </Text>
+
+      <View style={[welcomeStyles.messageBox, { backgroundColor: colors.bg.secondary }]}>
+        <Text style={[welcomeStyles.message, { color: colors.text.primary }]}>
+          Bienvenue ! Ici tu trouveras mes conseils personnalisés, analyses et alertes pour t'accompagner dans ton parcours nutrition.
+        </Text>
+        <Text style={[welcomeStyles.message, { color: colors.text.secondary, marginTop: spacing.sm }]}>
+          Mon rôle : t'aider à atteindre tes objectifs{' '}
+          <Text style={{ fontWeight: '600', color: colors.text.primary }}>
+            sans frustration ni culpabilité
+          </Text>.
+        </Text>
+      </View>
+
+      {/* Features summary */}
+      <View style={welcomeStyles.features}>
+        <View style={welcomeStyles.featureItem}>
+          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${staticColors.success}20` }]}>
+            <TrendingUp size={16} color={staticColors.success} />
+          </View>
+          <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
+            Suivi intelligent de tes repas
+          </Text>
+        </View>
+        <View style={welcomeStyles.featureItem}>
+          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${staticColors.secondary.primary}20` }]}>
+            <Heart size={16} color={staticColors.secondary.primary} />
+          </View>
+          <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
+            Bienveillance avant tout
+          </Text>
+        </View>
+      </View>
+    </View>
+  )
+}
+
+const welcomeStyles = StyleSheet.create({
+  card: {
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    ...shadows.md,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  greeting: {
+    ...typography.bodyMedium,
+    marginBottom: spacing.xs,
+  },
+  title: {
+    ...typography.h3,
+    marginBottom: spacing.md,
+  },
+  messageBox: {
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
+  },
+  message: {
+    ...typography.body,
+    lineHeight: 22,
+  },
+  features: {
+    gap: spacing.sm,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  featureIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  featureText: {
+    ...typography.small,
+  },
+})
 
 // Configuration des types
 const typeConfig: Record<CoachItemType, { icon: typeof Lightbulb; label: string; color: string }> = {
@@ -165,7 +293,7 @@ export default function CoachScreen() {
   const [refreshing, setRefreshing] = useState(false)
 
   const { items, unreadCount, generateItemsWithAI, markAsRead, dismissItem, setContext } = useCoachStore()
-  const { profile, nutritionGoals } = useUserStore()
+  const { profile, nutritionGoals, hasSeenCoachWelcome, setHasSeenCoachWelcome } = useUserStore()
   const { getTodayData } = useMealsStore()
   const wellnessStore = useWellnessStore()
   const { currentStreak, currentLevel, totalXP } = useGamificationStore()
@@ -223,6 +351,11 @@ export default function CoachScreen() {
     navigation.navigate(route)
   }
 
+  const handleDismissWelcome = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setHasSeenCoachWelcome(true)
+  }
+
   // Organize items by priority (dismissItem removes from array, no dismissed property)
   const alerts = items.filter(i => i.type === 'alert')
   const celebrations = items.filter(i => i.type === 'celebration')
@@ -258,6 +391,15 @@ export default function CoachScreen() {
             </LinearGradient>
           </View>
         </View>
+
+        {/* Welcome Card - shown only once after onboarding */}
+        {!hasSeenCoachWelcome && (
+          <WelcomeCard
+            firstName={profile?.firstName || 'toi'}
+            onDismiss={handleDismissWelcome}
+            colors={colors}
+          />
+        )}
 
         {/* Content */}
         {!hasItems ? (
