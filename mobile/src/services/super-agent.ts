@@ -412,7 +412,55 @@ function selectDailyInsight(
     }
   }
 
-  return null
+  // Priority 6: Fallback - Always provide a daily motivation insight
+  const fallbackInsights = [
+    {
+      title: 'Conseil du jour',
+      body: 'Chaque repas est une opportunité de nourrir ton corps. Prends le temps de tracker pour mieux comprendre tes habitudes.',
+      category: 'nutrition' as const,
+    },
+    {
+      title: 'Hydratation',
+      body: 'As-tu bu assez d\'eau aujourd\'hui ? Une bonne hydratation améliore l\'énergie et la concentration.',
+      category: 'wellness' as const,
+    },
+    {
+      title: 'Écoute ton corps',
+      body: 'Prends un moment pour noter comment tu te sens. Le suivi wellness aide à identifier ce qui te fait du bien.',
+      category: 'wellness' as const,
+    },
+    {
+      title: 'Protéines essentielles',
+      body: 'Les protéines sont essentielles pour la récupération et la satiété. Vise à en inclure à chaque repas.',
+      category: 'nutrition' as const,
+    },
+    {
+      title: 'Petit défi du jour',
+      body: 'Ajoute une portion de légumes supplémentaire à ton prochain repas. Les petits changements font les grandes transformations.',
+      category: 'nutrition' as const,
+    },
+    {
+      title: 'Sommeil réparateur',
+      body: 'Un bon sommeil favorise la récupération et aide à maintenir un poids stable. Comment as-tu dormi ?',
+      category: 'wellness' as const,
+    },
+    {
+      title: 'Moment de gratitude',
+      body: 'Prends un instant pour apprécier tes progrès, même les plus petits. Chaque pas compte.',
+      category: 'progress' as const,
+    },
+  ]
+
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
+  const fallback = fallbackInsights[dayOfYear % fallbackInsights.length]
+
+  return {
+    title: fallback.title,
+    body: fallback.body,
+    category: fallback.category,
+    severity: 'info',
+    confidence: 0.5,
+  }
 }
 
 // ============= SUPER AGENT CLASS =============

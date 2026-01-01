@@ -59,7 +59,7 @@ async function collectUserData(): Promise<SuperAgentContext | null> {
 
     const profile = userState.profile as UserProfile | null
     if (!profile) {
-      console.log('[DailyInsight] No profile found')
+      console.log('[DailyInsight] No profile found, will use fallback insight')
       return null
     }
 
@@ -139,6 +139,67 @@ async function collectUserData(): Promise<SuperAgentContext | null> {
   }
 }
 
+// ============= FALLBACK INSIGHTS =============
+
+const FALLBACK_INSIGHTS: DailyInsight[] = [
+  {
+    title: 'Conseil du jour',
+    body: 'Chaque repas est une opportunité de nourrir ton corps. Prends le temps de tracker pour mieux comprendre tes habitudes.',
+    category: 'nutrition',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Hydratation',
+    body: "As-tu bu assez d'eau aujourd'hui ? Une bonne hydratation améliore l'énergie et la concentration.",
+    category: 'wellness',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Écoute ton corps',
+    body: 'Prends un moment pour noter comment tu te sens. Le suivi wellness aide à identifier ce qui te fait du bien.',
+    category: 'wellness',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Protéines essentielles',
+    body: 'Les protéines sont essentielles pour la récupération et la satiété. Vise à en inclure à chaque repas.',
+    category: 'nutrition',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Petit défi du jour',
+    body: 'Ajoute une portion de légumes supplémentaire à ton prochain repas. Les petits changements font les grandes transformations.',
+    category: 'nutrition',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Sommeil réparateur',
+    body: 'Un bon sommeil favorise la récupération et aide à maintenir un poids stable. Comment as-tu dormi ?',
+    category: 'wellness',
+    severity: 'info',
+    confidence: 0.5,
+  },
+  {
+    title: 'Moment de gratitude',
+    body: 'Prends un instant pour apprécier tes progrès, même les plus petits. Chaque pas compte.',
+    category: 'progress',
+    severity: 'info',
+    confidence: 0.5,
+  },
+]
+
+function getFallbackInsight(): DailyInsight {
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  return FALLBACK_INSIGHTS[dayOfYear % FALLBACK_INSIGHTS.length]
+}
+
 // ============= INSIGHT GENERATION =============
 
 /**
@@ -167,22 +228,18 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
 
     // Collecter les données
     const context = await collectUserData()
-    if (!context) {
-      return {
-        success: false,
-        error: 'No user data available',
-      }
+
+    let insight: DailyInsight | null = null
+
+    if (context) {
+      // Appeler le Super Agent avec les données utilisateur
+      insight = await SuperAgent.generateDailyInsight(context)
     }
 
-    // Appeler le Super Agent
-    const insight = await SuperAgent.generateDailyInsight(context)
-
+    // Si pas d'insight généré, utiliser un fallback
     if (!insight) {
-      console.log('[DailyInsight] No insight generated')
-      return {
-        success: false,
-        error: 'No insight generated',
-      }
+      console.log('[DailyInsight] Using fallback insight')
+      insight = getFallbackInsight()
     }
 
     // Mettre en cache
@@ -198,9 +255,12 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
     }
   } catch (error) {
     console.error('[DailyInsight] Error generating insight:', error)
+    // Even on error, return a fallback insight
+    const fallback = getFallbackInsight()
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      success: true,
+      insight: fallback,
+      scheduled: false,
     }
   }
 }
@@ -213,11 +273,20 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
  */
 export async function generateAndNotifyInsight(): Promise<boolean> {
   try {
-    console.log('[DailyInsight] Generating insight for notification...')
+    console.log('[DailyInsight] ===== Starting notification process =====')
+
+    // Vérifier les permissions
+    const { status } = await Notifications.getPermissionsAsync()
+    console.log('[DailyInsight] Notification permission status:', status)
+    if (status !== 'granted') {
+      console.log('[DailyInsight] Notifications not permitted')
+      return false
+    }
 
     // Vérifier si on a déjà notifié aujourd'hui
     const lastNotifDate = await AsyncStorage.getItem('@lym_last_insight_notif_date')
     const today = new Date().toDateString()
+    console.log('[DailyInsight] Last notif date:', lastNotifDate, '| Today:', today)
 
     if (lastNotifDate === today) {
       console.log('[DailyInsight] Already notified today, skipping')
@@ -225,7 +294,10 @@ export async function generateAndNotifyInsight(): Promise<boolean> {
     }
 
     // Générer l'insight
+    console.log('[DailyInsight] Generating insight...')
     const result = await generateDailyInsight()
+    console.log('[DailyInsight] Generation result:', result.success, result.insight?.title)
+
     if (!result.success || !result.insight) {
       console.log('[DailyInsight] No insight to notify')
       return false
@@ -244,10 +316,13 @@ export async function generateAndNotifyInsight(): Promise<boolean> {
                   insight.severity === 'warning' ? '⚠️' :
                   categoryEmoji[insight.category] || '💡'
 
+    const title = `${emoji} ${insight.title}`
+    console.log('[DailyInsight] Sending notification:', title)
+
     // Envoyer la notification avec le VRAI contenu
-    await Notifications.scheduleNotificationAsync({
+    const notifId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: `${emoji} ${insight.title}`,
+        title,
         body: insight.body,
         data: {
           type: 'daily_insight',
@@ -259,10 +334,12 @@ export async function generateAndNotifyInsight(): Promise<boolean> {
       trigger: null, // Immédiat
     })
 
+    console.log('[DailyInsight] Notification scheduled with ID:', notifId)
+
     // Marquer comme notifié aujourd'hui
     await AsyncStorage.setItem('@lym_last_insight_notif_date', today)
 
-    console.log('[DailyInsight] Notification sent:', insight.title)
+    console.log('[DailyInsight] ===== Notification sent successfully =====')
     return true
   } catch (error) {
     console.error('[DailyInsight] Error generating/notifying insight:', error)
@@ -405,6 +482,21 @@ export async function forceRegenerateInsight(): Promise<InsightGenerationResult>
   return generateDailyInsight()
 }
 
+/**
+ * Force l'envoi d'une notification (pour debug)
+ * Efface les caches et envoie immédiatement
+ */
+export async function forceNotifyInsight(): Promise<boolean> {
+  console.log('[DailyInsight] ===== FORCE NOTIFY (DEBUG) =====')
+  // Effacer tous les caches de notification
+  await AsyncStorage.removeItem(STORAGE_KEYS.LAST_INSIGHT_DATE)
+  await AsyncStorage.removeItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT)
+  await AsyncStorage.removeItem('@lym_last_insight_notif_date')
+
+  // Forcer l'envoi
+  return generateAndNotifyInsight()
+}
+
 // ============= EXPORTS =============
 
 export const DailyInsightService = {
@@ -416,6 +508,7 @@ export const DailyInsightService = {
   initializeDailyInsightService,
   getLastDailyInsight,
   forceRegenerateInsight,
+  forceNotifyInsight,
 }
 
 export default DailyInsightService
