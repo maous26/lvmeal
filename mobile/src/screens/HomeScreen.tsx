@@ -579,10 +579,12 @@ export default function HomeScreen() {
         </View>
 
         {/* Programs Widget - Compact summary, navigates to Programs tab */}
-        <ProgramsWidget onPress={() => {
-          // @ts-ignore
-          navigation.navigate('Programs')
-        }} />
+        <View style={styles.programsWidgetContainer}>
+          <ProgramsWidget onPress={() => {
+            // @ts-ignore
+            navigation.navigate('Programs')
+          }} />
+        </View>
 
         {/* Caloric Balance */}
         <View style={[styles.balanceSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
@@ -974,6 +976,10 @@ const styles = StyleSheet.create({
   },
   addMoreText: {
     ...typography.smallMedium,
+  },
+  // Programs Widget Container
+  programsWidgetContainer: {
+    marginBottom: spacing.lg,
   },
   // Balance Section
   balanceSection: {
