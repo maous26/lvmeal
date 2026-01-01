@@ -78,7 +78,7 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
               {activeCount} programme{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''}
             </Text>
             <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              {isMetabolicEnrolled && `Métabo Semaine ${metabolicWeek}`}
+              {isMetabolicEnrolled && `Boost métabolique Semaine ${metabolicWeek}`}
               {isMetabolicEnrolled && isWellnessEnrolled && ' · '}
               {isWellnessEnrolled && `Bien-être Semaine ${wellnessWeek}`}
             </Text>
