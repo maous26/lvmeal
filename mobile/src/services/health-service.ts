@@ -5,24 +5,52 @@
  * - Steps (from phone's accelerometer)
  * - Sleep data (estimated from phone usage on Android, HealthKit on iOS)
  * - Active calories
+ * - Weight data from smart scales
  *
  * Note: Phone step counting is as accurate as watch for steps,
  * but less reliable for sleep (watch has heart rate monitoring)
+ *
+ * IMPORTANT: Native modules (react-native-health, react-native-health-connect)
+ * are only available in development builds, NOT in Expo Go.
  */
 
 import { Platform } from 'react-native'
-import AppleHealthKit, {
-  HealthValue,
-  HealthKitPermissions,
-  HealthInputOptions,
-} from 'react-native-health'
-import {
-  initialize as initializeHealthConnect,
-  requestPermission as requestHealthConnectPermission,
-  readRecords as readHealthConnectRecords,
-  getSdkStatus,
-  SdkAvailabilityStatus,
-} from 'react-native-health-connect'
+
+// Types for native modules (imported dynamically to avoid crashes in Expo Go)
+type HealthValue = { value: number; startDate: string; endDate: string }
+type HealthKitPermissions = { permissions: { read: string[]; write: string[] } }
+type HealthInputOptions = { startDate: string; endDate: string; ascending?: boolean; limit?: number }
+
+// Try to import native modules, but gracefully handle if they're not available
+let AppleHealthKit: any = null
+let initializeHealthConnect: any = null
+let requestHealthConnectPermission: any = null
+let readHealthConnectRecords: any = null
+let getSdkStatus: any = null
+let SdkAvailabilityStatus: any = { SDK_AVAILABLE: 1 }
+
+// Flag to track if native modules are available
+let nativeModulesAvailable = false
+
+try {
+  // Dynamic imports to prevent crashes when modules aren't linked
+  if (Platform.OS === 'ios') {
+    const healthModule = require('react-native-health')
+    AppleHealthKit = healthModule.default
+    nativeModulesAvailable = !!AppleHealthKit?.initHealthKit
+  } else if (Platform.OS === 'android') {
+    const healthConnectModule = require('react-native-health-connect')
+    initializeHealthConnect = healthConnectModule.initialize
+    requestHealthConnectPermission = healthConnectModule.requestPermission
+    readHealthConnectRecords = healthConnectModule.readRecords
+    getSdkStatus = healthConnectModule.getSdkStatus
+    SdkAvailabilityStatus = healthConnectModule.SdkAvailabilityStatus
+    nativeModulesAvailable = !!initializeHealthConnect
+  }
+} catch (error) {
+  console.log('[HealthService] Native health modules not available (expected in Expo Go)')
+  nativeModulesAvailable = false
+}
 
 // Types
 export interface HealthData {
@@ -51,18 +79,23 @@ export interface ScaleWeightData {
   sourceName?: string // e.g., "Withings", "Xiaomi Mi Fit"
 }
 
-// HealthKit permissions (iOS)
-const healthKitPermissions: HealthKitPermissions = {
-  permissions: {
-    read: [
-      AppleHealthKit.Constants.Permissions.Steps,
-      AppleHealthKit.Constants.Permissions.SleepAnalysis,
-      AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
-      AppleHealthKit.Constants.Permissions.Weight,
-      AppleHealthKit.Constants.Permissions.BodyFatPercentage,
-    ],
-    write: [],
-  },
+// HealthKit permissions (iOS) - built dynamically to avoid accessing undefined Constants
+function getHealthKitPermissions(): HealthKitPermissions {
+  if (!AppleHealthKit?.Constants?.Permissions) {
+    return { permissions: { read: [], write: [] } }
+  }
+  return {
+    permissions: {
+      read: [
+        AppleHealthKit.Constants.Permissions.Steps,
+        AppleHealthKit.Constants.Permissions.SleepAnalysis,
+        AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
+        AppleHealthKit.Constants.Permissions.Weight,
+        AppleHealthKit.Constants.Permissions.BodyFatPercentage,
+      ],
+      write: [],
+    },
+  }
 }
 
 // Health Connect permissions (Android)
@@ -78,11 +111,22 @@ const healthConnectPermissions = [
  * Check if health services are available on this device
  */
 export async function isHealthAvailable(): Promise<boolean> {
+  // First check if native modules are available
+  if (!nativeModulesAvailable) {
+    console.log('[HealthService] Native modules not available')
+    return false
+  }
+
   if (Platform.OS === 'ios') {
     return new Promise((resolve) => {
-      AppleHealthKit.isAvailable((error, available) => {
-        resolve(!error && available)
-      })
+      try {
+        AppleHealthKit.isAvailable((error: any, available: boolean) => {
+          resolve(!error && available)
+        })
+      } catch (e) {
+        console.log('[HealthService] isAvailable error:', e)
+        resolve(false)
+      }
     })
   } else if (Platform.OS === 'android') {
     try {
@@ -108,26 +152,38 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
     isAvailable: false,
   }
 
+  // Check if native modules are available
+  if (!nativeModulesAvailable) {
+    console.log('[HealthService] Cannot request permissions - native modules not available')
+    return result
+  }
+
   if (Platform.OS === 'ios') {
     return new Promise((resolve) => {
-      AppleHealthKit.initHealthKit(healthKitPermissions, (error) => {
-        if (error) {
-          console.log('[HealthService] HealthKit init error:', error)
-          resolve(result)
-          return
-        }
+      try {
+        const permissions = getHealthKitPermissions()
+        AppleHealthKit.initHealthKit(permissions, (error: any) => {
+          if (error) {
+            console.log('[HealthService] HealthKit init error:', error)
+            resolve(result)
+            return
+          }
 
-        // HealthKit doesn't tell us which specific permissions were granted
-        // We assume all were granted if init succeeded
-        resolve({
-          steps: true,
-          sleep: true,
-          calories: true,
-          weight: true,
-          bodyFat: true,
-          isAvailable: true,
+          // HealthKit doesn't tell us which specific permissions were granted
+          // We assume all were granted if init succeeded
+          resolve({
+            steps: true,
+            sleep: true,
+            calories: true,
+            weight: true,
+            bodyFat: true,
+            isAvailable: true,
+          })
         })
-      })
+      } catch (e) {
+        console.log('[HealthService] initHealthKit exception:', e)
+        resolve(result)
+      }
     })
   } else if (Platform.OS === 'android') {
     try {

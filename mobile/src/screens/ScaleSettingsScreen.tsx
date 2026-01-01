@@ -251,12 +251,15 @@ export default function ScaleSettingsScreen() {
             <XCircle size={24} color={colors.warning} />
             <View style={styles.warningContent}>
               <Text style={[styles.warningTitle, { color: colors.warning }]}>
-                Non disponible
+                Non disponible en mode développement
               </Text>
               <Text style={[styles.warningText, { color: colors.text.secondary }]}>
                 {Platform.OS === 'ios'
-                  ? 'HealthKit n\'est pas disponible sur cet appareil.'
-                  : 'Health Connect n\'est pas installé. Téléchargez-le sur le Play Store.'}
+                  ? 'HealthKit nécessite un build de production. Cette fonctionnalité sera disponible dans l\'app publiée.'
+                  : 'Health Connect nécessite un build de production. Cette fonctionnalité sera disponible dans l\'app publiée.'}
+              </Text>
+              <Text style={[styles.warningHint, { color: colors.text.tertiary }]}>
+                En attendant, vous pouvez ajouter vos mesures manuellement dans l'onglet Progrès.
               </Text>
             </View>
           </Card>
@@ -456,6 +459,12 @@ const styles = StyleSheet.create({
   warningText: {
     ...typography.small,
     lineHeight: 18,
+  },
+  warningHint: {
+    ...typography.small,
+    lineHeight: 18,
+    marginTop: spacing.sm,
+    fontStyle: 'italic',
   },
   sectionTitle: {
     ...typography.bodyMedium,
