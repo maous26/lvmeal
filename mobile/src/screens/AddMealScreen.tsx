@@ -72,6 +72,7 @@ import BarcodeScanner from '../components/BarcodeScanner'
 import PhotoFoodScanner from '../components/PhotoFoodScanner'
 import VoiceFoodInput from '../components/VoiceFoodInput'
 import RecipeDiscovery from '../components/RecipeDiscovery'
+import { MealInputMethodsGrid } from '../components/MealInputMethodsGrid'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -156,16 +157,6 @@ function transformGustarToRecipe(gustar: GustarRecipe): Recipe {
   }
 }
 
-// Input methods with large icons like web
-const inputMethods = [
-  { id: 'search', label: 'Rechercher', icon: Search, color: colors.accent.primary, bgColor: '#EBF5FF' },
-  { id: 'photo', label: 'Photo', icon: Camera, color: '#E11D48', bgColor: '#FFF1F2' },
-  { id: 'voice', label: 'Vocal', icon: Mic, color: '#8B5CF6', bgColor: '#F3E8FF' },
-  { id: 'barcode', label: 'Code-barres', icon: Barcode, color: colors.success, bgColor: '#ECFDF5' },
-  { id: 'ai-meal', label: 'Repas IA', icon: Sparkles, color: '#F59E0B', bgColor: '#FFFBEB' },
-  { id: 'discover-recipes', label: 'Decouvrir', icon: Globe, color: '#06B6D4', bgColor: '#ECFEFF' },
-  { id: 'favorites', label: 'Mes favoris', icon: Heart, color: '#EC4899', bgColor: '#FDF2F8' },
-]
 
 type ServingUnit = 'g' | 'ml' | 'unit' | 'portion'
 
@@ -966,26 +957,8 @@ export default function AddMealScreen() {
               ))}
             </View>
 
-            {/* Input methods grid - Large icons like web */}
-            <Text style={styles.sectionTitle}>Comment ajouter ?</Text>
-            <View style={styles.methodsGrid}>
-              {inputMethods.map((method) => {
-                const Icon = method.icon
-                return (
-                  <TouchableOpacity
-                    key={method.id}
-                    style={styles.methodButton}
-                    onPress={() => handleMethodSelect(method.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.methodIconContainer, { backgroundColor: method.bgColor }]}>
-                      <Icon size={24} color={method.color} />
-                    </View>
-                    <Text style={styles.methodLabel}>{method.label}</Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
+            {/* Input methods grid - Personalized with pinned methods */}
+            <MealInputMethodsGrid onMethodSelect={handleMethodSelect} />
 
             {/* Selected foods summary */}
             {selectedFoods.length > 0 && (

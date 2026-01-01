@@ -31,6 +31,8 @@ import {
   Sparkles,
   AlertTriangle,
   PartyPopper,
+  Pin,
+  RotateCcw,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -48,6 +50,11 @@ import {
   scheduleDailyInsightNotification,
   cancelDailyInsightNotification,
 } from '../services/daily-insight-service'
+import {
+  useMealInputPreferencesStore,
+  ALL_INPUT_METHODS,
+  DEFAULT_PINNED_METHODS,
+} from '../stores/meal-input-preferences-store'
 
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
@@ -103,6 +110,11 @@ export default function ProfileScreen() {
     currentPhase: wellnessPhase,
     currentWeek: wellnessWeek,
   } = useWellnessProgramStore()
+
+  const {
+    pinnedMethods,
+    resetToDefaults: resetMealInputPreferences,
+  } = useMealInputPreferencesStore()
 
   // Program exclusion rules
   // - Metabolic: disabled if Wellness is active (exclusive program)
@@ -214,6 +226,30 @@ export default function ProfileScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     updateNotificationPreferences({ celebrationsEnabled: value })
   }
+
+  const handleResetMealInputPreferences = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    Alert.alert(
+      'Réinitialiser',
+      'Remettre les méthodes d\'ajout par défaut ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Réinitialiser',
+          style: 'destructive',
+          onPress: () => {
+            resetMealInputPreferences()
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          },
+        },
+      ]
+    )
+  }
+
+  // Get pinned methods labels for display
+  const pinnedMethodsLabels = pinnedMethods
+    .map(id => ALL_INPUT_METHODS.find(m => m.id === id)?.labelShort || id)
+    .join(', ')
 
   const handleToggleMetabolic = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -546,6 +582,34 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
+        {/* Meal Input Methods */}
+        <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Ajouter un repas</Text>
+        <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
+          <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}>
+            <Pin size={20} color={colors.accent.primary} />
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Méthodes épinglées</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]} numberOfLines={1}>
+                {pinnedMethodsLabels}
+              </Text>
+            </View>
+            <Text style={[styles.pinnedCount, { color: colors.text.muted }]}>
+              {pinnedMethods.length}/4
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={handleResetMealInputPreferences}
+            activeOpacity={0.7}
+          >
+            <RotateCcw size={20} color={colors.text.secondary} />
+            <Text style={[styles.settingLabel, { flex: 1, color: colors.text.primary }]}>
+              Réinitialiser par défaut
+            </Text>
+            <ChevronRight size={20} color={colors.text.tertiary} />
+          </TouchableOpacity>
+        </Card>
+
         {/* Settings */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated }}>
@@ -782,6 +846,10 @@ const styles = StyleSheet.create({
   notificationDescription: {
     ...typography.caption,
     marginTop: 2,
+  },
+  pinnedCount: {
+    ...typography.small,
+    fontWeight: '500',
   },
   dangerZone: {
     alignItems: 'center',
