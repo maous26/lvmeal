@@ -60,6 +60,13 @@ import { generateId } from '../lib/utils'
 import { searchFoods, preloadCiqual, type SearchSource } from '../services/food-search'
 import { gustarRecipes, type GustarRecipe, type DietaryPreference } from '../services/gustar-recipes'
 import { translateRecipe, suggestMeal, type AIRecipe } from '../services/ai-service'
+import {
+  generateSingleMealWithRAG,
+  generateFlexibleMealPlanWithRAG,
+  type SingleMealResult,
+  type MealSource,
+  SOURCE_LABELS,
+} from '../services/meal-plan-rag-service'
 import BarcodeScanner from '../components/BarcodeScanner'
 import PhotoFoodScanner from '../components/PhotoFoodScanner'
 import VoiceFoodInput from '../components/VoiceFoodInput'
@@ -254,6 +261,7 @@ export default function AddMealScreen() {
   const [suggestedRecipe, setSuggestedRecipe] = useState<AIRecipe | null>(null)
   const [planDuration, setPlanDuration] = useState<1 | 3 | 7>(1)
   const [calorieReduction, setCalorieReduction] = useState(false)
+  const [lastMealSource, setLastMealSource] = useState<{ source: MealSource; label: string; confidence: number } | null>(null)
 
   // Discover Modal state
   const [showDiscoverModal, setShowDiscoverModal] = useState(false)
@@ -560,7 +568,7 @@ export default function AddMealScreen() {
   const isRecipeFavorite = (recipeId: string) => favoriteRecipes.some((f: Recipe) => f.id === recipeId)
   const getDifficulty = (level: string | undefined) => difficultyLabels[level || 'medium'] || difficultyLabels.medium
 
-  // AI Recipe suggestion handler
+  // AI Recipe suggestion handler - Now uses RAG for intelligent source selection
   const handleAISuggest = async () => {
     if (!profile || !nutritionGoals) {
       Alert.alert('Profil requis', 'Configurez votre profil pour utiliser LymIA.')
@@ -568,60 +576,109 @@ export default function AddMealScreen() {
     }
 
     setIsSuggesting(true)
+    setLastMealSource(null)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     try {
       const consumed = getDailyNutrition(currentDate)
+      const consumedNutrition = {
+        calories: consumed.calories,
+        proteins: consumed.proteins,
+        carbs: consumed.carbs,
+        fats: consumed.fats,
+      }
 
-      const result = await suggestMeal({
-        mealType: selectedMealType,
-        userProfile: profile as UserProfile,
-        consumed: {
-          calories: consumed.calories,
-          proteins: consumed.proteins,
-          carbs: consumed.carbs,
-          fats: consumed.fats,
-        },
-      })
+      // Use RAG for single meal generation (1 day mode)
+      if (planDuration === 1) {
+        const result = await generateSingleMealWithRAG({
+          mealType: selectedMealType,
+          userProfile: profile as UserProfile,
+          consumed: consumedNutrition,
+          calorieReduction,
+        })
 
-      if (result.success && result.recipe) {
-        setSuggestedRecipe(result.recipe)
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        if (result.success && result.recipe) {
+          // Store source info for display
+          setLastMealSource({
+            source: result.source,
+            label: result.sourceLabel,
+            confidence: result.confidence,
+          })
 
-        // Create Recipe object and show detail modal
-        const aiRecipe: Recipe = {
-          id: `ai-${Date.now()}`,
-          title: result.recipe.title,
-          description: result.recipe.description,
-          imageUrl: result.recipe.imageUrl || undefined,
-          servings: result.recipe.servings,
-          prepTime: result.recipe.prepTime,
-          cookTime: 0,
-          totalTime: result.recipe.prepTime,
-          difficulty: 'medium',
-          category: selectedMealType,
-          ingredients: result.recipe.ingredients.map((ing, i) => ({
-            id: `ai-ing-${i}`,
-            name: ing.name,
-            amount: parseFloat(ing.amount) || 0,
-            unit: 'g',
-          })),
-          instructions: result.recipe.instructions,
-          nutrition: result.recipe.nutrition,
-          nutritionPerServing: result.recipe.nutrition,
-          tags: ['LymIA'],
-          dietTypes: [],
-          allergens: [],
-          rating: 5,
-          ratingCount: 1,
-          isFavorite: false,
-          source: 'ai',
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+          // Create Recipe object and show detail modal
+          const aiRecipe: Recipe = {
+            id: result.recipe.id,
+            title: result.recipe.title,
+            description: result.recipe.description,
+            imageUrl: result.recipe.imageUrl,
+            servings: result.recipe.servings,
+            prepTime: result.recipe.prepTime,
+            cookTime: 0,
+            totalTime: result.recipe.prepTime,
+            difficulty: 'medium',
+            category: selectedMealType,
+            ingredients: result.recipe.ingredients.map((ing, i) => ({
+              id: `rag-ing-${i}`,
+              name: ing.name,
+              amount: parseFloat(ing.amount) || 0,
+              unit: 'g',
+            })),
+            instructions: result.recipe.instructions,
+            nutrition: result.recipe.nutrition,
+            nutritionPerServing: result.recipe.nutrition,
+            tags: ['LymIA', result.sourceLabel],
+            dietTypes: [],
+            allergens: [],
+            rating: 5,
+            ratingCount: 1,
+            isFavorite: false,
+            source: result.source === 'ai' ? 'ai' : result.source,
+          }
+          setSelectedRecipe(aiRecipe)
+          setShowRecipeDetailModal(true)
+        } else {
+          Alert.alert('Aucun resultat', result.error || 'Impossible de trouver un repas correspondant.')
         }
-        setSelectedRecipe(aiRecipe)
-        setShowRecipeDetailModal(true)
+      } else {
+        // Multi-day plan generation (3 or 7 days)
+        const result = await generateFlexibleMealPlanWithRAG({
+          userProfile: profile as UserProfile,
+          dailyCalories: nutritionGoals.calories,
+          days: planDuration,
+          calorieReduction,
+        })
+
+        if (result.meals.length > 0) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+          // Show summary of generated plan
+          const totalMeals = result.meals.length
+          const sourceInfo = Object.entries(result.sourceBreakdown)
+            .filter(([_, count]) => count > 0)
+            .map(([source, count]) => `${SOURCE_LABELS[source as MealSource]}: ${count}`)
+            .join('\n')
+
+          Alert.alert(
+            `Plan ${planDuration} jours genere`,
+            `${totalMeals} repas crees\n\nSources utilisees:\n${sourceInfo}\n\nCalories totales: ${result.totalNutrition.calories} kcal`,
+            [
+              { text: 'Voir le plan', onPress: () => {
+                setShowAIRecipeModal(false)
+                // @ts-ignore
+                navigation.navigate('WeeklyPlan')
+              }},
+              { text: 'Fermer', style: 'cancel' }
+            ]
+          )
+        } else {
+          Alert.alert('Erreur', 'Impossible de generer le plan repas.')
+        }
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de generer une suggestion. Verifiez votre cle API.')
+      console.error('RAG meal generation error:', error)
+      Alert.alert('Erreur', 'Impossible de generer une suggestion. Reessayez.')
     } finally {
       setIsSuggesting(false)
     }
@@ -1742,7 +1799,15 @@ export default function AddMealScreen() {
                   </>
                 )}
 
-                <Button variant="primary" size="lg" fullWidth onPress={handleAISuggest} disabled={isSuggesting} style={{ marginTop: spacing.xl }}>
+                {/* RAG Info Card */}
+                <View style={styles.ragInfoCard}>
+                  <Database size={16} color={colors.accent.primary} />
+                  <Text style={styles.ragInfoText}>
+                    Sources intelligentes: Gustar, Open Food Facts, CIQUAL, IA
+                  </Text>
+                </View>
+
+                <Button variant="primary" size="lg" fullWidth onPress={handleAISuggest} disabled={isSuggesting} style={{ marginTop: spacing.lg }}>
                   {isSuggesting ? (
                     <>
                       <ActivityIndicator size="small" color="#FFFFFF" />
@@ -2850,6 +2915,21 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: '#FFFFFF',
     marginLeft: spacing.sm,
+  },
+  ragInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${colors.accent.primary}10`,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  ragInfoText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    flex: 1,
   },
   // Discover styles
   discoverSearchRow: {

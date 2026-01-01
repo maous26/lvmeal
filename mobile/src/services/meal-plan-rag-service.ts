@@ -17,6 +17,9 @@ import {
   type SourcedMeal,
   type RAGContext,
 } from './rag-service'
+
+// Re-export MealSource for consumers
+export type { MealSource } from './rag-service'
 import {
   loadStaticRecipes,
   getStaticRecipesByMealType,
@@ -428,9 +431,311 @@ export async function getMealsFromSource(
   return results
 }
 
+// ============= SINGLE MEAL GENERATION (for Repas IA) =============
+
+export interface SingleMealResult {
+  success: boolean
+  recipe: {
+    id: string
+    title: string
+    description: string
+    ingredients: { name: string; amount: string; calories: number }[]
+    instructions: string[]
+    nutrition: NutritionInfo
+    prepTime: number
+    servings: number
+    imageUrl?: string
+  } | null
+  source: MealSource
+  sourceLabel: string
+  confidence: number
+  error?: string
+}
+
+/**
+ * Labels for sources in French
+ */
+export const SOURCE_LABELS: Record<MealSource, string> = {
+  gustar: 'Recettes Gustar',
+  off: 'Open Food Facts',
+  ciqual: 'CIQUAL (ANSES)',
+  ai: 'LymIA (IA)',
+}
+
+/**
+ * Generate a single meal using RAG for the "Repas IA" feature
+ * This replaces the direct OpenAI call with intelligent source selection
+ */
+export async function generateSingleMealWithRAG(params: {
+  mealType: MealType
+  userProfile: UserProfile
+  consumed: NutritionInfo
+  calorieReduction?: boolean
+}): Promise<SingleMealResult> {
+  const { mealType, userProfile, consumed, calorieReduction = false } = params
+
+  // Ensure static recipes are loaded
+  await loadStaticRecipes()
+
+  // Calculate target calories for this meal
+  const dailyTarget = userProfile.nutritionalNeeds?.calories || 2000
+  const adjustedTarget = calorieReduction ? Math.round(dailyTarget * 0.9) : dailyTarget
+
+  const mealTargets = calculateMealTargets(adjustedTarget)
+  const targetCalories = mealTargets[mealType]
+
+  // Build RAG context
+  const ragContext = buildRAGContext({
+    userProfile,
+    mealType,
+    day: 0,
+    dailyTarget: adjustedTarget,
+    consumed,
+    existingMeals: [],
+  })
+
+  console.log(`[RAG] Generating ${mealType} with target ${targetCalories} kcal (reduction: ${calorieReduction})`)
+
+  try {
+    const sourcedMeal = await getRAGMeal(ragContext)
+
+    if (!sourcedMeal) {
+      return {
+        success: false,
+        recipe: null,
+        source: 'ai',
+        sourceLabel: SOURCE_LABELS.ai,
+        confidence: 0,
+        error: 'Impossible de trouver un repas correspondant',
+      }
+    }
+
+    // Convert to recipe format compatible with AddMealScreen
+    const recipe = {
+      id: generateMealId(),
+      title: sourcedMeal.recipe?.title ||
+             sourcedMeal.aiRecipe?.title ||
+             sourcedMeal.offProduct?.name ||
+             'Repas suggere',
+      description: sourcedMeal.recipe?.description ||
+                   sourcedMeal.aiRecipe?.description ||
+                   (sourcedMeal.offProduct?.brand ? `Par ${sourcedMeal.offProduct.brand}` : ''),
+      ingredients: getIngredients(sourcedMeal),
+      instructions: getInstructions(sourcedMeal),
+      nutrition: sourcedMeal.nutrition,
+      prepTime: getPrepTime(sourcedMeal),
+      servings: getServings(sourcedMeal),
+      imageUrl: getImageUrl(sourcedMeal),
+    }
+
+    console.log(`[RAG] Success: ${recipe.title} from ${sourcedMeal.source} (${Math.round(sourcedMeal.confidence * 100)}%)`)
+
+    return {
+      success: true,
+      recipe,
+      source: sourcedMeal.source,
+      sourceLabel: SOURCE_LABELS[sourcedMeal.source],
+      confidence: sourcedMeal.confidence,
+    }
+  } catch (error) {
+    console.error('[RAG] Error generating meal:', error)
+    return {
+      success: false,
+      recipe: null,
+      source: 'ai',
+      sourceLabel: SOURCE_LABELS.ai,
+      confidence: 0,
+      error: error instanceof Error ? error.message : 'Erreur inconnue',
+    }
+  }
+}
+
+/**
+ * Generate a multi-day meal plan with flexible duration
+ */
+export async function generateFlexibleMealPlanWithRAG(params: {
+  userProfile: UserProfile
+  dailyCalories: number
+  days: 1 | 3 | 7
+  calorieReduction?: boolean
+  preferences?: MealPlanConfig['preferences']
+}): Promise<GeneratedMealPlan & { days: number }> {
+  const { userProfile, dailyCalories, days, calorieReduction = false, preferences } = params
+
+  // Adjust calories if reduction mode
+  const adjustedCalories = calorieReduction ? Math.round(dailyCalories * 0.9) : dailyCalories
+
+  // Ensure static recipes are loaded
+  await loadStaticRecipes()
+
+  const mealTargets = calculateMealTargets(adjustedCalories)
+  const meals: PlannedMealItem[] = []
+  const existingMealNames: string[] = []
+
+  // Track source usage
+  const sourceBreakdown = {
+    gustar: 0,
+    off: 0,
+    ciqual: 0,
+    ai: 0,
+  }
+
+  // Generate meals for each day
+  for (let dayIndex = 0; dayIndex < days; dayIndex++) {
+    console.log(`[RAG] Generating meals for day ${dayIndex + 1}/${days}...`)
+
+    for (const mealType of MEAL_TYPES_ORDER) {
+      const isCheatMeal =
+        preferences?.includeCheatMeal &&
+        preferences?.cheatMealDay === dayIndex &&
+        preferences?.cheatMealType === mealType
+
+      const slot: MealSlot = {
+        dayIndex,
+        mealType,
+        targetCalories: isCheatMeal
+          ? Math.round(mealTargets[mealType] * 1.5)
+          : mealTargets[mealType],
+        isCheatMeal,
+      }
+
+      // Build consumed nutrition for this day
+      const consumed: NutritionInfo = {
+        calories: 0,
+        proteins: 0,
+        carbs: 0,
+        fats: 0,
+      }
+
+      meals
+        .filter(m => m.dayIndex === dayIndex)
+        .forEach(m => {
+          consumed.calories += m.nutrition.calories
+          consumed.proteins += m.nutrition.proteins
+          consumed.carbs += m.nutrition.carbs
+          consumed.fats += m.nutrition.fats
+        })
+
+      const ragContext = buildRAGContext({
+        userProfile,
+        mealType,
+        day: dayIndex,
+        dailyTarget: adjustedCalories,
+        consumed,
+        existingMeals: existingMealNames,
+      })
+
+      if (preferences?.preferQuick && ragContext.preferences) {
+        ragContext.preferences.preferHomemade = false
+      }
+
+      try {
+        const sourcedMeal = await getRAGMeal(ragContext)
+
+        if (sourcedMeal) {
+          const mealName = sourcedMeal.recipe?.title ||
+            sourcedMeal.aiRecipe?.title ||
+            sourcedMeal.offProduct?.name ||
+            `${mealType} jour ${dayIndex + 1}`
+
+          const plannedMeal = sourcedMealToPlannedItem(sourcedMeal, slot, mealName)
+          meals.push(plannedMeal)
+          existingMealNames.push(mealName)
+
+          if (sourcedMeal.source === 'gustar') sourceBreakdown.gustar++
+          else if (sourcedMeal.source === 'off') sourceBreakdown.off++
+          else if (sourcedMeal.source === 'ciqual') sourceBreakdown.ciqual++
+          else if (sourcedMeal.source === 'ai') sourceBreakdown.ai++
+
+          console.log(`  [${sourcedMeal.source}] ${mealType}: ${mealName} (${sourcedMeal.nutrition.calories} kcal)`)
+        }
+      } catch (error) {
+        console.error(`  Error generating ${mealType}:`, error)
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+  }
+
+  const totalNutrition = meals.reduce(
+    (acc, meal) => ({
+      calories: acc.calories + meal.nutrition.calories,
+      proteins: acc.proteins + meal.nutrition.proteins,
+      carbs: acc.carbs + meal.nutrition.carbs,
+      fats: acc.fats + meal.nutrition.fats,
+    }),
+    { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+  )
+
+  return {
+    meals,
+    sourceBreakdown,
+    totalNutrition,
+    generatedAt: new Date().toISOString(),
+    days,
+  }
+}
+
+// Helper functions for extracting data from SourcedMeal
+function getIngredients(meal: SourcedMeal): { name: string; amount: string; calories: number }[] {
+  if (meal.recipe) {
+    return meal.recipe.ingredients.map(ing => ({
+      name: ing.name,
+      amount: `${ing.amount} ${ing.unit}`,
+      calories: 0,
+    }))
+  }
+  if (meal.aiRecipe) {
+    return meal.aiRecipe.ingredients.map(ing => ({
+      name: ing.name,
+      amount: ing.amount,
+      calories: ing.calories || 0,
+    }))
+  }
+  if (meal.offProduct) {
+    return [{
+      name: meal.offProduct.name,
+      amount: `${meal.offProduct.portion}g`,
+      calories: meal.nutrition.calories,
+    }]
+  }
+  return []
+}
+
+function getInstructions(meal: SourcedMeal): string[] {
+  if (meal.recipe) return meal.recipe.instructions
+  if (meal.aiRecipe) return meal.aiRecipe.instructions
+  if (meal.offProduct) return ['Pret a consommer']
+  return []
+}
+
+function getPrepTime(meal: SourcedMeal): number {
+  if (meal.recipe) return meal.recipe.prepTime || meal.recipe.totalTime || 30
+  if (meal.aiRecipe) return meal.aiRecipe.prepTime
+  return 0
+}
+
+function getServings(meal: SourcedMeal): number {
+  if (meal.recipe) return meal.recipe.servings || 1
+  if (meal.aiRecipe) return meal.aiRecipe.servings
+  return 1
+}
+
+function getImageUrl(meal: SourcedMeal): string | undefined {
+  if (meal.recipe) return meal.recipe.imageUrl
+  if (meal.aiRecipe) return meal.aiRecipe.imageUrl || undefined
+  if (meal.offProduct) return meal.offProduct.imageUrl
+  return undefined
+}
+
 export default {
   generateMealPlanWithRAG,
   regenerateMealWithRAG,
   getMealSourceRecommendation,
   getMealsFromSource,
+  // New RAG-powered functions
+  generateSingleMealWithRAG,
+  generateFlexibleMealPlanWithRAG,
+  SOURCE_LABELS,
 }
