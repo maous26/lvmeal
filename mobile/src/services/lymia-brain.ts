@@ -1396,6 +1396,14 @@ export async function generateConnectedInsights(
 ): Promise<ConnectedInsight[]> {
   const { profile, todayNutrition, wellnessData, programProgress, fastingContext } = context
 
+  // IMPORTANT: No insights for users who haven't logged meals today
+  // This prevents anxious messages for new users or users just starting their day
+  // Aligns with LYM philosophy: "Sans jugement. Jamais."
+  const hasLoggedMealsToday = todayNutrition.calories > 0
+  if (!hasLoggedMealsToday) {
+    return [] // No coach insights until user has data
+  }
+
   // Query knowledge base for cross-domain relationships - include fasting if applicable
   const fastingTerm = fastingContext?.schedule && fastingContext.schedule !== 'none' ? ' jeune intermittent fenetre alimentaire' : ''
   const kbEntries = await queryKB(
@@ -1527,10 +1535,22 @@ Réponds en JSON:
 
 /**
  * Fallback static insights when AI is unavailable
+ *
+ * IMPORTANT: For new users (no meals logged today), we show welcoming messages
+ * instead of alerts. This aligns with LYM philosophy: "Sans jugement. Jamais."
  */
 function generateStaticConnectedInsights(context: UserContext): ConnectedInsight[] {
   const insights: ConnectedInsight[] = []
   const { wellnessData, todayNutrition, profile, fastingContext } = context
+
+  // Check if user has logged any meals today - if not, show welcoming message only
+  const hasLoggedMealsToday = todayNutrition.calories > 0
+
+  // For new users or users who haven't logged meals yet: NO messages at all
+  // The CoachInsights widget should not appear - let user discover the app peacefully
+  if (!hasLoggedMealsToday) {
+    return [] // Return empty - no insights for users without data today
+  }
 
   // Fasting → Nutrition connection (high priority during fasting)
   if (fastingContext?.schedule && fastingContext.schedule !== 'none' && !fastingContext.isInEatingWindow) {
