@@ -9,57 +9,76 @@ function getTodayString(): string {
 }
 
 interface CaloricBankState {
-  // 7-day rolling balance
+  // Solde hebdomadaire (7 jours glissants)
   dailyBalances: DailyBalance[]
 
-  // Week tracking
+  // Suivi de la semaine
   weekStartDate: string | null
   isFirstTime: boolean
 
-  // Cheat meal settings
-  cheatMealBudget: number // calories saved for cheat meal
+  // Solde plaisir
+  cheatMealBudget: number // calories économisées (solde unique hebdomadaire)
   lastCheatMealDate: string | null
-  cheatMealFrequency: 'weekly' | 'biweekly' | 'monthly'
 
-  // Repas plaisir tracking (max 2 per week)
-  weeklyPlaisirCount: number // nombre de repas plaisir utilisés cette semaine
-  plaisirDatesThisWeek: string[] // dates des repas plaisir cette semaine
+  // Suivi des repas plaisir (max 2 par semaine)
+  weeklyPlaisirCount: number
+  plaisirDatesThisWeek: string[]
 
   // Actions
   initializeWeek: () => void
   confirmStartDay: () => void
   updateDailyBalance: (date: string, targetCalories: number, consumedCalories: number) => void
-  useCheatMeal: (calories: number) => boolean
-  setCheatMealFrequency: (frequency: 'weekly' | 'biweekly' | 'monthly') => void
+  usePlaisirMeal: (calories: number) => boolean // Renommé pour plus de clarté
   cleanOldBalances: () => void
 
   // Getters
   getTotalSaved: () => number
   getTotalBalance: () => number
   getWeeklyBalance: () => DailyBalance[]
-  canHaveCheatMeal: () => boolean
-  canHavePlaisir: () => boolean
+  canHavePlaisir: () => boolean // Condition principale : jour >= 3 ET solde >= 200 ET repas restants
   getCurrentDayIndex: () => number
   getDaysUntilNewWeek: () => number
   isFirstTimeSetup: () => boolean
-  getCheatMealSuggestion: () => { available: boolean; budget: number; suggestion: string; maxPerMeal: number; requiresSplit: boolean; remainingPlaisirMeals: number }
-  getMaxPlaisirPerMeal: () => number
-  requiresSplitConsumption: () => boolean
+  getPlaisirSuggestion: () => { available: boolean; budget: number; suggestion: string; maxPerMeal: number; requiresSplit: boolean; remainingPlaisirMeals: number }
+  getMaxPlaisirPerMeal: () => number // min(solde, 600)
+  requiresSplitConsumption: () => boolean // solde > 600
   getRemainingPlaisirMeals: () => number
   canUsePlaisirMeal: () => boolean
+
+  // Aliases pour rétrocompatibilité
+  canHaveCheatMeal: () => boolean
+  useCheatMeal: (calories: number) => boolean
+  getCheatMealSuggestion: () => { available: boolean; budget: number; suggestion: string; maxPerMeal: number; requiresSplit: boolean; remainingPlaisirMeals: number }
 }
 
-const CHEAT_MEAL_THRESHOLDS = {
-  weekly: 500,
-  biweekly: 1000,
-  monthly: 2000,
-}
+// ============================================================================
+// RÈGLES DU SOLDE PLAISIR (Pleasure Balance Rules)
+// ============================================================================
+//
+// Principe : UN SEUL solde hebdomadaire, consommable en 1 ou 2 repas plaisir
+//
+// Accumulation :
+// - L'utilisateur économise des calories au fil des jours
+// - Solde max recommandé : ~1200 kcal (10% × 6 jours pour 2000 kcal/j)
+// - Réinitialisé chaque semaine
+//
+// Déclenchement :
+// - 1er repas plaisir : jour >= 3 ET solde >= 200 kcal
+// - 2ème repas plaisir : si solde restant > 0 après le 1er
+//
+// Plafond par repas : 600 kcal max (évite les gros excès)
+// ============================================================================
 
-// Seuil à partir duquel le solde plaisir doit être réparti sur plusieurs repas
-const SPLIT_THRESHOLD = 600 // Si budget > 600 kcal, doit être consommé sur au moins 2 repas
-const MAX_SINGLE_MEAL_RATIO = 0.5 // Maximum 50% du budget par repas
+// Seuil minimum pour débloquer un repas plaisir
+const MIN_PLAISIR_THRESHOLD = 200
 
-// Règle structurelle : max 2 repas plaisir par semaine (garde le côté événementiel)
+// Maximum de calories par repas plaisir (protection régime)
+const MAX_PLAISIR_PER_MEAL = 600
+
+// Jour minimum pour déclencher (0-indexed, donc 2 = jour 3)
+const MIN_DAY_FOR_PLAISIR = 2
+
+// Max 2 repas plaisir par semaine
 const MAX_PLAISIR_MEALS_PER_WEEK = 2
 
 export const useCaloricBankStore = create<CaloricBankState>()(
@@ -70,7 +89,6 @@ export const useCaloricBankStore = create<CaloricBankState>()(
       isFirstTime: true,
       cheatMealBudget: 0,
       lastCheatMealDate: null,
-      cheatMealFrequency: 'weekly',
       weeklyPlaisirCount: 0,
       plaisirDatesThisWeek: [],
 
@@ -187,8 +205,9 @@ export const useCaloricBankStore = create<CaloricBankState>()(
         return true
       },
 
-      setCheatMealFrequency: (frequency) => {
-        set({ cheatMealFrequency: frequency })
+      // Alias pour la nouvelle nomenclature
+      usePlaisirMeal: (calories: number) => {
+        return get().useCheatMeal(calories)
       },
 
       cleanOldBalances: () => {
@@ -234,11 +253,11 @@ export const useCaloricBankStore = create<CaloricBankState>()(
       },
 
       canHavePlaisir: () => {
-        const { getCurrentDayIndex, getTotalBalance } = get()
+        const { getCurrentDayIndex, getTotalBalance, canUsePlaisirMeal } = get()
         const dayIndex = getCurrentDayIndex()
         const balance = getTotalBalance()
-        // Can have plaisir on days 5-7 (index 4-6) if balance > 200
-        return dayIndex >= 4 && balance > 200
+        // Jour >= 3 (index >= 2) ET solde >= 200 kcal ET repas plaisir restants
+        return dayIndex >= MIN_DAY_FOR_PLAISIR && balance >= MIN_PLAISIR_THRESHOLD && canUsePlaisirMeal()
       },
 
       getWeeklyBalance: () => {
@@ -247,47 +266,21 @@ export const useCaloricBankStore = create<CaloricBankState>()(
       },
 
       canHaveCheatMeal: () => {
-        const { cheatMealBudget, lastCheatMealDate, cheatMealFrequency } = get()
-        const threshold = CHEAT_MEAL_THRESHOLDS[cheatMealFrequency]
-
-        if (cheatMealBudget < threshold) {
-          return false
-        }
-
-        if (!lastCheatMealDate) {
-          return true
-        }
-
-        const lastDate = new Date(lastCheatMealDate)
-        const today = new Date()
-        const daysSince = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-
-        const minDays = {
-          weekly: 7,
-          biweekly: 14,
-          monthly: 30,
-        }
-
-        return daysSince >= minDays[cheatMealFrequency]
+        // Simplifié : on utilise canHavePlaisir() comme source de vérité
+        return get().canHavePlaisir()
       },
 
-      // Vérifie si le budget doit être réparti sur plusieurs repas
+      // Vérifie si le budget doit être réparti sur plusieurs repas (> 600 kcal)
       requiresSplitConsumption: () => {
         const { cheatMealBudget } = get()
-        return cheatMealBudget > SPLIT_THRESHOLD
+        return cheatMealBudget > MAX_PLAISIR_PER_MEAL
       },
 
       // Retourne le maximum de calories consommables par repas plaisir
+      // Simple : min(solde, 600 kcal)
       getMaxPlaisirPerMeal: () => {
         const { cheatMealBudget } = get()
-
-        // Si le budget est <= au seuil, on peut tout consommer en un repas
-        if (cheatMealBudget <= SPLIT_THRESHOLD) {
-          return cheatMealBudget
-        }
-
-        // Sinon, maximum 50% du budget par repas (doit être réparti sur au moins 2 repas)
-        return Math.floor(cheatMealBudget * MAX_SINGLE_MEAL_RATIO)
+        return Math.min(cheatMealBudget, MAX_PLAISIR_PER_MEAL)
       },
 
       // Retourne le nombre de repas plaisir restants cette semaine
@@ -303,40 +296,40 @@ export const useCaloricBankStore = create<CaloricBankState>()(
       },
 
       getCheatMealSuggestion: () => {
-        const { cheatMealBudget, canHaveCheatMeal: checkCanHave, cheatMealFrequency, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals, canUsePlaisirMeal } = get()
-        const budgetAvailable = checkCanHave()
+        const { cheatMealBudget, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals, canUsePlaisirMeal, getCurrentDayIndex } = get()
+        const available = canHavePlaisir()
         const canUseThisWeek = canUsePlaisirMeal()
-        const available = budgetAvailable && canUseThisWeek
-        const threshold = CHEAT_MEAL_THRESHOLDS[cheatMealFrequency]
         const maxPerMeal = getMaxPlaisirPerMeal()
         const requiresSplit = requiresSplitConsumption()
         const remainingMeals = getRemainingPlaisirMeals()
+        const dayIndex = getCurrentDayIndex()
 
         let suggestion = ''
 
         // Cas où on a déjà utilisé les 2 repas plaisir de la semaine
-        if (budgetAvailable && !canUseThisWeek) {
+        if (!canUseThisWeek) {
           suggestion = `Tu as déjà profité de tes 2 repas plaisir cette semaine. Nouvelle semaine, nouveaux plaisirs !`
         } else if (available) {
           // Messages bienveillants : on dit le budget, on encourage la différence sans nommer d'aliments
           if (requiresSplit) {
-            // Budget conséquent - 2 repas plaisir
+            // Budget > 600 kcal → peut faire 2 repas plaisir
             if (remainingMeals === 2) {
-              suggestion = `+${maxPerMeal} kcal bonus par repas plaisir cette semaine. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+              suggestion = `+${maxPerMeal} kcal bonus par repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
             } else {
-              suggestion = `+${maxPerMeal} kcal bonus pour ton repas plaisir. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
+              suggestion = `+${maxPerMeal} kcal bonus pour ton dernier repas plaisir. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
             }
           } else {
-            // Budget normal - un seul repas
-            if (remainingMeals === 2) {
-              suggestion = `+${cheatMealBudget} kcal bonus pour un repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
-            } else {
-              suggestion = `Dernier repas plaisir de la semaine ! +${cheatMealBudget} kcal pour te faire vraiment plaisir.`
-            }
+            // Budget <= 600 kcal → un seul repas
+            suggestion = `+${cheatMealBudget} kcal bonus pour ton repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
           }
+        } else if (dayIndex < MIN_DAY_FOR_PLAISIR) {
+          // Pas encore jour 3
+          const daysLeft = MIN_DAY_FOR_PLAISIR - dayIndex
+          suggestion = `Encore ${daysLeft} jour${daysLeft > 1 ? 's' : ''} avant de pouvoir débloquer ton repas plaisir`
         } else {
-          const remaining = threshold - cheatMealBudget
-          suggestion = `Encore ${remaining} kcal à économiser pour débloquer ton repas plaisir de la semaine`
+          // Jour >= 3 mais solde insuffisant
+          const needed = MIN_PLAISIR_THRESHOLD - cheatMealBudget
+          suggestion = `Encore ${needed} kcal à économiser pour débloquer ton repas plaisir`
         }
 
         return {
@@ -348,6 +341,11 @@ export const useCaloricBankStore = create<CaloricBankState>()(
           remainingPlaisirMeals: remainingMeals,
         }
       },
+
+      // Alias pour la nouvelle nomenclature
+      getPlaisirSuggestion: () => {
+        return get().getCheatMealSuggestion()
+      },
     }),
     {
       name: 'presence-caloric-bank',
@@ -358,7 +356,6 @@ export const useCaloricBankStore = create<CaloricBankState>()(
         isFirstTime: state.isFirstTime,
         cheatMealBudget: state.cheatMealBudget,
         lastCheatMealDate: state.lastCheatMealDate,
-        cheatMealFrequency: state.cheatMealFrequency,
         weeklyPlaisirCount: state.weeklyPlaisirCount,
         plaisirDatesThisWeek: state.plaisirDatesThisWeek,
       }),

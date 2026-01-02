@@ -245,28 +245,24 @@ export function LymIA({ className }: LymIAProps) {
     }
 
     // Plaisir message when available
-    if (canHavePlaisirToday && caloricBalance > 200 && canStillUsePlaisir) {
+    // canHavePlaisirToday vérifie déjà : jour >= 3 ET solde >= 200 ET repas restants
+    if (canHavePlaisirToday) {
       let plaisirMessage: string
       let plaisirTitle: string
 
       if (needsSplit) {
-        // Budget conséquent - 2 repas plaisir possibles
+        // Budget > 600 kcal → 2 repas plaisir possibles
         if (remainingPlaisirMeals === 2) {
-          plaisirTitle = 'Tes 2 repas plaisir de la semaine !'
-          plaisirMessage = `+${maxPerMeal} kcal bonus par repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+          plaisirTitle = 'Tes repas plaisir de la semaine !'
+          plaisirMessage = `+${maxPerMeal} kcal bonus par repas. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
         } else {
-          plaisirTitle = 'Ton repas plaisir de la semaine !'
+          plaisirTitle = 'Ton dernier repas plaisir !'
           plaisirMessage = `+${maxPerMeal} kcal bonus. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
         }
       } else {
-        // Budget normal
-        if (remainingPlaisirMeals === 2) {
-          plaisirTitle = 'Ton repas plaisir de la semaine !'
-          plaisirMessage = `+${caloricBalance} kcal bonus. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
-        } else {
-          plaisirTitle = 'Dernier repas plaisir !'
-          plaisirMessage = `+${caloricBalance} kcal pour te faire vraiment plaisir.`
-        }
+        // Budget <= 600 kcal → un seul repas
+        plaisirTitle = 'Ton repas plaisir de la semaine !'
+        plaisirMessage = `+${maxPerMeal} kcal bonus. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
       }
 
       messages.push({
@@ -277,8 +273,8 @@ export function LymIA({ className }: LymIAProps) {
         message: plaisirMessage,
         priority: 75,
       })
-    } else if (canHavePlaisirToday && caloricBalance > 200 && !canStillUsePlaisir) {
-      // On a du budget mais déjà utilisé les 2 repas plaisir
+    } else if (!canStillUsePlaisir && caloricBalance > 0) {
+      // Plus de repas plaisir disponibles cette semaine
       messages.push({
         id: 'plaisir-used',
         type: 'tip',
