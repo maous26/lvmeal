@@ -27,6 +27,7 @@ import * as Haptics from 'expo-haptics'
 
 import { Button } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useRecipesStore } from '../stores/recipes-store'
@@ -71,6 +72,7 @@ export default function RecipeDetailScreen() {
   const navigation = useNavigation()
   const route = useRoute()
   const params = (route.params as RecipeDetailParams) || {}
+  const { colors: themeColors } = useTheme()
 
   const { addMeal } = useMealsStore()
   const { addXP } = useGamificationStore()
@@ -373,9 +375,9 @@ export default function RecipeDetailScreen() {
                 fullWidth
                 onPress={handleSaveRating}
                 style={styles.saveRatingButton}
+                icon={<Check size={18} color="#FFFFFF" />}
               >
-                <Check size={18} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Enregistrer ma note</Text>
+                Enregistrer ma note
               </Button>
             )}
           </View>
@@ -402,7 +404,11 @@ export default function RecipeDetailScreen() {
                   <Text
                     style={[
                       styles.mealTypeLabel,
-                      selectedMealType === meal.id && styles.mealTypeLabelActive,
+                      { color: themeColors.text.secondary },
+                      selectedMealType === meal.id && [
+                        styles.mealTypeLabelActive,
+                        { color: themeColors.accent.primary },
+                      ],
                     ]}
                   >
                     {meal.label}
@@ -412,43 +418,43 @@ export default function RecipeDetailScreen() {
             </View>
 
             {/* Add to Meal Button */}
-            <Button
-              variant="default"
-              size="lg"
-              fullWidth
+            <TouchableOpacity
+              style={styles.addMealButton}
               onPress={handleAddToMeal}
-              style={styles.addButton}
+              activeOpacity={0.8}
             >
               <Plus size={18} color="#FFFFFF" />
-              <Text style={styles.buttonText}>
+              <Text style={styles.addMealButtonText}>
                 Ajouter au {mealConfig[selectedMealType]?.label || 'repas'}
               </Text>
-            </Button>
+            </TouchableOpacity>
           </View>
 
           {/* Add to favorites button */}
-          <Button
-            variant={isRecipeFavorite(recipe.id) ? 'outline' : 'primary'}
-            size="lg"
-            fullWidth
+          <TouchableOpacity
+            style={[
+              styles.favActionButton,
+              isRecipeFavorite(recipe.id)
+                ? styles.favActionButtonOutline
+                : styles.favActionButtonPrimary
+            ]}
             onPress={handleToggleFavorite}
-            style={styles.favoriteActionButton}
+            activeOpacity={0.8}
           >
             <Heart
               size={18}
-              color={isRecipeFavorite(recipe.id) ? colors.error : '#FFFFFF'}
-              fill={isRecipeFavorite(recipe.id) ? colors.error : 'transparent'}
+              color={isRecipeFavorite(recipe.id) ? themeColors.error : '#FFFFFF'}
+              fill={isRecipeFavorite(recipe.id) ? themeColors.error : 'transparent'}
             />
             <Text
-              style={
-                isRecipeFavorite(recipe.id)
-                  ? [styles.buttonTextOutline, { color: colors.error }]
-                  : styles.buttonText
-              }
+              style={[
+                styles.favActionButtonText,
+                isRecipeFavorite(recipe.id) && { color: themeColors.error }
+              ]}
             >
               {isRecipeFavorite(recipe.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             </Text>
-          </Button>
+          </TouchableOpacity>
 
           <View style={styles.bottomSpacer} />
         </View>
@@ -651,6 +657,7 @@ const styles = StyleSheet.create({
     padding: spacing.default,
     borderRadius: radius.lg,
     marginBottom: spacing.md,
+    overflow: 'visible',
   },
   addToMealTitle: {
     ...typography.bodyMedium,
@@ -681,27 +688,48 @@ const styles = StyleSheet.create({
   },
   mealTypeLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   mealTypeLabelActive: {
-    color: colors.accent.primary,
     fontWeight: '600',
   },
-  addButton: {
+  addMealButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#009FEB',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
     marginTop: spacing.md,
+    gap: spacing.sm,
   },
-  favoriteActionButton: {
-    marginTop: spacing.sm,
-  },
-  buttonText: {
-    ...typography.bodyMedium,
+  addMealButtonText: {
+    ...typography.button,
     color: '#FFFFFF',
-    marginLeft: spacing.sm,
+    fontSize: 17,
   },
-  buttonTextOutline: {
-    ...typography.bodyMedium,
-    color: colors.text.primary,
-    marginLeft: spacing.sm,
+  favActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  favActionButtonPrimary: {
+    backgroundColor: '#009FEB',
+  },
+  favActionButtonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.border.default,
+  },
+  favActionButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontSize: 17,
   },
   bottomSpacer: {
     height: spacing['2xl'],

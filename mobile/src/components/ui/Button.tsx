@@ -142,6 +142,10 @@ export function Button({
   const variantStyles = getVariantStyles()
   const sizeStyles = getSizeStyles()
 
+  // Extract backgroundColor from style prop to ensure it overrides variant
+  const styleObj = style as ViewStyle | undefined
+  const customBgColor = styleObj?.backgroundColor
+
   return (
     <Pressable
       onPress={handlePress}
@@ -154,6 +158,8 @@ export function Button({
         disabled && styles.disabled,
         pressed && !disabled && styles.pressed,
         style,
+        // Force backgroundColor override at the end
+        customBgColor ? { backgroundColor: customBgColor } : undefined,
       ]}
     >
       {loading ? (
