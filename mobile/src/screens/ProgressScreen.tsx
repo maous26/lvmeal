@@ -12,6 +12,7 @@ import {
 } from 'react-native'
 import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, ChevronLeft, Settings, Bluetooth } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import Svg, { Path, Circle, Defs, LinearGradient as SvgGradient, Stop, Line, Text as SvgText } from 'react-native-svg'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -122,7 +123,31 @@ export default function ProgressScreen() {
     const lost = start - current
     const progress = totalToLose !== 0 ? Math.min(100, Math.max(0, (lost / totalToLose) * 100)) : 0
 
-    return { current, target, start, weeklyChange, monthlyChange, progress }
+    // ETA calculation (weeks to goal)
+    let etaWeeks: number | null = null
+    let etaDate: Date | null = null
+    const remainingToGoal = target ? current - target : null
+
+    if (remainingToGoal !== null && weeklyChange !== null && weeklyChange !== 0) {
+      // Check if we're moving in the right direction
+      const needsLoss = remainingToGoal > 0
+      const isLosing = weeklyChange < 0
+
+      if ((needsLoss && isLosing) || (!needsLoss && !isLosing)) {
+        // Calculate weeks based on weekly rate
+        const absWeeklyRate = Math.abs(weeklyChange)
+        const absRemaining = Math.abs(remainingToGoal)
+        etaWeeks = Math.ceil(absRemaining / absWeeklyRate)
+
+        // Calculate estimated date
+        if (etaWeeks > 0 && etaWeeks < 200) { // Cap at ~4 years
+          etaDate = new Date()
+          etaDate.setDate(etaDate.getDate() + etaWeeks * 7)
+        }
+      }
+    }
+
+    return { current, target, start, weeklyChange, monthlyChange, progress, etaWeeks, etaDate }
   }, [sortedWeights, profile])
 
   // Add weight handler
@@ -350,6 +375,34 @@ export default function ProgressScreen() {
                       style={[styles.weightProgressFill, { width: `${weightStats.progress}%` }]}
                     />
                   </View>
+
+                  {/* ETA to goal */}
+                  {weightStats.etaWeeks !== null && weightStats.etaDate && (
+                    <View style={[styles.etaContainer, { backgroundColor: `${staticColors.success}10` }]}>
+                      <Target size={16} color={staticColors.success} />
+                      <Text style={[styles.etaText, { color: colors.text.secondary }]}>
+                        <Text style={{ color: staticColors.success, fontWeight: '600' }}>
+                          ~{weightStats.etaWeeks} semaine{weightStats.etaWeeks > 1 ? 's' : ''}
+                        </Text>
+                        {' '}pour atteindre ton objectif
+                      </Text>
+                      <Text style={[styles.etaDate, { color: colors.text.muted }]}>
+                        ({weightStats.etaDate.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })})
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Show message if moving wrong direction */}
+                  {weightStats.weeklyChange !== null && weightStats.etaWeeks === null && currentWeight && targetWeight && currentWeight !== targetWeight && (
+                    <View style={[styles.etaContainer, { backgroundColor: `${staticColors.warning}10` }]}>
+                      <TrendingUp size={16} color={staticColors.warning} />
+                      <Text style={[styles.etaText, { color: colors.text.secondary }]}>
+                        {currentWeight > targetWeight
+                          ? 'Continue tes efforts pour voir l\'ETA'
+                          : 'Tu es sur la bonne voie, continue !'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -376,49 +429,235 @@ export default function ProgressScreen() {
               ))}
             </View>
 
-            {/* Weight Chart - Simple visual */}
+            {/* Weight Chart - SVG Line Chart */}
             <Card style={[styles.weightChartCard, { marginHorizontal: spacing.default }]}>
               {weightChartData && weightChartData.length > 0 ? (
-                <View style={styles.simpleChart}>
-                  {/* Find min/max for scaling */}
+                <View style={styles.lineChartContainer}>
                   {(() => {
+                    const chartWidth = width - spacing.default * 2 - 32 // Card padding
+                    const chartHeight = 160
+                    const paddingTop = 20
+                    const paddingBottom = 30
+                    const paddingLeft = 35
+                    const paddingRight = 15
+                    const graphWidth = chartWidth - paddingLeft - paddingRight
+                    const graphHeight = chartHeight - paddingTop - paddingBottom
+
                     const weights = weightChartData.map(w => w.weight)
-                    const minW = Math.min(...weights) - 1
-                    const maxW = Math.max(...weights) + 1
+                    const minW = Math.min(...weights) - 0.5
+                    const maxW = Math.max(...weights) + 0.5
                     const range = maxW - minW || 1
 
-                    // Show max 10 points
-                    const step = Math.max(1, Math.floor(weightChartData.length / 10))
+                    // Limit to max 12 points for readability
+                    const step = Math.max(1, Math.floor(weightChartData.length / 12))
                     const displayData = weightChartData.filter((_, i) =>
                       i % step === 0 || i === weightChartData.length - 1
                     )
 
+                    // Calculate points
+                    const points = displayData.map((entry, idx) => ({
+                      x: paddingLeft + (idx / (displayData.length - 1 || 1)) * graphWidth,
+                      y: paddingTop + graphHeight - ((entry.weight - minW) / range) * graphHeight,
+                      weight: entry.weight,
+                      date: entry.date,
+                    }))
+
+                    // Create smooth curve path
+                    const createSmoothPath = () => {
+                      if (points.length < 2) return ''
+
+                      let path = `M ${points[0].x} ${points[0].y}`
+
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const p0 = points[Math.max(0, i - 1)]
+                        const p1 = points[i]
+                        const p2 = points[i + 1]
+                        const p3 = points[Math.min(points.length - 1, i + 2)]
+
+                        const cp1x = p1.x + (p2.x - p0.x) / 6
+                        const cp1y = p1.y + (p2.y - p0.y) / 6
+                        const cp2x = p2.x - (p3.x - p1.x) / 6
+                        const cp2y = p2.y - (p3.y - p1.y) / 6
+
+                        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`
+                      }
+
+                      return path
+                    }
+
+                    // Create area path (for gradient fill)
+                    const createAreaPath = () => {
+                      if (points.length < 2) return ''
+                      const linePath = createSmoothPath()
+                      const lastPoint = points[points.length - 1]
+                      const firstPoint = points[0]
+                      const bottomY = paddingTop + graphHeight
+                      return `${linePath} L ${lastPoint.x} ${bottomY} L ${firstPoint.x} ${bottomY} Z`
+                    }
+
+                    // Target weight line
+                    const targetY = targetWeight
+                      ? paddingTop + graphHeight - ((targetWeight - minW) / range) * graphHeight
+                      : null
+
                     return (
-                      <>
-                        <View style={styles.chartYAxis}>
-                          <Text style={[styles.chartYLabel, { color: colors.text.muted }]}>{maxW.toFixed(0)}</Text>
-                          <Text style={[styles.chartYLabel, { color: colors.text.muted }]}>{minW.toFixed(0)}</Text>
-                        </View>
-                        <View style={styles.chartBars}>
-                          {displayData.map((entry, idx) => {
-                            const height = ((entry.weight - minW) / range) * 100
-                            const isLast = idx === displayData.length - 1
-                            return (
-                              <View key={entry.id} style={styles.chartBarWrapper}>
-                                <View style={[styles.chartBarContainer, { backgroundColor: colors.bg.secondary }]}>
-                                  <LinearGradient
-                                    colors={isLast ? [colors.accent.primary, colors.secondary.primary] : [colors.accent.muted, colors.accent.muted]}
-                                    style={[styles.chartBarFill, { height: `${height}%` }]}
-                                  />
-                                </View>
-                                <Text style={[styles.chartBarLabel, { color: colors.text.tertiary }]}>
-                                  {new Date(entry.date).getDate()}/{new Date(entry.date).getMonth() + 1}
-                                </Text>
-                              </View>
-                            )
-                          })}
-                        </View>
-                      </>
+                      <Svg width={chartWidth} height={chartHeight}>
+                        <Defs>
+                          <SvgGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                            <Stop offset="0" stopColor={colors.accent.primary} />
+                            <Stop offset="1" stopColor={colors.secondary.primary} />
+                          </SvgGradient>
+                          <SvgGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <Stop offset="0" stopColor={colors.accent.primary} stopOpacity="0.3" />
+                            <Stop offset="1" stopColor={colors.accent.primary} stopOpacity="0" />
+                          </SvgGradient>
+                        </Defs>
+
+                        {/* Y-axis labels */}
+                        <SvgText
+                          x={paddingLeft - 8}
+                          y={paddingTop + 4}
+                          fontSize={10}
+                          fill={colors.text.muted}
+                          textAnchor="end"
+                        >
+                          {maxW.toFixed(1)}
+                        </SvgText>
+                        <SvgText
+                          x={paddingLeft - 8}
+                          y={paddingTop + graphHeight / 2 + 4}
+                          fontSize={10}
+                          fill={colors.text.muted}
+                          textAnchor="end"
+                        >
+                          {((maxW + minW) / 2).toFixed(1)}
+                        </SvgText>
+                        <SvgText
+                          x={paddingLeft - 8}
+                          y={paddingTop + graphHeight + 4}
+                          fontSize={10}
+                          fill={colors.text.muted}
+                          textAnchor="end"
+                        >
+                          {minW.toFixed(1)}
+                        </SvgText>
+
+                        {/* Horizontal grid lines */}
+                        <Line
+                          x1={paddingLeft}
+                          y1={paddingTop}
+                          x2={paddingLeft + graphWidth}
+                          y2={paddingTop}
+                          stroke={colors.border.light}
+                          strokeWidth={1}
+                          strokeDasharray="4,4"
+                        />
+                        <Line
+                          x1={paddingLeft}
+                          y1={paddingTop + graphHeight / 2}
+                          x2={paddingLeft + graphWidth}
+                          y2={paddingTop + graphHeight / 2}
+                          stroke={colors.border.light}
+                          strokeWidth={1}
+                          strokeDasharray="4,4"
+                        />
+                        <Line
+                          x1={paddingLeft}
+                          y1={paddingTop + graphHeight}
+                          x2={paddingLeft + graphWidth}
+                          y2={paddingTop + graphHeight}
+                          stroke={colors.border.light}
+                          strokeWidth={1}
+                        />
+
+                        {/* Target weight line */}
+                        {targetY && targetY >= paddingTop && targetY <= paddingTop + graphHeight && (
+                          <>
+                            <Line
+                              x1={paddingLeft}
+                              y1={targetY}
+                              x2={paddingLeft + graphWidth}
+                              y2={targetY}
+                              stroke={colors.success}
+                              strokeWidth={1.5}
+                              strokeDasharray="6,4"
+                            />
+                            <SvgText
+                              x={paddingLeft + graphWidth + 2}
+                              y={targetY + 3}
+                              fontSize={9}
+                              fill={colors.success}
+                            >
+                              🎯
+                            </SvgText>
+                          </>
+                        )}
+
+                        {/* Area fill */}
+                        <Path
+                          d={createAreaPath()}
+                          fill="url(#areaGradient)"
+                        />
+
+                        {/* Line */}
+                        <Path
+                          d={createSmoothPath()}
+                          stroke="url(#lineGradient)"
+                          strokeWidth={2.5}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+
+                        {/* Data points */}
+                        {points.map((point, idx) => (
+                          <Circle
+                            key={idx}
+                            cx={point.x}
+                            cy={point.y}
+                            r={idx === points.length - 1 ? 6 : 4}
+                            fill={idx === points.length - 1 ? colors.accent.primary : colors.bg.elevated}
+                            stroke={idx === points.length - 1 ? colors.secondary.primary : colors.accent.primary}
+                            strokeWidth={2}
+                          />
+                        ))}
+
+                        {/* X-axis labels (first, middle, last) */}
+                        {points.length > 0 && (
+                          <>
+                            <SvgText
+                              x={points[0].x}
+                              y={chartHeight - 8}
+                              fontSize={9}
+                              fill={colors.text.tertiary}
+                              textAnchor="start"
+                            >
+                              {new Date(points[0].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            </SvgText>
+                            {points.length > 2 && (
+                              <SvgText
+                                x={points[Math.floor(points.length / 2)].x}
+                                y={chartHeight - 8}
+                                fontSize={9}
+                                fill={colors.text.tertiary}
+                                textAnchor="middle"
+                              >
+                                {new Date(points[Math.floor(points.length / 2)].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                              </SvgText>
+                            )}
+                            <SvgText
+                              x={points[points.length - 1].x}
+                              y={chartHeight - 8}
+                              fontSize={9}
+                              fill={colors.text.primary}
+                              textAnchor="end"
+                              fontWeight="600"
+                            >
+                              {new Date(points[points.length - 1].date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            </SvgText>
+                          </>
+                        )}
+                      </Svg>
                     )
                   })()}
                 </View>
@@ -808,6 +1047,100 @@ export default function ProgressScreen() {
                 </View>
               </View>
             </Card>
+
+            {/* Coach Insight - LYM Style */}
+            {(() => {
+              const caloriesRatio = averageCalories / goals.calories
+              const proteinsRatio = averageProteins / goals.proteins
+
+              // Generate personalized coach insight based on data
+              const getCoachInsight = () => {
+                // Priority: proteins deficit is most important for health
+                if (proteinsRatio < 0.8) {
+                  const deficit = Math.round(goals.proteins - averageProteins)
+                  return {
+                    icon: Target,
+                    color: staticColors.accent.primary,
+                    bgColor: `${staticColors.accent.primary}15`,
+                    title: 'Mon conseil de la semaine',
+                    message: `Tes proteines sont un peu basses cette semaine. Ajoute un oeuf au petit-dej ou une poignee d'amandes en collation pour gagner ${deficit}g facilement.`,
+                  }
+                }
+
+                // Calorie deficit with good proteins = good for weight loss
+                if (caloriesRatio < 0.9 && proteinsRatio >= 0.9) {
+                  return {
+                    icon: Sparkles,
+                    color: staticColors.success,
+                    bgColor: `${staticColors.success}15`,
+                    title: 'Tu es sur la bonne voie',
+                    message: 'Deficit calorique maitrise et proteines au top ! Continue comme ca, les resultats vont suivre.',
+                  }
+                }
+
+                // Excess calories
+                if (caloriesRatio > 1.15) {
+                  const excess = Math.round(averageCalories - goals.calories)
+                  return {
+                    icon: Flame,
+                    color: staticColors.warning,
+                    bgColor: `${staticColors.warning}15`,
+                    title: 'Petit ajustement suggere',
+                    message: `Tu depasses de ${excess} kcal en moyenne. Essaie de reduire les portions du soir ou de troquer le dessert contre un fruit.`,
+                  }
+                }
+
+                // Perfect week
+                if (calorieGoalMet >= 5 && proteinsRatio >= 0.9) {
+                  return {
+                    icon: Trophy,
+                    color: staticColors.warning,
+                    bgColor: `${staticColors.warning}15`,
+                    title: 'Semaine exemplaire !',
+                    message: 'Tu geres parfaitement ton alimentation. Garde ce rythme, tu es en train de construire de bonnes habitudes durables.',
+                  }
+                }
+
+                // Good week
+                if (calorieGoalMet >= 3) {
+                  return {
+                    icon: TrendingUp,
+                    color: staticColors.info,
+                    bgColor: `${staticColors.info}15`,
+                    title: 'Belle progression',
+                    message: 'Tu progresses bien ! Pour passer au niveau superieur, essaie de maintenir tes objectifs aussi le week-end.',
+                  }
+                }
+
+                // Default: needs improvement
+                return {
+                  icon: Zap,
+                  color: staticColors.accent.primary,
+                  bgColor: `${staticColors.accent.primary}15`,
+                  title: 'On reprend ensemble',
+                  message: 'Cette semaine etait difficile, mais chaque jour est une nouvelle opportunite. Commence par un petit-dejeuner equilibre demain.',
+                }
+              }
+
+              const insight = getCoachInsight()
+              const InsightIcon = insight.icon
+
+              return (
+                <Card style={[styles.coachInsightCard, { borderLeftColor: insight.color }]}>
+                  <View style={styles.coachInsightHeader}>
+                    <View style={[styles.coachInsightIcon, { backgroundColor: insight.bgColor }]}>
+                      <InsightIcon size={18} color={insight.color} />
+                    </View>
+                    <Text style={[styles.coachInsightTitle, { color: colors.text.primary }]}>
+                      {insight.title}
+                    </Text>
+                  </View>
+                  <Text style={[styles.coachInsightMessage, { color: colors.text.secondary }]}>
+                    {insight.message}
+                  </Text>
+                </Card>
+              )
+            })()}
           </>
         )}
       </ScrollView>
@@ -1228,6 +1561,34 @@ const styles = StyleSheet.create({
   macroItem: {
     alignItems: 'center',
   },
+  // Coach Insight styles (LYM-style)
+  coachInsightCard: {
+    marginHorizontal: spacing.default,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 3,
+    padding: spacing.md,
+  },
+  coachInsightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  coachInsightIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  coachInsightTitle: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+  },
+  coachInsightMessage: {
+    ...typography.body,
+    lineHeight: 22,
+  },
 
   // Weight Tab Styles
   weightCard: {
@@ -1368,6 +1729,22 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radius.full,
   },
+  etaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+  },
+  etaText: {
+    ...typography.small,
+    flex: 1,
+  },
+  etaDate: {
+    ...typography.caption,
+  },
   weightRangeSelector: {
     flexDirection: 'row',
     paddingHorizontal: spacing.default,
@@ -1385,6 +1762,11 @@ const styles = StyleSheet.create({
   },
   weightChartCard: {
     marginBottom: spacing.lg,
+  },
+  lineChartContainer: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   simpleChart: {
     flexDirection: 'row',

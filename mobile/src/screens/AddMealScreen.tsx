@@ -247,6 +247,7 @@ export default function AddMealScreen() {
   const [showVoiceInput, setShowVoiceInput] = useState(false)
   const [addedFoodIds, setAddedFoodIds] = useState<Set<string>>(new Set())
   const [favoritesTab, setFavoritesTab] = useState<'foods' | 'recipes'>('foods')
+  const [favoritesSearch, setFavoritesSearch] = useState('')
 
   // AI Recipe Modal state
   const [showAIRecipeModal, setShowAIRecipeModal] = useState(false)
@@ -1304,6 +1305,25 @@ export default function AddMealScreen() {
             contentContainerStyle={styles.foodListContent}
             showsVerticalScrollIndicator={false}
           >
+            {/* Quick Search Bar */}
+            <View style={styles.favoritesSearchContainer}>
+              <Search size={18} color={colors.text.muted} />
+              <TextInput
+                style={styles.favoritesSearchInput}
+                placeholder="Rechercher dans les favoris..."
+                placeholderTextColor={colors.text.muted}
+                value={favoritesSearch}
+                onChangeText={setFavoritesSearch}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {favoritesSearch.length > 0 && (
+                <TouchableOpacity onPress={() => setFavoritesSearch('')}>
+                  <X size={18} color={colors.text.muted} />
+                </TouchableOpacity>
+              )}
+            </View>
+
             {/* Tabs */}
             <View style={styles.favoritesTabsContainer}>
               <TouchableOpacity
@@ -1349,7 +1369,12 @@ export default function AddMealScreen() {
               <>
                 {favoriteFoods && favoriteFoods.length > 0 ? (
                   <View style={styles.favoritesList}>
-                    {favoriteFoods.map((food: FoodItem) => (
+                    {favoriteFoods
+                      .filter((food: FoodItem) =>
+                        favoritesSearch.length === 0 ||
+                        food.name.toLowerCase().includes(favoritesSearch.toLowerCase())
+                      )
+                      .map((food: FoodItem) => (
                       <View key={food.id} style={styles.favoriteItem}>
                         <TouchableOpacity
                           style={styles.favoriteItemContent}
@@ -1418,7 +1443,12 @@ export default function AddMealScreen() {
               <>
                 {favoriteRecipes && favoriteRecipes.length > 0 ? (
                   <View style={styles.favoritesList}>
-                    {favoriteRecipes.map((recipe) => (
+                    {favoriteRecipes
+                      .filter((recipe) =>
+                        favoritesSearch.length === 0 ||
+                        recipe.title.toLowerCase().includes(favoritesSearch.toLowerCase())
+                      )
+                      .map((recipe) => (
                       <View key={recipe.id} style={styles.favoriteItem}>
                         <TouchableOpacity
                           style={styles.favoriteItemContent}
@@ -2838,6 +2868,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   // Favorites view styles
+  favoritesSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  favoritesSearchInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.text.primary,
+    paddingVertical: spacing.xs,
+  },
   favoritesTabsContainer: {
     flexDirection: 'row',
     gap: spacing.sm,

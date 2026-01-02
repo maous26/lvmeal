@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
-  "generatedAt": "2026-01-01T21:39:16.464Z",
-  "totalRecipes": 244,
+  "generatedAt": "2026-01-02T16:28:47.415Z",
+  "totalRecipes": 293,
   "recipes": [
     {
       "id": "https://www.lecker.de/fruehstueck-muesli-34908.html",
@@ -21420,6 +21420,4353 @@
       "sourceUrl": "https://elavegan.com/de/proteinriegel-rezept/",
       "originalTitle": "Proteinriegel Rezept zum selbermachen",
       "enrichedAt": "2026-01-01T21:38:58.465Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/hummus-bowl",
+      "titleFr": "Bowl de Hummus aux Légumes",
+      "descriptionFr": "Savourez ce Bowl de Hummus qui allie quinoa et légumes croquants pour un déjeuner nutritif et coloré. Cette recette est non seulement délicieuse, mais elle est également riche en protéines et en fibres, idéale pour vous rassasier tout en restant léger.",
+      "ingredientsFr": [
+        {
+          "name": "Quinoa",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Fleurs de brocoli",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Poivrons rouge et jaune",
+          "amount": 3,
+          "unit": "unité"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Pois chiches",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Tahin",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Basilic",
+          "amount": 1,
+          "unit": "branche"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer le quinoa sous l'eau froide, puis le cuire dans le bouillon de légumes pendant environ 15 minutes ou jusqu'à ce qu'il soit tendre.",
+        "Étape 2: Pendant ce temps, couper les poivrons en dés et les fleurs de brocoli en petits morceaux.",
+        "Étape 3: Dans une poêle, chauffer l'huile d'olive et faire revenir l'ail émincé jusqu'à ce qu'il soit doré.",
+        "Étape 4: Ajouter les poivrons et le brocoli dans la poêle, assaisonner avec du sel et du poivre, puis cuire à feu moyen pendant environ 5-7 minutes jusqu'à ce qu'ils soient tendres.",
+        "Étape 5: Dans un bol, mélanger les pois chiches égouttés, le tahin, le jus de citron et le cumin. Écraser légèrement avec une fourchette pour obtenir une texture crémeuse.",
+        "Étape 6: Une fois le quinoa cuit, le mélanger avec les légumes sautés et le mélange de pois chiches.",
+        "Étape 7: Répartir le mélange dans des bols, garnir de basilic frais et ajouter un filet d'huile d'olive si désiré.",
+        "Étape 8: Servir immédiatement et déguster chaud ou à température ambiante."
+      ],
+      "nutrition": {
+        "calories": 540,
+        "proteins": 20,
+        "carbs": 70,
+        "fats": 20,
+        "sugar": 3,
+        "fiber": 12,
+        "saturatedFat": 2,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce bowl est riche en protéines grâce au quinoa et aux pois chiches, et en fibres avec les légumes, ce qui en fait un choix nutritif. De plus, l'utilisation d'huile d'olive ajoute des graisses saines tout en maintenant les niveaux de graisses saturées bas.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-12535941.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/hummus-bowl",
+      "originalTitle": "Hummus-Bowl",
+      "enrichedAt": "2026-01-02T16:19:08.577Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-saltimbocca-auf-gemuesereis-35126.html",
+      "titleFr": "Saltimbocca de poisson sur un lit de riz aux légumes",
+      "descriptionFr": "Découvrez cette recette savoureuse de saltimbocca de poisson, où le pangasius tendre est rehaussé de sauge et de jambon de Parme, servi sur un lit de riz aux légumes. Un plat à la fois délicieux et équilibré, idéal pour un dîner léger et nutritif.",
+      "ingredientsFr": [
+        {
+          "name": "Filet de pangasius",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Feuilles de sauge",
+          "amount": 6,
+          "unit": "unités"
+        },
+        {
+          "name": "Jambon de Parme",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Mélange de légumes surgelés avec riz Patna et riz sauvage",
+          "amount": 380,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Décongelez les filets de pangasius et épongez-les avec du papier absorbant.",
+        "Étape 2: Assaisonnez les filets avec le jus de citron, le sel et le poivre des deux côtés.",
+        "Étape 3: Enveloppez chaque filet de pangasius avec deux tranches de jambon de Parme et fixez avec un cure-dent si nécessaire.",
+        "Étape 4: Dans une poêle, chauffez 30 ml d'huile d'olive à feu moyen. Ajoutez les filets de poisson et faites-les cuire pendant 4-5 minutes de chaque côté jusqu'à ce qu'ils soient dorés.",
+        "Étape 5: Pendant ce temps, faites cuire le mélange de légumes selon les instructions sur l'emballage.",
+        "Étape 6: Ajoutez les feuilles de sauge dans la poêle avec le poisson pendant la dernière minute de cuisson pour infuser les saveurs.",
+        "Étape 7: Disposez le mélange de légumes et de riz sur les assiettes, puis placez les filets de pangasius sur le dessus.",
+        "Étape 8: Arrosez le tout avec le reste de l'huile d'olive et décorez avec quelques feuilles de sauge."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 40,
+        "carbs": 45,
+        "fats": 20,
+        "sugar": 2,
+        "fiber": 6,
+        "saturatedFat": 5,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est riche en protéines grâce au poisson et au jambon, et fournit une bonne quantité de fibres grâce aux légumes. L'utilisation d'huile d'olive apporte des graisses saines, bien que la portion de sodium soit à surveiller.",
+      "imageUrl": "https://images.lecker.de/,id=882d8b78,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-saltimbocca-auf-gemuesereis-35126.html",
+      "originalTitle": "Fisch-Saltimbocca auf Gemüsereis",
+      "enrichedAt": "2026-01-02T16:19:03.100Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-auf-tomaten-bohnen-46302.html",
+      "titleFr": "Poisson aux Tomates et Haricots",
+      "descriptionFr": "Savourez ce délicieux plat de poisson accompagné de haricots blancs et de tomates, rehaussé d'une touche de citron et d'ail. Une recette saine et équilibrée, parfaite pour un dîner léger et nutritif.",
+      "ingredientsFr": [
+        {
+          "name": "filet de poisson (par exemple, rouget)",
+          "amount": 600,
+          "unit": "g"
+        },
+        {
+          "name": "jus de 1/2 citron",
+          "amount": 50,
+          "unit": "ml"
+        },
+        {
+          "name": "gambas crues décortiquées",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "haricots blancs en conserve",
+          "amount": 425,
+          "unit": "ml"
+        },
+        {
+          "name": "majoan frais",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "tomates concassées en conserve",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "poivre blanc",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "oeufs",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "farine",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, mariner le filet de poisson avec le jus de citron, du sel et du poivre pendant environ 15 minutes.",
+        "Étape 2: Dans une poêle, faire chauffer l'huile d'olive à feu moyen et ajouter l'ail émincé.",
+        "Étape 3: Lorsque l'ail commence à dorer, ajouter les gambas et les faire revenir jusqu'à ce qu'elles deviennent roses, environ 3-4 minutes.",
+        "Étape 4: Ajouter les tomates concassées et les haricots blancs à la poêle, puis assaisonner avec le majoan, du sel et du poivre.",
+        "Étape 5: Laisser mijoter le mélange pendant 10 minutes, en remuant de temps en temps.",
+        "Étape 6: Pendant ce temps, battre les oeufs dans un bol et les mélanger avec la farine pour créer une pâte.",
+        "Étape 7: Dans une autre poêle, faire cuire les filets de poisson dans un peu d'huile d'olive, environ 3-4 minutes de chaque côté ou jusqu'à ce qu'ils soient bien cuits.",
+        "Étape 8: Servir le poisson sur un lit de mélange de tomates et haricots, en garnissant de quelques feuilles de majoan."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 40,
+        "carbs": 45,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 10,
+        "saturatedFat": 2,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines et en fibres grâce aux haricots et au poisson, tout en restant faible en graisses saturées et en sodium, ce qui en fait un choix très sain pour un dîner équilibré.",
+      "imageUrl": "https://images.lecker.de/,id=11c41924,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-auf-tomaten-bohnen-46302.html",
+      "originalTitle": "Fisch auf Tomaten-Bohnen",
+      "enrichedAt": "2026-01-02T16:19:24.401Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/kartoffelsalat-mit-joghurt-11796062.html",
+      "titleFr": "Salade de pommes de terre au yaourt",
+      "descriptionFr": "Découvrez cette délicieuse salade de pommes de terre au yaourt, parfaite pour un petit-déjeuner nutritif. L'association de pommes de terre fondantes, d'œufs bio et de yaourt crémeux en fait un plat savoureux et équilibré pour bien commencer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes de terre",
+          "amount": 600,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Œufs bio",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Oignon",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Ciboulette",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Vinaigre",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Poivre",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez les pommes de terre et faites-les cuire dans une grande casserole d'eau salée pendant environ 20 minutes, jusqu'à ce qu'elles soient tendres.",
+        "Étape 2: Pendant que les pommes de terre cuisent, faites cuire les œufs dans une autre casserole pendant 10 minutes pour obtenir des œufs durs.",
+        "Étape 3: Une fois les pommes de terre cuites, égouttez-les et laissez-les refroidir avant de les peler et de les couper en dés.",
+        "Étape 4: Émincez finement l'oignon et la ciboulette.",
+        "Étape 5: Dans un grand saladier, mélangez les dés de pommes de terre, les œufs coupés en morceaux, l'oignon et la ciboulette.",
+        "Étape 6: Dans un bol, mélangez le yaourt, le vinaigre, le sel et le poivre. Incorporez cette sauce au mélange de pommes de terre.",
+        "Étape 7: Mélangez délicatement pour bien enrober les ingrédients.",
+        "Étape 8: Réfrigérez la salade pendant au moins 30 minutes avant de servir pour que les saveurs se mélangent."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 18,
+        "carbs": 45,
+        "fats": 12,
+        "sugar": 2,
+        "fiber": 4,
+        "saturatedFat": 3,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette salade est équilibrée avec une bonne source de protéines grâce aux œufs et au yaourt, tout en étant riche en glucides complexes provenant des pommes de terre. Elle contient peu de sucres et de graisses saturées, ce qui en fait un choix sain pour le petit-déjeuner.",
+      "imageUrl": "https://image.brigitte.de/11796064/t/MR/v3/w1440/r1/-/kartoffelsalat-mit-joghurt.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/kartoffelsalat-mit-joghurt-11796062.html",
+      "originalTitle": "Kartoffelsalat mit Joghurt",
+      "enrichedAt": "2026-01-02T16:19:19.009Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/gurkensalat-mit-joghurt-2",
+      "titleFr": "Salade de concombre au yaourt",
+      "descriptionFr": "Cette salade rafraîchissante de concombre au yaourt est le choix parfait pour un petit-déjeuner léger et sain. Avec sa texture crémeuse et son goût délicat, elle saura vous réveiller en douceur tout en apportant des nutriments essentiels.",
+      "ingredientsFr": [
+        {
+          "name": "concombre",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "yaourt nature",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "assaisonnement à salade",
+          "amount": 1,
+          "unit": "sachet"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez le concombre sous l'eau froide et séchez-le.",
+        "Étape 2: Coupez le concombre en deux dans le sens de la longueur, puis en fines tranches.",
+        "Étape 3: Épluchez la gousse d'ail et hachez-la finement.",
+        "Étape 4: Dans un saladier, mélangez le yaourt nature, l'assaisonnement à salade, la gousse d'ail hachée et une pincée de sel.",
+        "Étape 5: Ajoutez les tranches de concombre au mélange de yaourt et mélangez bien pour enrober le concombre.",
+        "Étape 6: Laissez reposer au réfrigérateur pendant environ 15 minutes pour que les saveurs se mélangent.",
+        "Étape 7: Servez frais, idéalement avec du pain complet ou en accompagnement d'autres plats."
+      ],
+      "nutrition": {
+        "calories": 170,
+        "proteins": 8,
+        "carbs": 16,
+        "fats": 7,
+        "sugar": 5,
+        "fiber": 1,
+        "saturatedFat": 4,
+        "sodium": 200
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce au yaourt et faible en calories, ce qui en fait un excellent choix pour un petit-déjeuner équilibré. De plus, elle contient peu de graisses saturées et de sodium, contribuant ainsi à un régime alimentaire sain.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2009/8/Gurkensalat-mit-Joghurt--4a96ac008889a.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/gurkensalat-mit-joghurt-2",
+      "originalTitle": "Gurkensalat mit Joghurt",
+      "enrichedAt": "2026-01-02T16:19:34.684Z"
+    },
+    {
+      "id": "https://www.lecker.de/fenchel-fisch-pfanne-13181.html",
+      "titleFr": "Poêlée de Poisson au Fenouil",
+      "descriptionFr": "Savourez cette poêlée de poisson tendre à la saveur délicate, accompagnée de fenouil croquant et de tomates juteuses. Un plat coloré et plein de bienfaits qui ravira vos papilles tout en respectant votre équilibre alimentaire.",
+      "ingredientsFr": [
+        {
+          "name": "filet de poisson (par exemple, bar rouge)",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignon moyen",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "bulbes de fenouil",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "tomates cerises",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre blanc",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "brins de romarin",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "olives noires",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "poivre noir",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez l'oignon et les bulbes de fenouil en fines lamelles.",
+        "Étape 2: Dans une poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'oignon et le fenouil, puis faites revenir pendant environ 5 minutes jusqu'à ce qu'ils soient tendres.",
+        "Étape 3: Ajoutez les tomates cerises coupées en deux et poursuivez la cuisson pendant 3 minutes.",
+        "Étape 4: Assaisonnez avec du sel, du poivre blanc et le jus de citron. Mélangez bien.",
+        "Étape 5: Disposez le filet de poisson sur les légumes et ajoutez les brins de romarin sur le dessus.",
+        "Étape 6: Couvrez la poêle et laissez cuire à feu doux pendant 10 minutes ou jusqu'à ce que le poisson soit cuit et se défasse facilement à la fourchette.",
+        "Étape 7: Ajoutez les olives noires juste avant de servir, puis saupoudrez de poivre noir.",
+        "Étape 8: Servez chaud, accompagné de légumes ou d'une salade verte pour un repas équilibré."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 35,
+        "carbs": 25,
+        "fats": 20,
+        "sugar": 5,
+        "fiber": 5,
+        "saturatedFat": 3,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au poisson et aux fibres grâce aux légumes. Les graisses sont principalement des graisses saines provenant de l'huile d'olive. Un excellent choix pour un dîner léger et nutritif.",
+      "imageUrl": "https://images.lecker.de/,id=b43d3341,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 25,
+      "cookTime": 13,
+      "totalTime": 38,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fenchel-fisch-pfanne-13181.html",
+      "originalTitle": "Fenchel-Fisch-Pfanne",
+      "enrichedAt": "2026-01-02T16:20:20.465Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-auf-mallorquinische-art-46780.html",
+      "titleFr": "Poisson à la mallorquine",
+      "descriptionFr": "Savourez ce plat de poisson à la mallorquine, où des filets de rougets sont délicatement cuits avec des pommes de terre, des poivrons et des herbes aromatiques. Un mélange de saveurs méditerranéennes qui ravira vos papilles tout en étant léger et nutritif.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes de terre",
+          "amount": 750,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 105,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "grand"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Poivrons rouges",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Brins de thym",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Paprika doux",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Grains d'anis",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Vin blanc sec",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "Filets de rouget",
+          "amount": 800,
+          "unit": "g"
+        },
+        {
+          "name": "Farine",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Persil",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (thermostat 6).",
+        "Étape 2: Épluchez et coupez les pommes de terre en rondelles. Faites-les cuire à la vapeur pendant 10 minutes jusqu'à ce qu'elles soient légèrement tendres.",
+        "Étape 3: Dans une grande poêle, faites chauffer 4 cuillères à soupe d'huile d'olive à feu moyen. Ajoutez l'oignon émincé et les gousses d'ail hachées, faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 4: Ajoutez les poivrons rouges coupés en dés, le thym, le paprika doux et les graines d'anis. Faites revenir pendant environ 5 minutes.",
+        "Étape 5: Dans un plat à gratin, disposez une couche de pommes de terre, puis le mélange de légumes, et enfin les filets de rouget. Arrosez avec le vin blanc et le reste de l'huile d'olive. Assaisonnez de sel et de poivre.",
+        "Étape 6: Saupoudrez de farine sur le dessus et enfournez pendant 25-30 minutes jusqu'à ce que le poisson soit cuit et légèrement doré.",
+        "Étape 7: Avant de servir, parsemez de persil frais haché pour une touche de couleur et de saveur."
+      ],
+      "nutrition": {
+        "calories": 460,
+        "proteins": 30,
+        "carbs": 45,
+        "fats": 22,
+        "sugar": 5,
+        "fiber": 5,
+        "saturatedFat": 3,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est équilibré avec une bonne quantité de protéines provenant du poisson, des glucides complexes des pommes de terre et des fibres des légumes. L'utilisation d'huile d'olive apporte des graisses saines, bien que les portions doivent être surveillées pour maintenir un bon équilibre calorique.",
+      "imageUrl": "https://images.lecker.de/,id=f1545e2a,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-auf-mallorquinische-art-46780.html",
+      "originalTitle": "Fisch auf mallorquinische Art",
+      "enrichedAt": "2026-01-02T16:20:38.100Z"
+    },
+    {
+      "id": "https://www.lecker.de/ueberbackene-fisch-pfanne-30307.html",
+      "titleFr": "Poêlée de Poisson Gratinée",
+      "descriptionFr": "Savourez cette poêlée de poisson gratinée, où les filets de poisson se marient parfaitement avec des pommes de terre fondantes et une sauce crémeuse. Un plat réconfortant et équilibré, idéal pour un dîner en toute simplicité.",
+      "ingredientsFr": [
+        {
+          "name": "filets de poisson doré surgelés",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "pommes de terre",
+          "amount": 700,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "fromage Gouda",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "crème fraîche épaisse",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "moutarde douce",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "persil frais",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (thermostat 6).",
+        "Étape 2: Épluchez les pommes de terre et coupez-les en rondelles. Faites-les cuire à la vapeur ou dans de l'eau bouillante salée jusqu'à ce qu'elles soient tendres, environ 15 minutes.",
+        "Étape 3: Dans une poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez les filets de poisson encore congelés et faites cuire pendant 5-7 minutes de chaque côté jusqu'à ce qu'ils soient dorés.",
+        "Étape 4: Dans un bol, mélangez la crème fraîche, la moutarde, le sel et le poivre.",
+        "Étape 5: Dans un plat allant au four, disposez les rondelles de pommes de terre cuites, ajoutez les filets de poisson par-dessus, puis nappez le tout avec la préparation à la crème.",
+        "Étape 6: Râpez le fromage Gouda sur le dessus du plat.",
+        "Étape 7: Enfournez pendant environ 20 minutes, jusqu'à ce que le fromage soit doré et bouillonnant.",
+        "Étape 8: À la sortie du four, parsemez de persil frais haché avant de servir."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 34,
+        "carbs": 50,
+        "fats": 26,
+        "sugar": 2,
+        "fiber": 5,
+        "saturatedFat": 10,
+        "sodium": 400
+      },
+      "healthScore": 65,
+      "healthNotes": "Ce plat est riche en protéines grâce au poisson, mais contient une quantité élevée de graisses saturées à cause de la crème et du fromage. Il est conseillé de surveiller la portion pour respecter les apports recommandés.",
+      "imageUrl": "https://images.lecker.de/,id=974c0aa0,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 2,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/ueberbackene-fisch-pfanne-30307.html",
+      "originalTitle": "Überbackene Fisch-Pfanne",
+      "enrichedAt": "2026-01-02T16:20:36.580Z"
+    },
+    {
+      "id": "https://www.lecker.de/reis-mit-fisch-hawaii-11173.html",
+      "titleFr": "Riz au saumon à la hawaïenne",
+      "descriptionFr": "Savourez ce plat équilibré où le saumon tendre se marie à la douceur de l'ananas. Accompagné d'un riz parfumé, ce dîner vous transporte sous les tropiques tout en respectant vos besoins nutritionnels.",
+      "ingredientsFr": [
+        {
+          "name": "tranches de saumon congelées",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "ananas frais",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "fromage Gouda",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "riz express 'Risi Bisi'",
+          "amount": 500,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une poêle, faites chauffer l'huile d'olive à feu moyen.",
+        "Étape 2: Assaisonnez les tranches de saumon avec du sel, du poivre et le jus de citron, puis placez-les dans la poêle.",
+        "Étape 3: Faites cuire le saumon pendant environ 4-5 minutes de chaque côté, jusqu'à ce qu'il soit bien cuit.",
+        "Étape 4: Pendant que le saumon cuit, préparez le riz selon les instructions du paquet.",
+        "Étape 5: Coupez la tranche d'ananas en petits morceaux et faites-la griller dans la poêle pendant 2-3 minutes jusqu'à ce qu'elle soit légèrement caramélisée.",
+        "Étape 6: Une fois le riz cuit, incorporez-y les morceaux d'ananas grillés.",
+        "Étape 7: Servez le riz à l'ananas dans des assiettes, garnissez avec le saumon et ajoutez quelques tranches de fromage Gouda sur le dessus.",
+        "Étape 8: Dégustez chaud, en savourant cette alliance de saveurs sucrées et salées."
+      ],
+      "nutrition": {
+        "calories": 500,
+        "proteins": 38,
+        "carbs": 60,
+        "fats": 18,
+        "sugar": 8,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est riche en protéines grâce au saumon et contient des glucides complexes issus du riz. L'ananas apporte une touche de douceur et de vitamines, tandis que l'huile d'olive fournit des graisses saines. Le tout reste équilibré et relativement faible en sodium.",
+      "imageUrl": "https://images.lecker.de/,id=74562337,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/reis-mit-fisch-hawaii-11173.html",
+      "originalTitle": "Reis mit Fisch-Hawaii",
+      "enrichedAt": "2026-01-02T16:20:31.682Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-gurken-ragout-18859.html",
+      "titleFr": "Ragoût de Poisson et Concombre",
+      "descriptionFr": "Savourez ce ragoût de poisson délicat, où le saumon et le lieu se marient harmonieusement avec des légumes croquants. Parfait pour un dîner léger et équilibré, ce plat est à la fois nutritif et réconfortant.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes de terre",
+          "amount": 750,
+          "unit": "g"
+        },
+        {
+          "name": "Filet de saumon",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Filet de lieu",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Concombre",
+          "amount": 1,
+          "unit": "grand"
+        },
+        {
+          "name": "Tomates cerises",
+          "amount": 125,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes (instant)",
+          "amount": 1,
+          "unit": "l"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Liant pour sauces",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poivre blanc",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Aneth",
+          "amount": 1,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez et coupez les pommes de terre en cubes. Faites-les cuire dans de l'eau salée jusqu'à ce qu'elles soient tendres, environ 15-20 minutes.",
+        "Étape 2: Pendant ce temps, coupez les filets de saumon et de lieu en morceaux de taille moyenne. Assaisonnez avec du sel, du poivre blanc et le jus de citron.",
+        "Étape 3: Lavez et coupez le concombre en dés. Coupez les tomates cerises en deux.",
+        "Étape 4: Dans une grande poêle, chauffez l'huile d'olive à feu moyen. Ajoutez le concombre et les tomates, faites-les sauter pendant 5 minutes.",
+        "Étape 5: Ajoutez les morceaux de poisson à la poêle et versez le bouillon de légumes. Laissez mijoter pendant environ 10 minutes, jusqu'à ce que le poisson soit cuit.",
+        "Étape 6: Incorporez la crème fraîche et le liant pour sauces, mélangez bien et laissez épaissir pendant quelques minutes.",
+        "Étape 7: Ajoutez les pommes de terre égouttées et l'aneth ciselé, mélangez délicatement.",
+        "Étape 8: Servez chaud, garni de quelques brins d'aneth."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 32,
+        "carbs": 45,
+        "fats": 20,
+        "sugar": 4,
+        "fiber": 5,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce aux poissons et aux légumes, tout en étant faible en sucres et en graisses saturées. Elle offre un bon équilibre entre les macronutriments, ce qui en fait un choix sain pour le dîner.",
+      "imageUrl": "https://images.lecker.de/,id=aa8890bc,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-gurken-ragout-18859.html",
+      "originalTitle": "Fisch-Gurken-Ragout",
+      "enrichedAt": "2026-01-02T16:20:57.837Z"
+    },
+    {
+      "id": "https://www.lecker.de/eier-und-spinat-im-filoteig-60734.html",
+      "titleFr": "Œufs et Épinards en Feuille de Filo",
+      "descriptionFr": "Savourez cette délicieuse recette d'œufs et d'épinards enrobés dans des feuilles de filo croustillantes. Parfaite pour un petit-déjeuner nutritif et raffiné, elle allie la richesse des œufs à la légèreté des épinards, apportant une touche printanière à votre table.",
+      "ingredientsFr": [
+        {
+          "name": "feuilles de pâte filo",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "épinards frais",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "beurre",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "muscat râpé",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "parmesan râpé",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "œufs",
+          "amount": 8,
+          "unit": "unités"
+        },
+        {
+          "name": "huile de tournesol",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C.",
+        "Étape 2: Faites fondre le beurre dans une grande poêle à feu moyen et ajoutez les épinards. Faites cuire jusqu'à ce qu'ils soient fanés, puis assaisonnez avec le sel, le poivre et le muscat.",
+        "Étape 3: Dans un grand bol, battez les œufs, puis incorporez le parmesan et le mélange d'épinards.",
+        "Étape 4: Étalez une feuille de pâte filo sur une surface propre et badigeonnez-la légèrement d'huile de tournesol. Répétez l'opération avec 4 feuilles en les superposant.",
+        "Étape 5: Versez le mélange d'œufs et d'épinards au centre des feuilles de filo, puis repliez les bords pour enfermer la garniture.",
+        "Étape 6: Placez le paquet sur une plaque de cuisson recouverte de papier sulfurisé et badigeonnez le dessus avec un peu de beurre fondu.",
+        "Étape 7: Enfournez pendant environ 25-30 minutes, ou jusqu'à ce que le dessus soit doré et croustillant.",
+        "Étape 8: Laissez refroidir légèrement avant de couper en parts et de servir."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 20,
+        "carbs": 25,
+        "fats": 15,
+        "sugar": 2,
+        "fiber": 4,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement équilibrée, riche en protéines et en fibres grâce aux œufs et aux épinards, tout en contenant des graisses saines. Elle respecte les recommandations en matière de calories et de sodium, en faisant un choix de petit-déjeuner nutritif.",
+      "imageUrl": "https://images.lecker.de/,id=a81e932a,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/eier-und-spinat-im-filoteig-60734.html",
+      "originalTitle": "Eier und Spinat im Filoteig",
+      "enrichedAt": "2026-01-02T16:21:50.202Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/mango-bowle-10548238.html",
+      "titleFr": "Salade de Mangue Épicée",
+      "descriptionFr": "Découvrez cette salade de mangue rafraîchissante, parfaite pour un déjeuner léger et nutritif. Avec une touche de menthe et un zeste de lime, chaque bouchée est un véritable voyage gustatif. La limonade au gingembre et à l'orange apporte une douceur naturelle sans excès de sucre.",
+      "ingredientsFr": [
+        {
+          "name": "Mangue",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Feuille de menthe",
+          "amount": 1,
+          "unit": "c."
+        },
+        {
+          "name": "Citron vert",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Limonade au gingembre et à l'orange",
+          "amount": 250,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez la mangue et découpez-la en cubes.",
+        "Étape 2: Lavez soigneusement la feuille de menthe et hachez-la finement.",
+        "Étape 3: Pressez le citron vert pour obtenir le jus.",
+        "Étape 4: Dans un grand bol, mélangez les cubes de mangue avec le jus de citron vert et la menthe hachée.",
+        "Étape 5: Ajoutez la limonade au gingembre et à l'orange dans le bol et mélangez délicatement pour combiner les saveurs.",
+        "Étape 6: Laissez reposer la salade au réfrigérateur pendant environ 10 minutes pour que les saveurs s'imprègnent.",
+        "Étape 7: Servez frais, en garnissant éventuellement de quelques feuilles de menthe supplémentaires."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 2,
+        "carbs": 75,
+        "fats": 0,
+        "sugar": 18,
+        "fiber": 5,
+        "saturatedFat": 0,
+        "sodium": 10
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est très saine grâce à sa richesse en vitamines, en fibres et en antioxydants. La mangue apporte des nutriments essentiels, tandis que la menthe et le citron vert ajoutent des bienfaits digestifs sans excès de sucre.",
+      "imageUrl": "https://image.brigitte.de/10548236/t/kk/v6/w1440/r1/-/mango-bowle-bild.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/mango-bowle-10548238.html",
+      "originalTitle": "Mango-Bowle",
+      "enrichedAt": "2026-01-02T16:22:04.770Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/schnell-was-gutes/superfood-bowl-12241638.html",
+      "titleFr": "Bol Superalimentaire",
+      "descriptionFr": "Ce bol coloré et plein de saveurs est une explosion de nutriments. Avec de l'avocat crémeux, des filets de truite grillés et une touche de pesto de basilic, il est parfait pour un déjeuner équilibré et délicieux.",
+      "ingredientsFr": [
+        {
+          "name": "Grenade",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Avocat",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Roquette",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Filet de truite",
+          "amount": 2,
+          "unit": "filets"
+        },
+        {
+          "name": "Crème aigre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Pesto de basilic",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Raifort à la crème",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Citron",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Riz nature (type Uncle Ben's)",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Oignons frits",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites cuire le riz nature selon les instructions de l'emballage.",
+        "Étape 2: Pendant ce temps, faites cuire les filets de truite dans une poêle avec un peu d'huile d'olive, assaisonnez avec du sel et du poivre, environ 4-5 minutes de chaque côté.",
+        "Étape 3: Coupez l'avocat en deux, retirez le noyau et prélevez la chair à l'aide d'une cuillère. Coupez-le en tranches.",
+        "Étape 4: Démembrez la grenade pour en extraire les graines.",
+        "Étape 5: Dans un grand bol, disposez la roquette, le riz cuit, les tranches d'avocat, les filets de truite, et les graines de grenade.",
+        "Étape 6: Dans un petit bol, mélangez la crème aigre, le pesto de basilic et le raifort. Ajoutez un peu de jus de citron pour relever le goût.",
+        "Étape 7: Arrosez le bol avec la sauce préparée et ajoutez les oignons frits sur le dessus.",
+        "Étape 8: Servez immédiatement et savourez ce repas nutritif."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 30,
+        "carbs": 60,
+        "fats": 25,
+        "sugar": 5,
+        "fiber": 8,
+        "saturatedFat": 5,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en oméga-3 grâce à la truite et en fibres avec la roquette et la grenade. Elle respecte les règles nutritionnelles et fournit un bon équilibre de macronutriments.",
+      "imageUrl": "https://image.brigitte.de/12241636/t/yk/v4/w1440/r1/-/bild-ka16-aufmach.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/schnell-was-gutes/superfood-bowl-12241638.html",
+      "originalTitle": "Superfood-Bowl",
+      "enrichedAt": "2026-01-02T16:22:10.196Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/smoothie-bowl",
+      "titleFr": "Smoothie Bowl Fruité",
+      "descriptionFr": "Ce smoothie bowl est une explosion de saveurs fruitées et de textures croquantes. Riche en antioxydants et en nutriments, il est parfait pour un déjeuner frais et léger. Garnissez-le de vos fruits préférés pour une touche personnelle !",
+      "ingredientsFr": [
+        {
+          "name": "Brombeère",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Myrtille",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Framboise",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Graines de chanvre",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Noix de cajou",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Sirop d'agave",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Jus de citron vert",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de chia",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les brombeères, myrtilles, framboises et les bananes. Mixez jusqu'à obtenir une consistance lisse.",
+        "Étape 2: Ajoutez le yaourt nature, le sirop d'agave, le jus de citron vert et les graines de chia dans le mixeur. Mixez de nouveau jusqu'à ce que le mélange soit homogène.",
+        "Étape 3: Dans un grand bol, versez le smoothie obtenu.",
+        "Étape 4: Garnissez le smoothie bowl avec les flocons d'avoine, les graines de chanvre et les noix de cajou pour un effet croquant.",
+        "Étape 5: Vous pouvez également ajouter quelques fruits frais sur le dessus pour une présentation colorée.",
+        "Étape 6: Servez immédiatement et savourez ce déjeuner nutritif et revitalisant !"
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 18,
+        "carbs": 75,
+        "fats": 22,
+        "sugar": 18,
+        "fiber": 12,
+        "saturatedFat": 3,
+        "sodium": 70
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce smoothie bowl est riche en fibres, vitamines et minéraux grâce aux fruits et aux graines. Les graisses saines des noix de cajou et des graines de chanvre apportent des acides gras essentiels, tandis que le yaourt fournit des probiotiques bénéfiques pour la santé digestive.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-11976877.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/smoothie-bowl",
+      "originalTitle": "Smoothie Bowl",
+      "enrichedAt": "2026-01-02T16:22:10.813Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/fruchtige-bowle",
+      "titleFr": "Bowle Fruitière Épicée",
+      "descriptionFr": "Découvrez cette délicieuse bowle fruitière, rafraîchissante et légèrement pétillante, idéale pour un déjeuner léger. Avec ses fruits variés et son mélange de vins, elle apportera une touche de fête à votre table tout en restant équilibrée.",
+      "ingredientsFr": [
+        {
+          "name": "Sekt (vin mousseux sec)",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Vin blanc sec",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Pêches en conserve",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Mandarines en conserve",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Cocktail de fruits en conserve",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de fruits (orange ou multifruit)",
+          "amount": 480,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand saladier, versez le Sekt et le vin blanc sec.",
+        "Étape 2: Ajoutez le jus de fruits et mélangez doucement.",
+        "Étape 3: Égouttez les pêches, les mandarines et le cocktail de fruits, puis ajoutez-les dans le saladier.",
+        "Étape 4: Mélangez délicatement pour bien répartir les fruits dans la boisson.",
+        "Étape 5: Laissez reposer au réfrigérateur pendant au moins 30 minutes pour que les saveurs se mélangent.",
+        "Étape 6: Servez frais dans des verres, éventuellement avec des glaçons.",
+        "Étape 7: Décorez avec quelques tranches de fruits frais ou des feuilles de menthe si désiré."
+      ],
+      "nutrition": {
+        "calories": 180,
+        "proteins": 1,
+        "carbs": 27,
+        "fats": 0,
+        "sugar": 18,
+        "fiber": 1,
+        "saturatedFat": 0,
+        "sodium": 15
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette bowle fruitière est riche en vitamines grâce aux fruits et faible en calories. Cependant, elle contient une quantité modérée de sucre naturel. C'est un choix correct pour un déjeuner léger.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2011/9/Fruchtige-Bowle--4e7093a8a1121.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/fruchtige-bowle",
+      "originalTitle": "Fruchtige Bowle",
+      "enrichedAt": "2026-01-02T16:22:26.100Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/kartoffel-quiche-10536662.html",
+      "titleFr": "Quiche aux pommes de terre",
+      "descriptionFr": "Découvrez cette délicieuse quiche aux pommes de terre, agrémentée de poivrons verts et de jambon. Parfaite pour un déjeuner savoureux et équilibré, elle allie croquant et fondant pour le plus grand plaisir de vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "pommes de terre",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "beurre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "farine",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "poivron vert",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "maïs",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "jambon cuit",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "oignons nouveaux",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "œufs",
+          "amount": 3,
+          "unit": "pièce"
+        },
+        {
+          "name": "lait",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "fromage",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (th. 6).",
+        "Étape 2: Épluchez et coupez les pommes de terre en fines rondelles. Faites-les cuire à la vapeur ou dans l'eau bouillante salée pendant environ 10 minutes jusqu'à ce qu'elles soient tendres.",
+        "Étape 3: Dans une poêle, faites fondre le beurre à feu doux, ajoutez les oignons nouveaux émincés et le poivron vert coupé en dés. Faites revenir pendant 5 minutes.",
+        "Étape 4: Dans un saladier, battez les œufs avec le lait, le sel, le poivre et la farine jusqu'à obtenir un mélange homogène.",
+        "Étape 5: Ajoutez les pommes de terre, le maïs, le jambon coupé en dés et les légumes sautés au mélange d'œufs et mélangez délicatement.",
+        "Étape 6: Versez la préparation dans un moule à quiche beurré et saupoudrez de fromage râpé sur le dessus.",
+        "Étape 7: Enfournez pendant 30 à 35 minutes, jusqu'à ce que la quiche soit bien dorée.",
+        "Étape 8: Laissez refroidir quelques minutes avant de servir."
+      ],
+      "nutrition": {
+        "calories": 525,
+        "proteins": 25,
+        "carbs": 53,
+        "fats": 25,
+        "sugar": 2,
+        "fiber": 5,
+        "saturatedFat": 10,
+        "sodium": 450
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette quiche est équilibrée avec un bon apport en protéines et en fibres. Toutefois, la teneur en graisses saturées pourrait être améliorée en réduisant la quantité de fromage ou en utilisant une alternative allégée.",
+      "imageUrl": "https://image.brigitte.de/10536664/t/KL/v5/w1440/r1/-/kartoffel-quiche-97b60c8a6d98ea9da130f5164266a320-kartoffel-quiche-.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/kartoffel-quiche-10536662.html",
+      "originalTitle": "Kartoffel-Quiche",
+      "enrichedAt": "2026-01-02T16:22:59.658Z"
+    },
+    {
+      "id": "https://www.lecker.de/smoothie-bowl-12519.html",
+      "titleFr": "Smoothie-Bowl Tropical",
+      "descriptionFr": "Savourez ce smoothie-bowl tropical qui combine la douceur de la mangue et de la banane avec l'acidité des framboises. Un petit-déjeuner ou une collation saine, pleine de vitamines, qui vous apportera énergie et bien-être!",
+      "ingredientsFr": [
+        {
+          "name": "Mangue",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Baby épinards",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Framboises surgelées",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Fruits frais (ex: framboises, mûres)",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de lin",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Muesli aux fruits",
+          "amount": 15,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez la mangue et la banane, puis coupez-les en morceaux.",
+        "Étape 2: Dans un blender, ajoutez les morceaux de mangue, de banane, les framboises surgelées et les baby épinards.",
+        "Étape 3: Mixez à vitesse élevée jusqu'à obtenir une consistance lisse et crémeuse.",
+        "Étape 4: Si le mélange est trop épais, ajoutez un peu d'eau ou de lait végétal pour ajuster la texture.",
+        "Étape 5: Versez le smoothie dans un bol.",
+        "Étape 6: Disposez les fruits frais sur le dessus, puis ajoutez les graines de lin et le muesli aux fruits.",
+        "Étape 7: Servez immédiatement et dégustez avec une cuillère."
+      ],
+      "nutrition": {
+        "calories": 230,
+        "proteins": 5,
+        "carbs": 47,
+        "fats": 6,
+        "sugar": 18,
+        "fiber": 5,
+        "saturatedFat": 0.5,
+        "sodium": 2
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce smoothie-bowl est riche en vitamines, minéraux et fibres, tout en étant faible en graisses saturées et en sodium. Les fruits et les épinards apportent des antioxydants et des nutriments essentiels, ce qui en fait une option très saine.",
+      "imageUrl": "https://images.lecker.de/,id=2694c42f,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/smoothie-bowl-12519.html",
+      "originalTitle": "Smoothie-Bowl",
+      "enrichedAt": "2026-01-02T16:23:10.819Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/smoothie-bowl-11785442.html",
+      "titleFr": "Smoothie Bowl aux Baies",
+      "descriptionFr": "Ce smoothie bowl aux baies est une collation saine et délicieuse, idéale pour un petit coup de boost énergétique. Avec sa texture crémeuse et ses saveurs fruitées, il ravira vos papilles tout en vous apportant des nutriments essentiels.",
+      "ingredientsFr": [
+        {
+          "name": "Mélange de baies congelées",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Lait d'amande",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sirop d'agave",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Myrtilles",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Framboises",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de chia",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Flocons de noix de coco",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez le mélange de baies congelées, la banane coupée en morceaux et le lait d'amande.",
+        "Étape 2: Mixez jusqu'à obtenir une consistance lisse et crémeuse.",
+        "Étape 3: Ajoutez les flocons d'avoine, le sirop d'agave, les myrtilles et les framboises, puis mixez à nouveau légèrement pour mélanger les ingrédients.",
+        "Étape 4: Versez le mélange dans un bol.",
+        "Étape 5: Saupoudrez les graines de chia et les flocons de noix de coco sur le dessus.",
+        "Étape 6: Pour une présentation encore plus jolie, ajoutez quelques baies supplémentaires sur le dessus.",
+        "Étape 7: Dégustez immédiatement pour profiter de la fraîcheur des ingrédients."
+      ],
+      "nutrition": {
+        "calories": 236,
+        "proteins": 4,
+        "carbs": 47,
+        "fats": 6,
+        "sugar": 18,
+        "fiber": 7,
+        "saturatedFat": 2,
+        "sodium": 45
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en antioxydants grâce aux baies et en fibres grâce aux flocons d'avoine et aux graines de chia. Elle constitue une collation nutritive et équilibrée, bien que le sucre naturel provenant des fruits soit légèrement supérieur à la limite recommandée.",
+      "imageUrl": "https://image.brigitte.de/11785440/t/-c/v3/w1440/r1/-/smoothie-bowl.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/smoothie-bowl-11785442.html",
+      "originalTitle": "Smoothie Bowl mit Beeren",
+      "enrichedAt": "2026-01-02T16:23:29.281Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/mango-smoothie-bowl-mit-kiwi",
+      "titleFr": "Bol de Smoothie à la Mangue et Kiwi",
+      "descriptionFr": "Savourez un bol de smoothie rafraîchissant à base de mangue et de kiwi, parfait pour une collation saine et pleine de vitamines. La douceur de la mangue se marie à l'acidité du kiwi, offrant une explosion de saveurs en bouche. Ajoutez des pistaches et des graines de lin pour un croquant irrésistible et une touche nutritive.",
+      "ingredientsFr": [
+        {
+          "name": "Mangue",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron jaune",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Citron",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Jus d'orange",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Kiwis",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Pistaches",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de lin",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Cranberries séchées",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez la mangue et coupez-la en morceaux.",
+        "Étape 2: Lavez le poivron jaune, enlevez les graines et coupez-le en dés.",
+        "Étape 3: Pressez le jus du citron et mettez-le de côté.",
+        "Étape 4: Dans un mixeur, ajoutez les morceaux de mangue, les dés de poivron jaune, le jus de citron, le jus d'orange et les kiwis pelés et coupés.",
+        "Étape 5: Mixez jusqu'à obtenir une texture lisse et homogène.",
+        "Étape 6: Versez le smoothie dans des bols et garnissez avec les pistaches, les graines de lin et les cranberries séchées.",
+        "Étape 7: Servez immédiatement et dégustez votre bol de smoothie frais."
+      ],
+      "nutrition": {
+        "calories": 190,
+        "proteins": 5,
+        "carbs": 38,
+        "fats": 4,
+        "sugar": 15,
+        "fiber": 6,
+        "saturatedFat": 0.5,
+        "sodium": 5
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en vitamines, notamment en vitamine C grâce aux fruits. Les pistaches et les graines de lin apportent des acides gras essentiels et des fibres, contribuant ainsi à un bon équilibre nutritionnel.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/[node:url-slug]-655536.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/mango-smoothie-bowl-mit-kiwi",
+      "originalTitle": "Mango-Smoothie-Bowl mit Kiwi",
+      "enrichedAt": "2026-01-02T16:23:29.476Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/rosa-smoothie-bowl-mit-wassermelone",
+      "titleFr": "Smoothie-Bowl Rose à la Pastèque",
+      "descriptionFr": "Rafraîchissante et délicieuse, cette smoothie-bowl à la pastèque est parfaite pour une collation saine. Elle allie la douceur de la pastèque à la texture crémeuse des flocons d'avoine, le tout rehaussé par une touche de lime et de coco.",
+      "ingredientsFr": [
+        {
+          "name": "pastèque",
+          "amount": 2000,
+          "unit": "g"
+        },
+        {
+          "name": "jus de lime",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "sirop d'agave",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "flocons d'avoine",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "name": "eau de coco",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "copeaux de noix de coco",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "feuilles de mélisse",
+          "amount": 2,
+          "unit": "brins"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez la pastèque en morceaux et retirez les graines.",
+        "Étape 2: Dans un mixeur, ajoutez la pastèque, le jus de lime, le sirop d'agave et l'eau de coco. Mixez jusqu'à obtenir une consistance lisse.",
+        "Étape 3: Incorporez les flocons d'avoine au mélange et mixez à nouveau légèrement pour bien les mélanger.",
+        "Étape 4: Répartissez le mélange dans des bols.",
+        "Étape 5: Garnissez chaque bol avec des copeaux de noix de coco et quelques feuilles de mélisse.",
+        "Étape 6: Servez immédiatement pour une texture fraîche et onctueuse."
+      ],
+      "nutrition": {
+        "calories": 180,
+        "proteins": 5,
+        "carbs": 38,
+        "fats": 4,
+        "sugar": 14,
+        "fiber": 5,
+        "saturatedFat": 2,
+        "sodium": 15
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en vitamines et minéraux grâce à la pastèque et à la mélisse. Les flocons d'avoine apportent des fibres et des glucides complexes, ce qui en fait un en-cas équilibré et nourrissant.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/rosa-smoothie-bowl-mit-wassermelone-641176-1.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/rosa-smoothie-bowl-mit-wassermelone",
+      "originalTitle": "Rosa Smoothie-Bowl mit Wassermelone",
+      "enrichedAt": "2026-01-02T16:23:28.930Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-gemuese-pfanne-33701.html",
+      "titleFr": "Poêlée de poisson aux légumes",
+      "descriptionFr": "Découvrez cette délicieuse poêlée de poisson accompagnée de légumes croquants, parfaite pour un dîner léger et savoureux. Les nouvelles pommes de terre et les petits pois apportent une touche de douceur, tandis que le poisson maigre est riche en protéines et en oméga-3.",
+      "ingredientsFr": [
+        {
+          "name": "nouvelles pommes de terre",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre blanc",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "carotte",
+          "amount": 1,
+          "unit": "moyenne"
+        },
+        {
+          "name": "oignon nouveau",
+          "amount": 1,
+          "unit": "moyen"
+        },
+        {
+          "name": "pois sucrés",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "filet de poisson maigre (comme le cabillaud)",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "farine",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "cerfeuil ou persil",
+          "amount": 1,
+          "unit": "brin"
+        },
+        {
+          "name": "crème aigre",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez et coupez les nouvelles pommes de terre en morceaux. Faites-les cuire dans de l'eau bouillante salée pendant environ 15 minutes jusqu'à ce qu'elles soient tendres.",
+        "Étape 2: Pendant ce temps, épluchez et coupez la carotte en fines rondelles. Émincez l'oignon nouveau.",
+        "Étape 3: Dans une poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'oignon nouveau et la carotte, et faites revenir pendant environ 5 minutes.",
+        "Étape 4: Ajoutez les pois sucrés et le poisson dans la poêle. Assaisonnez avec du sel, du poivre et le jus de citron. Faites cuire pendant environ 5-7 minutes jusqu'à ce que le poisson soit bien cuit.",
+        "Étape 5: Dans un petit bol, mélangez la farine avec un peu d'eau pour former une pâte légère. Ajoutez ce mélange à la poêle pour épaissir légèrement la sauce.",
+        "Étape 6: Une fois les pommes de terre cuites, égouttez-les et ajoutez-les à la poêle. Mélangez délicatement pour enrober tous les ingrédients.",
+        "Étape 7: Servez chaud, garni de cerfeuil ou de persil haché, et ajoutez une cuillerée de crème aigre sur le dessus.",
+        "Étape 8: Profitez de ce plat savoureux et équilibré, idéal pour un dîner léger."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 35,
+        "carbs": 45,
+        "fats": 15,
+        "sugar": 4,
+        "fiber": 6,
+        "saturatedFat": 2,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au poisson maigre et contient des légumes variés, fournissant des vitamines et des minéraux essentiels. Les graisses sont limitées et proviennent principalement de l'huile d'olive, ce qui en fait un choix de dîner sain.",
+      "imageUrl": "https://images.lecker.de/,id=b7e26f2f,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-gemuese-pfanne-33701.html",
+      "originalTitle": "Fisch-Gemüse-Pfanne",
+      "enrichedAt": "2026-01-02T16:24:20.037Z"
+    },
+    {
+      "id": "https://www.lecker.de/broccoli-fisch-auflauf-43766.html",
+      "titleFr": "Gratin de Brocoli et Saumon",
+      "descriptionFr": "Ce gratin de brocoli et saumon combine des légumes croquants et des morceaux de poisson tendre, le tout nappé d'une sauce crémeuse. Parfait pour un dîner savoureux et nutritif, il ravira vos papilles tout en étant équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "brocoli",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "petits pois sucrés",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "petits pois surgelés",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "petite oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "beurre ou margarine",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "farine",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "crème liquide",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "poivre blanc",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "jaune d'œuf",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "filet de saumon",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "estragon",
+          "amount": 1,
+          "unit": "branche"
+        },
+        {
+          "name": "baies roses",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (thermostat 6).",
+        "Étape 2: Faites cuire le brocoli dans une grande casserole d'eau bouillante salée pendant 5 minutes, puis ajoutez les petits pois sucrés et les petits pois surgelés pour 2 minutes supplémentaires. Égouttez et réservez.",
+        "Étape 3: Dans une poêle, faites fondre le beurre ou la margarine à feu moyen. Ajoutez l'oignon haché et faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 4: Incorporez la farine et mélangez bien pour former un roux. Versez progressivement la crème liquide tout en remuant jusqu'à obtenir une consistance lisse.",
+        "Étape 5: Ajoutez le bouillon de légumes, le poivre blanc et le jaune d'œuf, mélangez bien et laissez mijoter pendant 2-3 minutes.",
+        "Étape 6: Dans un plat à gratin, disposez les légumes cuits et les morceaux de saumon. Versez la sauce par-dessus et mélangez délicatement.",
+        "Étape 7: Enfournez le gratin pendant environ 25-30 minutes, ou jusqu'à ce qu'il soit doré et bouillonnant.",
+        "Étape 8: Servez chaud, décoré d'estragon et de baies roses."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 32,
+        "carbs": 30,
+        "fats": 24,
+        "sugar": 4,
+        "fiber": 8,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au saumon et en fibres grâce aux légumes. La crème est la seule source de graisses saturées, mais elle reste dans les limites recommandées. Idéal pour un dîner nourrissant.",
+      "imageUrl": "https://images.lecker.de/,id=40890d34,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/broccoli-fisch-auflauf-43766.html",
+      "originalTitle": "Broccoli-Fisch-Auflauf",
+      "enrichedAt": "2026-01-02T16:24:22.296Z"
+    },
+    {
+      "id": "https://utopia.de/ratgeber/chili-con-tofu-mindestens-so-gut-wie-das-original/",
+      "titleFr": "Chili con Tofu Épicé",
+      "descriptionFr": "Savourez ce Chili con Tofu, un plat réconfortant et plein de saveurs. Parfait pour un dîner vegan, il combine une variété de légumes et de protéines végétales pour un repas nourrissant et délicieux.",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Piment",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Cumin",
+          "amount": 9,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "name": "Tomates concassées",
+          "amount": 800,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "Poivron",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Tofu",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Haricots rouges",
+          "amount": 255,
+          "unit": "g"
+        },
+        {
+          "name": "Maïs",
+          "amount": 285,
+          "unit": "g"
+        },
+        {
+          "name": "Cacao en poudre",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cannelle",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez l'oignon et le piment. Coupez le poivron en dés et le tofu en cubes.",
+        "Étape 2: Dans une grande poêle, chauffez l'huile d'olive à feu moyen et ajoutez l'oignon. Faites revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Ajoutez le piment, le cumin et le paprika. Faites cuire pendant 1 à 2 minutes pour libérer les arômes.",
+        "Étape 4: Ajoutez les tomates concassées et le bouillon de légumes. Portez à ébullition puis réduisez le feu.",
+        "Étape 5: Incorporez le poivron, le tofu, les haricots rouges et le maïs. Mélangez bien.",
+        "Étape 6: Ajoutez le cacao en poudre et la pincée de cannelle. Laissez mijoter pendant 20 minutes à feu doux, en remuant de temps en temps.",
+        "Étape 7: Goûtez et ajustez l'assaisonnement si nécessaire. Servez chaud avec du riz ou des tortillas si désiré."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 24,
+        "carbs": 64,
+        "fats": 15,
+        "sugar": 6,
+        "fiber": 14,
+        "saturatedFat": 2,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce Chili con Tofu est riche en protéines végétales et en fibres, tout en étant faible en graisses saturées. C'est un plat équilibré qui respecte les recommandations nutritionnelles.",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://utopia.de/ratgeber/chili-con-tofu-mindestens-so-gut-wie-das-original/",
+      "originalTitle": "Deftiges Chili con Tofu",
+      "enrichedAt": "2026-01-02T16:24:24.216Z"
+    },
+    {
+      "id": "https://elavegan.com/de/frittata-rezept/",
+      "titleFr": "Frittata Végétale aux Légumes",
+      "descriptionFr": "Savourez cette frittata végétale riche en légumes, parfaite pour un déjeuner équilibré. Facile à préparer, elle allie textures et saveurs pour un plat sain et nourrissant qui ravira toute la famille.",
+      "ingredientsFr": [
+        {
+          "name": "huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "oignon",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "poivron",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "patate douce",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "courgette",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "tomate",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "petits pois",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 2,
+          "unit": "unit"
+        },
+        {
+          "name": "eau ou bouillon de légumes",
+          "amount": 240,
+          "unit": "ml"
+        },
+        {
+          "name": "farine de pois chiches",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "farine de tapioca",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "flocons de levure",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "poudre à lever",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "sel marin",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "sel noir Kala Namak",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "mélange d'herbes italiennes",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "poivre noir",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "name": "paprika fumé",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "cumin moulu",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, chauffez l'huile d'olive à feu moyen. Ajoutez l'oignon et l'ail, et faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajoutez le poivron, la courgette, la patate douce et les petits pois. Faites cuire pendant environ 5 minutes, jusqu'à ce que les légumes soient tendres.",
+        "Étape 3: Dans un bol, mélangez la farine de pois chiches, la farine de tapioca, la poudre à lever, le sel, le sel noir, le mélange d'herbes italiennes, le poivre noir, le paprika fumé et le cumin.",
+        "Étape 4: Ajoutez l'eau ou le bouillon de légumes au mélange de farine et remuez jusqu'à l'obtention d'une pâte homogène.",
+        "Étape 5: Incorporez les légumes cuits dans le mélange de pâte et mélangez bien.",
+        "Étape 6: Versez le mélange dans la poêle et cuisez à feu moyen-doux pendant environ 10-15 minutes, jusqu'à ce que les bords commencent à se raffermir.",
+        "Étape 7: Préchauffez votre four à 180°C. Placez la poêle au four et faites cuire pendant 15-20 minutes jusqu'à ce que le dessus soit doré.",
+        "Étape 8: Laissez refroidir légèrement avant de couper en parts et de servir."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 18,
+        "carbs": 60,
+        "fats": 15,
+        "sugar": 7,
+        "fiber": 10,
+        "saturatedFat": 2,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette frittata est riche en légumes, apportant des fibres, des vitamines et des minéraux essentiels. Elle est faible en graisses saturées et satisfera vos besoins en protéines grâce aux pois chiches. Idéale pour un repas équilibré.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/05/Gemüse-Frittata-in-einer-Pfanne-mit-Stück-im-Hintergrund-auf-Teller.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 8,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/frittata-rezept/",
+      "originalTitle": "Frittata Rezept",
+      "enrichedAt": "2026-01-02T16:24:39.820Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/herzhafte-gruene-smoothie-bowl",
+      "titleFr": "Bowl de Smoothie Vert Savoureux",
+      "descriptionFr": "Découvrez cette délicieuse bowl de smoothie vert, riche en légumes frais et en herbes aromatiques. Avec sa texture crémeuse et ses notes de citron, elle constitue une collation parfaite pour booster votre énergie tout au long de la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Pois frais ou surgelés",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Cresson",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "name": "Capucine",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Épinards Baby",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Herbes (persil, basilic)",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Poudre de blé en herbe",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Noix de muscade",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Baies de Goji",
+          "amount": 40,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, chauffer le bouillon de légumes à feu moyen.",
+        "Étape 2: Ajouter les pois, le cresson, les épinards et les herbes dans le bouillon chaud et laisser mijoter pendant 5 minutes.",
+        "Étape 3: Retirer la casserole du feu et laisser refroidir légèrement.",
+        "Étape 4: Dans un mixeur, ajouter le mélange de légumes, l'huile d'olive, le jus de citron, le sel, le poivre et la muscade, puis mixer jusqu'à obtenir une consistance lisse.",
+        "Étape 5: Incorporer la poudre de blé en herbe au mélange et mixer de nouveau jusqu'à homogénéité.",
+        "Étape 6: Verser le smoothie dans des bowls et garnir de baies de Goji sur le dessus.",
+        "Étape 7: Servir immédiatement et déguster frais."
+      ],
+      "nutrition": {
+        "calories": 190,
+        "proteins": 8,
+        "carbs": 32,
+        "fats": 6,
+        "sugar": 5,
+        "fiber": 7,
+        "saturatedFat": 1,
+        "sodium": 320
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en légumes et en fibres, ce qui favorise une bonne digestion. Elle est faible en calories et en graisses saturées, tout en offrant des nutriments essentiels grâce aux herbes et aux super-aliments comme les baies de Goji.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/herzhafte-gruene-smoothie-bowl-652695.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/herzhafte-gruene-smoothie-bowl",
+      "originalTitle": "Herzhafte grüne Smoothie-Bowl",
+      "enrichedAt": "2026-01-02T16:24:40.318Z"
+    },
+    {
+      "id": "https://www.lecker.de/fisch-paella-1483.html",
+      "titleFr": "Paella de Fruits de Mer",
+      "descriptionFr": "Découvrez une explosion de saveurs maritimes avec cette paella riche en poissons et fruits de mer. Les arômes du safran et les légumes frais se marient parfaitement pour un dîner à la fois exotique et réconfortant.",
+      "ingredientsFr": [
+        {
+          "name": "Oignons",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Poivron rouge",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Calamars préparés",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 90,
+          "unit": "ml"
+        },
+        {
+          "name": "Riz Avorio",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon clair (instantané)",
+          "amount": 1,
+          "unit": "litre"
+        },
+        {
+          "name": "Safran",
+          "amount": 1,
+          "unit": "capsule"
+        },
+        {
+          "name": "Filet de lieu",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 8,
+          "unit": "g"
+        },
+        {
+          "name": "Farine",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre blanc",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Olives noires",
+          "amount": 185,
+          "unit": "g"
+        },
+        {
+          "name": "Moules",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Petits pois surgelés",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Chair de crabe",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Persil",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez les oignons émincés et l'ail haché, puis faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajoutez le poivron rouge coupé en dés et les calamars. Faites cuire pendant 5 minutes en remuant régulièrement.",
+        "Étape 3: Incorporez le riz et mélangez bien pour enrober les grains d'huile. Ajoutez le bouillon chaud et le safran dissous. Portez à ébullition.",
+        "Étape 4: Réduisez le feu, couvrez et laissez mijoter pendant 10 minutes.",
+        "Étape 5: Ajoutez le filet de lieu coupé en morceaux, le jus de citron, les moules, les petits pois et la chair de crabe. Mélangez délicatement.",
+        "Étape 6: Poursuivez la cuisson pendant encore 10 minutes ou jusqu'à ce que le riz soit tendre et que les moules soient ouvertes.",
+        "Étape 7: Rectifiez l'assaisonnement avec du sel et du poivre blanc. Ajoutez les olives noires.",
+        "Étape 8: Servez chaud, garni de persil frais haché."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 35,
+        "carbs": 70,
+        "fats": 15,
+        "sugar": 3,
+        "fiber": 5,
+        "saturatedFat": 2,
+        "sodium": 450
+      },
+      "healthScore": 78,
+      "healthNotes": "Cette paella est riche en protéines et en fibres grâce aux fruits de mer et aux légumes, tout en étant modérée en graisses saturées. Elle est équilibrée, mais attention à la quantité de sel ajoutée.",
+      "imageUrl": "https://images.lecker.de/,id=8b726f89,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/fisch-paella-1483.html",
+      "originalTitle": "Fisch-Paella",
+      "enrichedAt": "2026-01-02T16:24:57.213Z"
+    },
+    {
+      "id": "https://utopia.de/ratgeber/tofu-bolognese-rezept-fuer-die-vegane-alternative/",
+      "titleFr": "Bolognaise de Tofu",
+      "descriptionFr": "Découvrez une version végétalienne de la traditionnelle bolognaise, où le tofu prend la place de la viande pour un plat riche en saveurs et en protéines. Accompagnée de pâtes, cette recette saine et équilibrée ravira vos papilles tout en respectant vos besoins nutritionnels.",
+      "ingredientsFr": [
+        {
+          "name": "Tofu ferme",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Concentré de tomates",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Passata de tomates",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "Herbes italiennes",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sirop de betterave",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Égouttez et émiettez le tofu à l'aide d'une fourchette pour obtenir une texture similaire à de la viande hachée.",
+        "Étape 2: Épluchez et hachez finement l'oignon et l'ail.",
+        "Étape 3: Dans une grande poêle, chauffez l'huile d'olive à feu moyen et ajoutez l'oignon et l'ail. Faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 4: Ajoutez le tofu émietté à la poêle et faites-le cuire pendant environ 5 minutes, en remuant régulièrement.",
+        "Étape 5: Incorporez le concentré de tomates et mélangez bien, puis ajoutez la passata de tomates et le bouillon de légumes.",
+        "Étape 6: Assaisonnez avec les herbes italiennes, le sirop de betterave, le sel et le poivre. Laissez mijoter à feu doux pendant 15-20 minutes.",
+        "Étape 7: Pendant ce temps, faites cuire vos pâtes selon les instructions du paquet.",
+        "Étape 8: Servez la sauce bolognaise de tofu sur les pâtes chaudes et dégustez."
+      ],
+      "nutrition": {
+        "calories": 410,
+        "proteins": 22,
+        "carbs": 40,
+        "fats": 20,
+        "sugar": 5,
+        "fiber": 5,
+        "saturatedFat": 3,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce au tofu et contient des glucides complexes provenant des pâtes. Les graisses sont principalement saines, provenant de l'huile d'olive, et le plat est faible en sucres ajoutés, ce qui en fait un choix nutritif.",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://utopia.de/ratgeber/tofu-bolognese-rezept-fuer-die-vegane-alternative/",
+      "originalTitle": "Tofu-Bolognese",
+      "enrichedAt": "2026-01-02T16:24:55.268Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/heidelbeer-joghurt-10549440.html",
+      "titleFr": "Yaourt aux myrtilles",
+      "descriptionFr": "Commencez votre journée avec un délicieux yaourt aux myrtilles, riche en antioxydants et en protéines. Ce petit-déjeuner équilibré allie la douceur du sirop d'érable à la fraîcheur des fruits, tout en apportant des bienfaits nutritifs essentiels.",
+      "ingredientsFr": [
+        {
+          "name": "Yaourt nature",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "Myrtilles surgelées",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Amandes",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, déposez le yaourt nature.",
+        "Étape 2: Ajoutez le sirop d'érable au yaourt et mélangez bien pour l'incorporer.",
+        "Étape 3: Incorporez les myrtilles surgelées dans le mélange de yaourt.",
+        "Étape 4: Émiettez les amandes et saupoudrez-les sur le dessus du mélange.",
+        "Étape 5: Laissez reposer 5 minutes pour que les myrtilles se réchauffent légèrement.",
+        "Étape 6: Servez le yaourt aux myrtilles dans un bol ou un verre.",
+        "Étape 7: Dégustez immédiatement pour profiter de la fraîcheur des ingrédients."
+      ],
+      "nutrition": {
+        "calories": 165,
+        "proteins": 9,
+        "carbs": 20,
+        "fats": 7,
+        "sugar": 10,
+        "fiber": 2,
+        "saturatedFat": 1,
+        "sodium": 50
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est très saine, apportant une bonne source de protéines, de fibres et d'antioxydants. Le yaourt nature offre des probiotiques bénéfiques, tandis que les myrtilles ajoutent des vitamines et des minéraux essentiels.",
+      "imageUrl": "https://image.brigitte.de/10549442/t/GL/v5/w1440/r1/-/0042012002x0450-2-03aa34097175e794cf8d580d111f75d2-0042012002x0450-2-.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/heidelbeer-joghurt-10549440.html",
+      "originalTitle": "Heidelbeer-Joghurt",
+      "enrichedAt": "2026-01-02T16:25:07.863Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/joghurt-zitronencreme-0",
+      "titleFr": "Crème de Yaourt au Citron",
+      "descriptionFr": "Commencez votre journée avec cette délicieuse crème de yaourt au citron, légère et rafraîchissante. Sa texture onctueuse et son goût acidulé éveilleront vos papilles tout en apportant une touche de fraîcheur à votre petit-déjeuner.",
+      "ingredientsFr": [
+        {
+          "name": "Yaourt nature",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Sucre",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre vanillé",
+          "amount": 8,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Feuilles de gélatine",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Crème liquide",
+          "amount": 100,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Commencez par faire ramollir les feuilles de gélatine dans de l'eau froide pendant environ 10 minutes.",
+        "Étape 2: Dans un saladier, séparez les blancs des jaunes d'œufs. Fouettez les jaunes avec le sucre et le sucre vanillé jusqu'à obtenir un mélange crémeux.",
+        "Étape 3: Ajoutez le jus de citron au mélange de jaunes et mélangez bien.",
+        "Étape 4: Faites chauffer une petite quantité de crème liquide dans une casserole, puis incorporez-y les feuilles de gélatine essorées jusqu'à ce qu'elles soient complètement dissoutes.",
+        "Étape 5: Incorporez la crème à la préparation de jaunes d'œufs et mélangez délicatement.",
+        "Étape 6: Dans un autre bol, montez les blancs d'œufs en neige ferme. Incorporez-les délicatement à la préparation précédente.",
+        "Étape 7: Versez la préparation dans des coupes et laissez reposer au réfrigérateur pendant au moins 3 heures pour que la gélatine prenne.",
+        "Étape 8: Servez bien frais, éventuellement garni de zestes de citron ou de fruits frais."
+      ],
+      "nutrition": {
+        "calories": 182,
+        "proteins": 9,
+        "carbs": 20,
+        "fats": 6,
+        "sugar": 13,
+        "fiber": 0,
+        "saturatedFat": 3,
+        "sodium": 50
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, apportant des protéines et des graisses saines, tout en étant faible en calories. La présence de citron apporte une bonne source de vitamine C, bien que le sucre puisse être réduit pour une option encore plus saine.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2011/10/Joghurt-Zitronencreme-4e99e06716cc1.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/joghurt-zitronencreme-0",
+      "originalTitle": "Joghurt-Zitronencreme",
+      "enrichedAt": "2026-01-02T16:25:27.497Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/joghurt-kirscheis",
+      "titleFr": "Glace au Yaourt et Cerises",
+      "descriptionFr": "Commencez votre journée avec cette délicieuse glace au yaourt et cerises, alliant la douceur naturelle des cerises acidulées et la crémeux du yaourt. Une manière rafraîchissante et saine de se régaler au petit-déjeuner !",
+      "ingredientsFr": [
+        {
+          "name": "cerises aigres",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "liqueur de marasquin",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre glace",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "yaourt à la crème",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "crème chantilly",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "yaourt à la crème",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "lait",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "cannelle",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "sucre glace",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "liqueur de marasquin",
+          "amount": 30,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez et dénoyautez les cerises aigres, puis placez-les dans un mixeur.",
+        "Étape 2: Ajoutez le jus de citron et la liqueur de marasquin aux cerises, puis mixez jusqu'à obtenir une purée lisse.",
+        "Étape 3: Dans un grand bol, mélangez la purée de cerises avec le yaourt à la crème et le sucre glace jusqu'à ce que le mélange soit homogène.",
+        "Étape 4: Dans un autre bol, battez la crème chantilly jusqu'à obtenir des pics fermes.",
+        "Étape 5: Incorporez délicatement la crème chantilly au mélange de yaourt et cerises.",
+        "Étape 6: Ajoutez la cannelle et mélangez doucement.",
+        "Étape 7: Versez le mélange dans un récipient hermétique et placez-le au congélateur pendant au moins 4 heures.",
+        "Étape 8: Avant de servir, laissez la glace reposer à température ambiante pendant quelques minutes pour qu'elle soit plus facile à scooper."
+      ],
+      "nutrition": {
+        "calories": 245,
+        "proteins": 6,
+        "carbs": 37,
+        "fats": 9,
+        "sugar": 18,
+        "fiber": 2,
+        "saturatedFat": 5,
+        "sodium": 45
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, avec des ingrédients naturels et peu de graisses saturées. Les cerises apportent des antioxydants et des fibres, tandis que le yaourt ajoute des protéines. Cependant, la quantité de sucre peut être modérée en fonction des préférences personnelles.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/joghurt-kirscheis-284687.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 8,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/joghurt-kirscheis",
+      "originalTitle": "Joghurt-Kirscheis",
+      "enrichedAt": "2026-01-02T16:25:27.932Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/joghurt-charlotte",
+      "titleFr": "Charlotte au Yaourt",
+      "descriptionFr": "La Charlotte au Yaourt est un dessert léger et rafraîchissant, parfait pour commencer la journée de manière gourmande. Avec sa texture crémeuse et ses saveurs fruitées, elle saura séduire les papilles de toute la famille. Accompagnée d'un coulis d'abricots, elle allie plaisir et légèreté !",
+      "ingredientsFr": [
+        {
+          "name": "Yaourt",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "Feuilles de gélatine blanche",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Liqueur d'orange",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sucre vanillé",
+          "amount": 1,
+          "unit": "sachet"
+        },
+        {
+          "name": "Sucre glace",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Crème chantilly",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Biscuit (maison ou industriel)",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Abricots",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Chocolat blanc",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre mou",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre vanillé",
+          "amount": 1,
+          "unit": "sachet"
+        },
+        {
+          "name": "Cinnamon",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Sucre glace",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Blancs d'œufs",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Farine",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, faites ramollir les feuilles de gélatine dans de l'eau froide pendant environ 10 minutes.",
+        "Étape 2: Dans une casserole, faites chauffer le jus de citron, la liqueur d'orange et le sucre vanillé, puis incorporez-y les feuilles de gélatine essorées. Remuez jusqu'à ce qu'elles soient complètement dissoutes.",
+        "Étape 3: Dans un grand saladier, mélangez le yaourt avec le mélange de gélatine tiède jusqu'à obtenir une consistance homogène.",
+        "Étape 4: Montez la crème chantilly en ajoutant le sucre glace, puis incorporez délicatement la chantilly au mélange de yaourt.",
+        "Étape 5: Disposez les biscuits au fond de vos moules et versez le mélange de yaourt par-dessus. Réfrigérez pendant au moins 4 heures pour que la charlotte prenne.",
+        "Étape 6: Pendant ce temps, préparez le coulis d'abricots en cuisant les abricots avec le sucre jusqu'à ce qu'ils soient tendres. Mixez et laissez refroidir.",
+        "Étape 7: Démoulez délicatement les charlottes et servez-les accompagnées du coulis d'abricots.",
+        "Étape 8: Pour décorer, râpez un peu de chocolat blanc sur le dessus avant de servir."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 7,
+        "carbs": 50,
+        "fats": 10,
+        "sugar": 18,
+        "fiber": 2,
+        "saturatedFat": 5,
+        "sodium": 70
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette offre un bon équilibre entre protéines, glucides et graisses, tout en restant relativement faible en calories. L'utilisation de yaourt et de fruits frais contribue à une bonne nutrition, bien qu'il faille veiller à la quantité de sucre ajoutée.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/joghurt-charlotte-209363.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/joghurt-charlotte",
+      "originalTitle": "Joghurt-Charlotte",
+      "enrichedAt": "2026-01-02T16:25:44.913Z"
+    },
+    {
+      "id": "https://utopia.de/ratgeber/rhabarbereis-mit-joghurt-einfaches-rezept-mit-und-ohne-eismaschine/",
+      "titleFr": "Riz au Rhabarber avec Yaourt",
+      "descriptionFr": "Découvrez un petit-déjeuner rafraîchissant et original avec ce riz au rhubarbe accompagné de yaourt. La douceur du rhubarbe cuisiné se marie parfaitement avec la fraîcheur du yaourt, pour un moment gourmand et léger à savourer cet été.",
+      "ingredientsFr": [
+        {
+          "name": "Rhubarbe",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse de vanille",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Sucre",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Crème (végane)",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait ou boisson végétale",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Yaourt nature ou yaourt de soja",
+          "amount": 350,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez et coupez la rhubarbe en morceaux de 2 cm.",
+        "Étape 2: Dans une casserole, ajoutez la rhubarbe, le sucre et la gousse de vanille fendue pour infuser.",
+        "Étape 3: Faites cuire à feu moyen pendant environ 10-15 minutes jusqu'à ce que la rhubarbe soit tendre.",
+        "Étape 4: Retirez la gousse de vanille et laissez refroidir la préparation.",
+        "Étape 5: Dans un saladier, mélangez le yaourt et le lait ou la boisson végétale pour obtenir une consistance crémeuse.",
+        "Étape 6: Dans des verrines, disposez une couche de la préparation à la rhubarbe puis une couche de yaourt.",
+        "Étape 7: Répétez l'opération jusqu'à épuisement des ingrédients.",
+        "Étape 8: Réfrigérez pendant au moins 1 heure avant de servir pour un dessert bien frais."
+      ],
+      "nutrition": {
+        "calories": 248,
+        "proteins": 5,
+        "carbs": 37,
+        "fats": 8,
+        "sugar": 19,
+        "fiber": 2,
+        "saturatedFat": 3,
+        "sodium": 35
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, fournissant des fibres grâce à la rhubarbe et des protéines par le yaourt. Bien que le sucre soit légèrement élevé, la portion reste dans des limites acceptables pour un petit-déjeuner sucré.",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://utopia.de/ratgeber/rhabarbereis-mit-joghurt-einfaches-rezept-mit-und-ohne-eismaschine/",
+      "originalTitle": "Rhabarbereis mit Joghurt",
+      "enrichedAt": "2026-01-02T16:25:40.736Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/hefeteig-mit-joghurt",
+      "titleFr": "Pâte levée au yaourt",
+      "descriptionFr": "Découvrez une recette de pâte levée légère et moelleuse, idéale pour un petit-déjeuner savoureux. Le yaourt apporte une touche de crémeux et une source de protéines, tandis que la douceur de la pâte se marie parfaitement avec vos garnitures préférées.",
+      "ingredientsFr": [
+        {
+          "name": "farine",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "cube de levure",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "lait (tiède)",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "yaourt",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "beurre (ramolli)",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 2.5,
+          "unit": "g"
+        },
+        {
+          "name": "farine (pour le travail)",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "beurre (fondu)",
+          "amount": 60,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, émiettez la levure avec le lait tiède et le sucre. Laissez reposer pendant environ 10 minutes jusqu'à ce que le mélange devienne mousseux.",
+        "Étape 2: Dans un grand saladier, mélangez la farine et le sel. Faites un puits au centre et ajoutez le mélange de levure, le yaourt et le beurre ramolli.",
+        "Étape 3: Pétrissez la pâte pendant 10 minutes jusqu'à obtenir une texture lisse et élastique. Si la pâte est trop collante, ajoutez un peu de farine.",
+        "Étape 4: Formez une boule avec la pâte et placez-la dans un bol légèrement huilé. Couvrez avec un torchon et laissez lever dans un endroit chaud pendant 1 heure.",
+        "Étape 5: Une fois que la pâte a doublé de volume, dégazez-la en la pétrissant légèrement. Divisez-la en portions selon la taille des pains souhaités.",
+        "Étape 6: Façonnez les portions selon vos envies (petits pains, baguettes, etc.) et placez-les sur une plaque de cuisson recouverte de papier sulfurisé.",
+        "Étape 7: Laissez lever à nouveau pendant 30 minutes, puis badigeonnez avec le beurre fondu avant d'enfourner.",
+        "Étape 8: Préchauffez le four à 180°C et faites cuire les pains pendant 20-25 minutes jusqu'à ce qu'ils soient dorés."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 10,
+        "carbs": 50,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 2,
+        "saturatedFat": 9,
+        "sodium": 300
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est correcte sur le plan nutritionnel, riche en glucides et en protéines grâce au yaourt. Attention à la quantité de beurre qui augmente les graisses saturées, envisagez de réduire le beurre ou de le remplacer par une alternative plus légère.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-11512405.jpg",
+      "prepTime": 90,
+      "cookTime": 45,
+      "totalTime": 135,
+      "servings": 1,
+      "difficulty": "medium",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/hefeteig-mit-joghurt",
+      "originalTitle": "Hefeteig mit Joghurt",
+      "enrichedAt": "2026-01-02T16:25:45.550Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/kiwi-joghurt",
+      "titleFr": "Kiwi-Yogourt Frais",
+      "descriptionFr": "Commencez votre journée avec ce délicieux kiwi-yogourt, une combinaison rafraîchissante de saveurs. Les kiwis apportent une touche acidulée et une richesse en vitamine C, tandis que le yogourt et la crème fraîche offrent une texture crémeuse et un apport en protéines.",
+      "ingredientsFr": [
+        {
+          "name": "Yogourt nature",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Kiwi",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Sirop de kiwi",
+          "amount": 30,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez les kiwis et coupez-les en petits morceaux.",
+        "Étape 2: Dans un grand bol, mélangez le yogourt et la crème fraîche jusqu'à obtenir une texture homogène.",
+        "Étape 3: Ajoutez les morceaux de kiwi dans le mélange de yogourt et crème, puis incorporez doucement.",
+        "Étape 4: Ajoutez le sirop de kiwi et mélangez délicatement pour enrober les fruits.",
+        "Étape 5: Répartissez le mélange dans quatre bols ou verrines.",
+        "Étape 6: Vous pouvez décorer avec quelques tranches de kiwi sur le dessus pour une présentation esthétique.",
+        "Étape 7: Laissez reposer au réfrigérateur pendant environ 15 minutes avant de servir pour que les saveurs se mélangent.",
+        "Étape 8: Servez frais et dégustez!"
+      ],
+      "nutrition": {
+        "calories": 280,
+        "proteins": 8,
+        "carbs": 30,
+        "fats": 13,
+        "sugar": 19,
+        "fiber": 4,
+        "saturatedFat": 7,
+        "sodium": 60
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée avec une bonne source de protéines et de fibres. Les kiwis apportent des antioxydants et des vitamines, tandis que le yogourt fournit des probiotiques bénéfiques pour la digestion. Attention cependant à la quantité de sucre issue du sirop.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2012/6/Kiwi-Joghurt-4fe4d854cbab6.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/kiwi-joghurt",
+      "originalTitle": "Kiwi-Joghurt",
+      "enrichedAt": "2026-01-02T16:25:55.993Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/spargel-bowl-11595916.html",
+      "titleFr": "Bowl d'Asperges",
+      "descriptionFr": "Découvrez la fraîcheur de ce bowl d'asperges, mariant le croquant du spargel avec la douceur du riz sushi. Parfait pour un déjeuner léger et nutritif, ce plat vous apportera toutes les saveurs d'une cuisine saine et équilibrée.",
+      "ingredientsFr": [
+        {
+          "name": "asperge blanche",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "asperge verte",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "sucre",
+          "amount": 65,
+          "unit": "g"
+        },
+        {
+          "name": "beurre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "huile de sésame",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "name": "riz à sushi",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "vinaigre de riz",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "échalote",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "huile (pour cuisson)",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "œuf de caille",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "cresson",
+          "amount": 1,
+          "unit": "beet"
+        },
+        {
+          "name": "cresson rouge",
+          "amount": 1,
+          "unit": "beet"
+        },
+        {
+          "name": "basilic thaï",
+          "amount": 1,
+          "unit": "brin"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Commencez par cuire le riz à sushi selon les instructions du paquet. Une fois cuit, laissez-le refroidir.",
+        "Étape 2: Pendant ce temps, préparez les asperges. Épluchez l'asperge blanche et coupez les extrémités des asperges vertes.",
+        "Étape 3: Faites chauffer une poêle avec un peu d'huile et ajoutez les asperges. Faites-les sauter pendant environ 5 à 7 minutes jusqu'à ce qu'elles soient tendres.",
+        "Étape 4: Dans une petite casserole, faites fondre le beurre avec le vinaigre de riz, le sel et le sucre. Ajoutez les échalotes et l'ail finement hachés et laissez mijoter quelques minutes.",
+        "Étape 5: Dans une autre poêle, faites cuire les œufs de caille pendant environ 3 minutes dans de l'eau bouillante. Une fois cuits, retirez la coquille.",
+        "Étape 6: Dans un grand bol, disposez le riz à sushi au fond, puis ajoutez les asperges sautées par-dessus.",
+        "Étape 7: Ajoutez les œufs de caille, le cresson, le cresson rouge et le basilic thaï pour garnir.",
+        "Étape 8: Arrosez le tout avec la sauce à base de beurre et vinaigre, puis servez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 520,
+        "proteins": 18,
+        "carbs": 76,
+        "fats": 18,
+        "sugar": 7,
+        "fiber": 5,
+        "saturatedFat": 5,
+        "sodium": 450
+      },
+      "healthScore": 82,
+      "healthNotes": "Cette recette est riche en légumes et en protéines grâce aux œufs de caille, tout en étant modérée en graisses et en sucres. Elle constitue un choix sain pour un déjeuner équilibré.",
+      "imageUrl": "https://image.brigitte.de/11595928/t/sO/v4/w1440/r1/-/spargel-bowl.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/spargel-bowl-11595916.html",
+      "originalTitle": "Spargel-Bowl",
+      "enrichedAt": "2026-01-02T16:26:03.773Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/caipirinha-bowle-10917164.html",
+      "titleFr": "Caipirinha-Bowle Rafraîchissante",
+      "descriptionFr": "Découvrez une boisson festive et rafraîchissante avec notre Caipirinha-Bowle. Fraîcheur des citrons verts et douceur de la melon se mêlent pour un moment de convivialité. Parfaite pour un déjeuner léger et désaltérant.",
+      "ingredientsFr": [
+        {
+          "name": "Limes",
+          "amount": 12,
+          "unit": "pièces"
+        },
+        {
+          "name": "Eau minérale",
+          "amount": 2000,
+          "unit": "ml"
+        },
+        {
+          "name": "Sucre brun",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Alcool (cachaça ou vodka)",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Melon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Champagne",
+          "amount": 1500,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Laver soigneusement les limes et les couper en quartiers.",
+        "Étape 2: Dans un grand bol ou une carafe, ajouter les quartiers de lime et le sucre brun. Écraser délicatement les limes avec un pilon pour libérer le jus.",
+        "Étape 3: Ajouter l'alcool (cachaça ou vodka) et mélanger jusqu'à ce que le sucre soit dissous.",
+        "Étape 4: Incorporer le melon coupé en dés dans le mélange.",
+        "Étape 5: Ajouter l'eau minérale et bien mélanger pour combiner tous les ingrédients.",
+        "Étape 6: Réfrigérer la préparation pendant au moins 30 minutes pour permettre aux saveurs de se mélanger.",
+        "Étape 7: Juste avant de servir, ajouter le champagne pour un effet pétillant.",
+        "Étape 8: Servir dans des verres remplis de glace et garnir de quartiers de lime."
+      ],
+      "nutrition": {
+        "calories": 230,
+        "proteins": 1,
+        "carbs": 29,
+        "fats": 0,
+        "sugar": 10,
+        "fiber": 1,
+        "saturatedFat": 0,
+        "sodium": 5
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est relativement saine grâce à l'utilisation de fruits frais et d'eau, mais elle contient une quantité modérée de sucre. Le melon apporte des vitamines et des fibres, tandis que l'alcool doit être consommé avec modération.",
+      "imageUrl": "https://image.brigitte.de/10917180/t/TW/v4/w1440/r1/-/caipirinha-bowle.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 25,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/caipirinha-bowle-10917164.html",
+      "originalTitle": "Caipirinha-Bowle",
+      "enrichedAt": "2026-01-02T16:25:56.503Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/tuttifrutti-bowle-10529954.html",
+      "titleFr": "Bol Tuttifrutti",
+      "descriptionFr": "Découvrez le Bol Tuttifrutti, une explosion de fraîcheur et de saveurs tropicales ! Cette recette colorée combine des fruits juteux et exotiques, parfaits pour un déjeuner léger et vitaminé. Accompagné d'une touche de douceur, ce bol ravira vos papilles tout en respectant votre équilibre nutritionnel.",
+      "ingredientsFr": [
+        {
+          "name": "Ananas",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Papaye",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Pêches",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Kiwi",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Pamplemousse",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre de canne",
+          "amount": 40,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Passoa",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Vin blanc",
+          "amount": 750,
+          "unit": "ml"
+        },
+        {
+          "name": "Prosecco",
+          "amount": 750,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez et coupez l'ananas, la papaye, les pêches, les kiwis et le pamplemousse en petits morceaux.",
+        "Étape 2: Dans un grand bol, mélangez tous les fruits coupés avec le sucre de canne.",
+        "Étape 3: Ajoutez le Passoa et mélangez délicatement pour enrober les fruits.",
+        "Étape 4: Laissez macérer le mélange au réfrigérateur pendant 30 minutes afin que les saveurs se mélangent.",
+        "Étape 5: Juste avant de servir, ajoutez le vin blanc et le Prosecco, puis mélangez doucement.",
+        "Étape 6: Servez dans des coupes ou des bols individuels.",
+        "Étape 7: Décorez avec des feuilles de menthe fraîche si désiré.",
+        "Étape 8: Dégustez bien frais pour un maximum de saveurs !"
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 2,
+        "carbs": 70,
+        "fats": 0,
+        "sugar": 18,
+        "fiber": 5,
+        "saturatedFat": 0,
+        "sodium": 10
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est riche en fruits, ce qui apporte des vitamines, des minéraux et des fibres. Cependant, la quantité de sucre ajouté et d'alcool peut augmenter les calories et le sucre total, ce qui la rend à consommer avec modération.",
+      "imageUrl": "https://image.brigitte.de/10529952/t/k0/v5/w1440/r1/-/4cd523e9fc14c5690a32829491a46da3-sommerparty-tutti.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 12,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/tuttifrutti-bowle-10529954.html",
+      "originalTitle": "Tuttifrutti Bowle",
+      "enrichedAt": "2026-01-02T16:26:18.515Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/affen-bowle",
+      "titleFr": "Sangria Tropicale",
+      "descriptionFr": "Découvrez une boisson rafraîchissante qui allie le goût doux de l'orange et l'exotisme de l'ananas. Parfaite pour un déjeuner léger, cette sangria tropicale vous transportera sous les tropiques avec chaque gorgée.",
+      "ingredientsFr": [
+        {
+          "name": "jus d'orange",
+          "amount": 2000,
+          "unit": "ml"
+        },
+        {
+          "name": "ananas en morceaux",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "bananes",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "rhum",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "citron",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "citron en tranches",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "champagne ou vin pétillant",
+          "amount": 750,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand récipient, versez le jus d'orange et ajoutez les morceaux d'ananas.",
+        "Étape 2: Coupez les bananes en rondelles et ajoutez-les au mélange.",
+        "Étape 3: Pressez le citron pour en extraire le jus et ajoutez-le à la préparation.",
+        "Étape 4: Incorporez le rhum et le sucre, puis mélangez bien jusqu'à ce que le sucre soit dissous.",
+        "Étape 5: Ajoutez les tranches de citron pour une touche de fraîcheur.",
+        "Étape 6: Réfrigérez le mélange pendant environ 30 minutes pour permettre aux saveurs de se développer.",
+        "Étape 7: Juste avant de servir, ajoutez le champagne ou le vin pétillant pour un effet pétillant.",
+        "Étape 8: Servez bien frais dans des verres avec des glaçons, si désiré."
+      ],
+      "nutrition": {
+        "calories": 200,
+        "proteins": 1,
+        "carbs": 50,
+        "fats": 0,
+        "sugar": 15,
+        "fiber": 2,
+        "saturatedFat": 0,
+        "sodium": 5
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, riche en vitamines grâce aux fruits. Cependant, la quantité de sucre peut être ajustée à votre goût pour une option moins sucrée.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2012/12/Affen-Bowle-50cb9457286fc.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 8,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/affen-bowle",
+      "originalTitle": "Affen-Bowle",
+      "enrichedAt": "2026-01-02T16:26:18.420Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/mai-bowle",
+      "titleFr": "Mai-Bowle Revigorante",
+      "descriptionFr": "Découvrez cette délicieuse Mai-Bowle, un mélange rafraîchissant de vin blanc et de goût printanier apporté par le Waldmeister. Parfaite pour un déjeuner léger, elle apporte une touche de fraîcheur et de convivialité à vos repas.",
+      "ingredientsFr": [
+        {
+          "name": "Vin blanc",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Sucre",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Waldmeister frais",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand verre ou une carafe, versez le vin blanc.",
+        "Étape 2: Ajoutez le sucre et remuez doucement jusqu'à ce qu'il soit complètement dissous.",
+        "Étape 3: Lavez délicatement le Waldmeister frais et ajoutez-le au mélange.",
+        "Étape 4: Laissez infuser le Waldmeister pendant environ 10 minutes pour libérer ses arômes.",
+        "Étape 5: Servez votre Mai-Bowle bien fraîche, avec des glaçons si désiré.",
+        "Étape 6: Décorez avec quelques brins de Waldmeister pour une présentation élégante.",
+        "Étape 7: Profitez de cette boisson délicate et rafraîchissante pendant votre déjeuner."
+      ],
+      "nutrition": {
+        "calories": 150,
+        "proteins": 0,
+        "carbs": 15,
+        "fats": 0,
+        "sugar": 10,
+        "fiber": 0,
+        "saturatedFat": 0,
+        "sodium": 5
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement légère et rafraîchissante. Bien qu'elle contienne du sucre, la quantité reste modérée, ce qui en fait une option acceptable pour un déjeuner équilibré. Le vin blanc peut apporter des antioxydants, mais doit être consommé avec modération.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/Mai-Bowle-waldmeister2.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/mai-bowle",
+      "originalTitle": "Mai-Bowle",
+      "enrichedAt": "2026-01-02T16:26:29.172Z"
+    },
+    {
+      "id": "https://elavegan.com/de/puffreis-riegel-rezept/",
+      "titleFr": "Barres de riz soufflé au chocolat et beurre de cacahuète",
+      "descriptionFr": "Découvrez ces délicieuses barres de riz soufflé, alliant le croquant du puffreis et la richesse du beurre de cacahuète. Enrobées de chocolat noir, ces barres sont une collation parfaite pour les gourmands, tout en restant saines et vegan.",
+      "ingredientsFr": [
+        {
+          "name": "sirop d'érable",
+          "amount": 105,
+          "unit": "g"
+        },
+        {
+          "name": "beurre de cacahuète",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "sel de mer",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "extrait de vanille",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "riz soufflé",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "name": "chocolat noir",
+          "amount": 140,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, mélangez le beurre de cacahuète, le sirop d'érable, le sel de mer et l'extrait de vanille jusqu'à obtenir une consistance homogène.",
+        "Étape 2: Ajoutez le riz soufflé au mélange et remuez délicatement pour enrober tous les grains.",
+        "Étape 3: Tapissez un moule rectangulaire de papier sulfurisé et versez-y le mélange de riz soufflé, en pressant fermement pour former une couche uniforme.",
+        "Étape 4: Faites fondre le chocolat noir au bain-marie ou au micro-ondes, puis versez-le sur la couche de riz soufflé en l'étalant uniformément.",
+        "Étape 5: Réfrigérez pendant au moins 1 heure pour que le chocolat durcisse.",
+        "Étape 6: Une fois le chocolat solidifié, retirez les barres du moule et coupez-les en portions égales.",
+        "Étape 7: Conservez les barres dans un récipient hermétique au réfrigérateur."
+      ],
+      "nutrition": {
+        "calories": 182,
+        "proteins": 5,
+        "carbs": 21,
+        "fats": 9,
+        "sugar": 8,
+        "fiber": 2,
+        "saturatedFat": 2,
+        "sodium": 120
+      },
+      "healthScore": 75,
+      "healthNotes": "Ces barres sont riches en bonnes graisses grâce au beurre de cacahuète et au chocolat noir, tout en fournissant une source d'énergie rapide. Leur teneur en sucre est modérée, ce qui en fait une collation acceptable dans le cadre d'une alimentation équilibrée.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2019/08/Erdnussbutter-Puffreis-Riegel-mit-veganer-Schokolade.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 9,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/puffreis-riegel-rezept/",
+      "originalTitle": "Schoko-Erdnussbutter Puffreis Riegel",
+      "enrichedAt": "2026-01-02T16:26:59.175Z"
+    },
+    {
+      "id": "https://www.essen-und-trinken.de/rezepte/61978-rzpt-smoothie-bowl",
+      "titleFr": "Smoothie-Bowl Tropical Énergisant",
+      "descriptionFr": "Ce smoothie-bowl crémeux et coloré est un vrai rayon de soleil dans votre assiette. Avec ses fruits frais et ses super-aliments, il est parfait pour une collation revigorante et saine. Laissez-vous séduire par cette explosion de saveurs exotiques !",
+      "ingredientsFr": [
+        {
+          "name": "Huile de coco",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "name": "Amandes",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "name": "Baies d'aronia",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Baies de goji",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre de fleurs de coco",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Miel",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Mangue",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Fraises",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Dattes",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Lait d'amande",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Graines de chia",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Myrtilles",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les flocons d'avoine, les amandes, les baies d'aronia, les baies de goji, le miel et le sucre de fleurs de coco.",
+        "Étape 2: Ajoutez la banane, la mangue et les fraises coupées en morceaux dans le mixeur.",
+        "Étape 3: Versez le lait d'amande et ajoutez les dattes dénoyautées.",
+        "Étape 4: Mixez le tout jusqu'à obtenir une consistance lisse et crémeuse.",
+        "Étape 5: Incorporez les graines de chia et mixez brièvement pour les mélanger.",
+        "Étape 6: Répartissez le mélange dans deux bols.",
+        "Étape 7: Décorez avec des myrtilles et éventuellement quelques tranches de fruits ou des graines supplémentaires.",
+        "Étape 8: Servez immédiatement et savourez votre smoothie-bowl frais."
+      ],
+      "nutrition": {
+        "calories": 230,
+        "proteins": 8,
+        "carbs": 36,
+        "fats": 8,
+        "sugar": 19,
+        "fiber": 8,
+        "saturatedFat": 7,
+        "sodium": 20
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en fibres et en antioxydants grâce aux fruits et aux super-aliments. Bien qu'elle contienne des sucres naturels, elle reste dans la limite acceptable pour une collation saine.",
+      "imageUrl": "https://image.essen-und-trinken.de/11835652/t/Su/v9/w1440/r1/-/432556--10424-.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.essen-und-trinken.de/rezepte/61978-rzpt-smoothie-bowl",
+      "originalTitle": "Smoothie-Bowl Rezept",
+      "enrichedAt": "2026-01-02T16:27:13.306Z"
+    },
+    {
+      "id": "https://www.essen-und-trinken.de/rezepte/84501-rzpt-smoothie-bowl",
+      "titleFr": "Smoothie Bowl aux Baies et Noix",
+      "descriptionFr": "Savourez ce smoothie bowl onctueux, riche en saveurs et en nutriments. Parfait pour une collation saine, il combine des baies délicieuses, des noix croquantes et une touche de douceur naturelle. Une véritable explosion de bien-être dans un bol !",
+      "ingredientsFr": [
+        {
+          "name": "Noix",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Huile de coco",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'épeautre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de lin",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 80,
+          "unit": "ml"
+        },
+        {
+          "name": "Baies surgelées",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Baies fraîches",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Eau de coco",
+          "amount": 100,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les baies surgelées, l'eau de coco et le sirop d'érable.",
+        "Étape 2: Mixez jusqu'à obtenir une consistance lisse.",
+        "Étape 3: Ajoutez les flocons d'épeautre et les graines de lin. Mixez à nouveau pour bien incorporer.",
+        "Étape 4: Dans un bol, versez le mélange de smoothie obtenu.",
+        "Étape 5: Garnissez avec les baies fraîches et les noix concassées.",
+        "Étape 6: Arrosez d'huile de coco fondue pour ajouter une touche crémeuse.",
+        "Étape 7: Servez immédiatement et savourez votre smoothie bowl nutritif."
+      ],
+      "nutrition": {
+        "calories": 236,
+        "proteins": 6,
+        "carbs": 37,
+        "fats": 9,
+        "sugar": 15,
+        "fiber": 8,
+        "saturatedFat": 5,
+        "sodium": 2
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et en acides gras oméga-3 grâce aux graines de lin, tout en offrant un bon équilibre de glucides naturels provenant des fruits. Les noix apportent des graisses saines, ce qui en fait un encas nutritif et énergisant.",
+      "imageUrl": "https://image.essen-und-trinken.de/11941118/t/EA/v10/w1440/r1/-/smoothie-bowl-jpg--59248-.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.essen-und-trinken.de/rezepte/84501-rzpt-smoothie-bowl",
+      "originalTitle": "Smoothie Bowl Rezept",
+      "enrichedAt": "2026-01-02T16:27:12.280Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/schoko-smoothie-bowl",
+      "titleFr": "Bowl de Smoothie au Chocolat et Framboises",
+      "descriptionFr": "Savourez un bowl de smoothie crémeux et chocolaté, agrémenté de framboises juteuses et de bananes sucrées. Parfait comme collation saine, il allie plaisir et nutrition, tout en vous apportant de l'énergie pour affronter votre journée.",
+      "ingredientsFr": [
+        {
+          "name": "framboises",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "bananes",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "noix de Grenoble",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "flocons d'avoine (fin)",
+          "amount": 6,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "coco râpé",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sirop d'agave",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "cacao en poudre",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "yaourt à la crème",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "chocolat noir (râpé)",
+          "amount": 40,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les framboises, les bananes, le yaourt à la crème et le lait de coco. Mixez jusqu'à obtenir une consistance lisse.",
+        "Étape 2: Ajoutez les flocons d'avoine, le cacao en poudre, le sirop d'agave et mélangez à nouveau pour bien incorporer tous les ingrédients.",
+        "Étape 3: Goûtez le mélange et ajustez le niveau de douceur en ajoutant un peu plus de sirop d'agave si nécessaire.",
+        "Étape 4: Versez le mélange dans des bols et garnissez avec les noix de Grenoble, le chocolat noir râpé et la noix de coco râpée sur le dessus.",
+        "Étape 5: Décorez avec quelques framboises fraîches pour une touche de couleur.",
+        "Étape 6: Servez immédiatement et dégustez votre bowl de smoothie bien frais."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 7,
+        "carbs": 28,
+        "fats": 9,
+        "sugar": 14,
+        "fiber": 4,
+        "saturatedFat": 5,
+        "sodium": 45
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en antioxydants grâce aux framboises et au chocolat noir, tout en fournissant des graisses saines provenant des noix. Le yaourt ajoute des protéines, ce qui en fait une collation équilibrée.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-12382594.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/schoko-smoothie-bowl",
+      "originalTitle": "Schoko-Smoothie-Bowl",
+      "enrichedAt": "2026-01-02T16:27:11.997Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/acai-brombeer-smoothie-bowl",
+      "titleFr": "Bol de Smoothie à l'Açaï et aux Baies",
+      "descriptionFr": "Savourez ce bol de smoothie riche en antioxydants, parfait pour une collation revitalisante. Avec des baies juteuses et une touche de banane, il offre une texture crémeuse et une explosion de saveurs délicieuses. Idéal pour commencer la journée ou pour un petit coup de fouet à tout moment !",
+      "ingredientsFr": [
+        {
+          "name": "Brombeere",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Poudre d'Açaï",
+          "amount": 1.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Graines de lin moulues",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Boisson de coco (ou lait végétal)",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "Pâte de coco (ou purée végétale)",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Amandes hachées (ou flocons de noix de coco)",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Brin de menthe",
+          "amount": 1,
+          "unit": "pièce"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les bromberries, la banane coupée en morceaux, la poudre d'açaï, les flocons d'avoine, les graines de lin, et la boisson de coco.",
+        "Étape 2: Mixez à vitesse moyenne jusqu'à obtenir une consistance lisse et crémeuse.",
+        "Étape 3: Goûtez le mélange et ajustez la douceur si nécessaire, en ajoutant un peu de miel ou de sirop d'érable si désiré.",
+        "Étape 4: Versez le smoothie dans deux bols.",
+        "Étape 5: Ajoutez une cuillère de pâte de coco sur le dessus de chaque bol.",
+        "Étape 6: Saupoudrez d'amandes hachées sur chaque bol pour le croquant.",
+        "Étape 7: Garnissez avec un brin de menthe pour la décoration et une touche de fraîcheur.",
+        "Étape 8: Servez immédiatement et dégustez votre bol de smoothie nutritif !"
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 6,
+        "carbs": 37,
+        "fats": 7,
+        "sugar": 12,
+        "fiber": 7,
+        "saturatedFat": 4,
+        "sodium": 30
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en antioxydants grâce aux baies et à la poudre d'açaï, tout en fournissant des fibres et des acides gras oméga-3 grâce aux graines de lin. Elle respecte les recommandations nutritionnelles avec un bon équilibre de glucides, de protéines et de graisses saines.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/acai-brombeer-smoothie-bowl-639404-1.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/acai-brombeer-smoothie-bowl",
+      "originalTitle": "Acai-Brombeer-Smoothie-Bowl",
+      "enrichedAt": "2026-01-02T16:27:32.081Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/rote-smoothie-bowl-mit-erdbeeren",
+      "titleFr": "Smoothie-Bowl Rouge aux Fraises",
+      "descriptionFr": "Savourez un mélange rafraîchissant de pastèque et de fraises dans cette smoothie-bowl rouge vibrante. Parfaite pour une collation saine, elle est agrémentée d'une touche d'orange et de menthe, apportant une explosion de saveurs et de fraîcheur.",
+      "ingredientsFr": [
+        {
+          "name": "Pastèque",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Fraises",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Orange",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Menthe fraîche",
+          "amount": 2,
+          "unit": "brins"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Raisins secs",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Amandes",
+          "amount": 60,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez la pastèque en morceaux et retirez les pépins si nécessaire.",
+        "Étape 2: Lavez les fraises, équeutez-les et coupez-les en deux.",
+        "Étape 3: Pressez l'orange pour en extraire le jus.",
+        "Étape 4: Dans un mixeur, ajoutez les morceaux de pastèque, les fraises, le jus d'orange et les feuilles de menthe. Mixez jusqu'à obtenir une consistance lisse.",
+        "Étape 5: Ajoutez le sirop d'érable et les flocons d'avoine au mélange, puis mixez à nouveau brièvement.",
+        "Étape 6: Versez le mélange dans des bols.",
+        "Étape 7: Garnissez chaque bol avec des raisins secs et des amandes.",
+        "Étape 8: Servez immédiatement et dégustez frais."
+      ],
+      "nutrition": {
+        "calories": 172,
+        "proteins": 6,
+        "carbs": 30,
+        "fats": 6,
+        "sugar": 14,
+        "fiber": 4,
+        "saturatedFat": 0.5,
+        "sodium": 2
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette smoothie-bowl est riche en vitamines et minéraux grâce aux fruits frais. Elle fournit une bonne quantité de fibres et de protéines, tout en restant faible en graisses saturées et en sodium. Un excellent choix pour une collation saine!",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/rote-smoothie-bowl-mit-erdbeeren-641184.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/rote-smoothie-bowl-mit-erdbeeren",
+      "originalTitle": "Rote Smoothie-Bowl mit Erdbeeren",
+      "enrichedAt": "2026-01-02T16:27:28.539Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/smoothie-mit-pfirsich-10541230.html",
+      "titleFr": "Smoothie Pêche Délicieux",
+      "descriptionFr": "Commencez votre journée avec ce smoothie onctueux à la pêche, alliant douceur naturelle et fraîcheur. Parfait pour un petit-déjeuner rapide et nutritif, il vous apportera l'énergie nécessaire pour bien démarrer votre journée.",
+      "ingredientsFr": [
+        {
+          "name": "Pêche",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre en poudre",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Lait fermenté",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Eau minérale",
+          "amount": 200,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez soigneusement les pêches et coupez-les en morceaux. Retirez le noyau.",
+        "Étape 2: Épluchez les bananes et coupez-les en rondelles.",
+        "Étape 3: Dans un mixeur, ajoutez les morceaux de pêche, les rondelles de banane, le sucre en poudre, le sirop d'érable et le jus de citron.",
+        "Étape 4: Ajoutez le lait fermenté et l'eau minérale dans le mixeur.",
+        "Étape 5: Mixez tous les ingrédients à vitesse élevée jusqu'à obtenir une texture lisse et homogène.",
+        "Étape 6: Goûtez le smoothie et ajustez la douceur si nécessaire en ajoutant un peu plus de sirop d'érable si désiré.",
+        "Étape 7: Servez immédiatement dans des verres et dégustez frais.",
+        "Étape 8: Vous pouvez décorer avec des tranches de pêche ou des rondelles de banane sur le dessus."
+      ],
+      "nutrition": {
+        "calories": 310,
+        "proteins": 9,
+        "carbs": 66,
+        "fats": 3,
+        "sugar": 20,
+        "fiber": 4,
+        "saturatedFat": 1,
+        "sodium": 50
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en vitamines et minéraux grâce aux fruits. Toutefois, la quantité de sucre est relativement élevée en raison du sucre ajouté et du sirop d'érable. Pour un smoothie encore plus sain, on peut réduire la quantité de sucre ou le remplacer par un édulcorant naturel.",
+      "imageUrl": "https://image.brigitte.de/10351530/t/uS/v33/w1440/r1/-/smoothie-mit-pfirsich.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/smoothie-mit-pfirsich-10541230.html",
+      "originalTitle": "Smoothie mit Pfirsich",
+      "enrichedAt": "2026-01-02T16:27:48.329Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/blaubeermuffins-mit-joghurt",
+      "titleFr": "Muffins aux myrtilles avec yaourt",
+      "descriptionFr": "Ces muffins moelleux aux myrtilles sont parfaits pour un petit-déjeuner sain et savoureux. Ils combinent la douceur des myrtilles avec la richesse du yaourt, pour un moment gourmand et nutritif. Faciles à réaliser, ils raviront toute la famille!",
+      "ingredientsFr": [
+        {
+          "name": "Myrtilles",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Farine",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre à lever",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Amandes émondées",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre vanillé",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Cannelle en poudre",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Yaourt",
+          "amount": 200,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (350°F) et préparez un moule à muffins en y plaçant des caissettes en papier.",
+        "Étape 2: Dans un grand bol, mélangez la farine, la poudre à lever, le sucre, le sucre vanillé, la cannelle et le sel.",
+        "Étape 3: Dans un autre bol, battez les œufs, puis ajoutez l'huile végétale et le yaourt. Mélangez bien jusqu'à obtenir une consistance homogène.",
+        "Étape 4: Incorporez le mélange humide aux ingrédients secs, en remuant doucement jusqu'à ce que tout soit combiné. Ne pas trop mélanger.",
+        "Étape 5: Ajoutez les myrtilles et les amandes émondées à la pâte, puis mélangez délicatement pour ne pas écraser les fruits.",
+        "Étape 6: Répartissez la pâte uniformément dans les caissettes à muffins, en remplissant chaque caissette aux trois quarts.",
+        "Étape 7: Enfournez pendant 20-25 minutes ou jusqu'à ce que les muffins soient dorés et qu'un cure-dent en ressorte propre.",
+        "Étape 8: Laissez refroidir quelques minutes avant de déguster, tièdes ou à température ambiante."
+      ],
+      "nutrition": {
+        "calories": 420,
+        "proteins": 9,
+        "carbs": 55,
+        "fats": 18,
+        "sugar": 18,
+        "fiber": 3,
+        "saturatedFat": 2,
+        "sodium": 250
+      },
+      "healthScore": 68,
+      "healthNotes": "Cette recette est riche en glucides provenant des fruits et de la farine, tout en apportant des graisses saines grâce aux amandes. Cependant, le taux de sucre est un peu élevé, ce qui peut limiter sa consommation pour un petit-déjeuner équilibré.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-12506949.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/blaubeermuffins-mit-joghurt",
+      "originalTitle": "Blaubeermuffins mit Joghurt",
+      "enrichedAt": "2026-01-02T16:28:02.972Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/muffins-mit-joghurt",
+      "titleFr": "Muffins au Yaourt",
+      "descriptionFr": "Ces muffins au yaourt sont moelleux et délicieusement parfumés au citron, parfaits pour un petit-déjeuner sain. Riches en protéines et faibles en sucre, ils vous apporteront l'énergie nécessaire pour bien commencer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Huile végétale",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Farine",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 75,
+          "unit": "ml"
+        },
+        {
+          "name": "Citron bio (jus et zeste)",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "Extrait de vanille",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Farine",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre à lever",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Bicarbonate de soude",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sucre glace",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (thermostat 6) et préparez un moule à muffins en le badigeonnant d'huile végétale et en le saupoudrant de farine.",
+        "Étape 2: Dans un grand bol, mélangez le yaourt, les œufs, l'huile végétale, le jus et le zeste de citron, ainsi que l'extrait de vanille jusqu'à obtenir un mélange homogène.",
+        "Étape 3: Dans un autre bol, tamisez la farine, la poudre à lever et le bicarbonate de soude. Ajoutez ce mélange sec au mélange humide et remuez délicatement jusqu'à ce que tout soit juste combiné.",
+        "Étape 4: Répartissez la pâte dans les moules à muffins, en les remplissant aux trois quarts.",
+        "Étape 5: Enfournez les muffins pendant environ 20-25 minutes, ou jusqu'à ce qu'un cure-dent inséré au centre en ressorte propre.",
+        "Étape 6: Laissez refroidir les muffins dans le moule pendant 5 minutes, puis transférez-les sur une grille pour les laisser refroidir complètement.",
+        "Étape 7: Avant de servir, saupoudrez de sucre glace si désiré."
+      ],
+      "nutrition": {
+        "calories": 300,
+        "proteins": 9,
+        "carbs": 43,
+        "fats": 12,
+        "sugar": 8,
+        "fiber": 1,
+        "saturatedFat": 2,
+        "sodium": 300
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette utilise du yaourt, qui est une excellente source de protéines et de probiotiques, et inclut du citron pour une touche de vitamine C. Le sucre est limité, ce qui en fait un choix raisonnable pour un petit-déjeuner sucré.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-12338025.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/muffins-mit-joghurt",
+      "originalTitle": "Muffins mit Joghurt",
+      "enrichedAt": "2026-01-02T16:28:06.044Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/schoko-riegel-mit-karamell",
+      "titleFr": "Barres Chocolatées au Caramel",
+      "descriptionFr": "Ces barres chocolatées au caramel sont un véritable délice pour les amateurs de sucré. Avec leur texture fondante et leur goût riche de chocolat noir, elles constituent une collation gourmande à savourer sans culpabilité. Parfaites pour un moment de douceur dans la journée!",
+      "ingredientsFr": [
+        {
+          "name": "Farine",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Beurre",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Œuf",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Huiles de cuisson pour le blindage",
+          "amount": 0,
+          "unit": ""
+        },
+        {
+          "name": "Crème épaisse",
+          "amount": 600,
+          "unit": "ml"
+        },
+        {
+          "name": "Sucre",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Whisky-Crème Liqueur",
+          "amount": 75,
+          "unit": "ml"
+        },
+        {
+          "name": "Chocolat noir de couverture",
+          "amount": 800,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (350°F). Dans un grand bol, mélangez la farine, le sucre et le sel.",
+        "Étape 2: Ajoutez le beurre coupé en petits morceaux et l'œuf. Mélangez jusqu'à obtenir une pâte homogène.",
+        "Étape 3: Étalez la pâte dans un moule à pâtisserie et piquez-la avec une fourchette. Recouvrez de haricots secs pour le blindage et enfournez pendant 15 minutes.",
+        "Étape 4: Pendant ce temps, préparez le caramel. Dans une casserole, faites chauffer la crème, le sucre et le beurre à feu moyen jusqu'à ce que le mélange épaississe.",
+        "Étape 5: Incorporez le whisky-crème liqueur une fois le caramel épaissi et retirez du feu.",
+        "Étape 6: Une fois la pâte cuite, retirez-la du four et laissez refroidir. Versez le caramel sur la pâte.",
+        "Étape 7: Faites fondre le chocolat noir au bain-marie et versez-le uniformément sur le caramel.",
+        "Étape 8: Laissez refroidir à température ambiante, puis réfrigérez pendant au moins 2 heures avant de couper en barres."
+      ],
+      "nutrition": {
+        "calories": 200,
+        "proteins": 3,
+        "carbs": 25,
+        "fats": 10,
+        "sugar": 15,
+        "fiber": 1,
+        "saturatedFat": 6,
+        "sodium": 150
+      },
+      "healthScore": 65,
+      "healthNotes": "Cette recette contient une quantité élevée de sucre et de graisses, principalement en raison du caramel et du chocolat. Cependant, elle peut être appréciée avec modération comme un dessert occasionnel.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/schoko-riegel-mit-karamell-116041.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 1,
+      "difficulty": "medium",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/schoko-riegel-mit-karamell",
+      "originalTitle": "Schoko-Riegel mit Karamell",
+      "enrichedAt": "2026-01-02T16:28:26.523Z"
     }
   ]
 }

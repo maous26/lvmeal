@@ -28,6 +28,8 @@ import {
   Moon,
   Droplets,
   X,
+  CalendarCheck,
+  Clock,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
@@ -36,6 +38,7 @@ import { Card, Badge } from '../components/ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
+import { useMealPlanStore, type PlannedMealItem } from '../stores/meal-plan-store'
 import { getDateKey } from '../lib/utils'
 import type { MealType } from '../types'
 
@@ -64,6 +67,28 @@ interface DayData {
   mealCount: number
   hasMetabolicLog: boolean
   metabolicSteps?: number
+  hasPlannedMeals: boolean
+  plannedMealCount: number
+}
+
+// Helper to get planned meals for a specific date
+function getPlannedMealsForDate(
+  weekStart: string | undefined,
+  meals: PlannedMealItem[],
+  targetDate: string
+): PlannedMealItem[] {
+  if (!weekStart || !meals.length) return []
+
+  const startDate = new Date(weekStart)
+  const target = new Date(targetDate)
+
+  // Calculate day index (0 = Monday)
+  const diffTime = target.getTime() - startDate.getTime()
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0 || diffDays > 6) return []
+
+  return meals.filter(m => m.dayIndex === diffDays)
 }
 
 export default function CalendarScreen() {
@@ -73,6 +98,7 @@ export default function CalendarScreen() {
 
   const { dailyData, getMealsForDate } = useMealsStore()
   const { dailyLogs: metabolicLogs, isEnrolled: metabolicEnrolled } = useMetabolicBoostStore()
+  const { currentPlan } = useMealPlanStore()
 
   // Generate calendar days for current month
   const calendarDays = useMemo(() => {
@@ -105,6 +131,13 @@ export default function CalendarScreen() {
       const dayData = dailyData[dateKey]
       const metabolicLog = metabolicLogs.find(l => l.date === dateKey)
 
+      // Check for planned meals
+      const plannedMeals = getPlannedMealsForDate(
+        currentPlan?.weekStart,
+        currentPlan?.meals || [],
+        dateKey
+      )
+
       days.push({
         date: new Date(currentDate),
         dateKey,
@@ -114,13 +147,15 @@ export default function CalendarScreen() {
         mealCount: dayData?.meals?.length || 0,
         hasMetabolicLog: !!metabolicLog,
         metabolicSteps: metabolicLog?.steps,
+        hasPlannedMeals: plannedMeals.length > 0,
+        plannedMealCount: plannedMeals.length,
       })
 
       currentDate.setDate(currentDate.getDate() + 1)
     }
 
     return days
-  }, [currentMonth, dailyData, metabolicLogs])
+  }, [currentMonth, dailyData, metabolicLogs, currentPlan])
 
   // Get selected day details
   const selectedDayDetails = useMemo(() => {
@@ -129,14 +164,21 @@ export default function CalendarScreen() {
     const meals = getMealsForDate(selectedDate)
     const metabolicLog = metabolicLogs.find(l => l.date === selectedDate)
     const dayData = dailyData[selectedDate]
+    const plannedMeals = getPlannedMealsForDate(
+      currentPlan?.weekStart,
+      currentPlan?.meals || [],
+      selectedDate
+    )
 
     return {
       meals,
       metabolicLog,
       hydration: dayData?.hydration || 0,
       totalCalories: dayData?.totalNutrition?.calories || 0,
+      plannedMeals,
+      plannedCalories: plannedMeals.reduce((sum, m) => sum + (m.nutrition?.calories || 0), 0),
     }
-  }, [selectedDate, getMealsForDate, metabolicLogs, dailyData])
+  }, [selectedDate, getMealsForDate, metabolicLogs, dailyData, currentPlan])
 
   const goToPreviousMonth = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -232,6 +274,9 @@ export default function CalendarScreen() {
                 {day.hasMeals && (
                   <View style={[styles.indicator, styles.indicatorMeals]} />
                 )}
+                {day.hasPlannedMeals && (
+                  <View style={[styles.indicator, styles.indicatorPlanned]} />
+                )}
                 {day.hasMetabolicLog && metabolicEnrolled && (
                   <View style={[styles.indicator, styles.indicatorMetabolic]} />
                 )}
@@ -246,10 +291,16 @@ export default function CalendarScreen() {
             <View style={[styles.legendDot, styles.indicatorMeals]} />
             <Text style={styles.legendText}>Repas</Text>
           </View>
+          {currentPlan && (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.indicatorPlanned]} />
+              <Text style={styles.legendText}>Planifies</Text>
+            </View>
+          )}
           {metabolicEnrolled && (
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, styles.indicatorMetabolic]} />
-              <Text style={styles.legendText}>Métabolique</Text>
+              <Text style={styles.legendText}>Metabolique</Text>
             </View>
           )}
         </View>
@@ -297,6 +348,40 @@ export default function CalendarScreen() {
                   <Utensils size={24} color={colors.text.muted} />
                   <Text style={styles.emptyText}>Aucun repas enregistré</Text>
                 </View>
+              </Card>
+            )}
+
+            {/* Planned Meals */}
+            {selectedDayDetails.plannedMeals.length > 0 && (
+              <Card style={styles.detailCard}>
+                <View style={styles.detailCardHeader}>
+                  <CalendarCheck size={18} color={colors.success} />
+                  <Text style={styles.detailCardTitle}>Repas planifies</Text>
+                  <Badge variant="success" size="sm">
+                    {selectedDayDetails.plannedCalories} kcal
+                  </Badge>
+                </View>
+                {selectedDayDetails.plannedMeals.map(meal => (
+                  <View key={meal.id} style={styles.mealItem}>
+                    <Text style={styles.mealEmoji}>{MEAL_ICONS[meal.mealType]}</Text>
+                    <View style={styles.mealInfo}>
+                      <Text style={styles.mealType} numberOfLines={1}>
+                        {meal.name}
+                      </Text>
+                      <View style={styles.plannedMealMeta}>
+                        <Clock size={12} color={colors.text.muted} />
+                        <Text style={styles.mealDetails}>
+                          {meal.prepTime} min · {meal.nutrition?.calories || 0} kcal
+                        </Text>
+                        {meal.isValidated && (
+                          <Badge variant="success" size="sm" style={styles.validatedBadge}>
+                            Valide
+                          </Badge>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                ))}
               </Card>
             )}
 
@@ -470,8 +555,11 @@ const styles = StyleSheet.create({
   indicatorMetabolic: {
     backgroundColor: colors.warning,
   },
-  indicatorSport: {
+  indicatorPlanned: {
     backgroundColor: colors.success,
+  },
+  indicatorSport: {
+    backgroundColor: colors.info,
   },
   legend: {
     flexDirection: 'row',
@@ -550,6 +638,14 @@ const styles = StyleSheet.create({
   mealTime: {
     ...typography.small,
     color: colors.text.muted,
+  },
+  plannedMealMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  validatedBadge: {
+    marginLeft: spacing.xs,
   },
   emptyState: {
     alignItems: 'center',

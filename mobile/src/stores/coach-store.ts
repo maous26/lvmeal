@@ -126,6 +126,7 @@ export interface CoachContext {
 
 interface CoachState {
   items: CoachItem[]
+  historyItems: CoachItem[] // Archive of dismissed items
   unreadCount: number
   lastGeneratedAt: string | null
   context: CoachContext
@@ -137,11 +138,15 @@ interface CoachState {
   generateItems: () => void
   generateItemsWithAI: () => Promise<void> // NEW: LymIA Brain powered
   generateWithCoordinator: (trigger?: EventTrigger) => Promise<void> // NEW: Agent Coordinator powered
+  forceRefreshAI: () => Promise<void> // Force regeneration bypassing cache
   markAsRead: (itemId: string) => void
   markAllAsRead: () => void
   dismissItem: (itemId: string) => void
   clearExpired: () => void
   getUnreadCount: () => number
+  getCacheStatus: () => { isFresh: boolean; ageMinutes: number; itemCount: number }
+  getHistoryItems: () => CoachItem[] // Get archived items
+  clearHistory: () => void // Clear history
 }
 
 const generateId = () => `coach_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -958,6 +963,7 @@ export const useCoachStore = create<CoachState>()(
   persist(
     (set, get) => ({
       items: [],
+      historyItems: [],
       unreadCount: 0,
       lastGeneratedAt: null,
       context: {},
@@ -1027,10 +1033,23 @@ export const useCoachStore = create<CoachState>()(
 
       // Generate items using RAG + LymIA Brain (AI-powered with knowledge base)
       generateItemsWithAI: async () => {
-        const { context, items: existingItems, isGeneratingAI } = get()
+        const { context, items: existingItems, isGeneratingAI, lastGeneratedAt } = get()
 
         // Prevent concurrent generation
         if (isGeneratingAI) return
+
+        // CACHE: Don't regenerate if we have fresh AI items (within 6 hours)
+        const now = new Date()
+        if (lastGeneratedAt) {
+          const timeSinceLastGen = now.getTime() - new Date(lastGeneratedAt).getTime()
+          const sixHours = 6 * 60 * 60 * 1000
+
+          // If we have items and they're fresh, skip regeneration
+          if (timeSinceLastGen < sixHours && existingItems.length > 0) {
+            console.log('[CoachStore] Using cached AI insights (fresh within 6h)')
+            return
+          }
+        }
 
         set({ isGeneratingAI: true })
 
@@ -1098,10 +1117,23 @@ export const useCoachStore = create<CoachState>()(
 
       // NEW: Generate using Agent Coordinator (all agents communicate + notifications)
       generateWithCoordinator: async (trigger?: EventTrigger) => {
-        const { context, items: existingItems, isGeneratingAI } = get()
+        const { context, items: existingItems, isGeneratingAI, lastGeneratedAt } = get()
 
         // Prevent concurrent generation
         if (isGeneratingAI) return
+
+        // CACHE: Don't regenerate unless triggered or items are stale (8 hours)
+        // Triggers bypass cache (they're important events)
+        const now = new Date()
+        if (!trigger && lastGeneratedAt) {
+          const timeSinceLastGen = now.getTime() - new Date(lastGeneratedAt).getTime()
+          const eightHours = 8 * 60 * 60 * 1000
+
+          if (timeSinceLastGen < eightHours && existingItems.length > 0) {
+            console.log('[CoachStore] Using cached coordinator insights (fresh within 8h)')
+            return
+          }
+        }
 
         set({ isGeneratingAI: true })
 
@@ -1281,9 +1313,21 @@ export const useCoachStore = create<CoachState>()(
 
       dismissItem: (itemId) => {
         set((state) => {
+          const dismissedItem = state.items.find((item) => item.id === itemId)
           const items = state.items.filter((item) => item.id !== itemId)
+
+          // Archive dismissed item to history (max 50 items)
+          let historyItems = state.historyItems
+          if (dismissedItem) {
+            historyItems = [
+              { ...dismissedItem, isRead: true },
+              ...state.historyItems,
+            ].slice(0, 50)
+          }
+
           return {
             items,
+            historyItems,
             unreadCount: items.filter((item) => !item.isRead).length,
           }
         })
@@ -1305,6 +1349,44 @@ export const useCoachStore = create<CoachState>()(
 
       getUnreadCount: () => {
         return get().items.filter((item) => !item.isRead).length
+      },
+
+      // Force refresh AI insights (bypasses cache)
+      forceRefreshAI: async () => {
+        // Clear lastGeneratedAt to bypass cache
+        set({ lastGeneratedAt: null })
+        // Then regenerate
+        await get().generateItemsWithAI()
+      },
+
+      // Get cache status for UI display
+      getCacheStatus: () => {
+        const { lastGeneratedAt, items } = get()
+        const now = Date.now()
+
+        if (!lastGeneratedAt) {
+          return { isFresh: false, ageMinutes: 0, itemCount: items.length }
+        }
+
+        const ageMs = now - new Date(lastGeneratedAt).getTime()
+        const ageMinutes = Math.floor(ageMs / (60 * 1000))
+        const sixHours = 6 * 60 // 360 minutes
+
+        return {
+          isFresh: ageMinutes < sixHours && items.length > 0,
+          ageMinutes,
+          itemCount: items.length,
+        }
+      },
+
+      // Get archived history items
+      getHistoryItems: () => {
+        return get().historyItems
+      },
+
+      // Clear all history
+      clearHistory: () => {
+        set({ historyItems: [] })
       },
     }),
     {

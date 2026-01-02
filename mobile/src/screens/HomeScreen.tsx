@@ -38,6 +38,7 @@ import {
   CaloricBalance,
   ProgramsWidget,
   ProgressWidget,
+  CoachInsights,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows } from '../constants/theme'
@@ -370,6 +371,9 @@ export default function HomeScreen() {
             <Text style={[styles.statLabel, { color: colors.text.muted }]}>Niveau</Text>
           </View>
         </View>
+
+        {/* Coach Insights Widget - Compact mode */}
+        <CoachInsights compact />
 
         {/* Main Calories Widget */}
         <View style={[styles.caloriesSection, { backgroundColor: colors.bg.elevated }, shadows.md]}>

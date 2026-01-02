@@ -20,6 +20,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Linking,
+  Modal,
 } from 'react-native'
 import {
   Sparkles,
@@ -41,6 +42,8 @@ import {
   ExternalLink,
   Bot,
   TrendingUp,
+  History,
+  Trash2,
 } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
@@ -292,7 +295,8 @@ export default function CoachScreen() {
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
 
-  const { items, unreadCount, generateItemsWithAI, markAsRead, dismissItem, setContext } = useCoachStore()
+  const { items, historyItems, unreadCount, generateItemsWithAI, markAsRead, dismissItem, setContext, clearHistory } = useCoachStore()
+  const [showHistory, setShowHistory] = useState(false)
   const { profile, nutritionGoals, hasSeenCoachWelcome, setHasSeenCoachWelcome } = useUserStore()
   const { getTodayData } = useMealsStore()
   const wellnessStore = useWellnessStore()
@@ -383,12 +387,25 @@ export default function CoachScreen() {
                 {unreadCount > 0 ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}` : 'Tes conseils personnalisés'}
               </Text>
             </View>
-            <LinearGradient
-              colors={[staticColors.accent.primary, staticColors.secondary.primary]}
-              style={styles.avatarGradient}
-            >
-              <Bot size={24} color="#FFFFFF" />
-            </LinearGradient>
+            <View style={styles.headerRight}>
+              {historyItems.length > 0 && (
+                <TouchableOpacity
+                  style={[styles.historyButton, { backgroundColor: colors.bg.secondary }]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    setShowHistory(true)
+                  }}
+                >
+                  <History size={18} color={colors.text.secondary} />
+                </TouchableOpacity>
+              )}
+              <LinearGradient
+                colors={[staticColors.accent.primary, staticColors.secondary.primary]}
+                style={styles.avatarGradient}
+              >
+                <Bot size={24} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
           </View>
         </View>
 
@@ -496,6 +513,90 @@ export default function CoachScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* History Modal */}
+      <Modal
+        visible={showHistory}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowHistory(false)}
+      >
+        <View style={[styles.historyModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.historyModalContent, { backgroundColor: colors.bg.primary }]}>
+            {/* Header */}
+            <View style={styles.historyModalHeader}>
+              <View style={styles.historyModalTitleRow}>
+                <History size={20} color={colors.accent.primary} />
+                <Text style={[styles.historyModalTitle, { color: colors.text.primary }]}>
+                  Historique ({historyItems.length})
+                </Text>
+              </View>
+              <View style={styles.historyModalActions}>
+                {historyItems.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.clearHistoryButton, { backgroundColor: `${staticColors.error}15` }]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                      clearHistory()
+                    }}
+                  >
+                    <Trash2 size={16} color={staticColors.error} />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setShowHistory(false)}>
+                  <X size={24} color={colors.text.secondary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* History list */}
+            <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
+              {historyItems.length === 0 ? (
+                <View style={styles.historyEmpty}>
+                  <History size={40} color={colors.text.tertiary} />
+                  <Text style={[styles.historyEmptyText, { color: colors.text.muted }]}>
+                    Aucun conseil archivé
+                  </Text>
+                </View>
+              ) : (
+                historyItems.map((item) => {
+                  const config = typeConfig[item.type]
+                  const catConfig = categoryConfig[item.category]
+                  const CategoryIcon = catConfig.icon
+
+                  return (
+                    <View
+                      key={item.id}
+                      style={[styles.historyItem, { backgroundColor: colors.bg.elevated }]}
+                    >
+                      <View style={styles.historyItemHeader}>
+                        <View style={[styles.historyItemIcon, { backgroundColor: catConfig.bgColor }]}>
+                          <CategoryIcon size={14} color={config.color} />
+                        </View>
+                        <Text style={[styles.historyItemType, { color: config.color }]}>
+                          {config.label}
+                        </Text>
+                        <Text style={[styles.historyItemDate, { color: colors.text.muted }]}>
+                          {new Date(item.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        </Text>
+                      </View>
+                      <Text style={[styles.historyItemTitle, { color: colors.text.primary }]}>
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={[styles.historyItemMessage, { color: colors.text.secondary }]}
+                        numberOfLines={2}
+                      >
+                        {item.message}
+                      </Text>
+                    </View>
+                  )
+                })
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -633,5 +734,103 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  // Header with history button
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  historyButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // History Modal styles
+  historyModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  historyModalContent: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.lg,
+    paddingBottom: spacing['3xl'],
+    maxHeight: '80%',
+  },
+  historyModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  historyModalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  historyModalTitle: {
+    ...typography.h4,
+    fontWeight: '600',
+  },
+  historyModalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  clearHistoryButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyList: {
+    flex: 1,
+  },
+  historyEmpty: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl * 2,
+    gap: spacing.md,
+  },
+  historyEmptyText: {
+    ...typography.body,
+  },
+  historyItem: {
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  historyItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  historyItemIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyItemType: {
+    ...typography.caption,
+    fontWeight: '600',
+    flex: 1,
+  },
+  historyItemDate: {
+    ...typography.caption,
+  },
+  historyItemTitle: {
+    ...typography.bodyMedium,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  historyItemMessage: {
+    ...typography.small,
+    lineHeight: 18,
   },
 })
