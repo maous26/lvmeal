@@ -56,8 +56,8 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
           Bienvenue.
         </Text>
         <Text style={[styles.welcomeMessage, { color: colors.text.secondary }]}>
-          Ici, tu n'as rien a reussir.{'\n'}
-          Juste a avancer, a ton rythme.
+          Ici, tu n'as rien à réussir.{'\n'}
+          Juste à avancer, à ton rythme.
         </Text>
         <Text style={[styles.welcomeSubtext, { color: colors.text.tertiary }]}>
           On commencera simplement, quand tu voudras.
