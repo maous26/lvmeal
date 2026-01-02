@@ -52,10 +52,10 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
     {
       id: 'easy',
       icon: <Camera size={28} color="#FFFFFF" />,
-      title: 'Simple comme bonjour',
-      subtitle: 'FACILITÉ',
+      title: 'Simple, vraiment.',
+      subtitle: 'FACILITE',
       description:
-        "Prends en photo ton repas, dicte-le à la voix ou scanne un code-barre. LymIA fait le reste et calcule tout pour toi.",
+        "Un repas, une photo, quelques mots.\nPas besoin d'etre precis ou parfait : LYM te comprend et t'aide a avancer.",
       imagePlaceholder: 'Photo de quelqu\'un prenant en photo son assiette',
       image: require('../../../assets/photo2.jpg'),
       accentColor: colors.accent.primary,
@@ -63,32 +63,32 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
     {
       id: 'personalized',
       icon: <Sparkles size={28} color="#FFFFFF" />,
-      title: 'Fait pour toi',
+      title: 'Adapte a ton rythme.',
       subtitle: 'PERSONNALISATION',
       description:
-        "Tes objectifs, ton rythme, tes goûts. Notre IA apprend de toi pour t'accompagner au quotidien avec des conseils vraiment adaptés.",
-      imagePlaceholder: 'Photo d\'un coach bienveillant ou interface personnalisée',
-      useMockPreview: true, // Use mock tracking screen
-      accentColor: '#A855F7', // Purple
+        "Ton quotidien, ton energie, tes habitudes.\nLYM s'adapte a toi dans le temps, sans te demander d'en faire plus.",
+      imagePlaceholder: 'Interface personnalisee',
+      useMockPreview: true,
+      accentColor: '#A855F7',
     },
     {
       id: 'kind',
       icon: <Heart size={28} color="#FFFFFF" />,
-      title: 'Bienveillant, jamais culpabilisant',
+      title: 'Sans jugement. Jamais.',
       subtitle: 'CONFIANCE',
       description:
-        "Pas de jugement, pas de restriction. On célèbre tes progrès et on t'aide à rebondir. C'est ton parcours, à ton rythme.",
-      imagePlaceholder: 'Photo de personnes souriantes et épanouies',
+        "Les ecarts, les pauses, les semaines chargees font partie du chemin.\nLYM t'aide a reprendre, pas a te reprocher.",
+      imagePlaceholder: 'Personnes epanouies',
       accentColor: colors.secondary.primary,
     },
     {
-      id: 'results',
+      id: 'duration',
       icon: <TrendingUp size={28} color="#FFFFFF" />,
-      title: 'Des résultats durables',
-      subtitle: 'EFFICACITÉ',
+      title: 'Un equilibre qui tient.',
+      subtitle: 'DUREE',
       description:
-        "Finis les régimes yo-yo. Notre approche progressive et personnalisée t'aide à construire des habitudes qui durent.",
-      imagePlaceholder: 'Photo de transformation positive ou graphique de progression',
+        "Pas de regime.\nPas de pression constante.\nUne structure souple pour avancer dans la vraie vie.",
+      imagePlaceholder: 'Equilibre de vie',
       image: require('../../../assets/photo3.jpeg'),
       accentColor: colors.success,
     },

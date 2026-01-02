@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -24,8 +26,36 @@ export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
 
+  // Smooth fade-in animation from splash screen
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(20)).current
+
+  useEffect(() => {
+    // Gentle fade in with subtle slide up
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [])
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+    <Animated.View
+      style={[
+        styles.container,
+        { backgroundColor: colors.bg.primary },
+        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+      ]}
+    >
       {/* Hero Image */}
       <View style={styles.imageContainer}>
         <Image
@@ -96,7 +126,7 @@ export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
           Configuration en quelques étapes
         </Text>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 

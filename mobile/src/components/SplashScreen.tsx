@@ -61,17 +61,18 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
       ])
     ).start()
 
-    // Phase 3: Wait then fade out smoothly (after 2.5s total)
+    // Phase 3: Wait then fade out very smoothly (after 2.2s total)
+    // Longer, gentler fade for a seamless transition to onboarding
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 600,
-        easing: Easing.bezier(0.55, 0.055, 0.675, 0.19), // ease-in cubic
+        duration: 1000, // Longer fade out for smoother transition
+        easing: Easing.bezier(0.4, 0, 0.2, 1), // Material Design standard easing
         useNativeDriver: true,
       }).start(() => {
         onFinish()
       })
-    }, 2500)
+    }, 2200)
 
     return () => clearTimeout(timer)
   }, [fadeAnim, scaleAnim, glowAnim, onFinish])

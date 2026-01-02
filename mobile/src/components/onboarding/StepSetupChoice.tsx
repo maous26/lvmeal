@@ -50,16 +50,20 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
         />
       </View>
 
-      {/* Title */}
+      {/* Title - Welcoming message */}
       <View style={styles.titleContainer}>
-        <Text style={[styles.subtitle, { color: colors.accent.primary }]}>
-          PERSONNALISATION
+        <Text style={[styles.welcomeTitle, { color: colors.text.primary }]}>
+          Bienvenue.
         </Text>
-        <Text style={[styles.title, { color: colors.text.primary }]}>
-          Comment veux-tu commencer ?
+        <Text style={[styles.welcomeMessage, { color: colors.text.secondary }]}>
+          Ici, tu n'as rien a reussir.{'\n'}
+          Juste a avancer, a ton rythme.
         </Text>
-        <Text style={[styles.description, { color: colors.text.secondary }]}>
-          Tu pourras toujours affiner tes préférences plus tard.
+        <Text style={[styles.welcomeSubtext, { color: colors.text.tertiary }]}>
+          On commencera simplement, quand tu voudras.
+        </Text>
+        <Text style={[styles.questionText, { color: colors.text.primary }]}>
+          Que veux-tu faire maintenant ?
         </Text>
       </View>
 
@@ -153,18 +157,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.xl,
   },
-  subtitle: {
-    ...typography.captionMedium,
-    letterSpacing: 2,
-    marginBottom: spacing.sm,
-  },
-  title: {
-    ...typography.h2,
+  welcomeTitle: {
+    ...typography.h1,
     marginBottom: spacing.md,
   },
-  description: {
+  welcomeMessage: {
+    ...typography.lg,
+    lineHeight: 28,
+    marginBottom: spacing.md,
+  },
+  welcomeSubtext: {
     ...typography.body,
-    lineHeight: 24,
+    fontStyle: 'italic',
+    marginBottom: spacing.xl,
+  },
+  questionText: {
+    ...typography.bodyMedium,
   },
   optionsContainer: {
     flex: 1,
