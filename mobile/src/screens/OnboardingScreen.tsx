@@ -207,6 +207,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const [isQuickMode, setIsQuickMode] = useState(false)
   // Store quick profile temporarily before cloud-sync
   const [pendingQuickProfile, setPendingQuickProfile] = useState<Partial<UserProfile> | null>(null)
+  // Store AI-calculated needs from StepAnalysis
+  const [aiCalculatedNeeds, setAiCalculatedNeeds] = useState<NutritionalNeeds | null>(null)
 
   // Theme
   const { colors } = useTheme()
@@ -299,8 +301,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   // Finalize onboarding and save profile
   const finalizeOnboarding = useCallback(async () => {
     setLoading(true)
-    // Save profile
-    const needs = calculateNeeds(profile)
+    // Use AI-calculated needs if available, otherwise fall back to Harris-Benedict
+    const needs = aiCalculatedNeeds || calculateNeeds(profile)
 
     // Initialize sport program for adaptive profiles
     const finalProfile: Partial<UserProfile> = {
@@ -351,7 +353,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
     setLoading(false)
     onComplete()
-  }, [profile, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
+  }, [profile, aiCalculatedNeeds, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
 
   const handleNext = useCallback(async () => {
     // Analysis step: in Expo Go finalize directly, otherwise go to cloud-sync
@@ -516,7 +518,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       case 'lifestyle':
         return <StepLifestyle data={profile} onChange={setProfile} />
       case 'analysis':
-        return <StepAnalysis profile={profile} needs={needs} />
+        return <StepAnalysis profile={profile} needs={needs} onNeedsCalculated={setAiCalculatedNeeds} />
       case 'cloud-sync':
         return (
           <StepCloudSync

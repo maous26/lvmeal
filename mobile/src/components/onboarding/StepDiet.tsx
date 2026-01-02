@@ -45,9 +45,23 @@ export function StepDiet({ data, onChange }: StepDietProps) {
 
   return (
     <View style={styles.container}>
+      {/* Introduction accueillante */}
+      <View style={styles.intro}>
+        <Text style={styles.introIcon}>🍽️</Text>
+        <View style={styles.introContent}>
+          <Text style={styles.introTitle}>Tes preferences alimentaires</Text>
+          <Text style={styles.introText}>
+            On adapte toutes les recettes et conseils a ton mode d'alimentation. Aucun jugement, que du sur-mesure !
+          </Text>
+        </View>
+      </View>
+
       {/* Diet type selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Type d'alimentation</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>🥗</Text>
+          <Text style={styles.sectionTitle}>Comment tu manges au quotidien ?</Text>
+        </View>
         <View style={styles.dietGrid}>
           {dietTypes.map((diet) => {
             const isSelected = data.dietType === diet.value
@@ -71,8 +85,11 @@ export function StepDiet({ data, onChange }: StepDietProps) {
 
       {/* Religious dietary options */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Restriction religieuse</Text>
-        <Text style={styles.sectionHint}>Optionnel - peut se combiner avec ton type d'alimentation</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>🙏</Text>
+          <Text style={styles.sectionTitle}>Restriction religieuse</Text>
+          <Text style={styles.optionalBadge}>Optionnel</Text>
+        </View>
         <View style={styles.religiousRow}>
           {religiousOptions.map((option) => {
             const isSelected = data.religiousDiet === option.value
@@ -103,8 +120,11 @@ export function StepDiet({ data, onChange }: StepDietProps) {
 
       {/* Allergies */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Allergies ou intolerances</Text>
-        <Text style={styles.sectionHint}>Selectionne toutes celles qui s'appliquent (optionnel)</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>⚠️</Text>
+          <Text style={styles.sectionTitle}>Allergies ou intolerances</Text>
+          <Text style={styles.optionalBadge}>Optionnel</Text>
+        </View>
         <View style={styles.allergiesRow}>
           {commonAllergies.map((allergy) => {
             const isSelected = selectedAllergies.includes(allergy)
@@ -130,17 +150,56 @@ export function StepDiet({ data, onChange }: StepDietProps) {
 const styles = StyleSheet.create({
   container: {
     gap: spacing.xl,
+    paddingBottom: 60,
+  },
+  intro: {
+    flexDirection: 'row',
+    padding: spacing.default,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  introIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  introContent: {
+    flex: 1,
+  },
+  introTitle: {
+    ...typography.bodySemibold,
+    color: colors.text.primary,
+  },
+  introText: {
+    ...typography.small,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
   section: {},
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  sectionIcon: {
+    fontSize: 20,
+  },
   sectionTitle: {
     ...typography.smallMedium,
     color: colors.text.secondary,
-    marginBottom: spacing.sm,
+    flex: 1,
   },
-  sectionHint: {
+  optionalBadge: {
     ...typography.caption,
     color: colors.text.tertiary,
-    marginBottom: spacing.sm,
+    backgroundColor: colors.bg.tertiary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    overflow: 'hidden',
   },
   dietGrid: {
     flexDirection: 'row',

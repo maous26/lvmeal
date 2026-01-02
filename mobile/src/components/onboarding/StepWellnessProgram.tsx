@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { Heart, Sparkles, ChevronRight, Moon, Brain } from 'lucide-react-native'
+import { Heart, Sparkles, Check } from 'lucide-react-native'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile } from '../../types'
 
@@ -19,225 +19,171 @@ export function StepWellnessProgram({ data, onChange }: StepWellnessProgramProps
 
   return (
     <View style={styles.container}>
-      {/* Introduction */}
-      <View style={styles.intro}>
+      {/* Hero section - simple et accueillant */}
+      <View style={styles.hero}>
         <View style={styles.iconContainer}>
-          <Heart size={32} color={colors.secondary.primary} />
-          <Sparkles size={16} color={colors.warning} style={styles.sparkle} />
+          <Heart size={40} color="#FFFFFF" />
         </View>
-        <Text style={styles.title}>Programme Bien-etre</Text>
-        <Text style={styles.description}>
-          Cultive ton equilibre mental et physique avec un programme complet de meditation,
-          respiration et gestion du stress.
+        <Text style={styles.heroTitle}>Prends soin de toi</Text>
+        <Text style={styles.heroSubtitle}>
+          Sommeil, stress, energie... tout est lie a ton bien-etre.
         </Text>
       </View>
 
-      {/* Benefits */}
-      <View style={styles.benefits}>
-        <Text style={styles.benefitsTitle}>Ce programme inclut :</Text>
-        <View style={styles.benefitsList}>
-          <BenefitItem emoji="🧘" text="Meditations guidees quotidiennes" />
-          <BenefitItem emoji="🌬️" text="Exercices de coherence cardiaque" />
-          <BenefitItem emoji="😴" text="Suivi du sommeil et recuperation" />
-          <BenefitItem emoji="📝" text="Journal de gratitude et insights IA" />
-        </View>
+      {/* Ce que ca apporte - version epuree */}
+      <View style={styles.features}>
+        <FeatureItem emoji="🧘" text="Exercices de respiration" />
+        <FeatureItem emoji="😴" text="Suivi du sommeil" />
+        <FeatureItem emoji="💆" text="Gestion du stress" />
       </View>
 
-      {/* Alert about exclusion */}
-      <View style={styles.alertBox}>
-        <Text style={styles.alertIcon}>💡</Text>
-        <Text style={styles.alertText}>
-          Ce programme ne peut pas etre suivi en meme temps que le programme Metabolisme.
-          Tu peux cependant le combiner avec le programme Sport.
-        </Text>
-      </View>
-
-      {/* Choice buttons */}
+      {/* Choix simple */}
       <View style={styles.choices}>
         <Pressable
-          style={[styles.choiceButton, styles.choiceYes, isYesSelected && styles.choiceSelected]}
+          style={[styles.choiceCard, isYesSelected && styles.choiceCardSelected]}
           onPress={() => handleChoice(true)}
         >
-          <View style={styles.choiceContent}>
-            <Text style={styles.choiceEmoji}>✨</Text>
-            <View style={styles.choiceTextContainer}>
-              <Text style={[styles.choiceTitle, isYesSelected && styles.choiceTitleSelected]}>
-                Oui, je veux cultiver mon bien-etre
-              </Text>
-              <Text style={styles.choiceSubtitle}>
-                8 semaines de pratiques guidees
-              </Text>
-            </View>
+          <View style={[styles.radio, isYesSelected && styles.radioSelected]}>
+            {isYesSelected && <Check size={14} color="#FFFFFF" />}
           </View>
-          <ChevronRight size={20} color={isYesSelected ? colors.secondary.primary : colors.text.tertiary} />
+          <View style={styles.choiceContent}>
+            <Text style={[styles.choiceTitle, isYesSelected && styles.choiceTitleSelected]}>
+              Oui, je veux !
+            </Text>
+            <Text style={styles.choiceSubtitle}>Activer le suivi bien-etre</Text>
+          </View>
         </Pressable>
 
         <Pressable
-          style={[styles.choiceButton, isNoSelected && styles.choiceNoSelected]}
+          style={[styles.choiceCard, isNoSelected && styles.choiceCardNo]}
           onPress={() => handleChoice(false)}
         >
-          <View style={styles.choiceContent}>
-            <Text style={styles.choiceEmoji}>⏭️</Text>
-            <View style={styles.choiceTextContainer}>
-              <Text style={[styles.choiceTitle, isNoSelected && styles.choiceTitleNoSelected]}>
-                Non merci, peut-etre plus tard
-              </Text>
-              <Text style={styles.choiceSubtitle}>
-                Activable a tout moment dans le profil
-              </Text>
-            </View>
+          <View style={[styles.radio, isNoSelected && styles.radioNo]}>
+            {isNoSelected && <Check size={14} color={colors.text.secondary} />}
           </View>
-          <ChevronRight size={20} color={isNoSelected ? colors.text.primary : colors.text.tertiary} />
+          <View style={styles.choiceContent}>
+            <Text style={[styles.choiceTitle, isNoSelected && styles.choiceTitleNo]}>
+              Plus tard
+            </Text>
+            <Text style={styles.choiceSubtitle}>Activer depuis le profil</Text>
+          </View>
         </Pressable>
       </View>
-
-      {/* Reassurance */}
-      <Text style={styles.reassurance}>
-        Ce programme est optionnel et peut etre active ou desactive a tout moment depuis votre profil.
-      </Text>
     </View>
   )
 }
 
-function BenefitItem({ emoji, text }: { emoji: string; text: string }) {
+function FeatureItem({ emoji, text }: { emoji: string; text: string }) {
   return (
-    <View style={styles.benefitItem}>
-      <Text style={styles.benefitEmoji}>{emoji}</Text>
-      <Text style={styles.benefitText}>{text}</Text>
+    <View style={styles.featureItem}>
+      <Text style={styles.featureEmoji}>{emoji}</Text>
+      <Text style={styles.featureText}>{text}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
-  intro: {
+  hero: {
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
   },
   iconContainer: {
-    position: 'relative',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.secondary.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  sparkle: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-  },
-  title: {
-    ...typography.h4,
+  heroTitle: {
+    ...typography.h3,
     color: colors.text.primary,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  description: {
+  heroSubtitle: {
     ...typography.body,
     color: colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 22,
   },
-  benefits: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius: radius.lg,
-    padding: spacing.default,
-  },
-  benefitsTitle: {
-    ...typography.smallMedium,
-    color: colors.text.tertiary,
-    marginBottom: spacing.sm,
-  },
-  benefitsList: {
-    gap: spacing.sm,
-  },
-  benefitItem: {
+  features: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: spacing.md,
+  },
+  featureItem: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  benefitEmoji: {
-    fontSize: 18,
+  featureEmoji: {
+    fontSize: 32,
   },
-  benefitText: {
-    ...typography.body,
-    color: colors.text.primary,
-  },
-  alertBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  alertIcon: {
-    fontSize: 16,
-  },
-  alertText: {
+  featureText: {
     ...typography.small,
     color: colors.text.secondary,
-    flex: 1,
+    textAlign: 'center',
+    maxWidth: 90,
   },
   choices: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
-  choiceButton: {
+  choiceCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.default,
+    padding: spacing.lg,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 2,
     borderColor: colors.border.light,
+    gap: spacing.md,
   },
-  choiceYes: {},
-  choiceSelected: {
+  choiceCardSelected: {
     borderColor: colors.secondary.primary,
     backgroundColor: 'rgba(139, 92, 246, 0.1)',
   },
-  choiceNoSelected: {
-    borderColor: colors.text.tertiary,
+  choiceCardNo: {
+    borderColor: colors.border.default,
     backgroundColor: colors.bg.secondary,
   },
-  choiceContent: {
-    flexDirection: 'row',
+  radio: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.border.default,
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
   },
-  choiceEmoji: {
-    fontSize: 24,
-    marginRight: spacing.default,
+  radioSelected: {
+    borderColor: colors.secondary.primary,
+    backgroundColor: colors.secondary.primary,
   },
-  choiceTextContainer: {
+  radioNo: {
+    borderColor: colors.text.tertiary,
+    backgroundColor: colors.bg.tertiary,
+  },
+  choiceContent: {
     flex: 1,
   },
   choiceTitle: {
-    ...typography.bodySemibold,
+    ...typography.bodyMedium,
     color: colors.text.primary,
   },
   choiceTitleSelected: {
     color: colors.secondary.primary,
+    fontWeight: '600',
   },
-  choiceTitleNoSelected: {
-    color: colors.text.primary,
+  choiceTitleNo: {
+    color: colors.text.secondary,
   },
   choiceSubtitle: {
     ...typography.small,
-    color: colors.text.secondary,
+    color: colors.text.tertiary,
     marginTop: 2,
-  },
-  reassurance: {
-    ...typography.small,
-    color: colors.text.muted,
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
 })
 

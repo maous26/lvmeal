@@ -55,6 +55,17 @@ const goals: {
 export function StepGoal({ data, onChange }: StepGoalProps) {
   return (
     <View style={styles.container}>
+      {/* Introduction accueillante */}
+      <View style={styles.intro}>
+        <Text style={styles.introIcon}>🎯</Text>
+        <View style={styles.introContent}>
+          <Text style={styles.introTitle}>Qu'est-ce qui t'amene ?</Text>
+          <Text style={styles.introText}>
+            Chaque objectif merite une approche differente. On adapte tout a ce qui compte pour toi.
+          </Text>
+        </View>
+      </View>
+
       {goals.map((goal) => {
         const isSelected = data.goal === goal.value
 
@@ -94,7 +105,32 @@ export function StepGoal({ data, onChange }: StepGoalProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.sm,
+    gap: spacing.md,
+  },
+  intro: {
+    flexDirection: 'row',
+    padding: spacing.default,
+    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(168, 85, 247, 0.2)',
+    marginBottom: spacing.sm,
+  },
+  introIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  introContent: {
+    flex: 1,
+  },
+  introTitle: {
+    ...typography.bodySemibold,
+    color: colors.text.primary,
+  },
+  introText: {
+    ...typography.small,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
   option: {
     flexDirection: 'row',

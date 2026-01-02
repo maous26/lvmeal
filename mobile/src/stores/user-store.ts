@@ -130,7 +130,9 @@ export const useUserStore = create<UserState>()(
       },
 
       setProfile: (profile) => {
-        const needs = calculateNutritionalNeeds(profile)
+        // Use pre-calculated needs from profile if available (from AI/RAG),
+        // otherwise calculate using Harris-Benedict formula
+        const needs = profile.nutritionalNeeds || calculateNutritionalNeeds(profile)
         const goals = needs ? {
           calories: needs.calories,
           proteins: needs.proteins,

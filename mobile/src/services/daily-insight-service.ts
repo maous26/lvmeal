@@ -24,6 +24,7 @@ import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useCoachStore, type CoachItem, type CoachItemCategory } from '../stores/coach-store'
 import type { UserProfile, NutritionInfo } from '../types'
 
 // ============= CONSTANTS =============
@@ -205,6 +206,70 @@ function getFallbackInsight(): DailyInsight {
   return FALLBACK_INSIGHTS[dayOfYear % FALLBACK_INSIGHTS.length]
 }
 
+// ============= COACH STORE INTEGRATION =============
+
+/**
+ * Convert DailyInsight to CoachItem and add to store
+ * This ensures insights appear in the coach widget
+ */
+function addInsightToCoachStore(insight: DailyInsight): void {
+  try {
+    const coachStore = useCoachStore.getState()
+    const currentItems = coachStore.items
+
+    // Check if this insight is already in the store (by title + today's date)
+    const today = new Date().toDateString()
+    const alreadyExists = currentItems.some(item => {
+      const itemDate = new Date(item.createdAt).toDateString()
+      return item.title === insight.title && itemDate === today
+    })
+
+    if (alreadyExists) {
+      console.log('[DailyInsight] Insight already in coach store, skipping:', insight.title)
+      return
+    }
+
+    // Map DailyInsight category to CoachItemCategory
+    const categoryMap: Record<string, CoachItemCategory> = {
+      nutrition: 'nutrition',
+      wellness: 'wellness',
+      sport: 'sport',
+      progress: 'progress',
+    }
+
+    const coachItem: CoachItem = {
+      id: `daily_insight_${Date.now()}`,
+      type: insight.severity === 'celebration' ? 'celebration' :
+            insight.severity === 'warning' ? 'alert' : 'tip',
+      category: categoryMap[insight.category] || 'nutrition',
+      title: insight.title,
+      message: insight.body,
+      priority: insight.severity === 'warning' ? 'high' :
+               insight.severity === 'celebration' ? 'medium' : 'low',
+      source: insight.sources?.[0]?.source || 'LymIA',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
+      confidence: insight.confidence,
+      reasoning: insight.reasoning,
+    }
+
+    // Add new item at the beginning
+    const newItems = [coachItem, ...currentItems]
+      .slice(0, 10) // Keep max 10 items
+
+    // Update store directly (avoiding full regeneration)
+    useCoachStore.setState({
+      items: newItems,
+      unreadCount: newItems.filter(item => !item.isRead).length,
+    })
+
+    console.log('[DailyInsight] Added insight to coach store:', insight.title)
+  } catch (error) {
+    console.error('[DailyInsight] Failed to add insight to coach store:', error)
+  }
+}
+
 // ============= INSIGHT GENERATION =============
 
 /**
@@ -223,9 +288,12 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
       const cachedInsight = await AsyncStorage.getItem(STORAGE_KEYS.LAST_INSIGHT_CONTENT)
       if (cachedInsight) {
         console.log('[DailyInsight] Using cached insight')
+        const parsedInsight = JSON.parse(cachedInsight)
+        // Ensure it's in the coach store (in case app was killed)
+        addInsightToCoachStore(parsedInsight)
         return {
           success: true,
-          insight: JSON.parse(cachedInsight),
+          insight: parsedInsight,
           scheduled: false,
         }
       }
@@ -340,6 +408,9 @@ export async function generateAndNotifyInsight(): Promise<boolean> {
     })
 
     console.log('[DailyInsight] Notification scheduled with ID:', notifId)
+
+    // ADD INSIGHT TO COACH STORE so it appears in the app
+    addInsightToCoachStore(insight)
 
     // Marquer comme notifié aujourd'hui
     await AsyncStorage.setItem('@lym_last_insight_notif_date', today)

@@ -8,13 +8,14 @@ import { LymIABrain, type UserContext, type CalorieRecommendation } from '../../
 interface StepAnalysisProps {
   profile: Partial<UserProfile>
   needs: NutritionalNeeds
+  onNeedsCalculated?: (needs: NutritionalNeeds) => void
 }
 
 const formatNumber = (num: number): string => {
   return num.toLocaleString('fr-FR')
 }
 
-export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
+export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysisProps) {
   const [showResults, setShowResults] = useState(false)
   const [personalizedNeeds, setPersonalizedNeeds] = useState<CalorieRecommendation | null>(null)
   const [loadingMessage, setLoadingMessage] = useState('Analyse en cours...')
@@ -40,9 +41,24 @@ export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
         const ragNeeds = await LymIABrain.calculatePersonalizedNeeds(context)
         setPersonalizedNeeds(ragNeeds)
 
+        // Notify parent of calculated needs so they can be saved
+        if (onNeedsCalculated && ragNeeds) {
+          const needsToSave: NutritionalNeeds = {
+            ...needs,
+            calories: ragNeeds.calories,
+            proteins: ragNeeds.proteins,
+            carbs: ragNeeds.carbs,
+            fats: ragNeeds.fats,
+          }
+          onNeedsCalculated(needsToSave)
+        }
+
       } catch (error) {
         console.error('RAG calculation failed:', error)
-        // Will fallback to basic needs
+        // Will fallback to basic needs - notify parent with fallback
+        if (onNeedsCalculated) {
+          onNeedsCalculated(needs)
+        }
       } finally {
         setShowResults(true)
       }
@@ -51,7 +67,7 @@ export function StepAnalysis({ profile, needs }: StepAnalysisProps) {
     // Start calculation with slight delay for UX
     const timer = setTimeout(calculateRAGNeeds, 500)
     return () => clearTimeout(timer)
-  }, [profile])
+  }, [profile, needs, onNeedsCalculated])
 
   if (!showResults) {
     return (

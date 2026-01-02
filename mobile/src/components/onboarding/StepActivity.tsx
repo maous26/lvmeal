@@ -55,6 +55,17 @@ const activityLevels: {
 export function StepActivity({ data, onChange }: StepActivityProps) {
   return (
     <View style={styles.container}>
+      {/* Introduction accueillante */}
+      <View style={styles.intro}>
+        <Text style={styles.introIcon}>🏃</Text>
+        <View style={styles.introContent}>
+          <Text style={styles.introTitle}>Ton rythme de vie</Text>
+          <Text style={styles.introText}>
+            Pas besoin d'etre un athlete ! On calcule tes besoins selon ton quotidien reel.
+          </Text>
+        </View>
+      </View>
+
       {activityLevels.map((level) => {
         const isSelected = data.activityLevel === level.value
 
@@ -94,7 +105,32 @@ export function StepActivity({ data, onChange }: StepActivityProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.sm,
+    gap: spacing.md,
+  },
+  intro: {
+    flexDirection: 'row',
+    padding: spacing.default,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+    marginBottom: spacing.sm,
+  },
+  introIcon: {
+    fontSize: 24,
+    marginRight: spacing.md,
+  },
+  introContent: {
+    flex: 1,
+  },
+  introTitle: {
+    ...typography.bodySemibold,
+    color: colors.text.primary,
+  },
+  introText: {
+    ...typography.small,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
   },
   option: {
     flexDirection: 'row',
