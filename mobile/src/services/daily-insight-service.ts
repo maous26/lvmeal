@@ -19,6 +19,7 @@ import {
   type SuperAgentContext,
   type DailyInsight,
 } from './super-agent'
+import { buildFastingContext } from './lymia-brain'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useWellnessStore } from '../stores/wellness-store'
@@ -119,6 +120,9 @@ async function collectUserData(): Promise<SuperAgentContext | null> {
     const daysWithWellness = recentWellness.map((w: import('../types').WellnessEntry) => w.date)
     const daysTracked = new Set([...daysWithMeals, ...daysWithWellness]).size
 
+    // Build fasting context if user has fasting enabled
+    const fastingContext = buildFastingContext(profile)
+
     const context: SuperAgentContext = {
       profile,
       meals: allMeals,
@@ -126,6 +130,7 @@ async function collectUserData(): Promise<SuperAgentContext | null> {
       weeklyNutrition,
       wellnessEntries: recentWellness,
       todayWellness,
+      fastingContext,
       streak,
       level,
       xp,

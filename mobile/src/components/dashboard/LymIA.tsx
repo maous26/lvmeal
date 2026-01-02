@@ -234,8 +234,8 @@ export function LymIA({ className }: LymIAProps) {
         id: 'no-meals-logged',
         type: 'tip',
         icon: <Utensils size={20} color="#3B82F6" />,
-        title: "N'oublie pas ton suivi",
-        message: "Tu n'as pas encore enregistre de repas aujourd'hui. Le suivi t'aide a atteindre tes objectifs !",
+        title: 'Suivi du jour',
+        message: 'Pas de repas noté pour l\'instant — même une estimation rapide suffit !',
         priority: 45,
       })
     }

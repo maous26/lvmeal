@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Zap,
 } from 'lucide-react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../../contexts/ThemeContext'
@@ -142,12 +141,9 @@ export function ProgressWidget({ onPress }: ProgressWidgetProps) {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <LinearGradient
-            colors={[colors.accent.primary, colors.secondary.primary]}
-            style={styles.iconContainer}
-          >
+          <View style={[styles.iconContainer, { backgroundColor: colors.accent.primary }]}>
             <TrendingUp size={18} color="#FFFFFF" />
-          </LinearGradient>
+          </View>
           <Text style={[styles.title, { color: colors.text.primary }]}>Mes Progrès</Text>
         </View>
         <View style={styles.headerRight}>
@@ -192,11 +188,8 @@ export function ProgressWidget({ onPress }: ProgressWidgetProps) {
               </Text>
             </View>
             <View style={[styles.progressTrack, { backgroundColor: colors.bg.tertiary }]}>
-              <LinearGradient
-                colors={[colors.accent.primary, colors.secondary.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.progressFill, { width: `${weightProgress}%` }]}
+              <View
+                style={[styles.progressFill, { width: `${weightProgress}%`, backgroundColor: colors.accent.primary }]}
               />
             </View>
           </View>

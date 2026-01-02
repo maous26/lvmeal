@@ -99,6 +99,15 @@ export interface SuperAgentContext {
     completed: boolean
   }>
 
+  // Fasting context
+  fastingContext?: {
+    schedule: string
+    isInEatingWindow: boolean
+    eatingWindowStart?: number
+    eatingWindowEnd?: number
+    hoursUntilEatingWindow?: number
+  }
+
   // Gamification
   streak: number
   level: number
@@ -196,7 +205,7 @@ function detectEvents(
         type: 'goal_reached',
         priority: 'critical',
         title: 'Apport trop faible',
-        message: `Tu n'as consommé que ${Math.round(calorieRatio * 100)}% de tes calories. C'est trop restrictif.`,
+        message: `Seulement ${Math.round(calorieRatio * 100)}% de ton objectif calorique ce soir. Ton corps a besoin d'énergie — un petit quelque chose avant de dormir ?`,
         category: 'alert',
         source: 'ANSES',
         detectedAt: now,
@@ -216,7 +225,7 @@ function detectEvents(
       type: 'goal_reached',
       priority: 'high',
       title: 'Protéines insuffisantes',
-      message: `${proteinDeficitDays} jours avec moins de 60% de protéines. Pense aux œufs, poisson, légumineuses.`,
+      message: `Les protéines ont été un peu basses ces derniers jours. On ajoute des œufs, poisson ou légumineuses ?`,
       category: 'nutrition',
       source: 'ANSES',
       detectedAt: now,
@@ -234,7 +243,7 @@ function detectEvents(
       type: 'wellness_logged',
       priority: 'high',
       title: 'Sommeil insuffisant',
-      message: `${poorSleepDays} nuits courtes cette semaine. Ça impacte ta faim et ton énergie.`,
+      message: `Semaine chargée côté sommeil. Normal si tu as plus faim — je t'adapte des repas rassasiants.`,
       category: 'wellness',
       source: 'INSERM',
       detectedAt: now,
@@ -252,7 +261,7 @@ function detectEvents(
       type: 'wellness_logged',
       priority: 'high',
       title: 'Stress chronique détecté',
-      message: `Stress élevé ${highStressDays} jours sur 7. Essaie 5 min de cohérence cardiaque.`,
+      message: `Période stressante cette semaine. 5 min de respiration peuvent aider — on essaie ensemble ?`,
       category: 'wellness',
       source: 'HAS',
       detectedAt: now,
@@ -692,6 +701,7 @@ class SuperAgentService {
           energyLevel: context.todayWellness?.energyLevel,
           hydrationLiters: context.todayWellness?.waterLiters,
         },
+        fastingContext: context.fastingContext,
       }
 
       return await getCoachingAdvice(userContext)
@@ -717,6 +727,7 @@ class SuperAgentService {
           energyLevel: context.todayWellness?.energyLevel,
           hydrationLiters: context.todayWellness?.waterLiters,
         },
+        fastingContext: context.fastingContext,
       }
 
       return await generateConnectedInsights(userContext)

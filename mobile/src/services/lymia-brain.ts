@@ -32,6 +32,7 @@ import {
   RAG_CONTEXT_TEMPLATE,
   USER_CONTEXT_TEMPLATE,
   WELLNESS_CONTEXT_TEMPLATE,
+  FASTING_CONTEXT_TEMPLATE,
   buildPrompt,
   parseAIResponse,
 } from '../lib/ai/prompt-system'
@@ -69,6 +70,13 @@ export interface UserContext {
     phase: number
     weekInPhase: number
     completionRate: number
+  }
+  fastingContext?: {
+    schedule: string
+    isInEatingWindow: boolean
+    eatingWindowStart?: number
+    eatingWindowEnd?: number
+    hoursUntilEatingWindow?: number
   }
 }
 
@@ -160,6 +168,45 @@ function buildKBContext(entries: KnowledgeBaseEntry[]): string {
   return entries.map(e =>
     `[${e.source}] ${e.content}`
   ).join('\n\n')
+}
+
+// ============= FASTING HELPERS =============
+
+/**
+ * Check if user is currently in their eating window
+ */
+export function isInEatingWindow(eatingWindowStart?: number, eatingWindowEnd?: number): boolean {
+  if (eatingWindowStart === undefined || eatingWindowEnd === undefined) {
+    return true // No fasting configured = always eating window
+  }
+  const currentHour = new Date().getHours()
+  return currentHour >= eatingWindowStart && currentHour < eatingWindowEnd
+}
+
+/**
+ * Get hours until eating window opens
+ */
+export function getHoursUntilEatingWindow(eatingWindowStart?: number): number | undefined {
+  if (eatingWindowStart === undefined) return undefined
+  const currentHour = new Date().getHours()
+  if (currentHour >= eatingWindowStart) return 0
+  return eatingWindowStart - currentHour
+}
+
+/**
+ * Build fasting context from user profile
+ */
+export function buildFastingContext(profile: UserProfile): UserContext['fastingContext'] | undefined {
+  const fasting = profile.lifestyleHabits?.fasting
+  if (!fasting || fasting.schedule === 'none') return undefined
+
+  return {
+    schedule: fasting.schedule,
+    isInEatingWindow: isInEatingWindow(fasting.eatingWindowStart, fasting.eatingWindowEnd),
+    eatingWindowStart: fasting.eatingWindowStart,
+    eatingWindowEnd: fasting.eatingWindowEnd,
+    hoursUntilEatingWindow: getHoursUntilEatingWindow(fasting.eatingWindowStart),
+  }
 }
 
 /**
@@ -440,7 +487,10 @@ export async function getMealRecommendations(
   mealType: MealType,
   targetCalories: number
 ): Promise<MealRecommendation> {
-  const { profile, lastMeals, wellnessData } = context
+  const { profile, lastMeals, wellnessData, fastingContext } = context
+
+  // Check if user is in fasting period - if so, suggest fasting-friendly options
+  const inFastingPeriod = fastingContext && !fastingContext.isInEatingWindow
 
   // Query knowledge base for meal ideas
   const mealTypeTerms: Record<MealType, string> = {
@@ -451,11 +501,14 @@ export async function getMealRecommendations(
   }
 
   const kbEntries = await queryKB(
-    `${mealTypeTerms[mealType]} ${profile.dietType || ''} ${profile.goal}`,
+    `${mealTypeTerms[mealType]} ${profile.dietType || ''} ${profile.goal}${inFastingPeriod ? ' jeune intermittent' : ''}`,
     ['nutrition', 'guidelines']
   )
 
   const kbContext = buildKBContext(kbEntries)
+
+  // Build fasting context for prompt
+  const fastingPromptContext = FASTING_CONTEXT_TEMPLATE(fastingContext)
 
   const prompt = `Tu es LymIA, coach nutrition. Suggere 3 repas adaptes au contexte.
 
@@ -476,6 +529,7 @@ ${lastMeals.slice(0, 5).join(', ') || 'aucun'}
 CONTEXTE BIEN-ETRE:
 - Energie: ${wellnessData.energyLevel || 3}/5
 - Stress: ${wellnessData.stressLevel || 5}/10
+${fastingPromptContext}
 
 CONNAISSANCES:
 ${kbContext}
@@ -485,6 +539,7 @@ INSTRUCTIONS:
 - Respecte STRICTEMENT les allergies et restrictions
 - Adapte au niveau d'energie (si fatigué, repas energisants)
 - Si stress eleve, evite les sucres rapides
+${inFastingPeriod ? `- IMPORTANT: L'utilisateur est en période de JEÛNE. Suggère des boissons sans calories (eau, thé, café noir) ou indique qu'il vaut mieux attendre la fenêtre alimentaire (${fastingContext?.eatingWindowStart}h-${fastingContext?.eatingWindowEnd}h)` : ''}
 
 Reponds en JSON:
 {
@@ -559,10 +614,11 @@ export async function getCoachingAdvice(
   context: UserContext,
   topic?: string
 ): Promise<CoachingAdvice[]> {
-  const { profile, todayNutrition, wellnessData, currentStreak, programProgress } = context
+  const { profile, todayNutrition, wellnessData, currentStreak, programProgress, fastingContext } = context
 
-  // Query relevant knowledge
-  const queryTerms = topic || `conseil ${profile.goal} ${profile.metabolismProfile || ''}`
+  // Query relevant knowledge - include fasting if applicable
+  const fastingTerm = fastingContext?.schedule && fastingContext.schedule !== 'none' ? ' jeune intermittent' : ''
+  const queryTerms = topic || `conseil ${profile.goal} ${profile.metabolismProfile || ''}${fastingTerm}`
   const kbEntries = await queryKB(queryTerms, ['nutrition', 'wellness', 'metabolism', 'sport'])
 
   const kbContext = buildKBContext(kbEntries)
@@ -606,6 +662,7 @@ BIEN-ETRE:
 - Stress: ${wellnessData.stressLevel || '?'}/10
 - Energie: ${wellnessData.energyLevel || '?'}/5
 - Hydratation: ${wellnessData.hydrationLiters || '?'}L
+${FASTING_CONTEXT_TEMPLATE(fastingContext)}
 
 CONNAISSANCES SCIENTIFIQUES:
 ${kbContext}
@@ -1322,7 +1379,7 @@ INSTRUCTIONS:
 export interface ConnectedInsight {
   id: string
   message: string
-  linkedFeatures: Array<'nutrition' | 'sport' | 'sleep' | 'stress' | 'hydration' | 'weight'>
+  linkedFeatures: Array<'nutrition' | 'sport' | 'sleep' | 'stress' | 'hydration' | 'weight' | 'fasting'>
   actionLabel?: string
   actionRoute?: string
   priority: 'high' | 'medium' | 'low'
@@ -1337,11 +1394,12 @@ export interface ConnectedInsight {
 export async function generateConnectedInsights(
   context: UserContext
 ): Promise<ConnectedInsight[]> {
-  const { profile, todayNutrition, wellnessData, programProgress } = context
+  const { profile, todayNutrition, wellnessData, programProgress, fastingContext } = context
 
-  // Query knowledge base for cross-domain relationships
+  // Query knowledge base for cross-domain relationships - include fasting if applicable
+  const fastingTerm = fastingContext?.schedule && fastingContext.schedule !== 'none' ? ' jeune intermittent fenetre alimentaire' : ''
   const kbEntries = await queryKB(
-    `lien sommeil nutrition performance sport stress cortisol metabolisme recuperation`,
+    `lien sommeil nutrition performance sport stress cortisol metabolisme recuperation${fastingTerm}`,
     ['nutrition', 'wellness', 'sport', 'metabolism']
   )
   const kbContext = buildKBContext(kbEntries)
@@ -1388,6 +1446,7 @@ CONTEXTE ACTUEL:
 - Énergie: ${wellnessData.energyLevel || '?'}/5
 - Hydratation: ${wellnessData.hydrationLiters || '?'}L
 ${programProgress ? `- Programme actif: ${programProgress.type}` : ''}
+${FASTING_CONTEXT_TEMPLATE(fastingContext)}
 
 PROFIL:
 - Objectif: ${profile.goal}
@@ -1403,7 +1462,9 @@ Exemples de connexions à faire:
 - "Ton sommeil de 5h va impacter ta faim aujourd'hui → je te propose des repas plus rassasiants"
 - "Ton stress élevé + déficit calorique = risque de craquage → on ajuste tes repas"
 - "Excellente nuit ! Parfait pour ta séance sport → voici un petit-déj adapté"
-- "Tu n'as pas bu assez → ça peut expliquer ta fatigue → hydrate-toi avant le sport"
+- "Hydratation faible aujourd'hui → ça peut expliquer ta fatigue → un verre d'eau avant le sport ?"
+${fastingContext?.schedule && fastingContext.schedule !== 'none' ? `- "Fenêtre de jeûne en cours → parfait pour ta concentration, bois du thé/café noir"
+- "Plus que ${fastingContext.hoursUntilEatingWindow || 2}h avant ta fenêtre alimentaire → prépare un repas protéiné"` : ''}
 
 FORMAT OBLIGATOIRE - Messages courts et connecteurs:
 - Commence par constater un FAIT (donnée)
@@ -1469,7 +1530,27 @@ Réponds en JSON:
  */
 function generateStaticConnectedInsights(context: UserContext): ConnectedInsight[] {
   const insights: ConnectedInsight[] = []
-  const { wellnessData, todayNutrition, profile } = context
+  const { wellnessData, todayNutrition, profile, fastingContext } = context
+
+  // Fasting → Nutrition connection (high priority during fasting)
+  if (fastingContext?.schedule && fastingContext.schedule !== 'none' && !fastingContext.isInEatingWindow) {
+    insights.push({
+      id: `static_fasting_${Date.now()}`,
+      message: `Période de jeûne → ${fastingContext.hoursUntilEatingWindow}h avant ta fenêtre alimentaire, bois du thé/café`,
+      linkedFeatures: ['fasting', 'nutrition'],
+      actionLabel: 'Ajouter eau',
+      priority: 'high',
+      icon: 'tip',
+    })
+  } else if (fastingContext?.schedule && fastingContext.schedule !== 'none' && fastingContext.isInEatingWindow) {
+    insights.push({
+      id: `static_fasting_eating_${Date.now()}`,
+      message: `Fenêtre alimentaire ouverte → concentre tes protéines sur ce repas`,
+      linkedFeatures: ['fasting', 'nutrition'],
+      priority: 'medium',
+      icon: 'tip',
+    })
+  }
 
   // Sleep → Nutrition connection
   if (wellnessData.sleepHours !== undefined && wellnessData.sleepHours < 6) {

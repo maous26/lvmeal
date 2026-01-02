@@ -13,7 +13,6 @@ import {
   Pressable,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { LinearGradient } from 'expo-linear-gradient'
 import {
   Sparkles,
   Bot,
@@ -149,12 +148,9 @@ export function LymIAWidget() {
       {/* Header */}
       <Pressable style={styles.header} onPress={handleOpenCoach}>
         <View style={styles.headerLeft}>
-          <LinearGradient
-            colors={[colors.accent.primary, colors.secondary.primary]}
-            style={styles.headerIcon}
-          >
+          <View style={[styles.headerIcon, { backgroundColor: colors.accent.primary }]}>
             <Bot size={16} color={colors.bg.elevated} />
-          </LinearGradient>
+          </View>
           <Text style={styles.headerTitle}>LymIA Coach</Text>
           {unreadCount > 0 && (
             <View style={styles.badge}>

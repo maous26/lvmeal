@@ -67,7 +67,16 @@ RÈGLES DE RÉPONSE:
 2. CITER les sources avec [numéro] quand fournies
 3. ENCOURAGER sans culpabiliser
 4. Réponses CONCISES (2-4 phrases max)
-5. Si tu n'as pas de source pour une affirmation santé, écris "selon les recommandations générales"`
+5. Si tu n'as pas de source pour une affirmation santé, écris "selon les recommandations générales"
+
+PHILOSOPHIE LYM (NON-NÉGOCIABLE):
+- JAMAIS de verdict journalier ("objectif dépassé", "jour raté") → raisonne sur 7 jours
+- JAMAIS de formulation "Tu n'as pas..." → reformule positivement ("Hydratation faible" au lieu de "Tu n'as pas bu")
+- L'utilisateur N'EST JAMAIS le problème → c'est le contexte ou la méthode ("Période chargée" pas "Tu as échoué")
+- Proposer des MICRO-ACTIONS → pas d'objectifs intimidants
+- Régularité = 3 jours sur 7 c'est déjà bien → revenir après une pause = victoire
+- Le suivi est OPTIONNEL mais VALORISÉ → "même une estimation suffit"
+- Toujours offrir une PORTE DE SORTIE → "On peut ajuster", "On y reviendra"`
 
 // ============= RAG CONTEXT TEMPLATES =============
 
@@ -140,6 +149,52 @@ export const WELLNESS_CONTEXT_TEMPLATE = (data: {
   }
 
   return items.length > 0 ? `DONNÉES BIEN-ÊTRE:\n${items.join('\n')}` : ''
+}
+
+/**
+ * Template pour le contexte jeûne intermittent
+ */
+export const FASTING_CONTEXT_TEMPLATE = (fasting?: {
+  schedule: string
+  isInEatingWindow: boolean
+  eatingWindowStart?: number
+  eatingWindowEnd?: number
+  hoursUntilEatingWindow?: number
+}) => {
+  if (!fasting || fasting.schedule === 'none') {
+    return ''
+  }
+
+  const scheduleLabels: Record<string, string> = {
+    '16_8': 'Jeûne 16:8 (fenêtre 12h-20h)',
+    '18_6': 'Jeûne 18:6 (fenêtre de 6h)',
+    '20_4': 'Jeûne 20:4 (fenêtre de 4h)',
+    'interested': 'Intéressé par le jeûne intermittent',
+  }
+
+  const items: string[] = []
+  items.push(`- Protocol: ${scheduleLabels[fasting.schedule] || fasting.schedule}`)
+
+  if (fasting.eatingWindowStart !== undefined && fasting.eatingWindowEnd !== undefined) {
+    items.push(`- Fenêtre alimentaire: ${fasting.eatingWindowStart}h - ${fasting.eatingWindowEnd}h`)
+  }
+
+  if (fasting.isInEatingWindow) {
+    items.push(`- Statut actuel: ✓ Dans la fenêtre alimentaire`)
+  } else {
+    items.push(`- Statut actuel: ⏳ Période de jeûne`)
+    if (fasting.hoursUntilEatingWindow) {
+      items.push(`- Prochain repas dans: ~${fasting.hoursUntilEatingWindow}h`)
+    }
+  }
+
+  return `JEÛNE INTERMITTENT:\n${items.join('\n')}
+
+INSTRUCTIONS SPÉCIALES JEÛNE:
+- Ne PAS proposer de petit-déjeuner si la fenêtre commence à 12h ou plus tard
+- Pendant la période de jeûne: encourager eau, thé, café noir
+- Adapter les rappels de repas à la fenêtre alimentaire
+- Si l'utilisateur est curieux: proposer une introduction progressive au 16:8`
 }
 
 // ============= TASK-SPECIFIC PROMPTS =============

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { colors, radius, spacing, typography } from '../../constants/theme'
-import type { UserProfile, LifestyleHabits } from '../../types'
+import type { UserProfile, LifestyleHabits, FastingSchedule, FastingConfig } from '../../types'
 
 interface StepLifestyleProps {
   data: Partial<UserProfile>
@@ -38,6 +38,13 @@ const waterOptions = [
   { value: 2.5, label: '2.5L+', emoji: '🌊🌊' },
 ]
 
+const fastingOptions: { value: FastingSchedule; label: string; emoji: string; description: string; window?: { start: number; end: number } }[] = [
+  { value: 'none', label: 'Non', emoji: '🍽️', description: 'Je mange quand j\'ai faim' },
+  { value: '16_8', label: '16:8', emoji: '⏰', description: 'Je saute le petit-dej', window: { start: 12, end: 20 } },
+  { value: '18_6', label: '18:6', emoji: '🕐', description: 'Fenetre de 6h', window: { start: 12, end: 18 } },
+  { value: 'interested', label: 'Curieux', emoji: '🤔', description: 'J\'aimerais essayer' },
+]
+
 export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
   const [habits, setHabits] = useState<Partial<LifestyleHabits>>(data.lifestyleHabits || {})
 
@@ -48,6 +55,16 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       ...data,
       lifestyleHabits: updated as LifestyleHabits,
     })
+  }
+
+  const updateFasting = (schedule: FastingSchedule) => {
+    const option = fastingOptions.find(o => o.value === schedule)
+    const fastingConfig: FastingConfig = {
+      schedule,
+      eatingWindowStart: option?.window?.start,
+      eatingWindowEnd: option?.window?.end,
+    }
+    updateHabits({ fasting: fastingConfig })
   }
 
   return (
@@ -169,6 +186,35 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
           })}
         </View>
       </View>
+
+      {/* Intermittent Fasting */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>⏱️</Text>
+          <Text style={styles.sectionTitle}>Tu pratiques le jeune intermittent ?</Text>
+        </View>
+        <View style={styles.fastingGrid}>
+          {fastingOptions.map((option) => {
+            const isSelected = habits.fasting?.schedule === option.value
+
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => updateFasting(option.value)}
+                style={[styles.fastingOption, isSelected && styles.fastingOptionSelected]}
+              >
+                <Text style={styles.fastingEmoji}>{option.emoji}</Text>
+                <View style={styles.fastingContent}>
+                  <Text style={[styles.fastingLabel, isSelected && styles.fastingLabelSelected]}>
+                    {option.label}
+                  </Text>
+                  <Text style={styles.fastingDescription}>{option.description}</Text>
+                </View>
+              </Pressable>
+            )
+          })}
+        </View>
+      </View>
     </View>
   )
 }
@@ -176,6 +222,7 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
 const styles = StyleSheet.create({
   container: {
     gap: spacing.xl,
+    paddingBottom: 100, // Extra space for scrolling to see fasting section
   },
   intro: {
     flexDirection: 'row',
@@ -312,6 +359,43 @@ const styles = StyleSheet.create({
     color: '#F43F5E',
   },
   stressDescription: {
+    ...typography.caption,
+    color: colors.text.tertiary,
+  },
+  fastingGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  fastingOption: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+    gap: spacing.md,
+  },
+  fastingOptionSelected: {
+    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  fastingEmoji: {
+    fontSize: 24,
+  },
+  fastingContent: {
+    flex: 1,
+  },
+  fastingLabel: {
+    ...typography.smallMedium,
+    color: colors.text.primary,
+  },
+  fastingLabelSelected: {
+    color: '#F59E0B',
+  },
+  fastingDescription: {
     ...typography.caption,
     color: colors.text.tertiary,
   },

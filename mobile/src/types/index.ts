@@ -41,11 +41,25 @@ export type MealSource = 'manual' | 'photo' | 'voice' | 'barcode' | 'ai' | 'reci
 // LIFESTYLE & METABOLISM
 // =============================================================================
 
+export type FastingSchedule =
+  | 'none'       // No fasting - eat whenever hungry
+  | '16_8'       // 16:8 - Skip breakfast, eat 12pm-8pm
+  | '18_6'       // 18:6 - Eat within 6h window
+  | '20_4'       // 20:4 (Warrior) - Eat within 4h window
+  | 'interested' // Curious to try
+
+export interface FastingConfig {
+  schedule: FastingSchedule
+  eatingWindowStart?: number  // Hour (0-23), e.g. 12 for noon
+  eatingWindowEnd?: number    // Hour (0-23), e.g. 20 for 8pm
+}
+
 export interface LifestyleHabits {
   averageSleepHours: number
   sleepQualityPerception: 'poor' | 'average' | 'good' | 'excellent'
   stressLevelDaily: 'low' | 'moderate' | 'high' | 'very_high'
   waterIntakeDaily: number // in liters
+  fasting?: FastingConfig  // Intermittent fasting settings
 }
 
 export interface MetabolismFactors {

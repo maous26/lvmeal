@@ -220,7 +220,7 @@ function generateItemsFromContext(context: CoachContext): CoachItem[] {
           type: 'alert',
           category: 'nutrition',
           title: 'Calories',
-          message: `Objectif dépassé de ${Math.round((ratio - 1) * 100)}%. Pas de panique ! Un écart occasionnel ne change rien. Demain est une nouvelle journée.`,
+          message: `Journée plus généreuse (+${Math.round((ratio - 1) * 100)}%). C'est OK ! Sur 7 jours, un écart ne change rien. On continue ensemble.`,
           priority: 'medium',
           source: 'expert',
           isRead: false,
