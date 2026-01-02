@@ -440,10 +440,11 @@ export default function RecipeDetailScreen() {
               fill={isRecipeFavorite(recipe.id) ? colors.error : 'transparent'}
             />
             <Text
-              style={[
-                styles.buttonText,
-                isRecipeFavorite(recipe.id) && { color: colors.error },
-              ]}
+              style={
+                isRecipeFavorite(recipe.id)
+                  ? [styles.buttonTextOutline, { color: colors.error }]
+                  : styles.buttonText
+              }
             >
               {isRecipeFavorite(recipe.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             </Text>
@@ -695,6 +696,11 @@ const styles = StyleSheet.create({
   buttonText: {
     ...typography.bodyMedium,
     color: '#FFFFFF',
+    marginLeft: spacing.sm,
+  },
+  buttonTextOutline: {
+    ...typography.bodyMedium,
+    color: colors.text.primary,
     marginLeft: spacing.sm,
   },
   bottomSpacer: {
