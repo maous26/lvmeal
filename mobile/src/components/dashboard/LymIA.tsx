@@ -70,7 +70,7 @@ export function LymIA({ className }: LymIAProps) {
   const { getDailyNutrition, getMealsForDate, getHydration } = useMealsStore()
   const { getStreakInfo } = useGamificationStore()
   const { currentProgram, currentStreak: sportStreak, getPhaseProgress, totalSessionsCompleted } = useSportProgramStore()
-  const { getTotalBalance, getCurrentDayIndex, canHavePlaisir } = useCaloricBankStore()
+  const { getTotalBalance, getCurrentDayIndex, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals, canUsePlaisirMeal } = useCaloricBankStore()
 
   const [dismissedMessages, setDismissedMessages] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
@@ -119,6 +119,10 @@ export function LymIA({ className }: LymIAProps) {
   const caloricBalance = getTotalBalance()
   const currentDayIndex = getCurrentDayIndex()
   const canHavePlaisirToday = canHavePlaisir()
+  const maxPerMeal = getMaxPlaisirPerMeal()
+  const needsSplit = requiresSplitConsumption()
+  const remainingPlaisirMeals = getRemainingPlaisirMeals()
+  const canStillUsePlaisir = canUsePlaisirMeal()
 
   const sportPhase = getPhaseProgress()
   const isSportEnabled = profile?.sportTrackingEnabled || isAdaptive
@@ -241,14 +245,47 @@ export function LymIA({ className }: LymIAProps) {
     }
 
     // Plaisir message when available
-    if (canHavePlaisirToday && caloricBalance > 200) {
+    if (canHavePlaisirToday && caloricBalance > 200 && canStillUsePlaisir) {
+      let plaisirMessage: string
+      let plaisirTitle: string
+
+      if (needsSplit) {
+        // Budget conséquent - 2 repas plaisir possibles
+        if (remainingPlaisirMeals === 2) {
+          plaisirTitle = 'Tes 2 repas plaisir de la semaine !'
+          plaisirMessage = `+${maxPerMeal} kcal bonus par repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+        } else {
+          plaisirTitle = 'Ton repas plaisir de la semaine !'
+          plaisirMessage = `+${maxPerMeal} kcal bonus. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
+        }
+      } else {
+        // Budget normal
+        if (remainingPlaisirMeals === 2) {
+          plaisirTitle = 'Ton repas plaisir de la semaine !'
+          plaisirMessage = `+${caloricBalance} kcal bonus. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+        } else {
+          plaisirTitle = 'Dernier repas plaisir !'
+          plaisirMessage = `+${caloricBalance} kcal pour te faire vraiment plaisir.`
+        }
+      }
+
       messages.push({
         id: 'plaisir-available',
         type: 'celebration',
         icon: <Sparkles size={20} color="#D946EF" />,
-        title: 'Solde Plaisir disponible !',
-        message: `Tu as ${caloricBalance} kcal en banque. Accorde-toi un petit extra si tu le souhaites !`,
+        title: plaisirTitle,
+        message: plaisirMessage,
         priority: 75,
+      })
+    } else if (canHavePlaisirToday && caloricBalance > 200 && !canStillUsePlaisir) {
+      // On a du budget mais déjà utilisé les 2 repas plaisir
+      messages.push({
+        id: 'plaisir-used',
+        type: 'tip',
+        icon: <Sparkles size={20} color="#D946EF" />,
+        title: 'Repas plaisir utilisés',
+        message: `Tu as déjà profité de tes 2 repas plaisir cette semaine. Nouvelle semaine, nouveaux plaisirs !`,
+        priority: 40,
       })
     }
 
