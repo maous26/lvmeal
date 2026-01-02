@@ -19,6 +19,7 @@ import MealSourceSettingsScreen from '../screens/MealSourceSettingsScreen'
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
 import MealInputSettingsScreen from '../screens/MealInputSettingsScreen'
 import ScaleSettingsScreen from '../screens/ScaleSettingsScreen'
+import BackupSettingsScreen from '../screens/BackupSettingsScreen'
 import { useUserStore } from '../stores/user-store'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
@@ -65,6 +66,7 @@ export type RootStackParamList = {
   NotificationSettings: undefined
   MealInputSettings: undefined
   ScaleSettings: undefined
+  BackupSettings: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -205,6 +207,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="ScaleSettings"
             component={ScaleSettingsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="BackupSettings"
+            component={BackupSettingsScreen}
             options={{
               animation: 'slide_from_right',
             }}

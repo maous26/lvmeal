@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { MockHomePreview } from './MockHomePreview'
 
 const { width, height } = Dimensions.get('window')
 
@@ -31,6 +32,8 @@ interface BenefitSlide {
   subtitle: string
   description: string
   imagePlaceholder: string
+  image?: any // Optional real image
+  useMockPreview?: boolean // Use MockHomePreview instead of image
   accentColor: string
 }
 
@@ -54,6 +57,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       description:
         "Prends en photo ton repas, dicte-le à la voix ou scanne un code-barre. LymIA fait le reste et calcule tout pour toi.",
       imagePlaceholder: 'Photo de quelqu\'un prenant en photo son assiette',
+      image: require('../../../assets/photo2.jpg'),
       accentColor: colors.accent.primary,
     },
     {
@@ -64,6 +68,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       description:
         "Tes objectifs, ton rythme, tes goûts. Notre IA apprend de toi pour t'accompagner au quotidien avec des conseils vraiment adaptés.",
       imagePlaceholder: 'Photo d\'un coach bienveillant ou interface personnalisée',
+      useMockPreview: true, // Use mock tracking screen
       accentColor: '#A855F7', // Purple
     },
     {
@@ -84,6 +89,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       description:
         "Finis les régimes yo-yo. Notre approche progressive et personnalisée t'aide à construire des habitudes qui durent.",
       imagePlaceholder: 'Photo de transformation positive ou graphique de progression',
+      image: require('../../../assets/photo3.jpeg'),
       accentColor: colors.success,
     },
   ]
@@ -102,23 +108,36 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
 
   const renderSlide = ({ item, index }: { item: BenefitSlide; index: number }) => (
     <View style={[styles.slide, { width }]}>
-      {/* Image placeholder */}
+      {/* Image, MockPreview, or placeholder */}
       <View style={styles.imageContainer}>
-        <LinearGradient
-          colors={[item.accentColor + '20', item.accentColor + '40']}
-          style={styles.imagePlaceholder}
-        >
-          <View style={styles.placeholderContent}>
-            <View style={[styles.iconCircle, { backgroundColor: item.accentColor }]}>
-              {item.icon}
-            </View>
-            <Text style={[styles.placeholderText, { color: item.accentColor }]}>
-              {item.imagePlaceholder}
-            </Text>
+        {item.useMockPreview ? (
+          <View style={styles.mockPreviewContainer}>
+            <MockHomePreview />
           </View>
-        </LinearGradient>
+        ) : item.image ? (
+          <Image
+            source={item.image}
+            style={styles.slideImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <LinearGradient
+            colors={[item.accentColor + '20', item.accentColor + '40']}
+            style={styles.imagePlaceholder}
+          >
+            <View style={styles.placeholderContent}>
+              <View style={[styles.iconCircle, { backgroundColor: item.accentColor }]}>
+                {item.icon}
+              </View>
+              <Text style={[styles.placeholderText, { color: item.accentColor }]}>
+                {item.imagePlaceholder}
+              </Text>
+            </View>
+          </LinearGradient>
+        )}
         <LinearGradient
-          colors={['transparent', colors.bg.primary]}
+          colors={['transparent', 'rgba(255,255,255,0.3)', colors.bg.primary]}
+          locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
       </View>
@@ -244,6 +263,16 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: height * 0.45,
     position: 'relative',
+  },
+  slideImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mockPreviewContainer: {
+    flex: 1,
+    transform: [{ scale: 0.85 }],
+    borderRadius: radius.lg,
+    overflow: 'hidden',
   },
   imagePlaceholder: {
     flex: 1,

@@ -18,6 +18,7 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  Modal,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -30,6 +31,8 @@ import {
   Heart,
   Star,
   Sparkles,
+  X,
+  Check,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -61,6 +64,69 @@ const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
   { id: 'dinner', label: 'Dîner' },
 ]
 
+// Advanced filter options for the modal
+const CALORIE_RANGES = [
+  { id: 'any', label: 'Toutes', min: 0, max: 9999 },
+  { id: 'light', label: '< 300 kcal', min: 0, max: 300 },
+  { id: 'moderate', label: '300-500 kcal', min: 300, max: 500 },
+  { id: 'hearty', label: '> 500 kcal', min: 500, max: 9999 },
+]
+
+const PREP_TIME_RANGES = [
+  { id: 'any', label: 'Tous', max: 9999 },
+  { id: 'quick', label: '< 15 min', max: 15 },
+  { id: 'medium', label: '15-30 min', max: 30 },
+  { id: 'long', label: '> 30 min', max: 9999, min: 30 },
+]
+
+const DIFFICULTY_OPTIONS = [
+  { id: 'any', label: 'Tous', emoji: '👨‍🍳' },
+  { id: 'easy', label: 'Facile', emoji: '😊' },
+  { id: 'medium', label: 'Moyen', emoji: '👍' },
+  { id: 'hard', label: 'Difficile', emoji: '💪' },
+]
+
+const DIET_OPTIONS = [
+  { id: 'highprotein', label: 'Riche en protéines', emoji: '💪', filter: (r: Recipe) => (r.nutritionPerServing?.proteins || 0) >= 25 },
+  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', filter: (r: Recipe) => (r.nutritionPerServing?.carbs || 0) < 30 },
+  { id: 'lowfat', label: 'Pauvre en graisses', emoji: '🥗', filter: (r: Recipe) => (r.nutritionPerServing?.fats || 0) < 15 },
+  { id: 'balanced', label: 'Équilibré', emoji: '⚖️', filter: (r: Recipe) => {
+    const p = r.nutritionPerServing?.proteins || 0
+    const c = r.nutritionPerServing?.carbs || 0
+    const f = r.nutritionPerServing?.fats || 0
+    return p >= 15 && p <= 35 && c >= 30 && c <= 60 && f >= 10 && f <= 30
+  }},
+]
+
+const SERVINGS_OPTIONS = [
+  { id: 'any', label: 'Tous', min: 0, max: 99 },
+  { id: 'solo', label: '1-2 pers.', min: 1, max: 2 },
+  { id: 'couple', label: '3-4 pers.', min: 3, max: 4 },
+  { id: 'family', label: '5+ pers.', min: 5, max: 99 },
+]
+
+// Seeded random shuffle for daily rotation
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const result = [...array]
+  let m = result.length
+  while (m) {
+    const i = Math.floor(seededRandom(seed + m) * m--)
+    ;[result[m], result[i]] = [result[i], result[m]]
+  }
+  return result
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9999) * 10000
+  return x - Math.floor(x)
+}
+
+// Get daily seed (changes every day at midnight)
+function getDailySeed(): number {
+  const now = new Date()
+  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
+}
+
 export default function RecipesScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
@@ -74,6 +140,17 @@ export default function RecipesScreen() {
   const [isLoading, setIsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
+
+  // Advanced filters modal
+  const [showFiltersModal, setShowFiltersModal] = useState(false)
+  const [calorieFilter, setCalorieFilter] = useState('any')
+  const [prepTimeFilter, setPrepTimeFilter] = useState('any')
+  const [difficultyFilter, setDifficultyFilter] = useState('any')
+  const [dietFilters, setDietFilters] = useState<string[]>([])
+  const [servingsFilter, setServingsFilter] = useState('any')
+
+  // Daily seed for rotation (changes each day)
+  const [dailySeed] = useState(() => getDailySeed())
 
   // Load recipes on mount
   useEffect(() => {
@@ -164,43 +241,124 @@ export default function RecipesScreen() {
     })
   }
 
-  // Filtered recipes based on selected category
-  const filteredRecipes = useMemo(() => {
-    return filterByCategory(allRecipes, selectedCategory)
-  }, [allRecipes, selectedCategory, filterByCategory])
+  // Apply advanced filters (calories, prep time, difficulty, diet, servings)
+  const applyAdvancedFilters = useCallback((recipes: Recipe[]): Recipe[] => {
+    let result = recipes
 
-  // Group recipes by categories (with deduplication)
+    // Calorie filter
+    if (calorieFilter !== 'any') {
+      const range = CALORIE_RANGES.find(r => r.id === calorieFilter)
+      if (range) {
+        result = result.filter(r => {
+          const cals = r.nutritionPerServing?.calories || 0
+          return cals >= range.min && cals <= range.max
+        })
+      }
+    }
+
+    // Prep time filter
+    if (prepTimeFilter !== 'any') {
+      const range = PREP_TIME_RANGES.find(r => r.id === prepTimeFilter)
+      if (range) {
+        result = result.filter(r => {
+          const time = r.prepTime || 0
+          if (range.min !== undefined) {
+            return time >= range.min
+          }
+          return time <= range.max
+        })
+      }
+    }
+
+    // Difficulty filter
+    if (difficultyFilter !== 'any') {
+      result = result.filter(r => r.difficulty === difficultyFilter)
+    }
+
+    // Diet filters (multiple selection - recipe must match ALL selected)
+    if (dietFilters.length > 0) {
+      result = result.filter(recipe => {
+        return dietFilters.every(filterId => {
+          const dietOption = DIET_OPTIONS.find(d => d.id === filterId)
+          return dietOption ? dietOption.filter(recipe) : true
+        })
+      })
+    }
+
+    // Servings filter
+    if (servingsFilter !== 'any') {
+      const range = SERVINGS_OPTIONS.find(r => r.id === servingsFilter)
+      if (range) {
+        result = result.filter(r => {
+          const servings = r.servings || 2
+          return servings >= range.min && servings <= range.max
+        })
+      }
+    }
+
+    return result
+  }, [calorieFilter, prepTimeFilter, difficultyFilter, dietFilters, servingsFilter])
+
+  // Check if any advanced filter is active
+  const hasAdvancedFilters = calorieFilter !== 'any' || prepTimeFilter !== 'any' ||
+    difficultyFilter !== 'any' || dietFilters.length > 0 || servingsFilter !== 'any'
+
+  // Count active filters for badge
+  const activeFilterCount =
+    (calorieFilter !== 'any' ? 1 : 0) +
+    (prepTimeFilter !== 'any' ? 1 : 0) +
+    (difficultyFilter !== 'any' ? 1 : 0) +
+    dietFilters.length +
+    (servingsFilter !== 'any' ? 1 : 0)
+
+  // Filtered recipes based on selected category + advanced filters
+  const filteredRecipes = useMemo(() => {
+    let recipes = filterByCategory(allRecipes, selectedCategory)
+    recipes = applyAdvancedFilters(recipes)
+    return recipes
+  }, [allRecipes, selectedCategory, filterByCategory, applyAdvancedFilters])
+
+  // Group recipes by categories (with deduplication and daily rotation)
   const breakfastRecipes = useMemo(() => {
     const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 150 && cals <= 500
     })
-    return deduplicateRecipes(filtered).slice(0, 10)
-  }, [filteredRecipes])
+    const unique = deduplicateRecipes(filtered)
+    // Rotate based on daily seed (different offset for each section)
+    const shuffled = seededShuffle(unique, dailySeed + 1)
+    return shuffled.slice(0, 10)
+  }, [filteredRecipes, dailySeed])
 
   const lunchRecipes = useMemo(() => {
     const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 400 && cals <= 800
     })
-    return deduplicateRecipes(filtered).slice(0, 10)
-  }, [filteredRecipes])
+    const unique = deduplicateRecipes(filtered)
+    const shuffled = seededShuffle(unique, dailySeed + 2)
+    return shuffled.slice(0, 10)
+  }, [filteredRecipes, dailySeed])
 
   const snackRecipes = useMemo(() => {
     const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 50 && cals <= 300
     })
-    return deduplicateRecipes(filtered).slice(0, 10)
-  }, [filteredRecipes])
+    const unique = deduplicateRecipes(filtered)
+    const shuffled = seededShuffle(unique, dailySeed + 3)
+    return shuffled.slice(0, 10)
+  }, [filteredRecipes, dailySeed])
 
   const dinnerRecipes = useMemo(() => {
     const filtered = filteredRecipes.filter(r => {
       const cals = r.nutritionPerServing?.calories || 0
       return cals >= 350 && cals <= 700
     })
-    return deduplicateRecipes(filtered).slice(0, 10)
-  }, [filteredRecipes])
+    const unique = deduplicateRecipes(filtered)
+    const shuffled = seededShuffle(unique, dailySeed + 4)
+    return shuffled.slice(0, 10)
+  }, [filteredRecipes, dailySeed])
 
   // Search results
   const searchResults = useMemo(() => {
@@ -372,8 +530,25 @@ export default function RecipesScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
-        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}>
-          <SlidersHorizontal size={20} color={colors.accent.primary} />
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            { backgroundColor: colors.bg.elevated, borderColor: colors.border.light },
+            hasAdvancedFilters && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+          ]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            setShowFiltersModal(true)
+          }}
+        >
+          <SlidersHorizontal size={20} color={hasAdvancedFilters ? colors.accent.primary : colors.text.muted} />
+          {hasAdvancedFilters && (
+            <View style={[styles.filterBadge, { backgroundColor: colors.accent.primary }]}>
+              <Text style={styles.filterBadgeText}>
+                {activeFilterCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -505,6 +680,232 @@ export default function RecipesScreen() {
           <View style={{ height: spacing['3xl'] }} />
         </ScrollView>
       )}
+
+      {/* Advanced Filters Modal */}
+      <Modal
+        visible={showFiltersModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFiltersModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.bg.primary }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Filtres avancés</Text>
+              <TouchableOpacity
+                onPress={() => setShowFiltersModal(false)}
+                style={[styles.modalCloseButton, { backgroundColor: colors.bg.secondary }]}
+              >
+                <X size={20} color={colors.text.secondary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.modalScrollView}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Calorie Filter */}
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterSectionTitle, { color: colors.text.secondary }]}>CALORIES</Text>
+                <View style={styles.filterOptions}>
+                  {CALORIE_RANGES.map(range => (
+                    <TouchableOpacity
+                      key={range.id}
+                      style={[
+                        styles.filterOption,
+                        { backgroundColor: colors.bg.secondary, borderColor: colors.border.light },
+                        calorieFilter === range.id && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setCalorieFilter(range.id)
+                      }}
+                    >
+                      <Text style={[
+                        styles.filterOptionText,
+                        { color: colors.text.primary },
+                        calorieFilter === range.id && { color: colors.accent.primary, fontWeight: '600' }
+                      ]}>
+                        {range.label}
+                      </Text>
+                      {calorieFilter === range.id && (
+                        <Check size={16} color={colors.accent.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Prep Time Filter */}
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterSectionTitle, { color: colors.text.secondary }]}>TEMPS DE PRÉPARATION</Text>
+                <View style={styles.filterOptions}>
+                  {PREP_TIME_RANGES.map(range => (
+                    <TouchableOpacity
+                      key={range.id}
+                      style={[
+                        styles.filterOption,
+                        { backgroundColor: colors.bg.secondary, borderColor: colors.border.light },
+                        prepTimeFilter === range.id && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setPrepTimeFilter(range.id)
+                      }}
+                    >
+                      <Text style={[
+                        styles.filterOptionText,
+                        { color: colors.text.primary },
+                        prepTimeFilter === range.id && { color: colors.accent.primary, fontWeight: '600' }
+                      ]}>
+                        {range.label}
+                      </Text>
+                      {prepTimeFilter === range.id && (
+                        <Check size={16} color={colors.accent.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Difficulty Filter */}
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterSectionTitle, { color: colors.text.secondary }]}>DIFFICULTÉ</Text>
+                <View style={styles.filterOptions}>
+                  {DIFFICULTY_OPTIONS.map(option => (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={[
+                        styles.filterOption,
+                        { backgroundColor: colors.bg.secondary, borderColor: colors.border.light },
+                        difficultyFilter === option.id && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setDifficultyFilter(option.id)
+                      }}
+                    >
+                      <Text style={styles.filterOptionEmoji}>{option.emoji}</Text>
+                      <Text style={[
+                        styles.filterOptionText,
+                        { color: colors.text.primary },
+                        difficultyFilter === option.id && { color: colors.accent.primary, fontWeight: '600' }
+                      ]}>
+                        {option.label}
+                      </Text>
+                      {difficultyFilter === option.id && (
+                        <Check size={16} color={colors.accent.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Diet/Nutrition Filter (Multi-select) */}
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterSectionTitle, { color: colors.text.secondary }]}>PROFIL NUTRITIONNEL</Text>
+                <Text style={[styles.filterSectionHint, { color: colors.text.muted }]}>Sélection multiple possible</Text>
+                <View style={styles.filterOptions}>
+                  {DIET_OPTIONS.map(option => {
+                    const isSelected = dietFilters.includes(option.id)
+                    return (
+                      <TouchableOpacity
+                        key={option.id}
+                        style={[
+                          styles.filterOption,
+                          { backgroundColor: colors.bg.secondary, borderColor: colors.border.light },
+                          isSelected && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+                        ]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                          setDietFilters(prev =>
+                            isSelected
+                              ? prev.filter(id => id !== option.id)
+                              : [...prev, option.id]
+                          )
+                        }}
+                      >
+                        <Text style={styles.filterOptionEmoji}>{option.emoji}</Text>
+                        <Text style={[
+                          styles.filterOptionText,
+                          { color: colors.text.primary },
+                          isSelected && { color: colors.accent.primary, fontWeight: '600' }
+                        ]}>
+                          {option.label}
+                        </Text>
+                        {isSelected && (
+                          <Check size={16} color={colors.accent.primary} />
+                        )}
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
+              </View>
+
+              {/* Servings Filter */}
+              <View style={styles.filterSection}>
+                <Text style={[styles.filterSectionTitle, { color: colors.text.secondary }]}>NOMBRE DE PORTIONS</Text>
+                <View style={styles.filterOptions}>
+                  {SERVINGS_OPTIONS.map(option => (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={[
+                        styles.filterOption,
+                        { backgroundColor: colors.bg.secondary, borderColor: colors.border.light },
+                        servingsFilter === option.id && { backgroundColor: colors.accent.primary + '20', borderColor: colors.accent.primary }
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setServingsFilter(option.id)
+                      }}
+                    >
+                      <Text style={[
+                        styles.filterOptionText,
+                        { color: colors.text.primary },
+                        servingsFilter === option.id && { color: colors.accent.primary, fontWeight: '600' }
+                      ]}>
+                        {option.label}
+                      </Text>
+                      {servingsFilter === option.id && (
+                        <Check size={16} color={colors.accent.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ height: spacing.xl }} />
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.resetButton, { borderColor: colors.border.medium }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  setCalorieFilter('any')
+                  setPrepTimeFilter('any')
+                  setDifficultyFilter('any')
+                  setDietFilters([])
+                  setServingsFilter('any')
+                }}
+              >
+                <Text style={[styles.resetButtonText, { color: colors.text.secondary }]}>Réinitialiser</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.applyButton, { backgroundColor: colors.accent.primary }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                  setShowFiltersModal(false)
+                }}
+              >
+                <Text style={styles.applyButtonText}>Appliquer ({activeFilterCount})</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -703,6 +1104,115 @@ const styles = StyleSheet.create({
   },
   clearFilterText: {
     ...typography.small,
+    fontWeight: '600',
+  },
+  // Filter button badge
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing.default,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing['3xl'],
+    maxHeight: '85%',
+  },
+  modalScrollView: {
+    flexGrow: 0,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  modalTitle: {
+    ...typography.h3,
+    fontWeight: '600',
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterSection: {
+    marginBottom: spacing.xl,
+  },
+  filterSectionTitle: {
+    ...typography.caption,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+  },
+  filterSectionHint: {
+    ...typography.small,
+    marginBottom: spacing.sm,
+  },
+  filterOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  filterOptionText: {
+    ...typography.body,
+  },
+  filterOptionEmoji: {
+    fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  resetButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  resetButtonText: {
+    ...typography.bodyMedium,
+  },
+  applyButton: {
+    flex: 2,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    ...typography.bodyMedium,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 })

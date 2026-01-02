@@ -26,24 +26,18 @@ export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      {/* Hero Image Placeholder */}
+      {/* Hero Image */}
       <View style={styles.imageContainer}>
-        <LinearGradient
-          colors={[colors.accent.light, colors.accent.muted]}
-          style={styles.imagePlaceholder}
-        >
-          {/* Placeholder - Tu remplaceras par ta vraie photo */}
-          <View style={styles.placeholderContent}>
-            <Text style={styles.placeholderEmoji}>🍽️</Text>
-            <Text style={[styles.placeholderText, { color: colors.accent.primary }]}>
-              Photo de personnes souriantes autour d'un repas
-            </Text>
-          </View>
-        </LinearGradient>
+        <Image
+          source={require('../../../assets/Photo1.jpg')}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
 
         {/* Gradient overlay for text readability */}
         <LinearGradient
-          colors={['transparent', colors.bg.primary]}
+          colors={['transparent', 'rgba(255,255,255,0.3)', colors.bg.primary]}
+          locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
       </View>
@@ -114,23 +108,9 @@ const styles = StyleSheet.create({
     height: height * 0.45,
     position: 'relative',
   },
-  imagePlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderContent: {
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  placeholderEmoji: {
-    fontSize: 80,
-    marginBottom: spacing.md,
-  },
-  placeholderText: {
-    ...typography.small,
-    textAlign: 'center',
-    fontStyle: 'italic',
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
   imageOverlay: {
     position: 'absolute',

@@ -66,26 +66,53 @@ export interface GoogleUserInfo {
  * Custom hook for Google Sign-In with Expo
  *
  * IMPORTANT: Add this redirect URI in Google Cloud Console:
- * https://auth.expo.io/@maous/presence
+ * https://auth.expo.io/@maous1/presence
  *
  * Usage:
  * const [request, response, promptAsync] = useGoogleAuthConfig()
  * <Button onPress={() => promptAsync()} disabled={!request}>Sign in</Button>
  */
 export function useGoogleAuthConfig() {
-  // Debug info
-  if (__DEV__) {
-    console.log('[GoogleAuth] Is Expo Go:', isExpoGo)
-    console.log('[GoogleAuth] Platform:', Platform.OS)
+  // Debug: Log all config at startup
+  console.log('[GoogleAuth] ========== CONFIG DEBUG ==========')
+  console.log('[GoogleAuth] Is Expo Go:', isExpoGo)
+  console.log('[GoogleAuth] Platform:', Platform.OS)
+  console.log('[GoogleAuth] Web Client ID:', GOOGLE_WEB_CLIENT_ID ? `${GOOGLE_WEB_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
+  console.log('[GoogleAuth] iOS Client ID:', GOOGLE_IOS_CLIENT_ID ? `${GOOGLE_IOS_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
+  console.log('[GoogleAuth] Android Client ID:', GOOGLE_ANDROID_CLIENT_ID ? `${GOOGLE_ANDROID_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
+  console.log('[GoogleAuth] Expected Redirect URI: https://auth.expo.io/@maous1/presence')
+  console.log('[GoogleAuth] =====================================')
+
+  // In Expo Go, we MUST use the Web Client ID with the Expo proxy redirect URI
+  // because native iOS/Android Client IDs don't support the Expo proxy.
+  // In production builds (not Expo Go), we use the native Client IDs.
+  const expoRedirectUri = 'https://auth.expo.io/@maous1/presence'
+
+  const result = Google.useAuthRequest({
+    // In Expo Go: use Web Client ID only (it has the Expo redirect URI configured)
+    // In production: use platform-specific Client IDs
+    clientId: isExpoGo ? GOOGLE_WEB_CLIENT_ID : undefined,
+    webClientId: isExpoGo ? undefined : GOOGLE_WEB_CLIENT_ID,
+    iosClientId: isExpoGo ? undefined : GOOGLE_IOS_CLIENT_ID,
+    androidClientId: isExpoGo ? undefined : GOOGLE_ANDROID_CLIENT_ID,
+    scopes: ['openid', 'profile', 'email'],
+    redirectUri: isExpoGo ? expoRedirectUri : undefined,
+  })
+
+  // Debug: Log the generated request
+  const [request, response] = result
+  if (request) {
+    console.log('[GoogleAuth] Auth Request URL:', request.url)
+    console.log('[GoogleAuth] Redirect URI used:', request.redirectUri)
+  }
+  if (response) {
+    console.log('[GoogleAuth] Response type:', response.type)
+    if (response.type === 'error') {
+      console.error('[GoogleAuth] Error:', response.error)
+    }
   }
 
-  // expo-auth-session's Google provider handles redirect URIs automatically
-  return Google.useAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    scopes: ['openid', 'profile', 'email'],
-  })
+  return result
 }
 
 // ============================================================================

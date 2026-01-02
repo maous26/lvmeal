@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { View, StyleSheet, SafeAreaView } from 'react-native'
+import Constants from 'expo-constants'
 import {
   OnboardingLayout,
   StepWelcome,
@@ -86,10 +87,16 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
   },
 }
 
+// Check if running in Expo Go (OAuth doesn't work reliably in Expo Go)
+const isExpoGo = Constants.appOwnership === 'expo'
+
 // Base steps for FULL onboarding - conditional steps are inserted dynamically
 // Flow: welcome (marketing) → setup-choice → basic-info → ... → analysis → cloud-sync
 // Quick mode: welcome → setup-choice → quick-setup (no cloud-sync)
-const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
+// Note: cloud-sync is skipped in Expo Go because OAuth doesn't work reliably
+const baseSteps: OnboardingStep[] = isExpoGo
+  ? ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis']
+  : ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
@@ -347,8 +354,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   }, [profile, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
 
   const handleNext = useCallback(async () => {
-    // Analysis step: just move to cloud-sync
+    // Analysis step: in Expo Go finalize directly, otherwise go to cloud-sync
     if (currentStep === 'analysis') {
+      if (isExpoGo) {
+        // Skip cloud-sync in Expo Go and finalize directly
+        await finalizeOnboarding()
+        return
+      }
       const nextIndex = stepIndex + 1
       if (nextIndex < steps.length) {
         setCurrentStep(steps[nextIndex])
@@ -360,7 +372,28 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex])
     }
-  }, [currentStep, stepIndex, steps])
+  }, [currentStep, stepIndex, steps, finalizeOnboarding])
+
+  // Finalize quick setup (called after cloud-sync)
+  const finalizeQuickSetup = useCallback(async () => {
+    if (!pendingQuickProfile) return
+
+    setLoading(true)
+
+    // Save to Zustand store
+    setStoreProfile(pendingQuickProfile)
+    setOnboarded(true)
+
+    // Initialize the 7-day trial
+    setSignupDate()
+    startTrial()
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+
+    setLoading(false)
+    setPendingQuickProfile(null)
+    onComplete()
+  }, [pendingQuickProfile, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
 
   // Handle cloud sync completion (connected or skipped)
   const handleCloudSyncComplete = useCallback(async (connected: boolean) => {
@@ -390,8 +423,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const needs = useMemo(() => calculateNeeds(profile), [profile])
 
-  // Handle quick setup completion - go to cloud-sync before finalizing
-  const handleQuickSetupComplete = useCallback((quickProfile: Partial<UserProfile>) => {
+  // Handle quick setup completion - go to cloud-sync before finalizing (skip in Expo Go)
+  const handleQuickSetupComplete = useCallback(async (quickProfile: Partial<UserProfile>) => {
     // Calculate nutritional needs with quick profile
     const needs = calculateNeeds(quickProfile)
 
@@ -402,31 +435,23 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       onboardingCompleted: false, // Can complete full onboarding later
     }
 
+    // In Expo Go, skip cloud-sync and finalize directly
+    if (isExpoGo) {
+      setLoading(true)
+      setStoreProfile(profileWithNeeds)
+      setOnboarded(true)
+      setSignupDate()
+      startTrial()
+      await new Promise(resolve => setTimeout(resolve, 300))
+      setLoading(false)
+      onComplete()
+      return
+    }
+
     // Store temporarily and go to cloud-sync
     setPendingQuickProfile(profileWithNeeds)
     setCurrentStep('cloud-sync')
-  }, [])
-
-  // Finalize quick setup (called after cloud-sync)
-  const finalizeQuickSetup = useCallback(async () => {
-    if (!pendingQuickProfile) return
-
-    setLoading(true)
-
-    // Save to Zustand store
-    setStoreProfile(pendingQuickProfile)
-    setOnboarded(true)
-
-    // Initialize the 7-day trial
-    setSignupDate()
-    startTrial()
-
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    setLoading(false)
-    setPendingQuickProfile(null)
-    onComplete()
-  }, [pendingQuickProfile, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
+  }, [setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
 
   // Switch from quick mode to full onboarding
   const handleSwitchToFull = useCallback(() => {

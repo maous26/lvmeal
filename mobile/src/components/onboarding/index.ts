@@ -20,3 +20,6 @@ export { StepSetupChoice } from './StepSetupChoice'
 // Progressive Unlock Components
 export { default as FeatureDiscoveryModal } from './FeatureDiscoveryModal'
 export { default as FeatureLockOverlay } from './FeatureLockOverlay'
+
+// Mock Preview
+export { MockHomePreview } from './MockHomePreview'

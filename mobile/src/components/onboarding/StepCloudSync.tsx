@@ -40,6 +40,13 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
 
   // Handle Google auth response
   useEffect(() => {
+    console.log('[StepCloudSync] Google Auth Response:', JSON.stringify(response, null, 2))
+    console.log('[StepCloudSync] Request object:', request ? {
+      url: request.url,
+      redirectUri: request.redirectUri,
+      clientId: request.clientId,
+    } : 'No request')
+
     if (response?.type === 'success') {
       const { authentication } = response
       if (authentication?.accessToken) {
@@ -47,8 +54,13 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
       }
     } else if (response?.type === 'error') {
       setIsLoading(false)
-      console.error('Google Auth Error:', response.error)
-      Alert.alert('Erreur', 'La connexion Google a échoué. Réessayez ou continuez sans compte.')
+      console.error('[StepCloudSync] Google Auth Error:', response.error)
+      // Log more details about the error
+      console.error('[StepCloudSync] Error details:', JSON.stringify(response, null, 2))
+      Alert.alert(
+        'Erreur Google Auth',
+        `${response.error?.message || 'Erreur inconnue'}\n\nRedirect URI attendue: https://auth.expo.io/@maous/presence`
+      )
     }
   }, [response])
 

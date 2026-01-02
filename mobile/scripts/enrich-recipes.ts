@@ -42,8 +42,168 @@ const RAPIDAPI_KEY: string = process.env.RAPIDAPI_KEY || process.env.EXPO_PUBLIC
 const RAPIDAPI_HOST = 'gustar-io-deutsche-rezepte.p.rapidapi.com'
 const BASE_URL = `https://${RAPIDAPI_HOST}`
 
-// Maximum recipes to enrich per run (to control costs and time)
-const MAX_RECIPES = 100
+// Maximum NEW recipes to enrich per run (to control costs and time)
+const MAX_NEW_RECIPES = 100
+
+// Output file path
+const OUTPUT_DIR = path.join(__dirname, '..', 'src', 'data')
+const OUTPUT_FILE = path.join(OUTPUT_DIR, 'enriched-recipes.json')
+
+// ============= HEALTH VALIDATION CRITERIA (OMS/ANSES) =============
+
+// Maximum values per serving
+const MAX_SUGAR_SAVORY = 10 // g - OMS: <10% of daily calories
+const MAX_SUGAR_DESSERT = 20 // g - for allowed desserts
+const MAX_SODIUM_PER_SERVING = 500 // mg - OMS: <2000mg/day
+const MAX_SATURATED_FAT = 8 // g - ANSES: <10% of daily calories
+const MAX_FAT_PERCENTAGE = 40 // % of calories from fat
+
+// Calorie limits by meal type (based on 2000kcal/day target)
+const CALORIE_LIMITS = {
+  breakfast: { min: 250, max: 500 },
+  lunch: { min: 400, max: 700 },
+  snack: { min: 100, max: 250 },
+  dinner: { min: 350, max: 600 },
+}
+
+// Macronutrient ratio guidelines (% of calories)
+const MACRO_RATIOS = {
+  proteins: { min: 15, max: 35 }, // ANSES recommendation
+  carbs: { min: 40, max: 55 },    // ANSES recommendation
+  fats: { min: 25, max: 40 },     // ANSES recommendation
+}
+
+// Ingredients to avoid (indicate unhealthy)
+const UNHEALTHY_INDICATORS = [
+  // High sugar
+  'zucker', 'sirup', 'karamell', 'glasur', 'zuckerguss', 'kandis',
+  // High sodium
+  'brühwürfel', 'fertigsauce', 'instant',
+  // Ultra-processed
+  'fertiggericht', 'tiefkühl', 'pulver', 'geschmacksverstärker',
+  // Fried
+  'frittiert', 'paniert', 'gebacken',
+]
+
+// Healthy indicators (bonus)
+const HEALTHY_INDICATORS = [
+  'salat', 'gemüse', 'grill', 'gedämpft', 'vapeur', 'vollkorn',
+  'quinoa', 'linsen', 'bohnen', 'fisch', 'hähnchen', 'pute',
+]
+
+// Categories to exclude from daily meals
+const EXCLUDED_CATEGORIES = [
+  'kuchen', 'torte', 'dessert', 'nachtisch', 'süßspeise',
+  'pizza', 'burger', 'pommes', 'fritten', 'lasagne',
+  'fondue', 'raclette', 'carbonara',
+]
+
+/**
+ * Pre-filter recipe before enrichment (based on title and ingredients)
+ * Returns false if recipe should be skipped
+ */
+function shouldEnrichRecipe(recipe: GustarRecipe): { pass: boolean; reason?: string } {
+  const title = recipe.title.toLowerCase()
+  const ingredients = recipe.ingredients.map(i => i.name.toLowerCase()).join(' ')
+  const combined = `${title} ${ingredients}`
+
+  // 1. Check excluded categories
+  for (const category of EXCLUDED_CATEGORIES) {
+    if (title.includes(category)) {
+      return { pass: false, reason: `excluded category: ${category}` }
+    }
+  }
+
+  // 2. Check unhealthy indicators (max 2 allowed)
+  const unhealthyCount = UNHEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
+  if (unhealthyCount > 2) {
+    return { pass: false, reason: `too many unhealthy indicators: ${unhealthyCount}` }
+  }
+
+  // 3. Check if nutrition exists and validate basic criteria
+  if (recipe.nutrition) {
+    const { calories, fats } = recipe.nutrition
+
+    // Reject extremely high calorie recipes
+    if (calories > 800) {
+      return { pass: false, reason: `too many calories: ${calories}` }
+    }
+
+    // Reject extremely fatty recipes (>50% calories from fat)
+    if (calories > 0 && fats) {
+      const fatPercentage = (fats * 9 / calories) * 100
+      if (fatPercentage > 50) {
+        return { pass: false, reason: `too much fat: ${Math.round(fatPercentage)}%` }
+      }
+    }
+  }
+
+  // 4. Bonus check: has healthy indicators
+  const healthyCount = HEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
+
+  return { pass: true }
+}
+
+/**
+ * Calculate health score (0-100) for prioritizing recipes
+ */
+function getHealthScore(recipe: GustarRecipe): number {
+  let score = 70 // Base score
+  const title = recipe.title.toLowerCase()
+  const ingredients = recipe.ingredients.map(i => i.name.toLowerCase()).join(' ')
+  const combined = `${title} ${ingredients}`
+
+  // Healthy indicators bonus
+  const healthyCount = HEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
+  score += healthyCount * 5
+
+  // Unhealthy indicators penalty
+  const unhealthyCount = UNHEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
+  score -= unhealthyCount * 10
+
+  // Nutrition-based scoring if available
+  if (recipe.nutrition) {
+    const { calories, proteins, fats, carbs } = recipe.nutrition
+
+    // Good protein ratio
+    if (calories > 0 && proteins) {
+      const proteinPercentage = (proteins * 4 / calories) * 100
+      if (proteinPercentage >= 20) score += 10
+      if (proteinPercentage >= 30) score += 5
+    }
+
+    // Reasonable fat ratio
+    if (calories > 0 && fats) {
+      const fatPercentage = (fats * 9 / calories) * 100
+      if (fatPercentage <= 35) score += 10
+      if (fatPercentage > 45) score -= 15
+    }
+  }
+
+  return Math.max(0, Math.min(100, score))
+}
+
+// Load existing recipes to avoid duplicates
+interface ExistingData {
+  version: string
+  generatedAt: string
+  totalRecipes: number
+  recipes: EnrichedRecipe[]
+}
+
+function loadExistingRecipes(): EnrichedRecipe[] {
+  try {
+    if (fs.existsSync(OUTPUT_FILE)) {
+      const content = fs.readFileSync(OUTPUT_FILE, 'utf-8')
+      const data: ExistingData = JSON.parse(content)
+      console.log(`📦 Loaded ${data.recipes.length} existing recipes from database`)
+      return data.recipes || []
+    }
+  } catch (error) {
+    console.log('⚠️  Could not load existing recipes, starting fresh')
+  }
+  return []
+}
 
 // Meal type categories with German search terms
 const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
@@ -146,13 +306,20 @@ interface EnrichedRecipe {
   descriptionFr: string
   ingredientsFr: Array<{ name: string; amount: number; unit: string }>
   instructionsFr: string[]
-  // Nutrition per serving
+  // Nutrition per serving (extended with health data)
   nutrition: {
     calories: number
     proteins: number
     carbs: number
     fats: number
+    sugar?: number
+    fiber?: number
+    saturatedFat?: number
+    sodium?: number
   }
+  // Health assessment
+  healthScore: number // 0-100
+  healthNotes?: string
   // Metadata
   imageUrl?: string
   prepTime: number
@@ -167,6 +334,54 @@ interface EnrichedRecipe {
   originalTitle: string
   // Timestamps
   enrichedAt: string
+}
+
+/**
+ * Post-validation: check if enriched recipe meets health criteria
+ * Returns null if recipe should be rejected
+ */
+function validateEnrichedRecipe(
+  enriched: Record<string, unknown>,
+  mealType: string
+): { valid: boolean; reason?: string } {
+  const nutrition = enriched.nutrition as Record<string, number> | undefined
+  if (!nutrition) {
+    return { valid: false, reason: 'missing nutrition data' }
+  }
+
+  const { calories, fats, sugar, saturatedFat, sodium } = nutrition
+  const calorieLimit = CALORIE_LIMITS[mealType as keyof typeof CALORIE_LIMITS] || CALORIE_LIMITS.lunch
+
+  // Check calories
+  if (calories > calorieLimit.max * 1.1) { // 10% tolerance
+    return { valid: false, reason: `calories too high: ${calories} > ${calorieLimit.max}` }
+  }
+
+  // Check fat percentage
+  if (calories > 0 && fats) {
+    const fatPercentage = (fats * 9 / calories) * 100
+    if (fatPercentage > MAX_FAT_PERCENTAGE + 5) { // 5% tolerance
+      return { valid: false, reason: `fat percentage too high: ${Math.round(fatPercentage)}%` }
+    }
+  }
+
+  // Check sugar (if available)
+  if (sugar !== undefined && sugar > MAX_SUGAR_DESSERT) {
+    return { valid: false, reason: `sugar too high: ${sugar}g` }
+  }
+
+  // Check saturated fat (if available)
+  if (saturatedFat !== undefined && saturatedFat > MAX_SATURATED_FAT * 1.5) { // More tolerance
+    return { valid: false, reason: `saturated fat too high: ${saturatedFat}g` }
+  }
+
+  // Check health score
+  const healthScore = enriched.healthScore as number | undefined
+  if (healthScore !== undefined && healthScore < 50) {
+    return { valid: false, reason: `health score too low: ${healthScore}` }
+  }
+
+  return { valid: true }
 }
 
 // Helper: Fetch from Gustar API
@@ -262,51 +477,67 @@ async function enrichRecipeWithAI(recipe: GustarRecipe, mealType: string): Promi
 
   const needsNutrition = !recipe.nutrition || recipe.nutrition.calories === 0
 
-  const prompt = `Tu es un chef cuisinier et nutritionniste francais expert.
+  // Get calorie limits for this meal type
+  const calorieLimit = CALORIE_LIMITS[mealType as keyof typeof CALORIE_LIMITS] || CALORIE_LIMITS.lunch
 
-Voici une recette allemande a traduire et enrichir completement en francais:
+  const prompt = `Tu es un chef cuisinier et nutritionniste français expert, spécialisé dans l'alimentation saine et équilibrée.
 
+## RECETTE À ENRICHIR
 **Titre:** ${recipe.title}
+**Type de repas:** ${mealType} (${mealType === 'breakfast' ? 'petit-déjeuner' : mealType === 'lunch' ? 'déjeuner' : mealType === 'snack' ? 'collation' : 'dîner'})
 **Description:** ${recipe.description || 'Aucune description'}
 **Portions:** ${recipe.servings || 2}
-**Ingredients:**
-${ingredientsList || 'Non specifies'}
+**Ingrédients:**
+${ingredientsList || 'Non spécifiés'}
 **Instructions:**
 ${instructionsList}
-${recipe.nutrition ? `**Nutrition existante:** ${JSON.stringify(recipe.nutrition)}` : ''}
+${recipe.nutrition ? `**Nutrition source:** ${JSON.stringify(recipe.nutrition)}` : ''}
 
-Reponds UNIQUEMENT avec un JSON valide (sans markdown, sans \`\`\`) contenant:
+## RÈGLES NUTRITIONNELLES STRICTES (OMS/ANSES)
+- Calories: ${calorieLimit.min}-${calorieLimit.max} kcal par portion pour un ${mealType}
+- Sucre: <${MAX_SUGAR_SAVORY}g par portion (plat salé) ou <${MAX_SUGAR_DESSERT}g (sucré)
+- Sodium: <${MAX_SODIUM_PER_SERVING}mg par portion
+- Graisses saturées: <${MAX_SATURATED_FAT}g par portion
+- Ratio lipides: <${MAX_FAT_PERCENTAGE}% des calories
+- Protéines: 15-35% des calories
+- Glucides: 40-55% des calories
+
+## FORMAT DE RÉPONSE (JSON UNIQUEMENT)
 {
-  "titleFr": "Titre traduit en francais (naturel, appetissant, comme dans un livre de cuisine francais)",
-  "descriptionFr": "Description en francais (2-3 phrases qui donnent envie de cuisiner ce plat)",
+  "titleFr": "Titre appétissant en français",
+  "descriptionFr": "Description de 2-3 phrases donnant envie",
   "ingredientsFr": [
-    { "name": "nom en francais", "amount": quantite_numerique, "unit": "unite en francais (g, ml, c. a soupe, etc.)" }
+    { "name": "ingrédient en français", "amount": nombre, "unit": "g/ml/c. à soupe/etc." }
   ],
   "instructionsFr": [
-    "Etape 1: ...",
-    "Etape 2: ...",
-    "Etape 3: ...",
-    "Etape 4: ...",
-    "Etape 5: ..."
+    "Étape 1: ...",
+    "Étape 2: ..."
   ],
   "nutrition": {
-    "calories": ${needsNutrition ? 'estimation_kcal' : recipe.nutrition?.calories || 300},
-    "proteins": ${needsNutrition ? 'estimation_g' : recipe.nutrition?.proteins || 20},
-    "carbs": ${needsNutrition ? 'estimation_g' : recipe.nutrition?.carbs || 30},
-    "fats": ${needsNutrition ? 'estimation_g' : recipe.nutrition?.fats || 15}
+    "calories": nombre_entier,
+    "proteins": nombre_grammes,
+    "carbs": nombre_grammes,
+    "fats": nombre_grammes,
+    "sugar": nombre_grammes,
+    "fiber": nombre_grammes,
+    "saturatedFat": nombre_grammes,
+    "sodium": nombre_mg
   },
-  "difficulty": "easy" ou "medium" ou "hard",
-  "prepTime": nombre_en_minutes
+  "difficulty": "easy|medium|hard",
+  "prepTime": nombre_minutes,
+  "healthScore": nombre_0_100,
+  "healthNotes": "note sur la qualité nutritionnelle"
 }
 
-REGLES IMPORTANTES:
-1. Traduis TOUS les ingredients en francais avec des unites francaises standard
-2. ${recipe.instructions.length > 0 ? 'Traduis et ameliore les instructions existantes' : 'Genere 5-8 etapes de preparation detaillees et claires basees sur le titre et les ingredients'}
-3. Les instructions doivent etre pratiques, precises et faciles a suivre
-4. ${needsNutrition ? 'Estime les valeurs nutritionnelles par portion' : 'Garde les valeurs nutritionnelles existantes'}
-5. Evalue la difficulte realiste de la recette
+## INSTRUCTIONS
+1. Traduis TOUS les ingrédients en français avec unités métriques précises
+2. ${recipe.instructions.length > 0 ? 'Traduis et améliore les instructions' : 'Génère 5-8 étapes détaillées'}
+3. CALCULE les macros PRÉCISÉMENT basé sur les ingrédients réels (utilise une base de données nutritionnelle mentale)
+4. Si la recette dépasse les limites, ADAPTE les portions ou suggère des substitutions
+5. healthScore: 80+ = très sain, 60-79 = correct, <60 = à éviter
+6. healthNotes: explique brièvement la qualité nutritionnelle
 
-Reponds UNIQUEMENT avec le JSON, rien d'autre.`
+RÉPONDS UNIQUEMENT AVEC LE JSON, RIEN D'AUTRE.`
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -345,8 +576,18 @@ Reponds UNIQUEMENT avec le JSON, rien d'autre.`
 
     const enriched = JSON.parse(cleanJson)
 
+    // Post-validation: reject unhealthy recipes
+    const validation = validateEnrichedRecipe(enriched, mealType)
+    if (!validation.valid) {
+      console.log(`    ⚠️  Post-validation failed for "${recipe.title}": ${validation.reason}`)
+      return null
+    }
+
     const prepTime = enriched.prepTime || recipe.prepTime || 20
     const cookTime = recipe.cookTime || Math.round(prepTime * 0.5)
+
+    // Extract health score (default to calculated if not provided)
+    const healthScore = enriched.healthScore || getHealthScore(recipe)
 
     return {
       id: recipe.id,
@@ -354,7 +595,18 @@ Reponds UNIQUEMENT avec le JSON, rien d'autre.`
       descriptionFr: enriched.descriptionFr,
       ingredientsFr: enriched.ingredientsFr || [],
       instructionsFr: enriched.instructionsFr || [],
-      nutrition: enriched.nutrition,
+      nutrition: {
+        calories: enriched.nutrition.calories,
+        proteins: enriched.nutrition.proteins,
+        carbs: enriched.nutrition.carbs,
+        fats: enriched.nutrition.fats,
+        sugar: enriched.nutrition.sugar,
+        fiber: enriched.nutrition.fiber,
+        saturatedFat: enriched.nutrition.saturatedFat,
+        sodium: enriched.nutrition.sodium,
+      },
+      healthScore,
+      healthNotes: enriched.healthNotes,
       imageUrl: recipe.image,
       prepTime,
       cookTime,
@@ -375,7 +627,7 @@ Reponds UNIQUEMENT avec le JSON, rien d'autre.`
 
 // Main function
 async function main() {
-  console.log('=== Recipe Pre-Enrichment Script ===\n')
+  console.log('=== Recipe Pre-Enrichment Script (Accumulative Mode) ===\n')
 
   if (!OPENAI_API_KEY) {
     console.error('ERROR: OPENAI_API_KEY environment variable is required')
@@ -383,46 +635,79 @@ async function main() {
     process.exit(1)
   }
 
-  console.log('Step 1: Fetching recipes from Gustar API for all meal types...\n')
+  // Load existing recipes first
+  const existingRecipes = loadExistingRecipes()
+  const existingIds = new Set(existingRecipes.map(r => r.id))
+  const existingTitles = new Set(existingRecipes.map(r => r.originalTitle.toLowerCase()))
 
-  const allRecipes: GustarRecipe[] = []
+  console.log(`\n📊 Current database stats:`)
+  const existingPerType: Record<string, number> = { breakfast: 0, lunch: 0, snack: 0, dinner: 0 }
+  for (const r of existingRecipes) {
+    existingPerType[r.mealType]++
+  }
+  console.log(`  🌅 Breakfast: ${existingPerType.breakfast}`)
+  console.log(`  ☀️  Lunch:     ${existingPerType.lunch}`)
+  console.log(`  🍎 Snack:     ${existingPerType.snack}`)
+  console.log(`  🌙 Dinner:    ${existingPerType.dinner}`)
+  console.log(`  📦 TOTAL:     ${existingRecipes.length}\n`)
+
+  console.log('Step 1: Fetching NEW recipes from Gustar API...\n')
+
+  const newRecipes: GustarRecipe[] = []
   const seenIds = new Set<string>()
 
-  // Track recipes per meal type for balanced distribution
-  const recipesPerMealType: Record<string, number> = {
+  // Track NEW recipes per meal type for balanced distribution
+  const newRecipesPerMealType: Record<string, number> = {
     breakfast: 0,
     lunch: 0,
     snack: 0,
     dinner: 0,
   }
 
-  // Target recipes per meal type (balanced distribution)
-  const targetPerMealType = Math.ceil(MAX_RECIPES / 4)
+  // Target NEW recipes per meal type (balanced distribution)
+  const targetPerMealType = Math.ceil(MAX_NEW_RECIPES / 4)
 
   // Fetch recipes for each meal type
   for (const [mealType, searchTerms] of Object.entries(MEAL_TYPE_SEARCHES)) {
     console.log(`\n📋 ${mealType.toUpperCase()} recipes:`)
 
     for (const term of searchTerms) {
-      // Skip if we already have enough for this meal type
-      if (recipesPerMealType[mealType] >= targetPerMealType) {
+      // Skip if we already have enough NEW recipes for this meal type
+      if (newRecipesPerMealType[mealType] >= targetPerMealType) {
         break
       }
 
       console.log(`  Searching: "${term}"...`)
-      const recipes = await fetchGustarRecipes(term, 5)
+      // Fetch more recipes to find new ones (increase limit)
+      const recipes = await fetchGustarRecipes(term, 20)
 
-      // Add unique recipes only
+      let newFound = 0
+      let skippedHealth = 0
+      // Add unique recipes only (not in existing DB and not already seen)
       for (const recipe of recipes) {
-        if (!seenIds.has(recipe.id) && recipesPerMealType[mealType] < targetPerMealType) {
+        const isDuplicate = seenIds.has(recipe.id) ||
+                           existingIds.has(recipe.id) ||
+                           existingTitles.has(recipe.title.toLowerCase())
+
+        if (isDuplicate) continue
+
+        // Pre-filter: check health criteria before enrichment
+        const healthCheck = shouldEnrichRecipe(recipe)
+        if (!healthCheck.pass) {
+          skippedHealth++
+          continue
+        }
+
+        if (newRecipesPerMealType[mealType] < targetPerMealType) {
           seenIds.add(recipe.id)
-          allRecipes.push(recipe)
+          newRecipes.push(recipe)
           recipeToMealType.set(recipe.id, mealType)
-          recipesPerMealType[mealType]++
+          newRecipesPerMealType[mealType]++
+          newFound++
         }
       }
 
-      console.log(`    Found ${recipes.length} recipes (${mealType}: ${recipesPerMealType[mealType]}/${targetPerMealType})`)
+      console.log(`    Found ${recipes.length} total, ${newFound} NEW, ${skippedHealth} skipped (unhealthy) (${mealType}: ${newRecipesPerMealType[mealType]}/${targetPerMealType})`)
 
       // Small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 300))
@@ -431,19 +716,32 @@ async function main() {
 
   // Summary of fetched recipes
   console.log(`\n=== Fetch Summary ===`)
-  console.log(`  Breakfast: ${recipesPerMealType.breakfast} recipes`)
-  console.log(`  Lunch:     ${recipesPerMealType.lunch} recipes`)
-  console.log(`  Snack:     ${recipesPerMealType.snack} recipes`)
-  console.log(`  Dinner:    ${recipesPerMealType.dinner} recipes`)
-  console.log(`  TOTAL:     ${allRecipes.length} unique recipes\n`)
+  console.log(`  NEW Breakfast: ${newRecipesPerMealType.breakfast} recipes`)
+  console.log(`  NEW Lunch:     ${newRecipesPerMealType.lunch} recipes`)
+  console.log(`  NEW Snack:     ${newRecipesPerMealType.snack} recipes`)
+  console.log(`  NEW Dinner:    ${newRecipesPerMealType.dinner} recipes`)
+  console.log(`  TOTAL NEW:     ${newRecipes.length} unique recipes\n`)
 
-  // Limit to MAX_RECIPES
-  const recipesToEnrich = allRecipes.slice(0, MAX_RECIPES)
-  console.log(`Recipes to enrich: ${recipesToEnrich.length}\n`)
+  // Sort by health score (prioritize healthiest recipes)
+  newRecipes.sort((a, b) => getHealthScore(b) - getHealthScore(a))
+
+  // Limit to MAX_NEW_RECIPES
+  const recipesToEnrich = newRecipes.slice(0, MAX_NEW_RECIPES)
+  console.log(`New recipes to enrich: ${recipesToEnrich.length} (sorted by health score)\n`)
+
+  // Show health score distribution
+  if (recipesToEnrich.length > 0) {
+    const scores = recipesToEnrich.map(r => getHealthScore(r))
+    const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    const minScore = Math.min(...scores)
+    const maxScore = Math.max(...scores)
+    console.log(`  📊 Health scores: avg=${avgScore}, min=${minScore}, max=${maxScore}\n`)
+  }
 
   if (recipesToEnrich.length === 0) {
-    console.error('No recipes fetched. Check your RapidAPI key.')
-    process.exit(1)
+    console.log('✅ No new recipes to enrich - database is up to date!')
+    console.log(`   Total recipes in database: ${existingRecipes.length}`)
+    process.exit(0)
   }
 
   console.log('Step 2: Enriching recipes with OpenAI...\n')
@@ -475,71 +773,106 @@ async function main() {
     }
 
     // Delay between batches to avoid rate limiting
-    if (i + batchSize < allRecipes.length) {
+    if (i + batchSize < recipesToEnrich.length) {
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
 
-  console.log(`\nEnriched ${enrichedRecipes.length}/${allRecipes.length} recipes\n`)
+  console.log(`\nEnriched ${enrichedRecipes.length}/${newRecipes.length} NEW recipes\n`)
 
   if (enrichedRecipes.length === 0) {
     console.error('No recipes were enriched. Check your OpenAI key.')
     process.exit(1)
   }
 
-  // Step 3: Save to JSON file
-  console.log('Step 3: Saving to JSON file...\n')
-
-  const outputDir = path.join(__dirname, '..', 'src', 'data')
-  const outputFile = path.join(outputDir, 'enriched-recipes.json')
+  // Step 3: Merge and save to JSON file
+  console.log('Step 3: Merging with existing recipes and saving...\n')
 
   // Create directory if it doesn't exist
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true })
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true })
   }
+
+  // Merge existing + new recipes
+  const allRecipes = [...existingRecipes, ...enrichedRecipes]
 
   const output = {
-    version: '1.0.0',
+    version: '1.1.0',
     generatedAt: new Date().toISOString(),
-    totalRecipes: enrichedRecipes.length,
-    recipes: enrichedRecipes,
+    totalRecipes: allRecipes.length,
+    recipes: allRecipes,
   }
 
-  fs.writeFileSync(outputFile, JSON.stringify(output, null, 2), 'utf-8')
+  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2), 'utf-8')
 
-  console.log(`✓ Saved ${enrichedRecipes.length} enriched recipes to:`)
-  console.log(`  ${outputFile}\n`)
+  console.log(`✅ Database updated!`)
+  console.log(`   Previous: ${existingRecipes.length} recipes`)
+  console.log(`   Added:    ${enrichedRecipes.length} NEW recipes`)
+  console.log(`   Total:    ${allRecipes.length} recipes\n`)
 
-  // Count enriched recipes per meal type
-  const enrichedPerMealType: Record<string, number> = {
+  // Count total recipes per meal type (existing + new)
+  const totalPerMealType: Record<string, number> = {
+    breakfast: 0,
+    lunch: 0,
+    snack: 0,
+    dinner: 0,
+  }
+  for (const recipe of allRecipes) {
+    totalPerMealType[recipe.mealType]++
+  }
+
+  // Count newly enriched per meal type
+  const newPerMealType: Record<string, number> = {
     breakfast: 0,
     lunch: 0,
     snack: 0,
     dinner: 0,
   }
   for (const recipe of enrichedRecipes) {
-    enrichedPerMealType[recipe.mealType]++
+    newPerMealType[recipe.mealType]++
   }
+
+  // Calculate health statistics
+  const allHealthScores = allRecipes.map(r => r.healthScore || 70)
+  const avgHealthScore = Math.round(allHealthScores.reduce((a, b) => a + b, 0) / allHealthScores.length)
+  const healthyCount = allHealthScores.filter(s => s >= 70).length
+  const veryHealthyCount = allHealthScores.filter(s => s >= 85).length
 
   // Print summary
   console.log('=== Summary ===')
-  console.log(`  Total fetched:  ${allRecipes.length}`)
-  console.log(`  Total enriched: ${enrichedRecipes.length}`)
-  console.log(`  Success rate:   ${Math.round((enrichedRecipes.length / allRecipes.length) * 100)}%`)
-  console.log('\n  Enriched by meal type:')
-  console.log(`    🌅 Breakfast: ${enrichedPerMealType.breakfast}`)
-  console.log(`    ☀️ Lunch:     ${enrichedPerMealType.lunch}`)
-  console.log(`    🍎 Snack:     ${enrichedPerMealType.snack}`)
-  console.log(`    🌙 Dinner:    ${enrichedPerMealType.dinner}`)
+  console.log(`  Previous recipes: ${existingRecipes.length}`)
+  console.log(`  New recipes:      ${enrichedRecipes.length}`)
+  console.log(`  TOTAL DATABASE:   ${allRecipes.length}`)
+  console.log(`  Success rate:     ${Math.round((enrichedRecipes.length / newRecipes.length) * 100)}%`)
+  console.log('\n  📊 Total by meal type:')
+  console.log(`    🌅 Breakfast: ${totalPerMealType.breakfast} (+${newPerMealType.breakfast} new)`)
+  console.log(`    ☀️  Lunch:     ${totalPerMealType.lunch} (+${newPerMealType.lunch} new)`)
+  console.log(`    🍎 Snack:     ${totalPerMealType.snack} (+${newPerMealType.snack} new)`)
+  console.log(`    🌙 Dinner:    ${totalPerMealType.dinner} (+${newPerMealType.dinner} new)`)
+  console.log('\n  🏥 Health Statistics:')
+  console.log(`    Average health score: ${avgHealthScore}/100`)
+  console.log(`    Healthy recipes (≥70): ${healthyCount} (${Math.round(healthyCount / allRecipes.length * 100)}%)`)
+  console.log(`    Very healthy (≥85):    ${veryHealthyCount} (${Math.round(veryHealthyCount / allRecipes.length * 100)}%)`)
 
-  // Sample recipe from each meal type
-  console.log('\n=== Sample Recipes by Meal Type ===')
+  // Sample recipe from each meal type (show healthiest)
+  console.log('\n=== Sample Recipes by Meal Type (Healthiest) ===')
   for (const mealType of ['breakfast', 'lunch', 'snack', 'dinner']) {
-    const sample = enrichedRecipes.find(r => r.mealType === mealType)
+    // Get healthiest new recipe for this meal type
+    const sample = enrichedRecipes
+      .filter(r => r.mealType === mealType)
+      .sort((a, b) => (b.healthScore || 0) - (a.healthScore || 0))[0]
     if (sample) {
       const emoji = { breakfast: '🌅', lunch: '☀️', snack: '🍎', dinner: '🌙' }[mealType]
+      const n = sample.nutrition
       console.log(`\n  ${emoji} ${mealType.toUpperCase()}: ${sample.titleFr}`)
-      console.log(`     ${sample.nutrition.calories} kcal | ${sample.nutrition.proteins}g protein | ${sample.instructionsFr.length} steps`)
+      console.log(`     ${n.calories} kcal | P:${n.proteins}g C:${n.carbs}g F:${n.fats}g`)
+      if (n.sugar !== undefined || n.fiber !== undefined) {
+        console.log(`     Sugar:${n.sugar || '?'}g | Fiber:${n.fiber || '?'}g | SatFat:${n.saturatedFat || '?'}g`)
+      }
+      console.log(`     Health score: ${sample.healthScore}/100 ${sample.healthScore >= 80 ? '✅' : sample.healthScore >= 60 ? '⚠️' : '❌'}`)
+      if (sample.healthNotes) {
+        console.log(`     💡 ${sample.healthNotes}`)
+      }
     }
   }
 }

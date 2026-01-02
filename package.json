@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run sync-recipes",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "sync-recipes": "npx ts-node scripts/sync-recipes-to-db.ts",
+    "enrich-recipes": "cd mobile && npx ts-node scripts/enrich-recipes.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -52,6 +54,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5",
     "xlsx": "^0.18.5"
   }
