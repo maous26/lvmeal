@@ -711,7 +711,10 @@ export default function WeeklyPlanScreen() {
               <Text style={styles.generateDescription}>
                 LymIA va generer un plan de {planDuration} jour{planDuration > 1 ? 's' : ''} adapte a tes objectifs.
                 {calorieReduction ? '\n-10% de calories pour alimenter ton Solde Plaisir.' : ''}
-                {'\n'}Recettes issues de Gustar.io, OFF et Ciqual.
+              </Text>
+              <Text style={styles.generateSourceHint}>
+                Sources: Gustar.io, OFF, Ciqual.{'\n'}
+                Modifiable dans Profil → Parametres → Sources repas
               </Text>
               <Button
                 variant="primary"
@@ -981,7 +984,14 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text.secondary,
     textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  generateSourceHint: {
+    ...typography.small,
+    color: colors.text.tertiary,
+    textAlign: 'center',
     marginBottom: spacing.xl,
+    fontStyle: 'italic',
   },
   buttonText: {
     ...typography.bodyMedium,
