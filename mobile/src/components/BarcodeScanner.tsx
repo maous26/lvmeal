@@ -14,7 +14,7 @@ import { X, Flashlight, FlashlightOff, ScanLine } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { colors, spacing, typography, radius } from '../constants/theme'
-import { lookupBarcode } from '../services/food-search'
+import { lookupBarcode, type BarcodeResult } from '../services/food-search'
 import { analytics } from '../services/analytics-service'
 import { errorReporting } from '../services/error-reporting-service'
 import type { FoodItem } from '../types'
@@ -72,14 +72,44 @@ export default function BarcodeScanner({
     analytics.track('barcode_scan_started')
 
     try {
-      const food = await lookupBarcode(barcode)
+      const result = await lookupBarcode(barcode)
       const durationMs = Date.now() - startTime
 
-      if (food) {
+      if (result) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
         analytics.trackAIFeature('barcode_scan', true, durationMs)
-        onFoodFound(food)
-        onClose()
+
+        // Check if conversion is available (dry food like lentils, rice, pasta)
+        if (result.conversionAvailable && result.convertedFood) {
+          // Ask user if they cooked this food
+          const originalCal = result.food.nutrition.calories
+          const cookedCal = result.convertedFood.nutrition.calories
+
+          Alert.alert(
+            'Aliment sec detecte',
+            `Ce produit semble etre un feculent ou une legumineuse seche.\n\nValeur seche: ${originalCal} kcal/100g\nValeur cuite: ${cookedCal} kcal/100g\n\nComment vas-tu le consommer ?`,
+            [
+              {
+                text: `Cuit (${cookedCal} kcal)`,
+                onPress: () => {
+                  onFoodFound(result.convertedFood!)
+                  onClose()
+                },
+              },
+              {
+                text: `Sec (${originalCal} kcal)`,
+                onPress: () => {
+                  onFoodFound(result.food)
+                  onClose()
+                },
+                style: 'cancel',
+              },
+            ]
+          )
+        } else {
+          onFoodFound(result.food)
+          onClose()
+        }
       } else {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
         analytics.trackAIFeature('barcode_scan', false, durationMs, {

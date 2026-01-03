@@ -18,6 +18,7 @@ import {
   MEAL_PLANNER_SYSTEM_PROMPT,
   MEAL_TYPE_GUIDELINES,
 } from '../lib/ai/prompts'
+import { getFoodDataForPrompt } from './food-data-rag'
 import { generateUserProfileContext, generateRemainingNutritionContext } from '../lib/ai/user-context'
 import { getThemedPrompt } from '../lib/ai/themes'
 import type { UserProfile, NutritionInfo, FoodItem } from '../types'
@@ -269,11 +270,25 @@ export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResu
 
 /**
  * Analyze food from voice/text description
+ * Uses RAG to fetch real nutritional data from CIQUAL/OFF databases
  */
 export async function analyzeFoodDescription(description: string): Promise<FoodAnalysisResult> {
   try {
+    // Fetch real food data from CIQUAL/OFF for accurate unit weights
+    console.log('[AI] Fetching RAG data for:', description)
+    const ragData = await getFoodDataForPrompt(description)
+
+    if (ragData.hasData) {
+      console.log('[AI] RAG found data for foods:', ragData.foods.map(f => f.name))
+    } else {
+      console.log('[AI] No RAG data found, using fallback')
+    }
+
+    // Build prompt with RAG context (or fallback to hardcoded values)
+    const prompt = FOOD_DESCRIPTION_PROMPT(description, ragData.promptContext || undefined)
+
     const response = await callOpenAI(
-      [{ role: 'user', content: FOOD_DESCRIPTION_PROMPT(description) }],
+      [{ role: 'user', content: prompt }],
       { model: 'gpt-4o-mini', maxTokens: 1024 }
     )
 

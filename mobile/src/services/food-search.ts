@@ -10,6 +10,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { FoodItem, NutritionInfo, NutriScoreGrade } from '../types'
+import { analyzeForConversion, detectDryFood, type ConversionResult } from './cooking-conversion'
 
 // ============= TYPES =============
 
@@ -78,9 +79,9 @@ const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 const CACHE_KEY_PREFIX = 'food_search_'
 
 class FoodSearchCache {
-  private memoryCache = new Map<string, CacheEntry<FoodItem[]>>()
+  private memoryCache = new Map<string, CacheEntry<any[]>>()
 
-  async get(key: string): Promise<FoodItem[] | null> {
+  async get(key: string): Promise<any[] | null> {
     // Check memory first
     const memEntry = this.memoryCache.get(key)
     if (memEntry && Date.now() - memEntry.timestamp < CACHE_TTL) {
@@ -91,7 +92,7 @@ class FoodSearchCache {
     try {
       const stored = await AsyncStorage.getItem(CACHE_KEY_PREFIX + key)
       if (stored) {
-        const entry: CacheEntry<FoodItem[]> = JSON.parse(stored)
+        const entry: CacheEntry<any[]> = JSON.parse(stored)
         if (Date.now() - entry.timestamp < CACHE_TTL) {
           // Refresh memory cache
           this.memoryCache.set(key, entry)
@@ -105,8 +106,8 @@ class FoodSearchCache {
     return null
   }
 
-  async set(key: string, data: FoodItem[]): Promise<void> {
-    const entry: CacheEntry<FoodItem[]> = {
+  async set(key: string, data: any[]): Promise<void> {
+    const entry: CacheEntry<any[]> = {
       data,
       timestamp: Date.now(),
     }
@@ -479,7 +480,17 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
 
 // ============= BARCODE LOOKUP =============
 
-export async function lookupBarcode(barcode: string): Promise<FoodItem | null> {
+export interface BarcodeResult {
+  food: FoodItem
+  /** If the food is dry and needs cooking conversion */
+  conversionAvailable: boolean
+  /** Converted version if available */
+  convertedFood?: FoodItem
+  /** Conversion rule ID */
+  conversionRule?: string
+}
+
+export async function lookupBarcode(barcode: string): Promise<BarcodeResult | null> {
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
@@ -506,11 +517,31 @@ export async function lookupBarcode(barcode: string): Promise<FoodItem | null> {
       return null
     }
 
-    return transformOffProduct(data.product)
+    const food = transformOffProduct(data.product)
+    if (!food) return null
+
+    // Check if this is a dry food that needs cooking conversion
+    const conversion = analyzeForConversion(food)
+
+    return {
+      food,
+      conversionAvailable: conversion.needsConversion,
+      convertedFood: conversion.convertedFood,
+      conversionRule: conversion.rule?.id,
+    }
   } catch (error) {
     console.error('Error looking up barcode:', error)
     return null
   }
+}
+
+/**
+ * Simple barcode lookup that returns just the food item
+ * For backwards compatibility
+ */
+export async function lookupBarcodeSimple(barcode: string): Promise<FoodItem | null> {
+  const result = await lookupBarcode(barcode)
+  return result?.food || null
 }
 
 // ============= MAIN SEARCH SERVICE =============
@@ -525,8 +556,17 @@ export interface SearchFoodsOptions {
   source?: SearchSource
 }
 
+export interface FoodItemWithConversion extends FoodItem {
+  /** If the food is dry and needs cooking conversion */
+  conversionAvailable?: boolean
+  /** Converted version if available */
+  convertedFood?: FoodItem
+  /** Conversion rule ID */
+  conversionRule?: string
+}
+
 export interface SearchFoodsResult {
-  products: FoodItem[]
+  products: FoodItemWithConversion[]
   total: number
   sources: string[]
   fromCache: boolean
@@ -581,7 +621,21 @@ export async function searchFoods(options: SearchFoodsOptions): Promise<SearchFo
     return bHasCalories - aHasCalories
   })
 
-  const finalProducts = products.slice(0, limit)
+  // Add conversion info to each product
+  const productsWithConversion: FoodItemWithConversion[] = products.slice(0, limit).map(food => {
+    const conversion = analyzeForConversion(food)
+    if (conversion.needsConversion) {
+      return {
+        ...food,
+        conversionAvailable: true,
+        convertedFood: conversion.convertedFood,
+        conversionRule: conversion.rule?.id,
+      }
+    }
+    return food
+  })
+
+  const finalProducts = productsWithConversion
 
   // Cache results
   await cache.set(cacheKey, finalProducts)
@@ -621,9 +675,18 @@ export async function clearFoodSearchCache(): Promise<void> {
   }
 }
 
+// Re-export cooking conversion utilities for convenience
+export {
+  detectDryFood,
+  convertToCooked,
+  analyzeForConversion,
+  COOKING_CONVERSION_RULES,
+} from './cooking-conversion'
+
 export default {
   searchFoods,
   lookupBarcode,
+  lookupBarcodeSimple,
   clearFoodSearchCache,
   preloadCiqual,
 }
