@@ -100,10 +100,8 @@ const isExpoGo = Constants.appOwnership === 'expo'
 // Base steps for FULL onboarding - conditional steps are inserted dynamically
 // Flow: welcome (marketing) → setup-choice → basic-info → ... → analysis → cloud-sync
 // Quick mode: welcome → setup-choice → quick-setup (no cloud-sync)
-// Note: cloud-sync is skipped in Expo Go because OAuth doesn't work reliably
-const baseSteps: OnboardingStep[] = isExpoGo
-  ? ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis']
-  : ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
+// Note: cloud-sync is now enabled in Expo Go for testing
+const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
@@ -386,13 +384,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
 
   const handleNext = useCallback(async () => {
-    // Analysis step: in Expo Go finalize directly, otherwise go to cloud-sync
+    // Analysis step: go to cloud-sync
     if (currentStep === 'analysis') {
-      if (isExpoGo) {
-        // Skip cloud-sync in Expo Go and finalize directly
-        await finalizeOnboarding()
-        return
-      }
       const nextIndex = stepIndex + 1
       if (nextIndex < steps.length) {
         setCurrentStep(steps[nextIndex])
@@ -404,7 +397,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex])
     }
-  }, [currentStep, stepIndex, steps, finalizeOnboarding])
+  }, [currentStep, stepIndex, steps])
 
   // Finalize quick setup (called after cloud-sync)
   const finalizeQuickSetup = useCallback(async () => {
@@ -469,22 +462,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       nutritionalNeeds: needs,
       quickSetupCompleted: true,
       onboardingCompleted: false, // Can complete full onboarding later
-    }
-
-    // In Expo Go, skip cloud-sync and finalize directly
-    if (isExpoGo) {
-      setLoading(true)
-      setStoreProfile(profileWithNeeds)
-      setOnboarded(true)
-      setSignupDate()
-      startTrial()
-      // Track onboarding completed (quick mode, Expo Go)
-      const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
-      lymInsights.trackOnboardingCompleted(durationSeconds, ['full_profile_skipped', 'expo_go'])
-      await new Promise(resolve => setTimeout(resolve, 300))
-      setLoading(false)
-      onComplete()
-      return
     }
 
     // Store temporarily and go to cloud-sync

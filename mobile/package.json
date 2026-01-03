@@ -4,8 +4,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "enrich-recipes": "npx ts-node scripts/enrich-recipes.ts",
     "generate-meditations": "npx ts-node --transpile-only scripts/generate-meditation-audios.ts"
@@ -15,7 +15,6 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/slider": "5.0.1",
-    "@react-native-voice/voice": "^3.2.4",
     "@react-navigation/bottom-tabs": "^7.9.0",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
@@ -27,6 +26,7 @@
     "expo-auth-session": "^7.0.10",
     "expo-av": "~16.0.8",
     "expo-blur": "^15.0.8",
+    "expo-build-properties": "^1.0.10",
     "expo-camera": "^17.0.10",
     "expo-crypto": "~15.0.8",
     "expo-device": "~8.0.10",

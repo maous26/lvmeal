@@ -24,6 +24,8 @@
     },
     "android": {
       "package": "com.presence.nutrition",
+      "versionCode": 1,
+      "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -32,7 +34,11 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "VIBRATE"
+        "VIBRATE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -45,17 +51,17 @@
         }
       ],
       [
-        "@sentry/react-native/expo",
+        "expo-build-properties",
         {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "lym"
+          "android": {
+            "minSdkVersion": 26
+          }
         }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "presence-nutrition"
+        "projectId": "d22ac2c1-1cd1-4437-aa28-3c1c7ebfdef9"
       }
     }
   }

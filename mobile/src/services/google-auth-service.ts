@@ -6,6 +6,7 @@
  */
 
 import * as Google from 'expo-auth-session/providers/google'
+import { makeRedirectUri } from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 import { supabase, isSupabaseConfigured } from './supabase-client'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -73,6 +74,21 @@ export interface GoogleUserInfo {
  * <Button onPress={() => promptAsync()} disabled={!request}>Sign in</Button>
  */
 export function useGoogleAuthConfig() {
+  // For Expo Go on iOS: use expo-proxy scheme that redirects back to Expo Go
+  // For standalone builds: use native deep link
+  const redirectUri = makeRedirectUri({
+    scheme: 'presence',
+    // In Expo Go, this generates: exp://192.168.x.x:8081/--/
+    // which won't work with Google OAuth
+  })
+
+  // For Expo Go, we need to use a special approach
+  // Google OAuth requires https:// redirect URIs for web clients
+  // So in Expo Go, we'll use the Expo proxy
+  const finalRedirectUri = isExpoGo
+    ? 'https://auth.expo.io/@maous1/presence'
+    : redirectUri
+
   // Debug: Log all config at startup
   console.log('[GoogleAuth] ========== CONFIG DEBUG ==========')
   console.log('[GoogleAuth] Is Expo Go:', isExpoGo)
@@ -80,23 +96,19 @@ export function useGoogleAuthConfig() {
   console.log('[GoogleAuth] Web Client ID:', GOOGLE_WEB_CLIENT_ID ? `${GOOGLE_WEB_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
   console.log('[GoogleAuth] iOS Client ID:', GOOGLE_IOS_CLIENT_ID ? `${GOOGLE_IOS_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
   console.log('[GoogleAuth] Android Client ID:', GOOGLE_ANDROID_CLIENT_ID ? `${GOOGLE_ANDROID_CLIENT_ID.substring(0, 20)}...` : 'NOT SET')
-  console.log('[GoogleAuth] Expected Redirect URI: https://auth.expo.io/@maous1/presence')
+  console.log('[GoogleAuth] Generated Redirect URI:', finalRedirectUri)
   console.log('[GoogleAuth] =====================================')
 
-  // In Expo Go, we MUST use the Web Client ID with the Expo proxy redirect URI
-  // because native iOS/Android Client IDs don't support the Expo proxy.
-  // In production builds (not Expo Go), we use the native Client IDs.
-  const expoRedirectUri = 'https://auth.expo.io/@maous1/presence'
-
   const result = Google.useAuthRequest({
-    // In Expo Go: use Web Client ID only (it has the Expo redirect URI configured)
-    // In production: use platform-specific Client IDs
-    clientId: isExpoGo ? GOOGLE_WEB_CLIENT_ID : undefined,
-    webClientId: isExpoGo ? undefined : GOOGLE_WEB_CLIENT_ID,
+    // Use Web Client ID for Expo Go (required for https redirect)
+    // For standalone builds, use platform-specific Client IDs
+    clientId: GOOGLE_WEB_CLIENT_ID,
     iosClientId: isExpoGo ? undefined : GOOGLE_IOS_CLIENT_ID,
     androidClientId: isExpoGo ? undefined : GOOGLE_ANDROID_CLIENT_ID,
     scopes: ['openid', 'profile', 'email'],
-    redirectUri: isExpoGo ? expoRedirectUri : undefined,
+    redirectUri: finalRedirectUri,
+    // Use implicit flow to get token directly (no server-side code exchange needed)
+    responseType: 'token',
   })
 
   // Debug: Log the generated request

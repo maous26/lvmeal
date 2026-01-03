@@ -18,10 +18,14 @@ import {
 import { ArrowRight } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
+import Constants from 'expo-constants'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius } from '../../constants/theme'
 import { useAuthStore } from '../../stores/auth-store'
 import { useGoogleAuthConfig, isGoogleAuthConfigured } from '../../services/google-auth-service'
+
+// Check if running in Expo Go
+const isExpoGo = Constants.appOwnership === 'expo'
 
 interface StepCloudSyncProps {
   onComplete: (connected: boolean) => void
@@ -85,7 +89,8 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setIsLoading(true)
     try {
-      await promptAsync()
+      // Use proxy in Expo Go for OAuth redirect handling
+      await promptAsync({ useProxy: isExpoGo })
     } catch {
       setIsLoading(false)
     }
