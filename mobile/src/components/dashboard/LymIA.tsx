@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { X, Sparkles, Heart, TrendingUp, Moon, Droplets, Activity, ChevronRight, Scale, Utensils, Target, Flame, Award } from 'lucide-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -11,6 +11,7 @@ import { useMealsStore } from '../../stores/meals-store'
 import { useGamificationStore } from '../../stores/gamification-store'
 import { useSportProgramStore } from '../../stores/sport-program-store'
 import { useCaloricBankStore } from '../../stores/caloric-bank-store'
+import { lymInsights } from '../../services/lym-insights-service'
 
 interface LymIAProps {
   className?: string
@@ -305,6 +306,25 @@ export function LymIA({ className }: LymIAProps) {
     .filter(m => !dismissedMessages.includes(m.id))
     .sort((a, b) => b.priority - a.priority)
     .slice(0, 2)
+
+  // Track reassurance messages shown (gentle reminders, encouragement)
+  // Using a ref to track which messages we've already tracked this session
+  const trackedMessagesRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    // Track reassurance messages when they become visible
+    const reassuranceMessages = visibleMessages.filter(m =>
+      m.type === 'adaptive' || m.type === 'encouragement' ||
+      m.id.includes('adaptive-') || m.id === 'plaisir-used'
+    )
+
+    reassuranceMessages.forEach(msg => {
+      if (!trackedMessagesRef.current.has(msg.id)) {
+        trackedMessagesRef.current.add(msg.id)
+        lymInsights.trackReassuranceShown('gentle_reminder', msg.id)
+      }
+    })
+  }, [visibleMessages])
 
   if (visibleMessages.length === 0) {
     return null

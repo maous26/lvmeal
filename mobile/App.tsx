@@ -21,6 +21,7 @@ import { initializeDailyInsightService } from './src/services/daily-insight-serv
 import { loadStaticRecipes } from './src/services/static-recipes'
 import { analytics } from './src/services/analytics-service'
 import { errorReporting } from './src/services/error-reporting-service'
+import { lymInsights } from './src/services/lym-insights-service'
 
 // Initialize Sentry
 Sentry.init({
@@ -53,6 +54,9 @@ export default Sentry.wrap(function App() {
         // Initialize analytics
         await analytics.initialize()
         analytics.track('app_opened')
+
+        // Initialize LYM Insights (Supabase-based, bienveillant analytics)
+        await lymInsights.initialize()
 
         // OPTIMIZATION: Pre-load static recipes in parallel with other init tasks
         // This prevents latency during meal plan generation

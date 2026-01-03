@@ -24,6 +24,7 @@ import { useUserStore } from '../stores/user-store'
 import { useOnboardingStore } from '../stores/onboarding-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useTheme } from '../contexts/ThemeContext'
+import { lymInsights } from '../services/lym-insights-service'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
 type OnboardingStep = 'welcome' | 'setup-choice' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis' | 'cloud-sync'
@@ -209,6 +210,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const [pendingQuickProfile, setPendingQuickProfile] = useState<Partial<UserProfile> | null>(null)
   // Store AI-calculated needs from StepAnalysis
   const [aiCalculatedNeeds, setAiCalculatedNeeds] = useState<NutritionalNeeds | null>(null)
+  // Track onboarding start time for duration calculation
+  const [onboardingStartTime] = useState<number>(Date.now())
+
+  // Track onboarding started on mount
+  useEffect(() => {
+    lymInsights.trackOnboardingStarted()
+  }, [])
 
   // Theme
   const { colors } = useTheme()
@@ -348,12 +356,16 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     // Start the AI trial period (unlimited AI credits for 7 days)
     startTrial()
 
+    // Track onboarding completed with duration
+    const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
+    lymInsights.trackOnboardingCompleted(durationSeconds)
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500))
 
     setLoading(false)
     onComplete()
-  }, [profile, aiCalculatedNeeds, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
+  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
 
   const handleNext = useCallback(async () => {
     // Analysis step: in Expo Go finalize directly, otherwise go to cloud-sync
@@ -390,12 +402,16 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     setSignupDate()
     startTrial()
 
+    // Track onboarding completed (quick mode)
+    const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
+    lymInsights.trackOnboardingCompleted(durationSeconds, ['full_profile_skipped'])
+
     await new Promise(resolve => setTimeout(resolve, 300))
 
     setLoading(false)
     setPendingQuickProfile(null)
     onComplete()
-  }, [pendingQuickProfile, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
+  }, [pendingQuickProfile, onboardingStartTime, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
 
   // Handle cloud sync completion (connected or skipped)
   const handleCloudSyncComplete = useCallback(async (connected: boolean) => {
@@ -444,6 +460,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       setOnboarded(true)
       setSignupDate()
       startTrial()
+      // Track onboarding completed (quick mode, Expo Go)
+      const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
+      lymInsights.trackOnboardingCompleted(durationSeconds, ['full_profile_skipped', 'expo_go'])
       await new Promise(resolve => setTimeout(resolve, 300))
       setLoading(false)
       onComplete()
