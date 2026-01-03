@@ -6,7 +6,8 @@ import {
   StepWelcome,
   StepSetupChoice,
   StepBasicInfo,
-  StepGoal,
+  StepGoalNew,
+  StepHealthPriorities,
   StepActivity,
   StepDiet,
   StepCooking,
@@ -27,7 +28,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { lymInsights } from '../services/lym-insights-service'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
-type OnboardingStep = 'welcome' | 'setup-choice' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis' | 'cloud-sync'
+type OnboardingStep = 'welcome' | 'setup-choice' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'health-priorities' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis' | 'cloud-sync'
 
 const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valueProposition?: string }> = {
   welcome: { title: '', subtitle: '' },
@@ -47,6 +48,11 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     title: 'Ton objectif principal',
     subtitle: 'TA MOTIVATION',
     valueProposition: "Chaque objectif a sa stratégie. On adapte les conseils et les macros pour t'aider à y arriver.",
+  },
+  'health-priorities': {
+    title: 'Tes priorités santé',
+    subtitle: 'PERSONNALISATION',
+    valueProposition: "Ces choix orientent les conseils, sans créer de contraintes. Tu pourras changer quand tu veux.",
   },
   diet: {
     title: 'Comment tu manges ?',
@@ -69,9 +75,9 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     valueProposition: "Un accompagnement sur-mesure pour réparer ton métabolisme en douceur et retrouver une relation saine avec la nourriture.",
   },
   'wellness-program': {
-    title: 'Programme Bien-être',
-    subtitle: 'PRENDS SOIN DE TOI',
-    valueProposition: "Sommeil, stress, hydratation... Parce que bien manger, c'est aussi bien vivre.",
+    title: 'Outils bien-etre',
+    subtitle: 'EN COMPLEMENT',
+    valueProposition: "Des outils optionnels pour soutenir ton equilibre au quotidien.",
   },
   lifestyle: {
     title: 'Tes habitudes de vie',
@@ -232,11 +238,20 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   // Build steps dynamically based on user profile
   // ORDRE DE PRIORITÉ:
+  // 0. health-priorities: si goal = health (après goal)
   // 1. Diagnostic métabolisme d'ABORD (après cooking)
   // 2. metabolic-program: si métabolisme adaptatif détecté (après metabolism)
   // 3. wellness-program: proposé à TOUS sauf si métabo accepté
   const steps = useMemo(() => {
     let dynamicSteps = [...baseSteps]
+
+    // 0. Si goal = health, ajouter l'étape health-priorities après goal
+    if (profile.goal === 'health') {
+      const goalIndex = dynamicSteps.indexOf('goal')
+      if (goalIndex !== -1) {
+        dynamicSteps = [...dynamicSteps.slice(0, goalIndex + 1), 'health-priorities' as OnboardingStep, ...dynamicSteps.slice(goalIndex + 1)]
+      }
+    }
 
     // 1. Si métabolisme adaptatif détecté, proposer Programme Métabo (après metabolism step)
     if (profile.metabolismProfile === 'adaptive') {
@@ -265,7 +280,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     }
 
     return dynamicSteps
-  }, [profile.metabolismProfile, profile.wantsMetabolicProgram])
+  }, [profile.goal, profile.metabolismProfile, profile.wantsMetabolicProgram])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
@@ -280,6 +295,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return !!profile.activityLevel
       case 'goal':
         return !!profile.goal
+      case 'health-priorities':
+        // Can always proceed - priorities are optional (store has defaults)
+        return true
       case 'diet':
         return !!profile.dietType
       case 'cooking':
@@ -523,7 +541,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       case 'activity':
         return <StepActivity data={profile} onChange={setProfile} />
       case 'goal':
-        return <StepGoal data={profile} onChange={setProfile} />
+        return <StepGoalNew data={profile} onChange={setProfile} />
+      case 'health-priorities':
+        return <StepHealthPriorities />
       case 'diet':
         return <StepDiet data={profile} onChange={setProfile} />
       case 'cooking':

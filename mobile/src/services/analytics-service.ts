@@ -52,6 +52,18 @@ export type AnalyticsEvent =
   | 'profile_updated'
   | 'weight_logged'
   | 'goal_changed'
+  // Goals & Health Module
+  | 'objective_selected'
+  | 'health_priorities_selected'
+  | 'routine_equilibre_enabled'
+  | 'routine_equilibre_disabled'
+  | 'checkin_prompt_shown'
+  | 'checkin_submitted'
+  | 'checkin_skipped'
+  | 'advice_requested'
+  | 'advice_viewed'
+  | 'health_overview_opened'
+  | 'diversity_card_viewed'
   // Errors & issues
   | 'error_occurred'
   | 'feature_failed'
