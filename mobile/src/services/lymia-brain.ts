@@ -1251,22 +1251,39 @@ export async function askLymIA(
   // Check if DSPy is available for enhanced RAG
   const dspyEnabled = await isDSPyEnabled()
 
+  // Detect supplement-related questions for food-first approach
+  const supplementKeywords = ['vitamine', 'vitamin', 'fer', 'magnésium', 'magnesium', 'zinc', 'omega', 'oméga', 'complément', 'supplement', 'carence', 'b12', 'vitamine d', 'calcium', 'protéine en poudre', 'whey', 'créatine']
+  const isSupplementQuestion = supplementKeywords.some(kw => question.toLowerCase().includes(kw))
+
+  // Detect movement-related questions
+  const movementKeywords = ['marche', 'sport', 'exercice', 'activité', 'bouger', 'musculation', 'course', 'vélo']
+  const isMovementQuestion = movementKeywords.some(kw => question.toLowerCase().includes(kw))
+
   // Step 1: Query rewriting (DSPy-enhanced if available)
   let searchQueries = [question]
+
+  // Add specific KB queries for supplements or movement
+  if (isSupplementQuestion) {
+    searchQueries.push('complements alimentaires ANSES food first sources alimentaires')
+  }
+  if (isMovementQuestion) {
+    searchQueries.push('mouvement marche glycemie appetit satiete activite physique')
+  }
+
   if (dspyEnabled) {
     const rewriteResult = await hookRewriteQuery(question, context.profile, {
       sleepHours: context.wellnessData.sleepHours,
       stressLevel: context.wellnessData.stressLevel,
     })
     if (rewriteResult.enhanced) {
-      searchQueries = rewriteResult.queries
+      searchQueries = [...rewriteResult.queries, ...searchQueries.slice(1)]
       console.log('[LymIA] DSPy rewritten queries:', searchQueries)
     }
   }
 
   // Step 2: Retrieve from KB using rewritten queries
   const allEntries: KnowledgeBaseEntry[] = []
-  for (const query of searchQueries.slice(0, 3)) {
+  for (const query of searchQueries.slice(0, 4)) {
     const entries = await queryKB(query)
     allEntries.push(...entries)
   }
@@ -1319,6 +1336,26 @@ export async function askLymIA(
   // Fallback: Standard RAG without DSPy
   const kbContext = buildKBContext(uniqueEntries)
 
+  // Build context-specific instructions
+  let specialInstructions = ''
+  if (isSupplementQuestion) {
+    specialInstructions = `
+RÈGLES SUPPLÉMENTS (OBLIGATOIRE):
+- Approche "food first" : cite TOUJOURS les sources alimentaires en premier
+- JAMAIS de dosages ni de recommandations de compléments spécifiques
+- Si carence suspectée → "Un bilan sanguin avec ton médecin permettra de confirmer"
+- Exceptions légitimes à mentionner : vitamine D en hiver, B12 pour végétaliens, acide folique grossesse
+- Termine par "Ces informations ne remplacent pas un avis médical"`
+  }
+  if (isMovementQuestion) {
+    specialInstructions = `
+RÈGLES MOUVEMENT:
+- Le mouvement est un SOUTIEN à la nutrition (pas pour "brûler des calories")
+- Angle : meilleure digestion, régulation de l'appétit, qualité du sommeil
+- Recommandations OMS : 150 min/semaine d'activité modérée (~20 min/jour)
+- NE JAMAIS culpabiliser sur le manque d'exercice`
+  }
+
   const prompt = `Tu es LymIA, assistant nutrition et bien-etre. Reponds a cette question:
 
 QUESTION: ${question}
@@ -1330,6 +1367,7 @@ CONTEXTE UTILISATEUR:
 
 CONNAISSANCES:
 ${kbContext || 'Aucune connaissance specifique trouvee dans la base.'}
+${specialInstructions}
 
 INSTRUCTIONS:
 - Reponds de maniere concise (2-4 phrases max)
@@ -1406,9 +1444,15 @@ export async function generateConnectedInsights(
 
   // Query knowledge base for cross-domain relationships - include fasting if applicable
   const fastingTerm = fastingContext?.schedule && fastingContext.schedule !== 'none' ? ' jeune intermittent fenetre alimentaire' : ''
+
+  // Enhanced query: include movement and supplements knowledge
+  const currentHour = new Date().getHours()
+  const isPostMealTime = (currentHour >= 12 && currentHour <= 14) || (currentHour >= 19 && currentHour <= 21)
+  const movementTerm = isPostMealTime ? ' marche digestive glycemie mouvement' : ' activite physique appetit'
+
   const kbEntries = await queryKB(
-    `lien sommeil nutrition performance sport stress cortisol metabolisme recuperation${fastingTerm}`,
-    ['nutrition', 'wellness', 'sport', 'metabolism']
+    `lien sommeil nutrition performance stress cortisol metabolisme recuperation${fastingTerm}${movementTerm}`,
+    ['nutrition', 'wellness', 'metabolism']
   )
   const kbContext = buildKBContext(kbEntries)
 
@@ -1471,8 +1515,19 @@ Exemples de connexions à faire:
 - "Ton stress élevé + déficit calorique = risque de craquage → on ajuste tes repas"
 - "Excellente nuit ! Parfait pour ta séance sport → voici un petit-déj adapté"
 - "Hydratation faible aujourd'hui → ça peut expliquer ta fatigue → un verre d'eau avant le sport ?"
+${isPostMealTime ? `- "Après le repas → 15 min de marche réduit ton pic glycémique de 30%"
+- "Digestion en cours → une petite marche aide à stabiliser ta glycémie"` : ''}
 ${fastingContext?.schedule && fastingContext.schedule !== 'none' ? `- "Fenêtre de jeûne en cours → parfait pour ta concentration, bois du thé/café noir"
 - "Plus que ${fastingContext.hoursUntilEatingWindow || 2}h avant ta fenêtre alimentaire → prépare un repas protéiné"` : ''}
+
+RÈGLE MOUVEMENT:
+- Tu peux mentionner la marche et le mouvement comme SOUTIEN à la nutrition (pas comme "brûler des calories")
+- Angle: "mouvement = meilleure digestion, moins de fringales" (PAS "sport pour maigrir")
+
+RÈGLE SUPPLÉMENTS (si question vitamines/fer/magnésium détectée):
+- TOUJOURS approche "food first" : "On trouve la vitamine D dans les poissons gras..."
+- JAMAIS de dosages ni de recommandations de compléments
+- Si carence suspectée → "Un bilan sanguin avec ton médecin permettra de voir"
 
 FORMAT OBLIGATOIRE - Messages courts et connecteurs:
 - Commence par constater un FAIT (donnée)
@@ -1632,9 +1687,23 @@ function generateStaticConnectedInsights(context: UserContext): ConnectedInsight
     })
   }
 
+  // Post-meal movement insight (12h-14h or 19h-21h)
+  const hour = new Date().getHours()
+  const isPostMealWindow = (hour >= 12 && hour <= 14) || (hour >= 19 && hour <= 21)
+
+  if (isPostMealWindow && todayNutrition.calories > 200) {
+    // User has eaten and it's post-meal time → suggest digestive walk
+    insights.push({
+      id: `static_movement_digestion_${Date.now()}`,
+      message: `Après manger → 15 min de marche réduit le pic glycémique de 30%`,
+      linkedFeatures: ['nutrition', 'sport'],
+      priority: 'medium',
+      icon: 'tip',
+    })
+  }
+
   // Default insight based on time of day if no other insights
   if (insights.length === 0) {
-    const hour = new Date().getHours()
     if (hour >= 6 && hour < 11) {
       insights.push({
         id: `static_morning_${Date.now()}`,

@@ -273,6 +273,78 @@
         "keywords": ["programme", "phase 4", "autonomie", "maintenance"],
         "relevance_score": 0.88
       }
+    },
+    {
+      "id": "wellness_movement_001",
+      "content": "Le mouvement regulier optimise la relation a l'alimentation. Une marche de 15-20 min apres les repas reduit le pic glycemique de 30% (etude Diabetes Care 2022). L'activite moderee (30 min/jour) regule la ghreline (hormone de la faim) et ameliore la sensibilite a la leptine (satiete). Il ne s'agit pas de 'bruler des calories' mais de soutenir le metabolisme naturel. La marche digestive est particulierement efficace apres le dejeuner.",
+      "category": "wellness",
+      "source": "pubmed",
+      "source_url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "metadata": {
+        "title": "Mouvement et regulation alimentaire",
+        "keywords": ["mouvement", "marche", "glycemie", "digestion", "satiete"],
+        "relevance_score": 0.91
+      }
+    },
+    {
+      "id": "wellness_movement_002",
+      "content": "L'activite physique impacte directement l'appetit et les choix alimentaires. L'exercice modere reduit les envies d'aliments ultra-transformes de 25% et augmente l'attrait pour les aliments nutritifs. Le mouvement en nature (marche, velo) combine les benefices physiques et les effets anti-stress du contact avec la nature. Objectif realiste: 150 min/semaine d'activite moderee (OMS), soit ~20 min/jour.",
+      "category": "wellness",
+      "source": "oms",
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/physical-activity",
+      "metadata": {
+        "title": "Activite physique et comportement alimentaire",
+        "keywords": ["exercice", "appetit", "envies", "nature", "OMS"],
+        "relevance_score": 0.89
+      }
+    },
+    {
+      "id": "wellness_movement_003",
+      "content": "Lien mouvement-sommeil-nutrition: L'activite physique reguliere ameliore la qualite du sommeil de 65%, ce qui a son tour regule les hormones de la faim (ghreline, leptine). Un cercle vertueux s'installe: mieux dormir = moins de fringales = meilleurs choix = plus d'energie pour bouger. Eviter l'exercice intense 3h avant le coucher pour ne pas perturber l'endormissement.",
+      "category": "wellness",
+      "source": "inserm",
+      "source_url": "https://www.inserm.fr/",
+      "metadata": {
+        "title": "Triangle mouvement-sommeil-nutrition",
+        "keywords": ["sommeil", "exercice", "hormones", "cercle vertueux"],
+        "relevance_score": 0.92
+      }
+    },
+    {
+      "id": "wellness_supplements_001",
+      "content": "L'ANSES rappelle que les complements alimentaires ne remplacent pas une alimentation variee. 80% des besoins en micronutriments peuvent etre couverts par l'alimentation. La supplementation sans avis medical peut masquer des symptomes ou creer des surdosages. Approche 'food first': privilegier les sources alimentaires avant toute supplementation.",
+      "category": "wellness",
+      "source": "anses",
+      "source_url": "https://www.anses.fr/fr/content/les-complements-alimentaires",
+      "metadata": {
+        "title": "Position generale sur les supplements",
+        "keywords": ["supplements", "complements", "ANSES", "food first"],
+        "relevance_score": 0.93
+      }
+    },
+    {
+      "id": "wellness_supplements_002",
+      "content": "Exceptions consensuelles pour supplementation: Vitamine D en hiver pour populations nordiques (800-1000 UI/j recommandes), acide folique pour femmes en projet de grossesse (400 mcg/j), vitamine B12 pour regimes vegetaliens stricts. Toute autre supplementation necessite un bilan sanguin prealable et un avis medical. Les carences suspectees doivent etre confirmees par analyse.",
+      "category": "wellness",
+      "source": "has",
+      "source_url": "https://www.has-sante.fr/",
+      "metadata": {
+        "title": "Cas legitimes de supplementation",
+        "keywords": ["vitamine D", "B12", "folate", "carence", "bilan sanguin"],
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "id": "wellness_supplements_003",
+      "content": "Sources alimentaires des micronutriments cles: Vitamine D (poissons gras, oeufs, champignons exposes au soleil), Fer (viandes rouges, lentilles, epinards + vitamine C), Magnesium (chocolat noir, amandes, bananes), Omega-3 (poissons gras 2x/semaine, noix, graines de lin), Calcium (produits laitiers, sardines, brocoli). Une alimentation diversifiee couvre la majorite des besoins.",
+      "category": "wellness",
+      "source": "anses",
+      "source_url": "https://www.anses.fr/",
+      "metadata": {
+        "title": "Sources alimentaires vs supplements",
+        "keywords": ["vitamines", "mineraux", "sources alimentaires", "diversite"],
+        "relevance_score": 0.88
+      }
     }
   ]
 }
