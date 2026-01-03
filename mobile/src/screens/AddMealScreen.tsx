@@ -75,6 +75,7 @@ import RecipeDiscovery from '../components/RecipeDiscovery'
 import { MealInputMethodsGrid } from '../components/MealInputMethodsGrid'
 import { analytics } from '../services/analytics-service'
 import { errorReporting } from '../services/error-reporting-service'
+import { detectUnitWeight, calculateWeightFromUnits, getUnitDisplayInfo } from '../services/unit-weights'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -360,7 +361,9 @@ export default function AddMealScreen() {
     (acc, { food, quantity, unit }) => {
       let gramsEquivalent = quantity
       if (unit === 'unit' || unit === 'portion') {
-        gramsEquivalent = quantity * (food.servingSize || 100)
+        // Use accurate unit weight from our database
+        const { weightGrams } = calculateWeightFromUnits(food, quantity)
+        gramsEquivalent = weightGrams
       }
       const multiplier = gramsEquivalent / 100
 
@@ -421,12 +424,14 @@ export default function AddMealScreen() {
 
   // Calculate nutrition for modal
   const calculateModalNutrition = () => {
-    if (!quantityModal.food) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    if (!quantityModal.food) return { calories: 0, proteins: 0, carbs: 0, fats: 0, gramsEquivalent: 0 }
 
     const { food, quantity, unit } = quantityModal
     let gramsEquivalent = quantity
     if (unit === 'unit' || unit === 'portion') {
-      gramsEquivalent = quantity * (food.servingSize || 100)
+      // Use accurate unit weight from our database
+      const { weightGrams } = calculateWeightFromUnits(food, quantity)
+      gramsEquivalent = weightGrams
     }
     const multiplier = gramsEquivalent / 100
 
@@ -435,7 +440,14 @@ export default function AddMealScreen() {
       proteins: Math.round(food.nutrition.proteins * multiplier * 10) / 10,
       carbs: Math.round(food.nutrition.carbs * multiplier * 10) / 10,
       fats: Math.round(food.nutrition.fats * multiplier * 10) / 10,
+      gramsEquivalent: Math.round(gramsEquivalent * 10) / 10,
     }
+  }
+
+  // Get unit weight info for display
+  const getModalUnitInfo = () => {
+    if (!quantityModal.food) return null
+    return getUnitDisplayInfo(quantityModal.food)
   }
 
   // Confirm add food from modal
@@ -1881,7 +1893,8 @@ export default function AddMealScreen() {
                 <View style={styles.ragInfoCard}>
                   <Database size={16} color={colors.accent.primary} />
                   <Text style={styles.ragInfoText}>
-                    Sources intelligentes: Gustar, Open Food Facts, CIQUAL, IA
+                    Sources: Gustar, OFF, CIQUAL, IA{'\n'}
+                    <Text style={styles.ragInfoHint}>Changer les sources de recettes dans Profil → Parametres</Text>
                   </Text>
                 </View>
               </LinearGradient>
@@ -3143,6 +3156,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
     flex: 1,
+  },
+  ragInfoHint: {
+    ...typography.small,
+    color: colors.text.tertiary,
+    fontStyle: 'italic',
   },
   generateButton: {
     marginHorizontal: spacing.default,
