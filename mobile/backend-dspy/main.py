@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import diskcache
@@ -235,6 +236,79 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy():
+    """Privacy policy page for Google Play Store"""
+    return """<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité - LYM</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+        h1 { color: #0077B6; }
+        h2 { color: #0096C7; margin-top: 30px; }
+        .last-updated { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>Politique de Confidentialité</h1>
+    <p class="last-updated">Dernière mise à jour : 4 janvier 2025</p>
+    <p>LYM ("nous", "notre", "l'application") s'engage à protéger votre vie privée. Cette politique explique comment nous collectons, utilisons et protégeons vos données.</p>
+    <h2>1. Données collectées</h2>
+    <p>L'application peut collecter les types de données suivants :</p>
+    <ul>
+        <li><strong>Informations de profil</strong> : âge, sexe, poids, taille, niveau d'activité (stockées localement sur votre appareil)</li>
+        <li><strong>Données nutritionnelles</strong> : repas enregistrés, objectifs caloriques (stockées localement)</li>
+        <li><strong>Photos</strong> : uniquement lorsque vous utilisez la fonction de scan d'aliments (traitées pour analyse, non conservées)</li>
+        <li><strong>Compte Google</strong> : si vous choisissez la synchronisation cloud, votre email est utilisé pour l'authentification</li>
+    </ul>
+    <h2>2. Utilisation de la caméra</h2>
+    <p>L'application utilise l'accès à la caméra pour :</p>
+    <ul>
+        <li>Scanner les codes-barres des produits alimentaires</li>
+        <li>Photographier vos repas pour analyse nutritionnelle automatique</li>
+    </ul>
+    <p>Les photos sont traitées pour extraire les informations nutritionnelles et ne sont pas stockées sur nos serveurs.</p>
+    <h2>3. Stockage des données</h2>
+    <p>Par défaut, toutes vos données sont stockées <strong>localement sur votre appareil</strong>. Si vous activez la synchronisation cloud :</p>
+    <ul>
+        <li>Vos données sont chiffrées et stockées de manière sécurisée</li>
+        <li>Vous pouvez supprimer vos données à tout moment depuis l'application</li>
+    </ul>
+    <h2>4. Partage des données</h2>
+    <p>Nous ne vendons ni ne partageons vos données personnelles avec des tiers, sauf :</p>
+    <ul>
+        <li>Pour fournir les fonctionnalités de l'application (ex: API d'analyse nutritionnelle)</li>
+        <li>Si requis par la loi</li>
+    </ul>
+    <h2>5. Services tiers</h2>
+    <p>L'application peut utiliser des services tiers pour :</p>
+    <ul>
+        <li><strong>Authentification</strong> : Google Sign-In</li>
+        <li><strong>Analyse nutritionnelle</strong> : OpenAI API (les données sont anonymisées)</li>
+        <li><strong>Base de données alimentaires</strong> : Open Food Facts</li>
+    </ul>
+    <h2>6. Vos droits</h2>
+    <p>Vous avez le droit de :</p>
+    <ul>
+        <li>Accéder à vos données personnelles</li>
+        <li>Rectifier vos données</li>
+        <li>Supprimer vos données (effacer toutes les données depuis les paramètres)</li>
+        <li>Retirer votre consentement à tout moment</li>
+    </ul>
+    <h2>7. Sécurité</h2>
+    <p>Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos données contre tout accès non autorisé.</p>
+    <h2>8. Contact</h2>
+    <p>Pour toute question concernant cette politique de confidentialité, contactez-nous à :</p>
+    <p><strong>Email</strong> : contact@lym-app.com</p>
+    <h2>9. Modifications</h2>
+    <p>Nous nous réservons le droit de modifier cette politique. Les utilisateurs seront informés de tout changement significatif.</p>
+</body>
+</html>"""
 
 
 @app.post("/rewrite-query", response_model=RewriteQueryResponse)
