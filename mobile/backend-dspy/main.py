@@ -228,14 +228,139 @@ async def health_check():
     }
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint"""
-    return {
-        "service": "LYM DSPy RAG API",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
+    """
+    Root endpoint - handles both API info and Supabase auth redirects.
+    Supabase redirects with fragment (#access_token=...) which JavaScript handles.
+    """
+    return """<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .icon.success { background: #10B981; }
+        .icon.info { background: #667eea; }
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+            fill: none;
+        }
+        h1 {
+            color: #1F2937;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        p {
+            color: #6B7280;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #9CA3AF;
+        }
+        .api-info { display: none; }
+        .auth-success { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- API Info (shown when no auth fragment) -->
+        <div class="api-info" id="apiInfo">
+            <div class="icon info">
+                <svg viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h1>LYM API</h1>
+            <p>Service backend pour l'application LYM.</p>
+            <a href="/docs" class="btn">Documentation API</a>
+        </div>
+
+        <!-- Auth Success (shown when auth fragment detected) -->
+        <div class="auth-success" id="authSuccess">
+            <div class="icon success">
+                <svg viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1>Email vérifié !</h1>
+            <p>Ton compte LYM est maintenant activé. Tu peux retourner dans l'application pour te connecter.</p>
+            <a href="#" class="btn" id="openAppBtn">Ouvrir LYM</a>
+            <p class="note">Si le bouton ne fonctionne pas, ouvre l'app LYM manuellement.</p>
+        </div>
+    </div>
+
+    <script>
+        // Check if we have auth tokens in the URL fragment
+        var hash = window.location.hash;
+        if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery'))) {
+            // Show auth success view
+            document.getElementById('authSuccess').style.display = 'block';
+            document.getElementById('apiInfo').style.display = 'none';
+
+            // Build deep link with the fragment params
+            var params = hash.substring(1); // Remove the #
+            var deepLink = 'lym://auth/callback?' + params;
+
+            // Update button href
+            document.getElementById('openAppBtn').href = deepLink;
+
+            // Try to open app automatically after delay
+            setTimeout(function() {
+                window.location.href = deepLink;
+            }, 1500);
+        } else {
+            // Show API info
+            document.getElementById('apiInfo').style.display = 'block';
+            document.getElementById('authSuccess').style.display = 'none';
+        }
+    </script>
+</body>
+</html>"""
 
 
 @app.get("/privacy", response_class=HTMLResponse)
