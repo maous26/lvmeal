@@ -79,12 +79,11 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 export default function RootNavigator() {
-  const { isOnboarded, profile, setOnboarded } = useUserStore()
+  const { isOnboarded, profile, setOnboarded, clearProfile } = useUserStore()
   const { isAuthenticated } = useAuthStore()
   const [showAuth, setShowAuth] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [isReturningUser, setIsReturningUser] = useState(false) // True when user clicked "J'ai déjà un compte"
-  const [forceShowOnboarding, setForceShowOnboarding] = useState(false) // Allow returning users to view onboarding screens
 
   // Check if user has cached auth (Google or Email) on mount
   useEffect(() => {
@@ -133,7 +132,6 @@ export default function RootNavigator() {
     setOnboarded(true)
     setShowAuth(false)
     setIsReturningUser(false) // Reset for next time
-    setForceShowOnboarding(false)
   }
 
   // Show nothing while checking auth state
@@ -146,7 +144,6 @@ export default function RootNavigator() {
   // 2. If onboarded but needs auth (logged out returning user) -> Auth
   // 3. If not onboarded (new user) -> Onboarding (auth is at the end via StepCloudSync)
   const getInitialRoute = () => {
-    if (forceShowOnboarding) return 'Onboarding'
     if (isOnboarded && !showAuth) return 'Main'
     if (showAuth) return 'Auth'
     return 'Onboarding'
@@ -167,28 +164,27 @@ export default function RootNavigator() {
               {...props}
               onAuthenticated={handleAuthenticated}
               isReturningUser={isReturningUser}
-              onViewOnboarding={() => {
-                setForceShowOnboarding(true)
+              onRestartOnboarding={() => {
+                // Reset returning-user auth flow back to onboarding
+                clearProfile()
                 setShowAuth(false)
                 setIsReturningUser(false)
               }}
             />
           )}
         </Stack.Screen>
-      ) : (!isOnboarded || forceShowOnboarding) ? (
+      ) : !isOnboarded ? (
         <Stack.Screen name="Onboarding">
           {(props) => (
             <OnboardingScreen
               {...props}
               onComplete={() => {
                 // Navigation will happen automatically due to isOnboarded change
-                setForceShowOnboarding(false)
               }}
               onHaveAccount={() => {
                 // User claims to have an account - show auth screen in sign-in mode
                 setIsReturningUser(true)
                 setShowAuth(true)
-                setForceShowOnboarding(false)
               }}
             />
           )}

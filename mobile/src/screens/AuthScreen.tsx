@@ -41,10 +41,10 @@ type AuthView = 'main' | 'email' | 'verification' | 'reset'
 interface AuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
   isReturningUser?: boolean // True when user clicked "J'ai déjà un compte"
-  onViewOnboarding?: () => void
+  onRestartOnboarding?: () => void
 }
 
-export default function AuthScreen({ onAuthenticated, isReturningUser = false, onViewOnboarding }: AuthScreenProps) {
+export default function AuthScreen({ onAuthenticated, isReturningUser = false, onRestartOnboarding }: AuthScreenProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<'google' | 'email' | null>(null)
@@ -52,7 +52,7 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
 
   const { signInWithGoogleToken, signOut } = useAuthStore()
-  const { profile } = useUserStore()
+  const { profile, clearProfile } = useUserStore()
 
   const handleGoogleSignIn = async () => {
     if (!isGoogleAuthConfigured()) {
@@ -119,9 +119,13 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
             setLoadingMethod(null)
             try {
               await signOut()
+              // Reset local profile/onboarding so the flow restarts cleanly
+              clearProfile()
               setCurrentView('main')
               setPendingVerificationEmail('')
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+              // Ask RootNavigator to show onboarding again
+              onRestartOnboarding?.()
             } catch (e: any) {
               Alert.alert('Erreur', e?.message || 'Impossible de se déconnecter')
             } finally {
@@ -131,11 +135,6 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
         },
       ]
     )
-  }
-
-  const handleViewOnboarding = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    onViewOnboarding?.()
   }
 
   const googleConfigured = isGoogleAuthConfigured()
@@ -149,7 +148,8 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
         onNeedsVerification={handleNeedsVerification}
         onForgotPassword={handleForgotPassword}
         initialEmail={pendingVerificationEmail}
-        forceSignIn={isReturningUser}
+        // Default to sign-in (user can still switch to sign-up from the screen)
+        forceSignIn
       />
     )
   }
@@ -251,18 +251,8 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
         </TouchableOpacity>
       </View>
 
-      {/* Returning user helpers */}
+      {/* Switch account */}
       <View style={styles.helpers}>
-        <TouchableOpacity
-          onPress={handleViewOnboarding}
-          disabled={isLoading || !onViewOnboarding}
-          style={styles.helperButton}
-        >
-          <Text style={[styles.helperText, { color: colors.accent.primary, opacity: isLoading ? 0.6 : 1 }]}>
-            Voir le nouvel onboarding
-          </Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           onPress={handleUseAnotherAccount}
           disabled={isLoading}
