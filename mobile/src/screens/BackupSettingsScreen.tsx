@@ -39,6 +39,8 @@ import {
   ChevronRight,
   LogOut,
   User,
+  Lock,
+  Mail,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import * as DocumentPicker from 'expo-document-picker'
@@ -49,9 +51,11 @@ import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius } from '../constants/theme'
 import { useAuthStore } from '../stores/auth-store'
 import { signInWithGoogle, signInWithGoogleToken, isGoogleAuthConfigured as checkGoogleConfigured } from '../services/google-auth-service'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../navigation/RootNavigator'
 
 export default function BackupSettingsScreen() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { colors } = useTheme()
   const toast = useToast()
 
@@ -278,38 +282,71 @@ export default function BackupSettingsScreen() {
         </Text>
 
         {isAuthenticated && authMethod !== 'anonymous' ? (
-          <Card style={{ backgroundColor: colors.bg.elevated }}>
-            <View style={styles.accountInfo}>
-              {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.accent.light }]}>
-                  <User size={24} color={colors.accent.primary} />
+          <>
+            <Card style={{ backgroundColor: colors.bg.elevated }}>
+              <View style={styles.accountInfo}>
+                {avatarUrl ? (
+                  <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                ) : (
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: colors.accent.light }]}>
+                    <User size={24} color={colors.accent.primary} />
+                  </View>
+                )}
+                <View style={styles.accountDetails}>
+                  <Text style={[styles.accountName, { color: colors.text.primary }]}>
+                    {displayName || 'Utilisateur'}
+                  </Text>
+                  <Text style={[styles.accountEmail, { color: colors.text.tertiary }]}>
+                    {email}
+                  </Text>
+                  <View style={styles.accountBadge}>
+                    {authMethod === 'google' && (
+                      <Text style={[styles.badgeText, { color: colors.accent.primary }]}>
+                        Google
+                      </Text>
+                    )}
+                    {authMethod === 'email' && (
+                      <View style={styles.emailBadge}>
+                        <Mail size={12} color={colors.accent.primary} />
+                        <Text style={[styles.badgeText, { color: colors.accent.primary }]}>
+                          Email
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              )}
-              <View style={styles.accountDetails}>
-                <Text style={[styles.accountName, { color: colors.text.primary }]}>
-                  {displayName || 'Utilisateur'}
-                </Text>
-                <Text style={[styles.accountEmail, { color: colors.text.tertiary }]}>
-                  {email}
-                </Text>
-                <View style={styles.accountBadge}>
-                  {authMethod === 'google' && (
-                    <Text style={[styles.badgeText, { color: colors.accent.primary }]}>
-                      Google
-                    </Text>
-                  )}
-                </View>
+                <TouchableOpacity
+                  onPress={handleSignOut}
+                  style={[styles.signOutButton, { backgroundColor: colors.bg.secondary }]}
+                >
+                  <LogOut size={18} color={colors.text.secondary} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                onPress={handleSignOut}
-                style={[styles.signOutButton, { backgroundColor: colors.bg.secondary }]}
-              >
-                <LogOut size={18} color={colors.text.secondary} />
-              </TouchableOpacity>
-            </View>
-          </Card>
+            </Card>
+
+            {/* Change Password Option (Email users only) */}
+            {authMethod === 'email' && (
+              <Card padding="none" style={{ backgroundColor: colors.bg.elevated, marginTop: spacing.md }}>
+                <TouchableOpacity
+                  style={styles.settingItem}
+                  onPress={() => navigation.navigate('ChangePassword')}
+                >
+                  <View style={[styles.settingIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+                    <Lock size={22} color="#8B5CF6" />
+                  </View>
+                  <View style={styles.settingInfo}>
+                    <Text style={[styles.settingLabel, { color: colors.text.primary }]}>
+                      Modifier le mot de passe
+                    </Text>
+                    <Text style={[styles.settingDescription, { color: colors.text.tertiary }]}>
+                      Changer votre mot de passe
+                    </Text>
+                  </View>
+                  <ChevronRight size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
+              </Card>
+            )}
+          </>
         ) : (
           <Card style={{ backgroundColor: colors.bg.elevated }}>
             <View style={styles.signInPrompt}>
@@ -603,6 +640,11 @@ const styles = StyleSheet.create({
   badgeText: {
     ...typography.caption,
     fontWeight: '600',
+  },
+  emailBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   signOutButton: {
     width: 36,

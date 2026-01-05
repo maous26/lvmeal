@@ -21,9 +21,11 @@ import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'
 import MealInputSettingsScreen from '../screens/MealInputSettingsScreen'
 import ScaleSettingsScreen from '../screens/ScaleSettingsScreen'
 import BackupSettingsScreen from '../screens/BackupSettingsScreen'
+import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import { useUserStore } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { isGoogleSignedIn, getCachedGoogleUser } from '../services/google-auth-service'
+import { isEmailSignedIn, getCachedEmailUser } from '../services/email-auth-service'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
@@ -71,6 +73,7 @@ export type RootStackParamList = {
   MealInputSettings: undefined
   ScaleSettings: undefined
   BackupSettings: undefined
+  ChangePassword: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -81,15 +84,19 @@ export default function RootNavigator() {
   const [showAuth, setShowAuth] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
-  // Check if user has cached Google auth on mount
+  // Check if user has cached auth (Google or Email) on mount
   useEffect(() => {
     const checkExistingAuth = async () => {
       try {
-        // Check if user has cached Google credentials
-        const cachedUser = await getCachedGoogleUser()
-        const signedIn = await isGoogleSignedIn()
+        // Check if user has cached Google or Email credentials
+        const cachedGoogleUser = await getCachedGoogleUser()
+        const googleSignedIn = await isGoogleSignedIn()
+        const cachedEmailUser = await getCachedEmailUser()
+        const emailSignedIn = await isEmailSignedIn()
 
-        if (cachedUser || signedIn) {
+        const hasAuth = cachedGoogleUser || googleSignedIn || cachedEmailUser || emailSignedIn
+
+        if (hasAuth) {
           // User has previous auth, check if they completed onboarding
           if (profile?.onboardingCompleted || isOnboarded) {
             // Returning user with completed profile - go straight to app
@@ -279,6 +286,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="BackupSettings"
             component={BackupSettingsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
             options={{
               animation: 'slide_from_right',
             }}

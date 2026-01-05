@@ -7,8 +7,7 @@
  *
  * Options:
  * - Continue with Google (native sign-in)
- * - Continue with Email (magic link - future)
- * - Skip (continue without account)
+ * - Continue with Email (email/password auth)
  */
 
 import React, { useState } from 'react'
@@ -22,7 +21,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Mail } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -31,10 +29,14 @@ import { spacing, typography, radius, shadows } from '../constants/theme'
 import {
   signInWithGoogle,
   isGoogleAuthConfigured,
-  getCachedGoogleUser,
 } from '../services/google-auth-service'
 import { useAuthStore } from '../stores/auth-store'
 import { useUserStore } from '../stores/user-store'
+import EmailAuthScreen from './EmailAuthScreen'
+import EmailVerificationScreen from './EmailVerificationScreen'
+import PasswordResetScreen from './PasswordResetScreen'
+
+type AuthView = 'main' | 'email' | 'verification' | 'reset'
 
 interface AuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
@@ -44,9 +46,11 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<'google' | 'email' | null>(null)
+  const [currentView, setCurrentView] = useState<AuthView>('main')
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
 
   const { signInWithGoogleToken } = useAuthStore()
-  const { profile, setOnboarded } = useUserStore()
+  const { profile } = useUserStore()
 
   const handleGoogleSignIn = async () => {
     if (!isGoogleAuthConfigured()) {
@@ -83,16 +87,58 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   }
 
   const handleEmailSignIn = () => {
-    // TODO: Implement email magic link
-    Alert.alert(
-      'Bientôt disponible',
-      'La connexion par email sera disponible prochainement.',
-      [{ text: 'OK' }]
-    )
+    setCurrentView('email')
+  }
+
+  const handleNeedsVerification = (email: string) => {
+    setPendingVerificationEmail(email)
+    setCurrentView('verification')
+  }
+
+  const handleVerified = () => {
+    onAuthenticated(true)
+  }
+
+  const handleForgotPassword = () => {
+    setCurrentView('reset')
   }
 
   const googleConfigured = isGoogleAuthConfigured()
 
+  // Render email auth screen
+  if (currentView === 'email') {
+    return (
+      <EmailAuthScreen
+        onBack={() => setCurrentView('main')}
+        onAuthenticated={onAuthenticated}
+        onNeedsVerification={handleNeedsVerification}
+        onForgotPassword={handleForgotPassword}
+      />
+    )
+  }
+
+  // Render verification screen
+  if (currentView === 'verification') {
+    return (
+      <EmailVerificationScreen
+        email={pendingVerificationEmail}
+        onBack={() => setCurrentView('email')}
+        onVerified={handleVerified}
+      />
+    )
+  }
+
+  // Render password reset screen
+  if (currentView === 'reset') {
+    return (
+      <PasswordResetScreen
+        onBack={() => setCurrentView('email')}
+        initialEmail={pendingVerificationEmail}
+      />
+    )
+  }
+
+  // Render main auth screen
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Logo & App Name */}
