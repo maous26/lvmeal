@@ -16,20 +16,28 @@ import * as Haptics from 'expo-haptics'
 import Constants from 'expo-constants'
 
 // Check if running in Expo Go (native modules not available)
-const isExpoGo = Constants.executionEnvironment === 'storeClient' ? false : Constants.executionEnvironment === 'standalone' ? false : true
+// appOwnership: 'expo' = Expo Go, 'standalone' or null = production build
+const isExpoGo = Constants.appOwnership === 'expo'
+
+console.log('[VoiceFoodInput] appOwnership:', Constants.appOwnership)
+console.log('[VoiceFoodInput] isExpoGo:', isExpoGo)
 
 // Conditionally import expo-speech-recognition
 let ExpoSpeechRecognitionModule: any = null
 let useSpeechRecognitionEvent: (event: string, callback: (e: any) => void) => void = () => {}
 
+// Always try to load the module in production builds
 if (!isExpoGo) {
   try {
     const speechModule = require('expo-speech-recognition')
     ExpoSpeechRecognitionModule = speechModule.ExpoSpeechRecognitionModule
     useSpeechRecognitionEvent = speechModule.useSpeechRecognitionEvent
+    console.log('[VoiceFoodInput] Speech module loaded:', !!ExpoSpeechRecognitionModule)
   } catch (e) {
-    console.warn('[VoiceFoodInput] expo-speech-recognition not available')
+    console.warn('[VoiceFoodInput] expo-speech-recognition not available:', e)
   }
+} else {
+  console.log('[VoiceFoodInput] Skipping speech module load (Expo Go)')
 }
 
 import { Card, Button, Badge } from './ui'
@@ -66,15 +74,22 @@ export default function VoiceFoodInput({
   }, [])
 
   const checkSpeechAvailability = () => {
+    console.log('[VoiceFoodInput] checkSpeechAvailability called')
+    console.log('[VoiceFoodInput] isExpoGo:', isExpoGo)
+    console.log('[VoiceFoodInput] ExpoSpeechRecognitionModule:', !!ExpoSpeechRecognitionModule)
+
     // In Expo Go, speech recognition is not available
     if (isExpoGo || !ExpoSpeechRecognitionModule) {
+      console.log('[VoiceFoodInput] Speech not available: isExpoGo or no module')
       setSpeechAvailable(false)
       return
     }
     try {
       const available = ExpoSpeechRecognitionModule.isRecognitionAvailable()
+      console.log('[VoiceFoodInput] isRecognitionAvailable:', available)
       setSpeechAvailable(available)
-    } catch {
+    } catch (e) {
+      console.log('[VoiceFoodInput] isRecognitionAvailable error:', e)
       setSpeechAvailable(false)
     }
   }
