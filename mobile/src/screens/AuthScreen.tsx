@@ -41,16 +41,17 @@ type AuthView = 'main' | 'email' | 'verification' | 'reset'
 interface AuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
   isReturningUser?: boolean // True when user clicked "J'ai déjà un compte"
+  onViewOnboarding?: () => void
 }
 
-export default function AuthScreen({ onAuthenticated, isReturningUser = false }: AuthScreenProps) {
+export default function AuthScreen({ onAuthenticated, isReturningUser = false, onViewOnboarding }: AuthScreenProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<'google' | 'email' | null>(null)
   const [currentView, setCurrentView] = useState<AuthView>('main')
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
 
-  const { signInWithGoogleToken } = useAuthStore()
+  const { signInWithGoogleToken, signOut } = useAuthStore()
   const { profile } = useUserStore()
 
   const handleGoogleSignIn = async () => {
@@ -102,6 +103,39 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false }:
 
   const handleForgotPassword = () => {
     setCurrentView('reset')
+  }
+
+  const handleUseAnotherAccount = () => {
+    Alert.alert(
+      'Utiliser un autre compte',
+      'Tu vas être déconnecté(e) pour pouvoir te connecter avec un autre compte. Continuer ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Continuer',
+          style: 'destructive',
+          onPress: async () => {
+            setIsLoading(true)
+            setLoadingMethod(null)
+            try {
+              await signOut()
+              setCurrentView('main')
+              setPendingVerificationEmail('')
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+            } catch (e: any) {
+              Alert.alert('Erreur', e?.message || 'Impossible de se déconnecter')
+            } finally {
+              setIsLoading(false)
+            }
+          },
+        },
+      ]
+    )
+  }
+
+  const handleViewOnboarding = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    onViewOnboarding?.()
   }
 
   const googleConfigured = isGoogleAuthConfigured()
@@ -217,6 +251,29 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false }:
         </TouchableOpacity>
       </View>
 
+      {/* Returning user helpers */}
+      <View style={styles.helpers}>
+        <TouchableOpacity
+          onPress={handleViewOnboarding}
+          disabled={isLoading || !onViewOnboarding}
+          style={styles.helperButton}
+        >
+          <Text style={[styles.helperText, { color: colors.accent.primary, opacity: isLoading ? 0.6 : 1 }]}>
+            Voir le nouvel onboarding
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleUseAnotherAccount}
+          disabled={isLoading}
+          style={styles.helperButton}
+        >
+          <Text style={[styles.helperText, { color: colors.text.secondary, opacity: isLoading ? 0.6 : 1 }]}>
+            Utiliser un autre compte
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Privacy Note */}
       <Text style={[styles.privacyNote, { color: colors.text.muted }]}>
         Tes données sont stockées localement sur ton appareil.{'\n'}
@@ -267,6 +324,19 @@ const styles = StyleSheet.create({
   authOptions: {
     gap: spacing.md,
     marginTop: spacing.xl,
+  },
+  helpers: {
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  helperButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+  },
+  helperText: {
+    ...typography.bodyMedium,
+    textAlign: 'center',
   },
   authButton: {
     flexDirection: 'row',
