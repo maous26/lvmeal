@@ -11,9 +11,9 @@ import logging
 from typing import Optional, List
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import diskcache
@@ -514,6 +514,227 @@ async def clear_cache():
     """Clear the response cache"""
     cache.clear()
     return {"status": "cache cleared"}
+
+
+# ============= AUTH CALLBACK ENDPOINTS =============
+
+@app.get("/auth/callback", response_class=HTMLResponse)
+async def auth_callback(request: Request):
+    """
+    Handle Supabase email verification callback.
+    Displays a success page and redirects to the app via deep link.
+    """
+    # Get query params from Supabase
+    params = dict(request.query_params)
+
+    # Build deep link URL with tokens
+    deep_link = "lym://auth/callback"
+    if params:
+        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        deep_link = f"{deep_link}?{query_string}"
+
+    return f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email vérifié - LYM</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }}
+        .container {{
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }}
+        .icon {{
+            width: 80px;
+            height: 80px;
+            background: #10B981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }}
+        .icon svg {{
+            width: 40px;
+            height: 40px;
+            color: white;
+        }}
+        h1 {{
+            color: #1F2937;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }}
+        p {{
+            color: #6B7280;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }}
+        .btn {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }}
+        .btn:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }}
+        .note {{
+            margin-top: 20px;
+            font-size: 14px;
+            color: #9CA3AF;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <h1>Email vérifié !</h1>
+        <p>Ton compte LYM est maintenant activé. Tu peux retourner dans l'application pour te connecter.</p>
+        <a href="{deep_link}" class="btn">Ouvrir LYM</a>
+        <p class="note">Si le bouton ne fonctionne pas, ouvre l'app LYM manuellement.</p>
+    </div>
+    <script>
+        // Try to open the app automatically after a short delay
+        setTimeout(function() {{
+            window.location.href = "{deep_link}";
+        }}, 1500);
+    </script>
+</body>
+</html>"""
+
+
+@app.get("/auth/reset-password", response_class=HTMLResponse)
+async def auth_reset_password(request: Request):
+    """
+    Handle Supabase password reset callback.
+    Displays a page to redirect to the app for password change.
+    """
+    params = dict(request.query_params)
+
+    # Build deep link URL with tokens
+    deep_link = "lym://auth/reset-password"
+    if params:
+        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
+        deep_link = f"{deep_link}?{query_string}"
+
+    return f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réinitialiser le mot de passe - LYM</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }}
+        .container {{
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }}
+        .icon {{
+            width: 80px;
+            height: 80px;
+            background: #8B5CF6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }}
+        .icon svg {{
+            width: 40px;
+            height: 40px;
+            color: white;
+        }}
+        h1 {{
+            color: #1F2937;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }}
+        p {{
+            color: #6B7280;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }}
+        .btn {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }}
+        .btn:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }}
+        .note {{
+            margin-top: 20px;
+            font-size: 14px;
+            color: #9CA3AF;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+            </svg>
+        </div>
+        <h1>Réinitialiser le mot de passe</h1>
+        <p>Clique sur le bouton ci-dessous pour ouvrir l'application et choisir un nouveau mot de passe.</p>
+        <a href="{deep_link}" class="btn">Ouvrir LYM</a>
+        <p class="note">Si le bouton ne fonctionne pas, ouvre l'app LYM manuellement.</p>
+    </div>
+    <script>
+        // Try to open the app automatically after a short delay
+        setTimeout(function() {{
+            window.location.href = "{deep_link}";
+        }}, 1500);
+    </script>
+</body>
+</html>"""
 
 
 # ============= RUN =============

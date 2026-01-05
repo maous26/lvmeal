@@ -34,6 +34,9 @@ export interface PasswordResetResult {
 // Storage key for cached email user
 const EMAIL_USER_STORAGE_KEY = 'lym_email_user'
 
+// Backend URL for auth redirects
+const AUTH_REDIRECT_BASE = 'https://lym1-production.up.railway.app'
+
 // ============================================================================
 // Email Authentication Functions
 // ============================================================================
@@ -77,7 +80,7 @@ export async function signUpWithEmail(
       email,
       password,
       options: {
-        emailRedirectTo: 'presence://auth/callback',
+        emailRedirectTo: `${AUTH_REDIRECT_BASE}/auth/callback`,
       },
     })
 
@@ -233,7 +236,7 @@ export async function sendPasswordResetEmail(email: string): Promise<PasswordRes
 
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'presence://auth/reset-password',
+      redirectTo: `${AUTH_REDIRECT_BASE}/auth/reset-password`,
     })
 
     if (error) {
@@ -318,7 +321,7 @@ export async function resendVerificationEmail(email: string): Promise<PasswordRe
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: 'presence://auth/callback',
+        emailRedirectTo: `${AUTH_REDIRECT_BASE}/auth/callback`,
       },
     })
 
