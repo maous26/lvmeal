@@ -35,6 +35,8 @@ interface EmailAuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
   onNeedsVerification: (email: string) => void
   onForgotPassword: () => void
+  initialEmail?: string // Pre-fill email when coming back from verification
+  forceSignIn?: boolean // Force sign-in mode (for "J'ai déjà un compte")
 }
 
 export default function EmailAuthScreen({
@@ -42,10 +44,19 @@ export default function EmailAuthScreen({
   onAuthenticated,
   onNeedsVerification,
   onForgotPassword,
+  initialEmail = '',
+  forceSignIn = false,
 }: EmailAuthScreenProps) {
   const { colors } = useTheme()
-  const [isSignUp, setIsSignUp] = useState(true)
-  const [email, setEmail] = useState('')
+
+  // Clean initial email from invisible characters
+  const cleanInitialEmail = initialEmail
+    .replace(/[\u200B-\u200F\u2028-\u202F\uFEFF]/g, '')
+    .trim()
+
+  // If we have an initial email or forceSignIn is true, start in sign-in mode
+  const [isSignUp, setIsSignUp] = useState(!cleanInitialEmail && !forceSignIn)
+  const [email, setEmail] = useState(cleanInitialEmail)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -84,6 +95,9 @@ export default function EmailAuthScreen({
 
     setIsLoading(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    // Debug: Log the email being submitted
+    console.log('[EmailAuthScreen] Submitting:', isSignUp ? 'SIGNUP' : 'SIGNIN', 'Email length:', email.length, 'Email:', JSON.stringify(email))
 
     try {
       if (isSignUp) {
@@ -167,7 +181,11 @@ export default function EmailAuthScreen({
                   placeholder="votre@email.com"
                   placeholderTextColor={colors.text.muted}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    // Clean invisible characters when typing
+                    const cleanText = text.replace(/[\u200B-\u200F\u2028-\u202F\uFEFF]/g, '')
+                    setEmail(cleanText)
+                  }}
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
@@ -366,6 +384,8 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     height: '100%',
+    textAlign: 'left',
+    writingDirection: 'ltr',
   },
   hint: {
     ...typography.small,

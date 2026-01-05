@@ -20,9 +20,10 @@ const { width, height } = Dimensions.get('window')
 
 interface OnboardingHeroProps {
   onGetStarted: () => void
+  onHaveAccount?: () => void
 }
 
-export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
+export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
 
@@ -125,6 +126,22 @@ export function OnboardingHero({ onGetStarted }: OnboardingHeroProps) {
         <Text style={[styles.microCopy, { color: colors.text.muted }]}>
           Configuration en quelques étapes
         </Text>
+
+        {/* Already have an account link */}
+        {onHaveAccount && (
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              onHaveAccount()
+            }}
+            style={styles.haveAccountButton}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
+              J'ai déjà un compte
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </Animated.View>
   )
@@ -209,6 +226,13 @@ const styles = StyleSheet.create({
     ...typography.caption,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  haveAccountButton: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  haveAccountText: {
+    ...typography.bodyMedium,
   },
 })
 

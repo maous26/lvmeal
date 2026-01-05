@@ -40,9 +40,10 @@ type AuthView = 'main' | 'email' | 'verification' | 'reset'
 
 interface AuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
+  isReturningUser?: boolean // True when user clicked "J'ai déjà un compte"
 }
 
-export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
+export default function AuthScreen({ onAuthenticated, isReturningUser = false }: AuthScreenProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMethod, setLoadingMethod] = useState<'google' | 'email' | null>(null)
@@ -113,6 +114,8 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
         onAuthenticated={onAuthenticated}
         onNeedsVerification={handleNeedsVerification}
         onForgotPassword={handleForgotPassword}
+        initialEmail={pendingVerificationEmail}
+        forceSignIn={isReturningUser}
       />
     )
   }

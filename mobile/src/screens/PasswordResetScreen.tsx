@@ -259,6 +259,8 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     height: '100%',
+    textAlign: 'left',
+    writingDirection: 'ltr',
   },
   errorContainer: {
     padding: spacing.md,

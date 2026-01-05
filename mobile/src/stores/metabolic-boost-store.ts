@@ -163,6 +163,7 @@ export interface MetabolicBoostState {
   // Actions
   enroll: () => void
   unenroll: () => void
+  reset: () => void // Reset all data (for new user or account switch)
   logDaily: (log: Omit<DailyLog, 'date'>) => void
   getTodayLog: () => DailyLog | null
   getWeekLogs: (weekNumber?: number) => DailyLog[]
@@ -228,6 +229,25 @@ export const useMetabolicBoostStore = create<MetabolicBoostState>()(
           currentPhase: 'discovery',
           currentWeek: 1,
           phaseStartDate: null,
+        })
+      },
+
+      // Reset all data (for new user or account switch)
+      reset: () => {
+        set({
+          isEnrolled: false,
+          enrolledAt: null,
+          currentPhase: 'discovery',
+          currentWeek: 1,
+          phaseStartDate: null,
+          dailyLogs: [],
+          weekSummaries: [],
+          totalWeeksCompleted: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          lastDeviceSync: null,
+          deviceStepsToday: 0,
+          phaseTransitionNotifications: [],
         })
       },
 

@@ -12,6 +12,12 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || ''
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
 const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY || ''
 
+// Debug: Log Supabase configuration status at startup
+console.log('[Supabase] Config check:',
+  'URL:', SUPABASE_URL ? `${SUPABASE_URL.substring(0, 30)}...` : 'NOT SET',
+  'Key:', SUPABASE_ANON_KEY ? `${SUPABASE_ANON_KEY.substring(0, 20)}...` : 'NOT SET'
+)
+
 // Database types for RAG
 export interface KnowledgeBaseEntry {
   id: string
@@ -602,6 +608,9 @@ export const supabase = new Proxy({} as SupabaseClient, {
           getUser: () => Promise.resolve({ data: { user: null }, error: null }),
           updateUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase non configuré' } }),
           signInWithIdToken: () => Promise.resolve({ data: { user: null, session: null }, error: { message: 'Supabase non configuré' } }),
+          resend: () => Promise.resolve({ data: null, error: { message: 'Supabase non configuré' } }),
+          signInWithOtp: () => Promise.resolve({ data: null, error: { message: 'Supabase non configuré' } }),
+          resetPasswordForEmail: () => Promise.resolve({ data: null, error: { message: 'Supabase non configuré' } }),
         }
       }
       console.warn('Supabase not configured - operation skipped')

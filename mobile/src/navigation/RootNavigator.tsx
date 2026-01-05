@@ -83,6 +83,7 @@ export default function RootNavigator() {
   const { isAuthenticated } = useAuthStore()
   const [showAuth, setShowAuth] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isReturningUser, setIsReturningUser] = useState(false) // True when user clicked "J'ai déjà un compte"
 
   // Check if user has cached auth (Google or Email) on mount
   useEffect(() => {
@@ -95,23 +96,28 @@ export default function RootNavigator() {
         const emailSignedIn = await isEmailSignedIn()
 
         const hasAuth = cachedGoogleUser || googleSignedIn || cachedEmailUser || emailSignedIn
+        const hasCompletedOnboarding = profile?.onboardingCompleted || isOnboarded
 
-        if (hasAuth) {
-          // User has previous auth, check if they completed onboarding
-          if (profile?.onboardingCompleted || isOnboarded) {
-            // Returning user with completed profile - go straight to app
+        console.log('[RootNavigator] Auth check:', { hasAuth, hasCompletedOnboarding, isOnboarded })
+
+        if (hasCompletedOnboarding) {
+          // User has completed onboarding previously
+          if (hasAuth) {
+            // Returning user with auth - go straight to app
             setOnboarded(true)
+            setShowAuth(false)
           } else {
-            // Has auth but no profile - show auth then onboarding
+            // Has completed onboarding but no auth (logged out) - show auth screen
             setShowAuth(true)
           }
         } else {
-          // No cached auth - show auth screen for new users
-          setShowAuth(!isOnboarded)
+          // New user - show onboarding (auth is handled in StepCloudSync at the end)
+          setShowAuth(false)
         }
       } catch (error) {
         console.error('[RootNavigator] Auth check error:', error)
-        setShowAuth(!isOnboarded)
+        // On error, default to onboarding for new users
+        setShowAuth(false)
       } finally {
         setIsCheckingAuth(false)
       }
@@ -120,21 +126,27 @@ export default function RootNavigator() {
     checkExistingAuth()
   }, [])
 
-  // Handle auth completion
+  // Handle auth completion (for returning users who need to re-authenticate)
   const handleAuthenticated = (isNewUser: boolean) => {
-    if (isNewUser) {
-      // New user - go to onboarding
-      setShowAuth(false)
-    } else {
-      // Returning user - go straight to main
-      setOnboarded(true)
-      setShowAuth(false)
-    }
+    // After auth, returning users go straight to main (they already did onboarding)
+    setOnboarded(true)
+    setShowAuth(false)
+    setIsReturningUser(false) // Reset for next time
   }
 
   // Show nothing while checking auth state
   if (isCheckingAuth) {
     return null
+  }
+
+  // Determine initial route:
+  // 1. If already onboarded -> Main
+  // 2. If onboarded but needs auth (logged out returning user) -> Auth
+  // 3. If not onboarded (new user) -> Onboarding (auth is at the end via StepCloudSync)
+  const getInitialRoute = () => {
+    if (isOnboarded && !showAuth) return 'Main'
+    if (showAuth) return 'Auth'
+    return 'Onboarding'
   }
 
   return (
@@ -143,14 +155,15 @@ export default function RootNavigator() {
         headerShown: false,
         animation: 'slide_from_right',
       }}
-      initialRouteName={isOnboarded ? 'Main' : showAuth ? 'Auth' : 'Onboarding'}
+      initialRouteName={getInitialRoute()}
     >
-      {showAuth && !isOnboarded ? (
+      {showAuth ? (
         <Stack.Screen name="Auth">
           {(props) => (
             <AuthScreen
               {...props}
               onAuthenticated={handleAuthenticated}
+              isReturningUser={isReturningUser}
             />
           )}
         </Stack.Screen>
@@ -161,6 +174,11 @@ export default function RootNavigator() {
               {...props}
               onComplete={() => {
                 // Navigation will happen automatically due to isOnboarded change
+              }}
+              onHaveAccount={() => {
+                // User claims to have an account - show auth screen in sign-in mode
+                setIsReturningUser(true)
+                setShowAuth(true)
               }}
             />
           )}

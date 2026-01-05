@@ -254,6 +254,7 @@ export interface WellnessProgramState {
   // Actions
   enroll: () => void
   unenroll: () => void
+  reset: () => void // Reset all data (for new user or account switch)
   logDaily: (log: Omit<WellnessDailyLog, 'date'>) => void
   getTodayLog: () => WellnessDailyLog | null
   getWeekLogs: (weekNumber?: number) => WellnessDailyLog[]
@@ -369,6 +370,27 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           currentPhase: 'foundations',
           currentWeek: 1,
           phaseStartDate: null,
+        })
+      },
+
+      // Reset all data (for new user or account switch)
+      reset: () => {
+        set({
+          isEnrolled: false,
+          enrolledAt: null,
+          currentPhase: 'foundations',
+          currentWeek: 1,
+          phaseStartDate: null,
+          completedAt: null,
+          dailyLogs: [],
+          weekSummaries: [],
+          totalWeeksCompleted: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          totalBreathingExercises: 0,
+          isHiddenDueToMetabolic: false,
+          wasProposedAfterMetabolic: false,
+          phaseTransitions: [],
         })
       },
 

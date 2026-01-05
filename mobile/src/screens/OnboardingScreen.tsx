@@ -203,9 +203,10 @@ function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
 
 interface OnboardingScreenProps {
   onComplete: () => void
+  onHaveAccount?: () => void
 }
 
-export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
+export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreenProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
   const [profile, setProfile] = useState<Partial<UserProfile>>({})
   const [loading, setLoading] = useState(false)
@@ -230,9 +231,9 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const { setSignupDate } = useOnboardingStore()
   const { startTrial } = useGamificationStore()
 
-  // Program stores for enrollment
-  const { enroll: enrollMetabolicBoost } = useMetabolicBoostStore()
-  const { enroll: enrollWellnessProgram } = useWellnessProgramStore()
+  // Program stores for enrollment and reset
+  const { enroll: enrollMetabolicBoost, reset: resetMetabolicBoost } = useMetabolicBoostStore()
+  const { enroll: enrollWellnessProgram, reset: resetWellnessProgram } = useWellnessProgramStore()
 
   // Build steps dynamically based on user profile
   // ORDRE DE PRIORITÉ:
@@ -325,6 +326,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   // Finalize onboarding and save profile
   const finalizeOnboarding = useCallback(async () => {
     setLoading(true)
+
+    // Reset program stores to clear any data from previous accounts
+    resetMetabolicBoost()
+    resetWellnessProgram()
+
     // Use AI-calculated needs if available, otherwise fall back to Harris-Benedict
     const needs = aiCalculatedNeeds || calculateNeeds(profile)
 
@@ -381,7 +387,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
     setLoading(false)
     onComplete()
-  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, onComplete, setSignupDate])
+  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, resetMetabolicBoost, resetWellnessProgram, onComplete, setSignupDate])
 
   const handleNext = useCallback(async () => {
     // Analysis step: go to cloud-sync
@@ -405,6 +411,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
     setLoading(true)
 
+    // Reset program stores to clear any data from previous accounts
+    resetMetabolicBoost()
+    resetWellnessProgram()
+
     // Save to Zustand store
     setStoreProfile(pendingQuickProfile)
     setOnboarded(true)
@@ -422,7 +432,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
     setLoading(false)
     setPendingQuickProfile(null)
     onComplete()
-  }, [pendingQuickProfile, onboardingStartTime, setStoreProfile, setOnboarded, setSignupDate, startTrial, onComplete])
+  }, [pendingQuickProfile, onboardingStartTime, setStoreProfile, setOnboarded, setSignupDate, startTrial, resetMetabolicBoost, resetWellnessProgram, onComplete])
 
   // Handle cloud sync completion (connected or skipped)
   const handleCloudSyncComplete = useCallback(async (connected: boolean) => {
@@ -495,6 +505,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return (
           <StepWelcome
             onStart={handleNext}
+            onHaveAccount={onHaveAccount}
           />
         )
       case 'setup-choice':

@@ -239,16 +239,33 @@ export async function signInWithEmail(
 ): Promise<{ success: boolean; user?: { id: string; email: string }; error?: string }> {
   const client = getSupabaseClient()
   if (!client) {
-    return { success: false, error: 'Supabase not configured' }
+    return { success: false, error: 'Service non disponible' }
   }
+
+  // Clean email (remove whitespace, invisible characters, and normalize)
+  const cleanEmail = email
+    .replace(/[\u200B-\u200F\u2028-\u202F\uFEFF]/g, '') // Remove invisible Unicode chars
+    .trim()
+    .toLowerCase()
 
   try {
     const { data, error } = await client.auth.signInWithPassword({
-      email,
+      email: cleanEmail,
       password,
     })
 
     if (error) {
+      // Translate common error messages to French
+      if (error.message.includes('Invalid login credentials')) {
+        return { success: false, error: 'Email ou mot de passe incorrect' }
+      }
+      if (error.message.includes('Email not confirmed')) {
+        return { success: false, error: 'Veuillez vérifier votre email avant de vous connecter' }
+      }
+      if (error.message.includes('invalid format') ||
+          error.message.includes('Unable to validate')) {
+        return { success: false, error: 'Format d\'email invalide' }
+      }
       return { success: false, error: error.message }
     }
 
@@ -256,11 +273,11 @@ export async function signInWithEmail(
       await AsyncStorage.setItem(USER_ID_KEY, data.user.id)
       return {
         success: true,
-        user: { id: data.user.id, email: data.user.email || email },
+        user: { id: data.user.id, email: data.user.email || cleanEmail },
       }
     }
 
-    return { success: false, error: 'Unknown error' }
+    return { success: false, error: 'Erreur inconnue' }
   } catch (error) {
     return { success: false, error: (error as Error).message }
   }
@@ -272,31 +289,95 @@ export async function signInWithEmail(
 export async function signUpWithEmail(
   email: string,
   password: string
-): Promise<{ success: boolean; user?: { id: string; email: string }; error?: string }> {
+): Promise<{ success: boolean; user?: { id: string; email: string }; needsVerification?: boolean; error?: string }> {
   const client = getSupabaseClient()
+
+  console.log('[CloudSync] signUpWithEmail - Supabase configured:', !!client)
+
   if (!client) {
-    return { success: false, error: 'Supabase not configured' }
+    console.error('[CloudSync] signUpWithEmail - Supabase client is NULL')
+    return { success: false, error: 'Service non disponible' }
   }
 
+  // Clean email (remove whitespace, invisible characters, and normalize)
+  // Remove RTL/LTR marks, zero-width characters, and other invisible Unicode
+  const cleanEmail = email
+    .replace(/[\u200B-\u200F\u2028-\u202F\uFEFF]/g, '') // Remove invisible Unicode chars
+    .trim()
+    .toLowerCase()
+
+  // Log the email for debugging (masking part of it for privacy)
+  const maskedEmail = cleanEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+  console.log('[CloudSync] signUpWithEmail - Email:', maskedEmail, 'Length:', cleanEmail.length)
+  console.log('[CloudSync] signUpWithEmail - Email bytes:', JSON.stringify(cleanEmail))
+
+  // Basic email validation before sending to Supabase
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(cleanEmail)) {
+    console.error('[CloudSync] signUpWithEmail - Local email validation failed')
+    return { success: false, error: 'Format d\'email invalide' }
+  }
+
+  // Backend URL for auth redirects
+  const AUTH_REDIRECT_BASE = 'https://lym1-production.up.railway.app'
+
   try {
+    console.log('[CloudSync] signUpWithEmail - Calling Supabase signUp...')
     const { data, error } = await client.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
+      options: {
+        emailRedirectTo: `${AUTH_REDIRECT_BASE}/auth/callback`,
+      },
     })
 
+    console.log('[CloudSync] signUpWithEmail - Response:', { hasData: !!data, hasError: !!error, errorMsg: error?.message })
+
     if (error) {
+      console.error('[CloudSync] signUpWithEmail - Supabase error:', error.message, error)
+
+      // Handle API key/configuration errors
+      if (error.message.includes('Invalid API key') ||
+          error.message.includes('401') ||
+          error.message.includes('Unauthorized')) {
+        return {
+          success: false,
+          error: 'Service temporairement indisponible. Réessaie plus tard.',
+        }
+      }
+      // Handle "already registered" error with a helpful message
+      if (error.message.includes('already registered') ||
+          error.message.includes('already been registered')) {
+        return {
+          success: false,
+          error: 'Cette adresse email est déjà utilisée. Essaie de te connecter.',
+        }
+      }
+      // Handle invalid email format
+      if (error.message.includes('invalid format') ||
+          error.message.includes('Unable to validate')) {
+        return {
+          success: false,
+          error: 'Format d\'email invalide. Vérifie ton adresse.',
+        }
+      }
       return { success: false, error: error.message }
     }
 
     if (data.user) {
       await AsyncStorage.setItem(USER_ID_KEY, data.user.id)
+
+      // Check if email confirmation is required
+      const needsVerification = !data.user.email_confirmed_at
+
       return {
         success: true,
         user: { id: data.user.id, email: data.user.email || email },
+        needsVerification,
       }
     }
 
-    return { success: false, error: 'Unknown error' }
+    return { success: false, error: 'Erreur inconnue' }
   } catch (error) {
     return { success: false, error: (error as Error).message }
   }

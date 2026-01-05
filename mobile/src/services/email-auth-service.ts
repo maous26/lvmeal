@@ -305,6 +305,10 @@ export async function updatePassword(newPassword: string): Promise<PasswordReset
 
 /**
  * Resend verification email
+ *
+ * Uses supabase.auth.resend() with type 'signup'.
+ * Note: Supabase has rate limiting - typically 60 seconds between resends.
+ * The UI enforces a 60-second cooldown to match this.
  */
 export async function resendVerificationEmail(email: string): Promise<PasswordResetResult> {
   console.log('[EmailAuth] resendVerificationEmail called for:', email)
@@ -316,8 +320,19 @@ export async function resendVerificationEmail(email: string): Promise<PasswordRe
     }
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return {
+      success: false,
+      error: 'Adresse email invalide',
+    }
+  }
+
   try {
-    const { error } = await supabase.auth.resend({
+    console.log('[EmailAuth] Calling supabase.auth.resend with email:', email)
+
+    const { data, error: resendError } = await supabase.auth.resend({
       type: 'signup',
       email,
       options: {
@@ -325,21 +340,51 @@ export async function resendVerificationEmail(email: string): Promise<PasswordRe
       },
     })
 
-    if (error) {
-      console.error('[EmailAuth] Resend verification error:', error.message)
+    console.log('[EmailAuth] Resend response - data:', data, 'error:', resendError)
+
+    if (resendError) {
+      console.error('[EmailAuth] Resend error:', resendError.message, resendError)
+
+      // Handle rate limiting
+      if (resendError.message.includes('rate') ||
+          resendError.message.includes('limit') ||
+          resendError.message.includes('too many')) {
+        return {
+          success: false,
+          error: 'Trop de tentatives. Attends quelques minutes avant de réessayer.',
+        }
+      }
+
+      // Handle user not found (shouldn't happen if they just signed up)
+      if (resendError.message.includes('not found') ||
+          resendError.message.includes('User not found')) {
+        return {
+          success: false,
+          error: 'Aucun compte trouvé avec cette adresse email.',
+        }
+      }
+
+      // Handle already confirmed
+      if (resendError.message.includes('already confirmed') ||
+          resendError.message.includes('already verified')) {
+        return {
+          success: true, // Consider it a success - they're already verified
+        }
+      }
+
       return {
         success: false,
-        error: error.message || 'Erreur lors de l\'envoi de l\'email',
+        error: resendError.message || 'Erreur lors de l\'envoi de l\'email',
       }
     }
 
-    console.log('[EmailAuth] Verification email resent')
+    console.log('[EmailAuth] Verification email resent successfully')
     return { success: true }
-  } catch (error) {
+  } catch (error: any) {
     console.error('[EmailAuth] Resend verification exception:', error)
     return {
       success: false,
-      error: 'Une erreur inattendue est survenue',
+      error: error?.message || 'Une erreur inattendue est survenue',
     }
   }
 }
