@@ -22,6 +22,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
 import { MockHomePreview } from './MockHomePreview'
+import { Button } from '../ui/Button'
 
 const { width, height } = Dimensions.get('window')
 
@@ -43,10 +44,12 @@ interface OnboardingBenefitsProps {
 }
 
 export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.3)'
+  const purple = colors.nutrients.fats
 
   const benefits: BenefitSlide[] = [
     {
@@ -69,7 +72,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
         "Ton quotidien, ton énergie, tes habitudes.\nLYM s'adapte à toi dans le temps, sans te demander d'en faire plus.",
       imagePlaceholder: 'Interface personnalisée',
       useMockPreview: true,
-      accentColor: '#A855F7',
+      accentColor: purple,
     },
     {
       id: 'kind',
@@ -136,7 +139,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           </LinearGradient>
         )}
         <LinearGradient
-          colors={['transparent', 'rgba(255,255,255,0.3)', colors.bg.primary]}
+          colors={['transparent', overlayMid, colors.bg.primary]}
           locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
@@ -206,24 +209,22 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           ))}
         </View>
 
-        {/* CTA Button */}
-        <TouchableOpacity
+        <Button
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
             handleNext()
           }}
-          activeOpacity={0.8}
-          style={[
-            styles.ctaButton,
-            { backgroundColor: colors.accent.primary },
-            shadows.glowPrimary,
-          ]}
+          size="lg"
+          fullWidth
+          icon={<ChevronRight size={20} color="#FFFFFF" />}
+          iconPosition="right"
+          style={{
+            backgroundColor: colors.accent.primary,
+            ...shadows.glowPrimary,
+          }}
         >
-          <Text style={styles.ctaText}>
-            {currentIndex === benefits.length - 1 ? 'C\'est parti !' : 'Continuer'}
-          </Text>
-          <ChevronRight size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+          {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
+        </Button>
       </View>
     </View>
   )
@@ -336,19 +337,6 @@ const styles = StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.xl,
-    gap: spacing.sm,
-  },
-  ctaText: {
-    ...typography.button,
-    color: '#FFFFFF',
   },
 })
 

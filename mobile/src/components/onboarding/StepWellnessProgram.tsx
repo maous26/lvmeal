@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { Heart, Check } from 'lucide-react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, Goal } from '../../types'
 import type { HealthPriority } from '../../features/goals/types'
 import { useGoalsStore } from '../../features/goals/stores/goals-store'
+import { useTheme } from '../../contexts/ThemeContext'
 
 // =============================================================================
 // TYPES
@@ -48,12 +49,12 @@ function getWellnessToolsCopy(context: WellnessToolsContext): WellnessToolsCopy 
   // CAS A — goal = health + priorité = stress
   if (isHealthGoal && hasStressPriority) {
     return {
-      title: 'Des outils pour relacher la pression',
-      subtitle: 'Meditations, respirations et check-ins emotionnels, penses pour t\'aider a gerer le stress au quotidien.',
+      title: 'Des outils pour relâcher la pression',
+      subtitle: "Méditations, respirations et check-ins émotionnels, pensés pour t'aider à gérer le stress au quotidien.",
       features: [
-        { emoji: '🧘', text: 'Meditations guidees' },
+        { emoji: '🧘', text: 'Méditations guidées' },
         { emoji: '🌬️', text: 'Exercices de respiration' },
-        { emoji: '💭', text: 'Check-ins emotionnels' },
+        { emoji: '💭', text: 'Check-ins émotionnels' },
       ],
       ctaActivate: 'Activer les outils',
       ctaLater: 'Plus tard',
@@ -63,15 +64,15 @@ function getWellnessToolsCopy(context: WellnessToolsContext): WellnessToolsCopy 
   // CAS B — goal = health + priorités ≠ stress (mais peut avoir energy)
   if (isHealthGoal) {
     const subtitle = hasEnergyPriority
-      ? 'Respiration, meditation et check-ins peuvent t\'aider a mieux recuperer et garder une bonne energie.'
-      : 'En complement de tes choix nutrition, ces outils peuvent soutenir ton equilibre au quotidien.'
+      ? "Respiration, méditation et check-ins peuvent t'aider à mieux récupérer et garder une bonne énergie."
+      : "En complément de tes choix nutrition, ces outils peuvent soutenir ton équilibre au quotidien."
 
     return {
-      title: 'Envie d\'outils pour soutenir ton equilibre ?',
+      title: "Envie d'outils pour soutenir ton équilibre ?",
       subtitle,
       features: [
         { emoji: '🌬️', text: 'Respiration' },
-        { emoji: '🧘', text: 'Meditation' },
+        { emoji: '🧘', text: 'Méditation' },
         { emoji: '📝', text: 'Check-ins' },
       ],
       ctaActivate: 'Activer',
@@ -81,11 +82,11 @@ function getWellnessToolsCopy(context: WellnessToolsContext): WellnessToolsCopy 
 
   // CAS C — goal ≠ health (perte de poids / muscle)
   return {
-    title: 'En complement, des outils bien-etre ?',
-    subtitle: 'Pour le stress, la recuperation et l\'equilibre mental. Si tu en as envie.',
+    title: 'En complément, des outils bien-être ?',
+    subtitle: "Pour le stress, la récupération et l'équilibre mental. Si tu en as envie.",
     features: [
       { emoji: '🧘', text: 'Relaxation' },
-      { emoji: '😴', text: 'Recuperation' },
+      { emoji: '😴', text: 'Récupération' },
       { emoji: '💆', text: 'Anti-stress' },
     ],
     ctaActivate: 'Activer',
@@ -109,6 +110,7 @@ export function shouldShowWellnessTools(_context: WellnessToolsContext): boolean
 // =============================================================================
 
 export function StepWellnessProgram({ data, onChange }: StepWellnessProgramProps) {
+  const { colors } = useTheme()
   // Get health priorities from goals store
   const { healthPriorities } = useGoalsStore()
 
@@ -132,11 +134,11 @@ export function StepWellnessProgram({ data, onChange }: StepWellnessProgramProps
     <View style={styles.container}>
       {/* Hero section - contextual */}
       <View style={styles.hero}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.secondary.primary }]}>
           <Heart size={40} color="#FFFFFF" />
         </View>
-        <Text style={styles.heroTitle}>{copy.title}</Text>
-        <Text style={styles.heroSubtitle}>{copy.subtitle}</Text>
+        <Text style={[styles.heroTitle, { color: colors.text.primary }]}>{copy.title}</Text>
+        <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>{copy.subtitle}</Text>
       </View>
 
       {/* Features - contextual */}
@@ -149,32 +151,70 @@ export function StepWellnessProgram({ data, onChange }: StepWellnessProgramProps
       {/* Choices - simplified */}
       <View style={styles.choices}>
         <Pressable
-          style={[styles.choiceCard, isYesSelected && styles.choiceCardSelected]}
+          style={[
+            styles.choiceCard,
+            {
+              backgroundColor: colors.bg.elevated,
+              borderColor: isYesSelected ? colors.secondary.primary : colors.border.light,
+            },
+            isYesSelected && { backgroundColor: colors.secondary.light },
+          ]}
           onPress={() => handleChoice(true)}
         >
-          <View style={[styles.radio, isYesSelected && styles.radioSelected]}>
+          <View
+            style={[
+              styles.radio,
+              {
+                borderColor: isYesSelected ? colors.secondary.primary : colors.border.default,
+                backgroundColor: isYesSelected ? colors.secondary.primary : 'transparent',
+              },
+            ]}
+          >
             {isYesSelected && <Check size={14} color="#FFFFFF" />}
           </View>
           <View style={styles.choiceContent}>
-            <Text style={[styles.choiceTitle, isYesSelected && styles.choiceTitleSelected]}>
+            <Text
+              style={[
+                styles.choiceTitle,
+                { color: isYesSelected ? colors.secondary.primary : colors.text.primary },
+                isYesSelected && { fontWeight: '600' },
+              ]}
+            >
               {copy.ctaActivate}
             </Text>
-            <Text style={styles.choiceSubtitle}>Disponible dans l'app</Text>
+            <Text style={[styles.choiceSubtitle, { color: colors.text.tertiary }]}>Disponible dans l'app</Text>
           </View>
         </Pressable>
 
         <Pressable
-          style={[styles.choiceCard, isNoSelected && styles.choiceCardNo]}
+          style={[
+            styles.choiceCard,
+            {
+              backgroundColor: colors.bg.elevated,
+              borderColor: isNoSelected ? colors.border.default : colors.border.light,
+            },
+            isNoSelected && { backgroundColor: colors.bg.secondary },
+          ]}
           onPress={() => handleChoice(false)}
         >
-          <View style={[styles.radio, isNoSelected && styles.radioNo]}>
+          <View
+            style={[
+              styles.radio,
+              {
+                borderColor: isNoSelected ? colors.text.tertiary : colors.border.default,
+                backgroundColor: isNoSelected ? colors.bg.tertiary : 'transparent',
+              },
+            ]}
+          >
             {isNoSelected && <Check size={14} color={colors.text.secondary} />}
           </View>
           <View style={styles.choiceContent}>
-            <Text style={[styles.choiceTitle, isNoSelected && styles.choiceTitleNo]}>
+            <Text style={[styles.choiceTitle, { color: isNoSelected ? colors.text.secondary : colors.text.primary }]}>
               {copy.ctaLater}
             </Text>
-            <Text style={styles.choiceSubtitle}>Toujours accessible depuis le profil</Text>
+            <Text style={[styles.choiceSubtitle, { color: colors.text.tertiary }]}>
+              Toujours accessible depuis le profil
+            </Text>
           </View>
         </Pressable>
       </View>
@@ -203,20 +243,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.secondary.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
   heroTitle: {
     ...typography.h3,
-    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
   heroSubtitle: {
     ...typography.body,
-    color: colors.text.secondary,
     textAlign: 'center',
   },
   features: {
@@ -233,7 +270,6 @@ const styles = StyleSheet.create({
   },
   featureText: {
     ...typography.small,
-    color: colors.text.secondary,
     textAlign: 'center',
     maxWidth: 90,
   },
@@ -244,54 +280,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.xl,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.md,
-  },
-  choiceCardSelected: {
-    borderColor: colors.secondary.primary,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-  },
-  choiceCardNo: {
-    borderColor: colors.border.default,
-    backgroundColor: colors.bg.secondary,
   },
   radio: {
     width: 28,
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: colors.secondary.primary,
-    backgroundColor: colors.secondary.primary,
-  },
-  radioNo: {
-    borderColor: colors.text.tertiary,
-    backgroundColor: colors.bg.tertiary,
   },
   choiceContent: {
     flex: 1,
   },
   choiceTitle: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
-  },
-  choiceTitleSelected: {
-    color: colors.secondary.primary,
-    fontWeight: '600',
-  },
-  choiceTitleNo: {
-    color: colors.text.secondary,
   },
   choiceSubtitle: {
     ...typography.small,
-    color: colors.text.tertiary,
     marginTop: 2,
   },
 })

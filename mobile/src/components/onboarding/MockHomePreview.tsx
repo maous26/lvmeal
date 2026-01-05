@@ -20,20 +20,21 @@ const { width } = Dimensions.get('window')
 
 export function MockHomePreview() {
   const { colors } = useTheme()
+  const accent = colors.nutrients.fats
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Profile Header */}
-      <View style={[styles.profileCard, { backgroundColor: '#A855F7' + '15' }]}>
+      <View style={[styles.profileCard, { backgroundColor: `${accent}15` }]}>
         <View style={styles.profileHeader}>
-          <View style={[styles.avatar, { backgroundColor: '#A855F7' }]}>
+          <View style={[styles.avatar, { backgroundColor: accent }]}>
             <Text style={styles.avatarText}>M</Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={[styles.profileName, { color: colors.text.primary }]}>Marie, 28 ans</Text>
-            <Text style={[styles.profileGoal, { color: '#A855F7' }]}>Objectif : Perdre 5kg</Text>
+            <Text style={[styles.profileGoal, { color: accent }]}>Objectif : Perdre 5kg</Text>
           </View>
-          <View style={[styles.levelBadge, { backgroundColor: '#A855F7' }]}>
+          <View style={[styles.levelBadge, { backgroundColor: accent }]}>
             <Sparkles size={12} color="#FFFFFF" />
             <Text style={styles.levelText}>Pro</Text>
           </View>
@@ -62,13 +63,13 @@ export function MockHomePreview() {
       </View>
 
       {/* Coach AI Card */}
-      <View style={[styles.coachCard, { backgroundColor: '#A855F7' + '15', borderColor: '#A855F7' + '30' }]}>
+      <View style={[styles.coachCard, { backgroundColor: `${accent}15`, borderColor: `${accent}30` }]}>
         <View style={styles.coachHeader}>
-          <View style={[styles.coachAvatar, { backgroundColor: '#A855F7' }]}>
+          <View style={[styles.coachAvatar, { backgroundColor: accent }]}>
             <Text style={styles.coachEmoji}>🤖</Text>
           </View>
           <View style={styles.coachInfo}>
-            <Text style={[styles.coachName, { color: '#A855F7' }]}>Coach LymIA</Text>
+            <Text style={[styles.coachName, { color: accent }]}>Coach LymIA</Text>
             <Text style={[styles.coachStatus, { color: colors.text.muted }]}>Conseil personnalisé</Text>
           </View>
         </View>
@@ -87,8 +88,8 @@ export function MockHomePreview() {
           <View style={[styles.tag, { backgroundColor: colors.success + '20' }]}>
             <Text style={[styles.tagText, { color: colors.success }]}>Batch cooking</Text>
           </View>
-          <View style={[styles.tag, { backgroundColor: '#A855F7' + '20' }]}>
-            <Text style={[styles.tagText, { color: '#A855F7' }]}>Végétarien</Text>
+          <View style={[styles.tag, { backgroundColor: `${accent}20` }]}>
+            <Text style={[styles.tagText, { color: accent }]}>Végétarien</Text>
           </View>
           <View style={[styles.tag, { backgroundColor: colors.warning + '20' }]}>
             <Text style={[styles.tagText, { color: colors.warning }]}>15 min max</Text>

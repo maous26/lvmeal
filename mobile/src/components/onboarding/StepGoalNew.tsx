@@ -47,6 +47,7 @@ function getVisibleGoal(goal?: Goal): VisibleGoal | undefined {
 
 export function StepGoalNew({ data, onChange }: StepGoalNewProps) {
   const { colors } = useTheme()
+  const accent = colors.nutrients.fats
   const selectedVisibleGoal = getVisibleGoal(data.goal)
 
   const handleSelectGoal = (visibleGoal: VisibleGoal) => {
@@ -64,12 +65,12 @@ export function StepGoalNew({ data, onChange }: StepGoalNewProps) {
         style={[
           styles.intro,
           {
-            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-            borderColor: 'rgba(168, 85, 247, 0.2)',
+            backgroundColor: `${accent}15`,
+            borderColor: `${accent}30`,
           },
         ]}
       >
-        <Ionicons name="compass-outline" size={24} color={colors.accent.primary} />
+        <Ionicons name="compass-outline" size={24} color={accent} />
         <View style={styles.introContent}>
           <Text style={[styles.introTitle, { color: colors.text.primary }]}>
             Ton objectif
@@ -101,7 +102,7 @@ export function StepGoalNew({ data, onChange }: StepGoalNewProps) {
 
       {/* Helper text */}
       <Text style={[styles.helperText, { color: colors.text.tertiary }]}>
-        Tu pourras changer d'objectif a tout moment dans les reglages.
+        Tu pourras changer d'objectif à tout moment dans les réglages.
       </Text>
     </View>
   )

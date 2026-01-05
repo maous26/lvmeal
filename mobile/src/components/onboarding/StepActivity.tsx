@@ -1,7 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { ActivityLevel, UserProfile } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepActivityProps {
   data: Partial<UserProfile>
@@ -17,51 +18,55 @@ const activityLevels: {
 }[] = [
   {
     value: 'sedentary',
-    label: 'Sedentaire',
+    label: 'Sédentaire',
     description: 'Travail de bureau, peu de marche',
     icon: '🪑',
     multiplier: 'x1.2',
   },
   {
     value: 'light',
-    label: 'Legerement actif',
-    description: 'Marche quotidienne, activite legere',
+    label: 'Légèrement actif',
+    description: 'Marche quotidienne, activité légère',
     icon: '🚶',
     multiplier: 'x1.4',
   },
   {
     value: 'moderate',
-    label: 'Moderement actif',
+    label: 'Modérément actif',
     description: 'Exercice 3-5 fois par semaine',
     icon: '🚴',
     multiplier: 'x1.6',
   },
   {
     value: 'active',
-    label: 'Tres actif',
+    label: 'Très actif',
     description: 'Exercice intense 6-7 fois par semaine',
     icon: '🏋️',
     multiplier: 'x1.8',
   },
   {
     value: 'athlete',
-    label: 'Athlete',
-    description: 'Entrainement intensif quotidien',
+    label: 'Athlète',
+    description: 'Entraînement intensif quotidien',
     icon: '🏅',
     multiplier: 'x2.0',
   },
 ]
 
 export function StepActivity({ data, onChange }: StepActivityProps) {
+  const { colors, isDark } = useTheme()
+  const overlayBg = isDark ? `${colors.info}20` : colors.infoLight
+  const overlayBorder = `${colors.info}30`
+
   return (
     <View style={styles.container}>
       {/* Introduction accueillante */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: overlayBg, borderColor: overlayBorder }]}>
         <Text style={styles.introIcon}>🏃</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Ton rythme de vie</Text>
-          <Text style={styles.introText}>
-            Pas besoin d'etre un athlete ! On calcule tes besoins selon ton quotidien reel.
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Ton rythme de vie</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            Pas besoin d'être un athlète ! On calcule tes besoins selon ton quotidien réel.
           </Text>
         </View>
       </View>
@@ -73,28 +78,58 @@ export function StepActivity({ data, onChange }: StepActivityProps) {
           <Pressable
             key={level.value}
             onPress={() => onChange({ ...data, activityLevel: level.value })}
-            style={[styles.option, isSelected && styles.optionSelected]}
+            style={[
+              styles.option,
+              {
+                backgroundColor: colors.bg.elevated,
+                borderColor: isSelected ? colors.accent.primary : colors.border.light,
+              },
+              isSelected && { backgroundColor: colors.accent.light },
+            ]}
           >
-            <View style={[styles.iconContainer, isSelected && styles.iconContainerSelected]}>
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: isSelected ? colors.accent.primary : colors.bg.secondary },
+              ]}
+            >
               <Text style={styles.icon}>{level.icon}</Text>
             </View>
 
             <View style={styles.content}>
               <View style={styles.header}>
-                <Text style={[styles.label, isSelected && styles.labelSelected]}>
+                <Text style={[styles.label, { color: isSelected ? colors.accent.primary : colors.text.primary }]}>
                   {level.label}
                 </Text>
-                <View style={[styles.badge, isSelected && styles.badgeSelected]}>
-                  <Text style={[styles.badgeText, isSelected && styles.badgeTextSelected]}>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: isSelected ? colors.accent.primary : colors.bg.tertiary },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: isSelected ? colors.text.inverse : colors.text.tertiary },
+                    ]}
+                  >
                     {level.multiplier}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.description}>{level.description}</Text>
+              <Text style={[styles.description, { color: colors.text.secondary }]}>{level.description}</Text>
             </View>
 
-            <View style={[styles.radio, isSelected && styles.radioSelected]}>
-              {isSelected && <View style={styles.radioDot} />}
+            <View
+              style={[
+                styles.radio,
+                {
+                  borderColor: isSelected ? colors.accent.primary : colors.border.default,
+                  backgroundColor: isSelected ? colors.accent.primary : 'transparent',
+                },
+              ]}
+            >
+              {isSelected && <View style={[styles.radioDot, { backgroundColor: colors.text.inverse }]} />}
             </View>
           </Pressable>
         )
@@ -110,10 +145,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
     marginBottom: spacing.sm,
   },
   introIcon: {
@@ -125,37 +158,25 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  optionSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.light,
   },
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: radius.lg,
-    backgroundColor: colors.bg.secondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.default,
-  },
-  iconContainerSelected: {
-    backgroundColor: colors.accent.primary,
   },
   icon: {
     fontSize: 24,
@@ -172,50 +193,31 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
-  },
-  labelSelected: {
-    color: colors.accent.primary,
   },
   badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.full,
-    backgroundColor: colors.bg.tertiary,
-  },
-  badgeSelected: {
-    backgroundColor: colors.accent.primary,
   },
   badgeText: {
     ...typography.caption,
-    color: colors.text.tertiary,
     fontWeight: '500',
-  },
-  badgeTextSelected: {
-    color: '#FFFFFF',
   },
   description: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   radio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.primary,
   },
   radioDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
   },
 })
 

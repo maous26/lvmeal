@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, LifestyleHabits, FastingSchedule, FastingConfig } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepLifestyleProps {
   data: Partial<UserProfile>
@@ -24,9 +25,9 @@ const sleepQualityOptions = [
 ]
 
 const stressOptions = [
-  { value: 'low' as const, label: 'Zen', emoji: '🧘', description: 'Rarement stresse(e)' },
-  { value: 'moderate' as const, label: 'Modere', emoji: '😊', description: 'Parfois stresse(e)' },
-  { value: 'high' as const, label: 'Eleve', emoji: '😰', description: 'Souvent stresse(e)' },
+  { value: 'low' as const, label: 'Zen', emoji: '🧘', description: 'Rarement stressé(e)' },
+  { value: 'moderate' as const, label: 'Modéré', emoji: '😊', description: 'Parfois stressé(e)' },
+  { value: 'high' as const, label: 'Élevé', emoji: '😰', description: 'Souvent stressé(e)' },
   { value: 'very_high' as const, label: 'Intense', emoji: '🤯', description: 'Stress constant' },
 ]
 
@@ -40,12 +41,19 @@ const waterOptions = [
 
 const fastingOptions: { value: FastingSchedule; label: string; emoji: string; description: string; window?: { start: number; end: number } }[] = [
   { value: 'none', label: 'Non', emoji: '🍽️', description: 'Je mange quand j\'ai faim' },
-  { value: '16_8', label: '16:8', emoji: '⏰', description: 'Je saute le petit-dej', window: { start: 12, end: 20 } },
-  { value: '18_6', label: '18:6', emoji: '🕐', description: 'Fenetre de 6h', window: { start: 12, end: 18 } },
-  { value: 'interested', label: 'Curieux', emoji: '🤔', description: 'J\'aimerais essayer' },
+  { value: '16_8', label: '16:8', emoji: '⏰', description: 'Je saute le petit-déj', window: { start: 12, end: 20 } },
+  { value: '18_6', label: '18:6', emoji: '🕐', description: 'Fenêtre de 6h', window: { start: 12, end: 18 } },
+  { value: 'interested', label: 'Curieux', emoji: '🤔', description: "J'aimerais essayer" },
 ]
 
 export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
+  const { colors } = useTheme()
+  const sleepAccent = colors.accent.primary
+  const waterAccent = colors.nutrients.water
+  const qualityAccent = colors.nutrients.fats
+  const stressAccent = colors.error
+  const fastingAccent = colors.warning
+
   const [habits, setHabits] = useState<Partial<LifestyleHabits>>(data.lifestyleHabits || {})
 
   const updateHabits = (updates: Partial<LifestyleHabits>) => {
@@ -70,12 +78,12 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
   return (
     <View style={styles.container}>
       {/* Introduction */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: colors.infoLight, borderColor: `${colors.info}30` }]}>
         <Text style={styles.introIcon}>☀️</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Tes habitudes quotidiennes</Text>
-          <Text style={styles.introText}>
-            Le sommeil, le stress et l'hydratation jouent un role cle dans ton bien-etre et ton metabolisme.
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Tes habitudes quotidiennes</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            Le sommeil, le stress et l'hydratation jouent un rôle clé dans ton bien-être et ton métabolisme.
           </Text>
         </View>
       </View>
@@ -84,7 +92,9 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🌙</Text>
-          <Text style={styles.sectionTitle}>Tu dors combien d'heures en moyenne ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Tu dors combien d'heures en moyenne ?
+          </Text>
         </View>
         <View style={styles.optionsRow}>
           {sleepOptions.map((option) => {
@@ -94,10 +104,17 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updateHabits({ averageSleepHours: option.value })}
-                style={[styles.chipOption, isSelected && styles.chipOptionSelected]}
+                style={[
+                  styles.chipOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? sleepAccent : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: `${sleepAccent}15` },
+                ]}
               >
                 <Text style={styles.chipEmoji}>{option.emoji}</Text>
-                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                <Text style={[styles.chipLabel, { color: isSelected ? sleepAccent : colors.text.primary }]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -110,7 +127,9 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🔋</Text>
-          <Text style={styles.sectionTitle}>Comment est ton sommeil en general ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Comment est ton sommeil en général ?
+          </Text>
         </View>
         <View style={styles.qualityGrid}>
           {sleepQualityOptions.map((option) => {
@@ -120,10 +139,17 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updateHabits({ sleepQualityPerception: option.value })}
-                style={[styles.qualityOption, isSelected && styles.qualityOptionSelected]}
+                style={[
+                  styles.qualityOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? qualityAccent : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: `${qualityAccent}15` },
+                ]}
               >
                 <Text style={styles.qualityEmoji}>{option.emoji}</Text>
-                <Text style={[styles.qualityLabel, isSelected && styles.qualityLabelSelected]}>
+                <Text style={[styles.qualityLabel, { color: isSelected ? qualityAccent : colors.text.primary }]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -136,7 +162,9 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🧠</Text>
-          <Text style={styles.sectionTitle}>Ton niveau de stress au quotidien ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Ton niveau de stress au quotidien ?
+          </Text>
         </View>
         <View style={styles.stressGrid}>
           {stressOptions.map((option) => {
@@ -146,14 +174,21 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updateHabits({ stressLevelDaily: option.value })}
-                style={[styles.stressOption, isSelected && styles.stressOptionSelected]}
+                style={[
+                  styles.stressOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? stressAccent : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: `${stressAccent}15` },
+                ]}
               >
                 <Text style={styles.stressEmoji}>{option.emoji}</Text>
                 <View>
-                  <Text style={[styles.stressLabel, isSelected && styles.stressLabelSelected]}>
+                  <Text style={[styles.stressLabel, { color: isSelected ? stressAccent : colors.text.primary }]}>
                     {option.label}
                   </Text>
-                  <Text style={styles.stressDescription}>{option.description}</Text>
+                  <Text style={[styles.stressDescription, { color: colors.text.tertiary }]}>{option.description}</Text>
                 </View>
               </Pressable>
             )
@@ -165,7 +200,9 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>💧</Text>
-          <Text style={styles.sectionTitle}>Tu bois combien d'eau par jour ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Tu bois combien d'eau par jour ?
+          </Text>
         </View>
         <View style={styles.optionsRow}>
           {waterOptions.map((option) => {
@@ -175,10 +212,17 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updateHabits({ waterIntakeDaily: option.value })}
-                style={[styles.chipOption, isSelected && styles.chipOptionSelectedCyan]}
+                style={[
+                  styles.chipOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? waterAccent : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: `${waterAccent}15` },
+                ]}
               >
                 <Text style={styles.chipEmoji}>{option.emoji}</Text>
-                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelectedCyan]}>
+                <Text style={[styles.chipLabel, { color: isSelected ? waterAccent : colors.text.primary }]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -191,7 +235,9 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>⏱️</Text>
-          <Text style={styles.sectionTitle}>Tu pratiques le jeune intermittent ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Tu pratiques le jeûne intermittent ?
+          </Text>
         </View>
         <View style={styles.fastingGrid}>
           {fastingOptions.map((option) => {
@@ -201,14 +247,21 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updateFasting(option.value)}
-                style={[styles.fastingOption, isSelected && styles.fastingOptionSelected]}
+                style={[
+                  styles.fastingOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? fastingAccent : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: colors.warningLight },
+                ]}
               >
                 <Text style={styles.fastingEmoji}>{option.emoji}</Text>
                 <View style={styles.fastingContent}>
-                  <Text style={[styles.fastingLabel, isSelected && styles.fastingLabelSelected]}>
+                  <Text style={[styles.fastingLabel, { color: isSelected ? fastingAccent : colors.text.primary }]}>
                     {option.label}
                   </Text>
-                  <Text style={styles.fastingDescription}>{option.description}</Text>
+                  <Text style={[styles.fastingDescription, { color: colors.text.tertiary }]}>{option.description}</Text>
                 </View>
               </Pressable>
             )
@@ -227,10 +280,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
   },
   introIcon: {
     fontSize: 24,
@@ -241,11 +292,9 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   section: {},
@@ -260,7 +309,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   optionsRow: {
     flexDirection: 'row',
@@ -272,32 +320,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.default,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.sm,
-  },
-  chipOptionSelected: {
-    borderColor: '#6366F1',
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-  },
-  chipOptionSelectedCyan: {
-    borderColor: '#06B6D4',
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
   },
   chipEmoji: {
     fontSize: 16,
   },
   chipLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
-  },
-  chipLabelSelected: {
-    color: '#6366F1',
-  },
-  chipLabelSelectedCyan: {
-    color: '#06B6D4',
   },
   qualityGrid: {
     flexDirection: 'row',
@@ -307,26 +338,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.xs,
-  },
-  qualityOptionSelected: {
-    borderColor: '#A855F7',
-    backgroundColor: 'rgba(168, 85, 247, 0.1)',
   },
   qualityEmoji: {
     fontSize: 28,
   },
   qualityLabel: {
     ...typography.caption,
-    color: colors.text.primary,
     fontWeight: '500',
-  },
-  qualityLabelSelected: {
-    color: '#A855F7',
   },
   stressGrid: {
     flexDirection: 'row',
@@ -338,29 +359,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.md,
-  },
-  stressOptionSelected: {
-    borderColor: '#F43F5E',
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
   },
   stressEmoji: {
     fontSize: 28,
   },
   stressLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
-  },
-  stressLabelSelected: {
-    color: '#F43F5E',
   },
   stressDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   fastingGrid: {
     flexDirection: 'row',
@@ -372,15 +382,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.md,
-  },
-  fastingOptionSelected: {
-    borderColor: '#F59E0B',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
   },
   fastingEmoji: {
     fontSize: 24,
@@ -390,14 +394,9 @@ const styles = StyleSheet.create({
   },
   fastingLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
-  },
-  fastingLabelSelected: {
-    color: '#F59E0B',
   },
   fastingDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
 })
 

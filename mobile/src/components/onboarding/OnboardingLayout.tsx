@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import * as Haptics from 'expo-haptics'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Sparkles } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -141,30 +140,21 @@ export function OnboardingLayout({
       {/* Footer with action */}
       {onNext && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.default }]}>
-          <TouchableOpacity
-            onPress={() => {
-              if (!nextDisabled && !loading) {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                onNext()
-              }
-            }}
-            activeOpacity={0.8}
+          <Button
+            onPress={onNext}
+            size="lg"
+            fullWidth
+            disabled={nextDisabled}
+            loading={loading}
             style={[
-              styles.ctaButton,
               {
                 backgroundColor: nextDisabled ? colors.border.default : colors.accent.primary,
               },
-              !nextDisabled && shadows.default,
+              !nextDisabled ? shadows.default : undefined,
             ]}
           >
-            {loading ? (
-              <Text style={styles.ctaText}>Chargement...</Text>
-            ) : (
-              <Text style={[styles.ctaText, nextDisabled && { opacity: 0.6 }]}>
-                {nextLabel}
-              </Text>
-            )}
-          </TouchableOpacity>
+            {loading ? 'Chargement…' : nextLabel}
+          </Button>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -263,17 +253,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
-  },
-  ctaButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.xl,
-  },
-  ctaText: {
-    ...typography.button,
-    color: '#FFFFFF',
   },
 })
 

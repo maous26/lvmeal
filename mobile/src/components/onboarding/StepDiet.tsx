@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { DietType, ReligiousDiet, UserProfile } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepDietProps {
   data: Partial<UserProfile>
@@ -10,21 +11,22 @@ interface StepDietProps {
 
 const dietTypes: { value: DietType; label: string; emoji: string; description: string }[] = [
   { value: 'omnivore', label: 'Omnivore', emoji: '🍖', description: 'Je mange de tout' },
-  { value: 'vegetarian', label: 'Vegetarien', emoji: '🥗', description: 'Sans viande ni poisson' },
+  { value: 'vegetarian', label: 'Végétarien', emoji: '🥗', description: 'Sans viande ni poisson' },
   { value: 'vegan', label: 'Vegan', emoji: '🌱', description: 'Sans produit animal' },
-  { value: 'pescatarian', label: 'Pescetarien', emoji: '🐟', description: 'Poisson mais pas de viande' },
-  { value: 'keto', label: 'Keto', emoji: '🥑', description: 'Tres peu de glucides' },
+  { value: 'pescatarian', label: 'Pescétarien', emoji: '🐟', description: 'Poisson mais pas de viande' },
+  { value: 'keto', label: 'Keto', emoji: '🥑', description: 'Très peu de glucides' },
   { value: 'paleo', label: 'Paleo', emoji: '🥩', description: 'Alimentation ancestrale' },
 ]
 
 const religiousOptions: { value: 'halal' | 'casher'; label: string; emoji: string; description: string }[] = [
-  { value: 'halal', label: 'Halal', emoji: '🌙', description: 'Selon les preceptes islamiques' },
+  { value: 'halal', label: 'Halal', emoji: '🌙', description: 'Selon les préceptes islamiques' },
   { value: 'casher', label: 'Casher', emoji: '✡️', description: 'Selon les lois juives' },
 ]
 
-const commonAllergies = ['Gluten', 'Lactose', 'Arachides', 'Fruits a coque', 'Oeufs', 'Soja', 'Crustaces', 'Poisson']
+const commonAllergies = ['Gluten', 'Lactose', 'Arachides', 'Fruits à coque', 'Œufs', 'Soja', 'Crustacés', 'Poisson']
 
 export function StepDiet({ data, onChange }: StepDietProps) {
+  const { colors } = useTheme()
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(data.allergies || [])
 
   const toggleAllergy = (allergy: string) => {
@@ -46,12 +48,12 @@ export function StepDiet({ data, onChange }: StepDietProps) {
   return (
     <View style={styles.container}>
       {/* Introduction accueillante */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: colors.successLight, borderColor: `${colors.success}30` }]}>
         <Text style={styles.introIcon}>🍽️</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Tes preferences alimentaires</Text>
-          <Text style={styles.introText}>
-            On adapte toutes les recettes et conseils a ton mode d'alimentation. Aucun jugement, que du sur-mesure !
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Tes préférences alimentaires</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            On adapte toutes les recettes et conseils à ton mode d'alimentation. Aucun jugement, que du sur‑mesure !
           </Text>
         </View>
       </View>
@@ -60,7 +62,9 @@ export function StepDiet({ data, onChange }: StepDietProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🥗</Text>
-          <Text style={styles.sectionTitle}>Comment tu manges au quotidien ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Comment tu manges au quotidien ?
+          </Text>
         </View>
         <View style={styles.dietGrid}>
           {dietTypes.map((diet) => {
@@ -70,13 +74,20 @@ export function StepDiet({ data, onChange }: StepDietProps) {
               <Pressable
                 key={diet.value}
                 onPress={() => onChange({ ...data, dietType: diet.value })}
-                style={[styles.dietOption, isSelected && styles.dietOptionSelected]}
+                style={[
+                  styles.dietOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? colors.accent.primary : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: colors.accent.light },
+                ]}
               >
                 <Text style={styles.dietEmoji}>{diet.emoji}</Text>
-                <Text style={[styles.dietLabel, isSelected && styles.dietLabelSelected]}>
+                <Text style={[styles.dietLabel, { color: isSelected ? colors.accent.primary : colors.text.primary }]}>
                   {diet.label}
                 </Text>
-                <Text style={styles.dietDescription}>{diet.description}</Text>
+                <Text style={[styles.dietDescription, { color: colors.text.tertiary }]}>{diet.description}</Text>
               </Pressable>
             )
           })}
@@ -87,8 +98,10 @@ export function StepDiet({ data, onChange }: StepDietProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🙏</Text>
-          <Text style={styles.sectionTitle}>Restriction religieuse</Text>
-          <Text style={styles.optionalBadge}>Optionnel</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Restriction religieuse</Text>
+          <Text style={[styles.optionalBadge, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
+            Optionnel
+          </Text>
         </View>
         <View style={styles.religiousRow}>
           {religiousOptions.map((option) => {
@@ -98,18 +111,27 @@ export function StepDiet({ data, onChange }: StepDietProps) {
               <Pressable
                 key={option.value}
                 onPress={() => toggleReligiousDiet(option.value)}
-                style={[styles.religiousOption, isSelected && styles.religiousOptionSelected]}
+                style={[
+                  styles.religiousOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? colors.warning : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: colors.warningLight },
+                ]}
               >
                 <Text style={styles.religiousEmoji}>{option.emoji}</Text>
                 <View style={styles.religiousContent}>
-                  <Text style={[styles.religiousLabel, isSelected && styles.religiousLabelSelected]}>
+                  <Text style={[styles.religiousLabel, { color: isSelected ? colors.warning : colors.text.primary }]}>
                     {option.label}
                   </Text>
-                  <Text style={styles.religiousDescription}>{option.description}</Text>
+                  <Text style={[styles.religiousDescription, { color: colors.text.tertiary }]}>
+                    {option.description}
+                  </Text>
                 </View>
                 {isSelected && (
-                  <View style={styles.checkmark}>
-                    <Text style={styles.checkmarkText}>✓</Text>
+                  <View style={[styles.checkmark, { backgroundColor: colors.warning }]}>
+                    <Text style={[styles.checkmarkText, { color: colors.text.inverse }]}>✓</Text>
                   </View>
                 )}
               </Pressable>
@@ -122,8 +144,10 @@ export function StepDiet({ data, onChange }: StepDietProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>⚠️</Text>
-          <Text style={styles.sectionTitle}>Allergies ou intolerances</Text>
-          <Text style={styles.optionalBadge}>Optionnel</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Allergies ou intolérances</Text>
+          <Text style={[styles.optionalBadge, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
+            Optionnel
+          </Text>
         </View>
         <View style={styles.allergiesRow}>
           {commonAllergies.map((allergy) => {
@@ -133,9 +157,15 @@ export function StepDiet({ data, onChange }: StepDietProps) {
               <Pressable
                 key={allergy}
                 onPress={() => toggleAllergy(allergy)}
-                style={[styles.allergyChip, isSelected && styles.allergyChipSelected]}
+                style={[
+                  styles.allergyChip,
+                  {
+                    borderColor: isSelected ? colors.error : colors.border.default,
+                    backgroundColor: isSelected ? `${colors.error}15` : colors.bg.elevated,
+                  },
+                ]}
               >
-                <Text style={[styles.allergyText, isSelected && styles.allergyTextSelected]}>
+                <Text style={[styles.allergyText, { color: isSelected ? colors.error : colors.text.secondary }]}>
                   {allergy}
                 </Text>
               </Pressable>
@@ -155,10 +185,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.2)',
   },
   introIcon: {
     fontSize: 24,
@@ -169,11 +197,9 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   section: {},
@@ -189,13 +215,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
     flex: 1,
   },
   optionalBadge: {
     ...typography.caption,
-    color: colors.text.tertiary,
-    backgroundColor: colors.bg.tertiary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.full,
@@ -210,14 +233,8 @@ const styles = StyleSheet.create({
     width: '48%',
     alignItems: 'center',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  dietOptionSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.light,
   },
   dietEmoji: {
     fontSize: 28,
@@ -225,15 +242,10 @@ const styles = StyleSheet.create({
   },
   dietLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
     textAlign: 'center',
-  },
-  dietLabelSelected: {
-    color: colors.accent.primary,
   },
   dietDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
     textAlign: 'center',
     marginTop: 2,
   },
@@ -244,14 +256,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  religiousOptionSelected: {
-    borderColor: '#F59E0B',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
   },
   religiousEmoji: {
     fontSize: 28,
@@ -262,25 +268,18 @@ const styles = StyleSheet.create({
   },
   religiousLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
-  },
-  religiousLabelSelected: {
-    color: '#D97706',
   },
   religiousDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   checkmark: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F59E0B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkmarkText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -294,20 +293,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
     borderWidth: 1,
-    borderColor: colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  allergyChipSelected: {
-    borderColor: colors.error,
-    backgroundColor: `${colors.error}15`,
   },
   allergyText: {
     ...typography.small,
-    color: colors.text.secondary,
     fontWeight: '500',
-  },
-  allergyTextSelected: {
-    color: colors.error,
   },
 })
 

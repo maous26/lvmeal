@@ -1,7 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { Goal, UserProfile } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepGoalProps {
   data: Partial<UserProfile>
@@ -18,50 +19,53 @@ const goals: {
   {
     value: 'weight_loss',
     label: 'Perdre du poids',
-    description: 'Creer un deficit calorique progressif et sain',
+    description: 'Créer un déficit calorique progressif et sain',
     icon: '📉',
-    calorieAdjust: '-300 a -500 kcal',
+    calorieAdjust: '-300 à -500 kcal',
   },
   {
     value: 'muscle_gain',
     label: 'Prendre du muscle',
-    description: 'Augmenter la masse musculaire avec un surplus controle',
+    description: 'Augmenter la masse musculaire avec un surplus contrôlé',
     icon: '💪',
-    calorieAdjust: '+200 a +400 kcal',
+    calorieAdjust: '+200 à +400 kcal',
   },
   {
     value: 'maintenance',
     label: 'Maintenir mon poids',
-    description: 'Equilibrer apports et depenses caloriques',
+    description: 'Équilibrer apports et dépenses caloriques',
     icon: '⚖️',
-    calorieAdjust: 'Equilibre',
+    calorieAdjust: 'Équilibre',
   },
   {
     value: 'health',
-    label: 'Ameliorer ma sante',
-    description: 'Optimiser la qualite nutritionnelle de mon alimentation',
+    label: 'Améliorer ma santé',
+    description: 'Optimiser la qualité nutritionnelle de mon alimentation',
     icon: '❤️',
-    calorieAdjust: 'Personnalise',
+    calorieAdjust: 'Personnalisé',
   },
   {
     value: 'energy',
-    label: "Plus d'energie",
-    description: 'Ameliorer vitalite et performance au quotidien',
+    label: "Plus d'énergie",
+    description: 'Améliorer vitalité et performance au quotidien',
     icon: '⚡',
-    calorieAdjust: 'Personnalise',
+    calorieAdjust: 'Personnalisé',
   },
 ]
 
 export function StepGoal({ data, onChange }: StepGoalProps) {
+  const { colors } = useTheme()
+  const accent = colors.nutrients.fats
+
   return (
     <View style={styles.container}>
       {/* Introduction accueillante */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: `${accent}15`, borderColor: `${accent}30` }]}>
         <Text style={styles.introIcon}>🎯</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Qu'est-ce qui t'amene ?</Text>
-          <Text style={styles.introText}>
-            Chaque objectif merite une approche differente. On adapte tout a ce qui compte pour toi.
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Qu'est-ce qui t'amène ?</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            Chaque objectif mérite une approche différente. On adapte tout à ce qui compte pour toi.
           </Text>
         </View>
       </View>
@@ -73,28 +77,48 @@ export function StepGoal({ data, onChange }: StepGoalProps) {
           <Pressable
             key={goal.value}
             onPress={() => onChange({ ...data, goal: goal.value })}
-            style={[styles.option, isSelected && styles.optionSelected]}
+            style={[
+              styles.option,
+              {
+                backgroundColor: colors.bg.elevated,
+                borderColor: isSelected ? colors.accent.primary : colors.border.light,
+              },
+              isSelected && { backgroundColor: colors.accent.light },
+            ]}
           >
-            <View style={[styles.iconContainer, isSelected && styles.iconContainerSelected]}>
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: isSelected ? colors.accent.primary : colors.bg.secondary },
+              ]}
+            >
               <Text style={styles.icon}>{goal.icon}</Text>
             </View>
 
             <View style={styles.content}>
               <View style={styles.header}>
-                <Text style={[styles.label, isSelected && styles.labelSelected]}>
+                <Text style={[styles.label, { color: isSelected ? colors.accent.primary : colors.text.primary }]}>
                   {goal.label}
                 </Text>
-                <View style={[styles.badge, isSelected && styles.badgeSelected]}>
-                  <Text style={[styles.badgeText, isSelected && styles.badgeTextSelected]}>
+                <View style={[styles.badge, { backgroundColor: isSelected ? colors.accent.primary : colors.bg.tertiary }]}>
+                  <Text style={[styles.badgeText, { color: isSelected ? colors.text.inverse : colors.text.tertiary }]}>
                     {goal.calorieAdjust}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.description}>{goal.description}</Text>
+              <Text style={[styles.description, { color: colors.text.secondary }]}>{goal.description}</Text>
             </View>
 
-            <View style={[styles.radio, isSelected && styles.radioSelected]}>
-              {isSelected && <View style={styles.radioDot} />}
+            <View
+              style={[
+                styles.radio,
+                {
+                  borderColor: isSelected ? colors.accent.primary : colors.border.default,
+                  backgroundColor: isSelected ? colors.accent.primary : 'transparent',
+                },
+              ]}
+            >
+              {isSelected && <View style={[styles.radioDot, { backgroundColor: colors.text.inverse }]} />}
             </View>
           </Pressable>
         )
@@ -110,10 +134,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(168, 85, 247, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(168, 85, 247, 0.2)',
     marginBottom: spacing.sm,
   },
   introIcon: {
@@ -125,37 +147,25 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  optionSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.light,
   },
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: radius.lg,
-    backgroundColor: colors.bg.secondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.default,
-  },
-  iconContainerSelected: {
-    backgroundColor: colors.accent.primary,
   },
   icon: {
     fontSize: 24,
@@ -172,50 +182,31 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
-  },
-  labelSelected: {
-    color: colors.accent.primary,
   },
   badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.full,
-    backgroundColor: colors.bg.tertiary,
-  },
-  badgeSelected: {
-    backgroundColor: colors.accent.primary,
   },
   badgeText: {
     ...typography.caption,
-    color: colors.text.tertiary,
     fontWeight: '500',
-  },
-  badgeTextSelected: {
-    color: '#FFFFFF',
   },
   description: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   radio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.primary,
   },
   radioDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
   },
 })
 

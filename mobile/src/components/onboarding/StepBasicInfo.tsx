@@ -2,7 +2,7 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
-import { colors, spacing } from '../../constants/theme'
+import { spacing } from '../../constants/theme'
 import type { Gender, UserProfile } from '../../types'
 
 interface StepBasicInfoProps {
@@ -20,8 +20,8 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
   return (
     <View style={styles.container}>
       <Input
-        label="Prenom"
-        placeholder="Votre prenom"
+        label="Prénom"
+        placeholder="Votre prénom"
         value={data.firstName || ''}
         onChangeText={(text) => onChange({ ...data, firstName: text })}
         autoCapitalize="words"
@@ -30,7 +30,7 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
 
       <Select
         label="Genre"
-        placeholder="Selectionnez votre genre"
+        placeholder="Sélectionnez votre genre"
         value={data.gender}
         options={genderOptions}
         onChange={(value) => onChange({ ...data, gender: value })}
@@ -38,12 +38,12 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
       />
 
       <Input
-        label="Age"
+        label="Âge"
         placeholder="Ex: 35"
         value={data.age?.toString() || ''}
         onChangeText={(text) => onChange({ ...data, age: parseInt(text) || undefined })}
         keyboardType="number-pad"
-        hint="Utilise pour calculer vos besoins caloriques"
+        hint="Utilisé pour calculer tes besoins caloriques"
         containerStyle={styles.input}
       />
 

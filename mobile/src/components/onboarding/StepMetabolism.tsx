@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, MetabolismFactors } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepMetabolismProps {
   data: Partial<UserProfile>
@@ -16,31 +17,32 @@ const metabolismQuestions: {
 }[] = [
   {
     id: 'restrictiveDietsHistory',
-    question: 'Tu as deja fait plusieurs regimes restrictifs ?',
-    explanation: "Ton corps a appris a s'adapter - c'est une force !",
+    question: 'Tu as déjà fait plusieurs régimes restrictifs ?',
+    explanation: "Ton corps a appris à s'adapter — c'est une force !",
     icon: '🛡️',
   },
   {
     id: 'eatsLessThanHunger',
-    question: 'Tu manges souvent beaucoup moins que ta faim reelle ?',
-    explanation: "Ecouter sa faim est la cle d'un equilibre durable",
+    question: 'Tu manges souvent beaucoup moins que ta faim réelle ?',
+    explanation: "Écouter sa faim est la clé d'un équilibre durable",
     icon: '❤️',
   },
   {
     id: 'restrictionCrashCycle',
-    question: 'Tu as des periodes ou tu manges tres peu puis craquage ?',
+    question: 'Tu as des périodes où tu manges très peu, puis craquage ?',
     explanation: 'Ce cycle est naturel quand on se restreint trop',
     icon: '🔥',
   },
   {
     id: 'metabolicSymptoms',
-    question: 'Fatigue, froid, difficultes a perdre malgre peu de calories ?',
-    explanation: "Ton corps te protege - on va l'accompagner en douceur",
+    question: 'Fatigue, froid, difficultés à perdre malgré peu de calories ?',
+    explanation: "Ton corps te protège — on va l'accompagner en douceur",
     icon: '❄️',
   },
 ]
 
 export function StepMetabolism({ data, onChange }: StepMetabolismProps) {
+  const { colors } = useTheme()
   const [factors, setFactors] = useState<Partial<MetabolismFactors>>(data.metabolismFactors || {})
 
   const positiveCount = Object.values(factors).filter(Boolean).length
@@ -63,12 +65,12 @@ export function StepMetabolism({ data, onChange }: StepMetabolismProps) {
   return (
     <View style={styles.container}>
       {/* Introduction */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: colors.accent.light, borderColor: `${colors.accent.primary}30` }]}>
         <Text style={styles.introIcon}>✨</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Mieux te connaitre</Text>
-          <Text style={styles.introText}>
-            Ces questions nous aident a personnaliser ton accompagnement. Il n'y a pas de bonne ou mauvaise reponse !
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Mieux te connaître</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            Ces questions nous aident à personnaliser ton accompagnement. Il n'y a pas de bonne ou mauvaise réponse !
           </Text>
         </View>
       </View>
@@ -82,19 +84,39 @@ export function StepMetabolism({ data, onChange }: StepMetabolismProps) {
             <Pressable
               key={q.id}
               onPress={() => handleFactorChange(q.id, !isChecked)}
-              style={[styles.question, isChecked && styles.questionSelected]}
+              style={[
+                styles.question,
+                {
+                  backgroundColor: colors.bg.elevated,
+                  borderColor: isChecked ? colors.accent.primary : colors.border.light,
+                },
+                isChecked && { backgroundColor: colors.accent.light },
+              ]}
             >
-              <View style={[styles.questionIcon, isChecked && styles.questionIconSelected]}>
+              <View
+                style={[
+                  styles.questionIcon,
+                  { backgroundColor: isChecked ? colors.accent.primary : colors.bg.secondary },
+                ]}
+              >
                 <Text style={styles.questionEmoji}>{q.icon}</Text>
               </View>
 
               <View style={styles.questionContent}>
-                <Text style={styles.questionText}>{q.question}</Text>
-                <Text style={styles.questionExplanation}>{q.explanation}</Text>
+                <Text style={[styles.questionText, { color: colors.text.primary }]}>{q.question}</Text>
+                <Text style={[styles.questionExplanation, { color: colors.text.tertiary }]}>{q.explanation}</Text>
               </View>
 
-              <View style={[styles.checkbox, isChecked && styles.checkboxSelected]}>
-                {isChecked && <Text style={styles.checkmark}>✓</Text>}
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    borderColor: isChecked ? colors.accent.primary : colors.border.default,
+                    backgroundColor: isChecked ? colors.accent.primary : 'transparent',
+                  },
+                ]}
+              >
+                {isChecked && <Text style={[styles.checkmark, { color: colors.text.inverse }]}>✓</Text>}
               </View>
             </Pressable>
           )
@@ -103,14 +125,14 @@ export function StepMetabolism({ data, onChange }: StepMetabolismProps) {
 
       {/* Adaptive message - Program will be proposed in next step */}
       {isAdaptive && (
-        <View style={styles.adaptiveMessage}>
-          <View style={styles.adaptiveIcon}>
+        <View style={[styles.adaptiveMessage, { backgroundColor: colors.successLight, borderColor: `${colors.success}30` }]}>
+          <View style={[styles.adaptiveIcon, { backgroundColor: `${colors.success}20` }]}>
             <Text style={styles.adaptiveEmoji}>❤️</Text>
           </View>
           <View style={styles.adaptiveContent}>
-            <Text style={styles.adaptiveTitle}>On va y aller en douceur</Text>
-            <Text style={styles.adaptiveText}>
-              On va te proposer un programme adapte a ton profil a l'etape suivante.
+            <Text style={[styles.adaptiveTitle, { color: colors.success }]}>On va y aller en douceur</Text>
+            <Text style={[styles.adaptiveText, { color: colors.text.secondary }]}>
+              On va te proposer un programme adapté à ton profil à l'étape suivante.
             </Text>
           </View>
         </View>
@@ -118,9 +140,9 @@ export function StepMetabolism({ data, onChange }: StepMetabolismProps) {
 
       {/* Standard message */}
       {!isAdaptive && positiveCount > 0 && (
-        <View style={styles.standardMessage}>
-          <Text style={styles.standardText}>
-            Merci pour ces infos ! On adapte ton programme en consequence.
+        <View style={[styles.standardMessage, { backgroundColor: colors.bg.tertiary }]}>
+          <Text style={[styles.standardText, { color: colors.text.tertiary }]}>
+            Merci pour ces infos ! On adapte ton programme en conséquence.
           </Text>
         </View>
       )}
@@ -136,10 +158,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: `${colors.accent.primary}30`,
   },
   introIcon: {
     fontSize: 24,
@@ -150,11 +170,9 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   questions: {
@@ -164,26 +182,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  questionSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.light,
   },
   questionIcon: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: colors.bg.secondary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  questionIconSelected: {
-    backgroundColor: colors.accent.primary,
   },
   questionEmoji: {
     fontSize: 20,
@@ -194,12 +202,10 @@ const styles = StyleSheet.create({
   },
   questionText: {
     ...typography.body,
-    color: colors.text.primary,
     fontWeight: '500',
   },
   questionExplanation: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: spacing.xs,
   },
   checkbox: {
@@ -207,33 +213,24 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border.default,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.xs,
   },
-  checkboxSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.accent.primary,
-  },
   checkmark: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
   adaptiveMessage: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
   },
   adaptiveIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -246,21 +243,17 @@ const styles = StyleSheet.create({
   },
   adaptiveTitle: {
     ...typography.bodySemibold,
-    color: '#059669',
   },
   adaptiveText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   standardMessage: {
     padding: spacing.md,
-    backgroundColor: colors.bg.tertiary,
     borderRadius: radius.md,
   },
   standardText: {
     ...typography.small,
-    color: colors.text.tertiary,
     textAlign: 'center',
   },
 })

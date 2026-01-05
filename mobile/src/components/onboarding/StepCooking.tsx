@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, CookingPreferences, CookingLevel } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepCookingProps {
   data: Partial<UserProfile>
@@ -9,9 +10,9 @@ interface StepCookingProps {
 }
 
 const levelOptions: { value: CookingLevel; label: string; emoji: string; description: string }[] = [
-  { value: 'beginner', label: 'Debutant', emoji: '🍳', description: 'Je debute en cuisine' },
-  { value: 'intermediate', label: 'Intermediaire', emoji: '👨‍🍳', description: 'Je me debrouille bien' },
-  { value: 'advanced', label: 'Experimente', emoji: '⭐', description: 'La cuisine est ma passion' },
+  { value: 'beginner', label: 'Débutant', emoji: '🍳', description: 'Je débute en cuisine' },
+  { value: 'intermediate', label: 'Intermédiaire', emoji: '👨‍🍳', description: 'Je me débrouille bien' },
+  { value: 'advanced', label: 'Expérimenté', emoji: '⭐', description: 'La cuisine est ma passion' },
 ]
 
 const weekdayTimeOptions = [
@@ -29,6 +30,12 @@ const weekendTimeOptions = [
 ]
 
 export function StepCooking({ data, onChange }: StepCookingProps) {
+  const { colors } = useTheme()
+  const primary = colors.secondary.primary
+  const primaryLight = colors.secondary.light
+  const success = colors.success
+  const successLight = colors.successLight
+
   const [prefs, setPrefs] = useState<Partial<CookingPreferences>>(
     data.cookingPreferences || {
       level: 'intermediate',
@@ -51,12 +58,12 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
   return (
     <View style={styles.container}>
       {/* Introduction */}
-      <View style={styles.intro}>
+      <View style={[styles.intro, { backgroundColor: primaryLight, borderColor: `${primary}30` }]}>
         <Text style={styles.introIcon}>👨‍🍳</Text>
         <View style={styles.introContent}>
-          <Text style={styles.introTitle}>Tes preferences en cuisine</Text>
-          <Text style={styles.introText}>
-            Ces infos nous aident a te proposer des recettes adaptees a ton niveau et ton temps disponible.
+          <Text style={[styles.introTitle, { color: colors.text.primary }]}>Tes préférences en cuisine</Text>
+          <Text style={[styles.introText, { color: colors.text.secondary }]}>
+            Ces infos nous aident à te proposer des recettes adaptées à ton niveau et ton temps disponible.
           </Text>
         </View>
       </View>
@@ -65,7 +72,9 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🎯</Text>
-          <Text style={styles.sectionTitle}>Quel est ton niveau en cuisine ?</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Quel est ton niveau en cuisine ?
+          </Text>
         </View>
         <View style={styles.levelGrid}>
           {levelOptions.map((option) => {
@@ -75,14 +84,23 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updatePrefs({ level: option.value })}
-                style={[styles.levelOption, isSelected && styles.levelOptionSelected]}
+                style={[
+                  styles.levelOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? primary : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: primaryLight },
+                ]}
               >
                 <Text style={styles.levelEmoji}>{option.emoji}</Text>
                 <View style={styles.levelContent}>
-                  <Text style={[styles.levelLabel, isSelected && styles.levelLabelSelected]}>
+                  <Text style={[styles.levelLabel, { color: isSelected ? primary : colors.text.primary }]}>
                     {option.label}
                   </Text>
-                  <Text style={styles.levelDescription}>{option.description}</Text>
+                  <Text style={[styles.levelDescription, { color: colors.text.tertiary }]}>
+                    {option.description}
+                  </Text>
                 </View>
               </Pressable>
             )
@@ -94,7 +112,9 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>📅</Text>
-          <Text style={styles.sectionTitle}>Temps disponible en semaine (par repas)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Temps disponible en semaine (par repas)
+          </Text>
         </View>
         <View style={styles.optionsRow}>
           {weekdayTimeOptions.map((option) => {
@@ -104,10 +124,17 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updatePrefs({ weekdayTime: option.value })}
-                style={[styles.chipOption, isSelected && styles.chipOptionSelected]}
+                style={[
+                  styles.chipOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? primary : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: primaryLight },
+                ]}
               >
                 <Text style={styles.chipEmoji}>{option.emoji}</Text>
-                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                <Text style={[styles.chipLabel, { color: isSelected ? primary : colors.text.primary }]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -120,7 +147,9 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>🌴</Text>
-          <Text style={styles.sectionTitle}>Temps disponible le week-end (par repas)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Temps disponible le week-end (par repas)
+          </Text>
         </View>
         <View style={styles.optionsRow}>
           {weekendTimeOptions.map((option) => {
@@ -130,10 +159,17 @@ export function StepCooking({ data, onChange }: StepCookingProps) {
               <Pressable
                 key={option.value}
                 onPress={() => updatePrefs({ weekendTime: option.value })}
-                style={[styles.chipOption, isSelected && styles.chipOptionSelectedGreen]}
+                style={[
+                  styles.chipOption,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: isSelected ? success : colors.border.light,
+                  },
+                  isSelected && { backgroundColor: successLight },
+                ]}
               >
                 <Text style={styles.chipEmoji}>{option.emoji}</Text>
-                <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelectedGreen]}>
+                <Text style={[styles.chipLabel, { color: isSelected ? success : colors.text.primary }]}>
                   {option.label}
                 </Text>
               </Pressable>
@@ -152,10 +188,8 @@ const styles = StyleSheet.create({
   intro: {
     flexDirection: 'row',
     padding: spacing.default,
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(249, 115, 22, 0.2)',
   },
   introIcon: {
     fontSize: 24,
@@ -166,11 +200,9 @@ const styles = StyleSheet.create({
   },
   introTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   introText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   section: {},
@@ -185,7 +217,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   optionsRow: {
     flexDirection: 'row',
@@ -197,32 +228,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.default,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.sm,
-  },
-  chipOptionSelected: {
-    borderColor: '#F97316',
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-  },
-  chipOptionSelectedGreen: {
-    borderColor: '#22C55E',
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
   },
   chipEmoji: {
     fontSize: 16,
   },
   chipLabel: {
     ...typography.smallMedium,
-    color: colors.text.primary,
-  },
-  chipLabelSelected: {
-    color: '#F97316',
-  },
-  chipLabelSelectedGreen: {
-    color: '#22C55E',
   },
   levelGrid: {
     gap: spacing.sm,
@@ -231,15 +245,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
     gap: spacing.md,
-  },
-  levelOptionSelected: {
-    borderColor: '#F97316',
-    backgroundColor: 'rgba(249, 115, 22, 0.1)',
   },
   levelEmoji: {
     fontSize: 32,
@@ -249,14 +257,9 @@ const styles = StyleSheet.create({
   },
   levelLabel: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
-  },
-  levelLabelSelected: {
-    color: '#F97316',
   },
   levelDescription: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: 2,
   },
 })

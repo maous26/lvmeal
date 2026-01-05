@@ -1,8 +1,9 @@
 import React from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { Zap, Sparkles, ChevronRight, TrendingUp } from 'lucide-react-native'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile } from '../../types'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepMetabolicProgramProps {
   data: Partial<UserProfile>
@@ -10,6 +11,8 @@ interface StepMetabolicProgramProps {
 }
 
 export function StepMetabolicProgram({ data, onChange }: StepMetabolicProgramProps) {
+  const { colors } = useTheme()
+
   const handleChoice = (wantsMetabolicProgram: boolean) => {
     onChange({ ...data, wantsMetabolicProgram })
   }
@@ -21,49 +24,56 @@ export function StepMetabolicProgram({ data, onChange }: StepMetabolicProgramPro
     <View style={styles.container}>
       {/* Introduction */}
       <View style={styles.intro}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.warningLight }]}>
           <Zap size={32} color={colors.warning} />
           <TrendingUp size={16} color={colors.success} style={styles.sparkle} />
         </View>
-        <Text style={styles.title}>Programme Relance Metabolique</Text>
-        <Text style={styles.description}>
-          Ton profil indique un metabolisme adaptatif. Ce programme t'aidera a relancer
-          ton metabolisme en douceur, sans frustration.
+        <Text style={[styles.title, { color: colors.text.primary }]}>Programme Relance Métabolique</Text>
+        <Text style={[styles.description, { color: colors.text.secondary }]}>
+          Ton profil indique un métabolisme adaptatif. Ce programme t'aidera à relancer
+          ton métabolisme en douceur, sans frustration.
         </Text>
       </View>
 
       {/* Benefits */}
-      <View style={styles.benefits}>
-        <Text style={styles.benefitsTitle}>Ce programme inclut :</Text>
+      <View style={[styles.benefits, { backgroundColor: colors.bg.elevated }]}>
+        <Text style={[styles.benefitsTitle, { color: colors.text.tertiary }]}>Ce programme inclut :</Text>
         <View style={styles.benefitsList}>
           <BenefitItem emoji="🔥" text="Progression en 4 phases sur 9 semaines" />
-          <BenefitItem emoji="🥗" text="Strategie nutritionnelle adaptee" />
-          <BenefitItem emoji="🚶" text="Marche active et activite douce" />
-          <BenefitItem emoji="🧠" text="Suivi IA personnalise" />
+          <BenefitItem emoji="🥗" text="Stratégie nutritionnelle adaptée" />
+          <BenefitItem emoji="🚶" text="Marche active et activité douce" />
+          <BenefitItem emoji="🧠" text="Suivi IA personnalisé" />
         </View>
       </View>
 
       {/* Alert about exclusion */}
-      <View style={styles.alertBox}>
+      <View style={[styles.alertBox, { backgroundColor: colors.warningLight }]}>
         <Text style={styles.alertIcon}>⚠️</Text>
-        <Text style={styles.alertText}>
-          Ce programme est exclusif : il ne peut pas etre suivi en meme temps que le programme Sport ou Bien-etre.
+        <Text style={[styles.alertText, { color: colors.text.secondary }]}>
+          Ce programme est exclusif : il ne peut pas être suivi en même temps que le programme Sport ou Bien-être.
         </Text>
       </View>
 
       {/* Choice buttons */}
       <View style={styles.choices}>
         <Pressable
-          style={[styles.choiceButton, styles.choiceYes, isYesSelected && styles.choiceSelected]}
+          style={[
+            styles.choiceButton,
+            {
+              backgroundColor: colors.bg.elevated,
+              borderColor: isYesSelected ? colors.warning : colors.border.light,
+            },
+            isYesSelected && { backgroundColor: colors.warningLight },
+          ]}
           onPress={() => handleChoice(true)}
         >
           <View style={styles.choiceContent}>
             <Text style={styles.choiceEmoji}>⚡</Text>
             <View style={styles.choiceTextContainer}>
-              <Text style={[styles.choiceTitle, isYesSelected && styles.choiceTitleSelected]}>
-                Oui, je veux relancer mon metabolisme
+              <Text style={[styles.choiceTitle, { color: isYesSelected ? colors.warning : colors.text.primary }]}>
+                Oui, je veux relancer mon métabolisme
               </Text>
-              <Text style={styles.choiceSubtitle}>
+              <Text style={[styles.choiceSubtitle, { color: colors.text.secondary }]}>
                 Programme complet avec accompagnement IA
               </Text>
             </View>
@@ -72,17 +82,24 @@ export function StepMetabolicProgram({ data, onChange }: StepMetabolicProgramPro
         </Pressable>
 
         <Pressable
-          style={[styles.choiceButton, isNoSelected && styles.choiceNoSelected]}
+          style={[
+            styles.choiceButton,
+            {
+              backgroundColor: colors.bg.elevated,
+              borderColor: isNoSelected ? colors.text.tertiary : colors.border.light,
+            },
+            isNoSelected && { backgroundColor: colors.bg.secondary },
+          ]}
           onPress={() => handleChoice(false)}
         >
           <View style={styles.choiceContent}>
             <Text style={styles.choiceEmoji}>⏭️</Text>
             <View style={styles.choiceTextContainer}>
-              <Text style={[styles.choiceTitle, isNoSelected && styles.choiceTitleNoSelected]}>
-                Non merci, peut-etre plus tard
+              <Text style={[styles.choiceTitle, { color: colors.text.primary }]}>
+                Non merci, peut-être plus tard
               </Text>
-              <Text style={styles.choiceSubtitle}>
-                D'autres options te seront proposees
+              <Text style={[styles.choiceSubtitle, { color: colors.text.secondary }]}>
+                D'autres options te seront proposées
               </Text>
             </View>
           </View>
@@ -91,18 +108,19 @@ export function StepMetabolicProgram({ data, onChange }: StepMetabolicProgramPro
       </View>
 
       {/* Reassurance */}
-      <Text style={styles.reassurance}>
-        Ce programme est optionnel et peut etre active ou desactive a tout moment depuis votre profil.
+      <Text style={[styles.reassurance, { color: colors.text.muted }]}>
+        Ce programme est optionnel et peut être activé ou désactivé à tout moment depuis ton profil.
       </Text>
     </View>
   )
 }
 
 function BenefitItem({ emoji, text }: { emoji: string; text: string }) {
+  const { colors } = useTheme()
   return (
     <View style={styles.benefitItem}>
       <Text style={styles.benefitEmoji}>{emoji}</Text>
-      <Text style={styles.benefitText}>{text}</Text>
+      <Text style={[styles.benefitText, { color: colors.text.primary }]}>{text}</Text>
     </View>
   )
 }
@@ -120,7 +138,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -132,24 +149,20 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h4,
-    color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   description: {
     ...typography.body,
-    color: colors.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   benefits: {
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     padding: spacing.default,
   },
   benefitsTitle: {
     ...typography.smallMedium,
-    color: colors.text.tertiary,
     marginBottom: spacing.sm,
   },
   benefitsList: {
@@ -165,12 +178,10 @@ const styles = StyleSheet.create({
   },
   benefitText: {
     ...typography.body,
-    color: colors.text.primary,
   },
   alertBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
@@ -180,7 +191,6 @@ const styles = StyleSheet.create({
   },
   alertText: {
     ...typography.small,
-    color: colors.text.secondary,
     flex: 1,
   },
   choices: {
@@ -191,19 +201,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.default,
-    backgroundColor: colors.bg.elevated,
     borderRadius: radius.lg,
     borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  choiceYes: {},
-  choiceSelected: {
-    borderColor: colors.warning,
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-  },
-  choiceNoSelected: {
-    borderColor: colors.text.tertiary,
-    backgroundColor: colors.bg.secondary,
   },
   choiceContent: {
     flexDirection: 'row',
@@ -219,22 +218,13 @@ const styles = StyleSheet.create({
   },
   choiceTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
-  },
-  choiceTitleSelected: {
-    color: colors.warning,
-  },
-  choiceTitleNoSelected: {
-    color: colors.text.primary,
   },
   choiceSubtitle: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: 2,
   },
   reassurance: {
     ...typography.small,
-    color: colors.text.muted,
     textAlign: 'center',
     fontStyle: 'italic',
   },

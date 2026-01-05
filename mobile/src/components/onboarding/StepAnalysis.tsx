@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { Card } from '../ui/Card'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, NutritionalNeeds, NutritionInfo } from '../../types'
 import { LymIABrain, type UserContext, type CalorieRecommendation } from '../../services/lymia-brain'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepAnalysisProps {
   profile: Partial<UserProfile>
@@ -16,6 +17,7 @@ const formatNumber = (num: number): string => {
 }
 
 export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysisProps) {
+  const { colors } = useTheme()
   const [showResults, setShowResults] = useState(false)
   const [personalizedNeeds, setPersonalizedNeeds] = useState<CalorieRecommendation | null>(null)
   const [loadingMessage, setLoadingMessage] = useState('Analyse en cours...')
@@ -75,8 +77,10 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
         <View style={styles.spinner}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
         </View>
-        <Text style={styles.loadingTitle}>{loadingMessage}</Text>
-        <Text style={styles.loadingText}>Calcul de vos besoins nutritionnels</Text>
+        <Text style={[styles.loadingTitle, { color: colors.text.primary }]}>{loadingMessage}</Text>
+        <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
+          Calcul de tes besoins nutritionnels
+        </Text>
       </View>
     )
   }
@@ -87,7 +91,7 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
   const sources = personalizedNeeds?.sources || []
 
   const macros = [
-    { label: 'Proteines', value: finalNeeds.proteins, unit: 'g', color: colors.nutrients.proteins },
+    { label: 'Protéines', value: finalNeeds.proteins, unit: 'g', color: colors.nutrients.proteins },
     { label: 'Glucides', value: finalNeeds.carbs, unit: 'g', color: colors.nutrients.carbs },
     { label: 'Lipides', value: finalNeeds.fats, unit: 'g', color: colors.nutrients.fats },
   ]
@@ -96,43 +100,55 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
     weight_loss: 'perte de poids',
     muscle_gain: 'prise de muscle',
     maintenance: 'maintien',
-    health: 'sante',
-    energy: 'energie',
+    health: 'santé',
+    energy: 'énergie',
   }
 
   return (
     <View style={styles.container}>
       {/* Success message */}
-      <View style={styles.success}>
+      <View style={[styles.success, { backgroundColor: colors.accent.light }]}>
         <View style={styles.successIcon}>
           <Text style={styles.successEmoji}>✓</Text>
         </View>
         <View style={styles.successContent}>
-          <Text style={styles.successTitle}>Profil analyse avec succes !</Text>
-          <Text style={styles.successText}>Voici vos objectifs personnalises</Text>
+          <Text style={[styles.successTitle, { color: colors.text.primary }]}>
+            Profil analysé avec succès !
+          </Text>
+          <Text style={[styles.successText, { color: colors.text.secondary }]}>
+            Voici tes objectifs personnalisés
+          </Text>
         </View>
       </View>
 
       {/* Calories target */}
-      <Card style={styles.caloriesCard}>
+      <Card style={[styles.caloriesCard, { backgroundColor: colors.bg.elevated }]}>
         <View style={styles.caloriesHeader}>
           <Text style={styles.caloriesIcon}>🔥</Text>
-          <Text style={styles.caloriesLabel}>Objectif calorique quotidien</Text>
+          <Text style={[styles.caloriesLabel, { color: colors.text.secondary }]}>
+            Objectif calorique quotidien
+          </Text>
         </View>
         <View style={styles.caloriesValue}>
-          <Text style={styles.caloriesNumber}>{formatNumber(finalNeeds.calories)}</Text>
-          <Text style={styles.caloriesUnit}>kcal</Text>
+          <Text style={[styles.caloriesNumber, { color: colors.text.primary }]}>
+            {formatNumber(finalNeeds.calories)}
+          </Text>
+          <Text style={[styles.caloriesUnit, { color: colors.text.tertiary }]}>kcal</Text>
         </View>
-        <Text style={styles.caloriesHint}>
-          Base sur votre profil et objectif : {goalLabels[profile.goal || 'maintenance']}
+        <Text style={[styles.caloriesHint, { color: colors.text.tertiary }]}>
+          Basé sur ton profil et ton objectif : {goalLabels[profile.goal || 'maintenance']}
         </Text>
         {isRAGPowered && personalizedNeeds?.reasoning && (
-          <Text style={styles.reasoningText}>{personalizedNeeds.reasoning}</Text>
+          <Text style={[styles.reasoningText, { color: colors.text.secondary }]}>
+            {personalizedNeeds.reasoning}
+          </Text>
         )}
         {sources.length > 0 && (
-          <View style={styles.sourcesContainer}>
-            <Text style={styles.sourcesLabel}>Sources scientifiques:</Text>
-            <Text style={styles.sourcesText}>
+          <View style={[styles.sourcesContainer, { borderTopColor: colors.border.light }]}>
+            <Text style={[styles.sourcesLabel, { color: colors.text.tertiary }]}>
+              Sources scientifiques :
+            </Text>
+            <Text style={[styles.sourcesText, { color: colors.accent.primary }]}>
               {sources.map(s => s.source.toUpperCase()).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
             </Text>
           </View>
@@ -141,15 +157,19 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
 
       {/* Macros breakdown */}
       <View style={styles.macrosSection}>
-        <Text style={styles.macrosTitle}>Repartition des macronutriments</Text>
+        <Text style={[styles.macrosTitle, { color: colors.text.secondary }]}>
+          Répartition des macronutriments
+        </Text>
         <View style={styles.macrosGrid}>
           {macros.map((macro) => (
-            <Card key={macro.label} style={styles.macroCard}>
+            <Card key={macro.label} style={[styles.macroCard, { backgroundColor: colors.bg.elevated }]}>
               <View style={[styles.macroIcon, { backgroundColor: `${macro.color}20` }]}>
                 <View style={[styles.macroDot, { backgroundColor: macro.color }]} />
               </View>
-              <Text style={styles.macroValue}>{formatNumber(macro.value)}</Text>
-              <Text style={styles.macroLabel}>
+              <Text style={[styles.macroValue, { color: colors.text.primary }]}>
+                {formatNumber(macro.value)}
+              </Text>
+              <Text style={[styles.macroLabel, { color: colors.text.tertiary }]}>
                 {macro.unit} de {macro.label.toLowerCase()}
               </Text>
             </Card>
@@ -158,29 +178,31 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
       </View>
 
       {/* Summary */}
-      <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>Recapitulatif de votre profil</Text>
+      <View style={[styles.summary, { backgroundColor: colors.bg.secondary }]}>
+        <Text style={[styles.summaryTitle, { color: colors.text.primary }]}>
+          Récapitulatif de ton profil
+        </Text>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Prenom</Text>
-          <Text style={styles.summaryValue}>{profile.firstName}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.text.tertiary }]}>Prénom</Text>
+          <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{profile.firstName}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Taille</Text>
-          <Text style={styles.summaryValue}>{profile.height} cm</Text>
+          <Text style={[styles.summaryLabel, { color: colors.text.tertiary }]}>Taille</Text>
+          <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{profile.height} cm</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Poids actuel</Text>
-          <Text style={styles.summaryValue}>{profile.weight} kg</Text>
+          <Text style={[styles.summaryLabel, { color: colors.text.tertiary }]}>Poids actuel</Text>
+          <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{profile.weight} kg</Text>
         </View>
         {profile.targetWeight && (
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Objectif</Text>
-            <Text style={styles.summaryValue}>{profile.targetWeight} kg</Text>
+            <Text style={[styles.summaryLabel, { color: colors.text.tertiary }]}>Objectif</Text>
+            <Text style={[styles.summaryValue, { color: colors.text.primary }]}>{profile.targetWeight} kg</Text>
           </View>
         )}
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Regime</Text>
-          <Text style={[styles.summaryValue, { textTransform: 'capitalize' }]}>
+          <Text style={[styles.summaryLabel, { color: colors.text.tertiary }]}>Régime</Text>
+          <Text style={[styles.summaryValue, { color: colors.text.primary, textTransform: 'capitalize' }]}>
             {profile.dietType}
           </Text>
         </View>
@@ -203,25 +225,22 @@ const styles = StyleSheet.create({
   },
   loadingTitle: {
     ...typography.h4,
-    color: colors.text.primary,
     marginBottom: spacing.sm,
   },
   loadingText: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   success: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.default,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.lg,
   },
   successIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.accent.primary,
+    backgroundColor: '#009FEB',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -234,11 +253,9 @@ const styles = StyleSheet.create({
   successContent: {},
   successTitle: {
     ...typography.bodySemibold,
-    color: colors.text.primary,
   },
   successText: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   caloriesCard: {
     alignItems: 'center',
@@ -256,7 +273,6 @@ const styles = StyleSheet.create({
   },
   caloriesLabel: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
   },
   caloriesValue: {
     flexDirection: 'row',
@@ -265,21 +281,17 @@ const styles = StyleSheet.create({
   caloriesNumber: {
     fontSize: 48,
     fontWeight: '700',
-    color: colors.text.primary,
   },
   caloriesUnit: {
     fontSize: 20,
-    color: colors.text.tertiary,
     marginLeft: spacing.xs,
   },
   caloriesHint: {
     ...typography.small,
-    color: colors.text.tertiary,
     marginTop: spacing.sm,
   },
   reasoningText: {
     ...typography.small,
-    color: colors.text.secondary,
     marginTop: spacing.md,
     textAlign: 'center',
     fontStyle: 'italic',
@@ -288,22 +300,18 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
     alignItems: 'center',
   },
   sourcesLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   sourcesText: {
     ...typography.caption,
-    color: colors.accent.primary,
     fontWeight: '600',
   },
   macrosSection: {},
   macrosTitle: {
     ...typography.smallMedium,
-    color: colors.text.secondary,
     marginBottom: spacing.sm,
   },
   macrosGrid: {
@@ -330,21 +338,17 @@ const styles = StyleSheet.create({
   },
   macroValue: {
     ...typography.h4,
-    color: colors.text.primary,
   },
   macroLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
     textAlign: 'center',
   },
   summary: {
     padding: spacing.default,
-    backgroundColor: colors.bg.secondary,
     borderRadius: radius.lg,
   },
   summaryTitle: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
     marginBottom: spacing.sm,
   },
   summaryRow: {
@@ -354,11 +358,9 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     ...typography.small,
-    color: colors.text.tertiary,
   },
   summaryValue: {
     ...typography.small,
-    color: colors.text.primary,
   },
 })
 

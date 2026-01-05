@@ -75,9 +75,9 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     valueProposition: "Un accompagnement sur-mesure pour réparer ton métabolisme en douceur et retrouver une relation saine avec la nourriture.",
   },
   'wellness-program': {
-    title: 'Outils bien-etre',
+    title: 'Outils bien-être',
     subtitle: 'EN COMPLEMENT',
-    valueProposition: "Des outils optionnels pour soutenir ton equilibre au quotidien.",
+    valueProposition: "Des outils optionnels pour soutenir ton équilibre au quotidien.",
   },
   lifestyle: {
     title: 'Tes habitudes de vie',

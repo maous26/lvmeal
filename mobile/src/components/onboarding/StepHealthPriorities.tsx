@@ -72,18 +72,18 @@ export function StepHealthPriorities({ onComplete }: StepHealthPrioritiesProps) 
         style={[
           styles.intro,
           {
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderColor: 'rgba(16, 185, 129, 0.2)',
+            backgroundColor: colors.successLight,
+            borderColor: `${colors.success}30`,
           },
         ]}
       >
-        <Ionicons name="heart-outline" size={24} color="#10B981" />
+        <Ionicons name="heart-outline" size={24} color={colors.success} />
         <View style={styles.introContent}>
           <Text style={[styles.introTitle, { color: colors.text.primary }]}>
-            Tes priorites sante
+            Tes priorités santé
           </Text>
           <Text style={[styles.introText, { color: colors.text.secondary }]}>
-            Choisis 1 ou 2 priorites. Tu pourras changer quand tu veux.
+            Choisis 1 ou 2 priorités. Tu pourras changer quand tu veux.
           </Text>
         </View>
       </View>
@@ -104,7 +104,7 @@ export function StepHealthPriorities({ onComplete }: StepHealthPrioritiesProps) 
       {/* Selection counter */}
       <View style={styles.counterContainer}>
         <Text style={[styles.counterText, { color: colors.text.tertiary }]}>
-          {selectedPriorities.length} / {MAX_PRIORITIES} selectionnees
+          {selectedPriorities.length} / {MAX_PRIORITIES} sélectionnées
         </Text>
       </View>
 
@@ -116,7 +116,7 @@ export function StepHealthPriorities({ onComplete }: StepHealthPrioritiesProps) 
 
       {/* Helper text */}
       <Text style={[styles.helperText, { color: colors.text.tertiary }]}>
-        Ces choix orientent les conseils, sans creer de contraintes.
+        Ces choix orientent les conseils, sans créer de contraintes.
       </Text>
     </ScrollView>
   )

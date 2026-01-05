@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronRight } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { Button } from '../ui/Button'
 
 const { width, height } = Dimensions.get('window')
 
@@ -24,8 +25,9 @@ interface OnboardingHeroProps {
 }
 
 export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
+  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.3)'
 
   // Smooth fade-in animation from splash screen
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -67,7 +69,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
         {/* Gradient overlay for text readability */}
         <LinearGradient
-          colors={['transparent', 'rgba(255,255,255,0.3)', colors.bg.primary]}
+          colors={['transparent', overlayMid, colors.bg.primary]}
           locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
@@ -106,21 +108,19 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         </View>
 
         {/* CTA Button */}
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-            onGetStarted()
+        <Button
+          onPress={onGetStarted}
+          size="lg"
+          fullWidth
+          icon={<ChevronRight size={20} color="#FFFFFF" />}
+          iconPosition="right"
+          style={{
+            backgroundColor: colors.accent.primary,
+            ...shadows.glowPrimary,
           }}
-          activeOpacity={0.8}
-          style={[
-            styles.ctaButton,
-            { backgroundColor: colors.accent.primary },
-            shadows.glowPrimary,
-          ]}
         >
-          <Text style={styles.ctaText}>Commencer mon parcours</Text>
-          <ChevronRight size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+          Commencer mon parcours
+        </Button>
 
         {/* Micro-copy */}
         <Text style={[styles.microCopy, { color: colors.text.muted }]}>
@@ -208,19 +208,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...typography.captionMedium,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.xl,
-    gap: spacing.sm,
-  },
-  ctaText: {
-    ...typography.button,
-    color: '#FFFFFF',
   },
   microCopy: {
     ...typography.caption,

@@ -105,7 +105,7 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
           onPress={handleFull}
           activeOpacity={0.8}
         >
-          <View style={styles.recommendedBadge}>
+          <View style={[styles.recommendedBadge, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}>
             <Text style={[styles.recommendedText, { color: colors.accent.primary }]}>
               Recommandé
             </Text>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     left: spacing.lg,
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.sm,
