@@ -42,19 +42,30 @@ export interface LymiaMessage {
   expiresAt?: string // Auto-dismiss after this time
   read: boolean
   dismissed: boolean
+  // Nouveaux champs pour transparence et dedup
+  reason?: string // Pourquoi ce message est généré (ex: "8h sans repas")
+  confidence?: number // 0-1, confiance dans la pertinence
+  dedupKey?: string // Clé pour éviter doublons (ex: "nutrition-8h-alert")
 }
 
-// Priority config
+// Priority config - P0 = vraiment urgent (rare), vibrations seulement P0
 export const PRIORITY_CONFIG: Record<MessagePriority, {
   color: string
   vibrate: boolean
   persistent: boolean
   maxAge: number // hours
+  cooldown: number // heures avant de pouvoir renvoyer un message similaire
 }> = {
-  P0: { color: '#EF4444', vibrate: true, persistent: true, maxAge: 24 },   // Red - urgent
-  P1: { color: '#F97316', vibrate: false, persistent: true, maxAge: 12 },  // Orange - action needed
-  P2: { color: '#22C55E', vibrate: false, persistent: false, maxAge: 8 },  // Green - celebration
-  P3: { color: '#3B82F6', vibrate: false, persistent: false, maxAge: 4 },  // Blue - tip
+  P0: { color: '#EF4444', vibrate: true, persistent: true, maxAge: 24, cooldown: 24 },   // Red - urgent (rare!)
+  P1: { color: '#F97316', vibrate: false, persistent: true, maxAge: 12, cooldown: 8 },   // Orange - action needed
+  P2: { color: '#22C55E', vibrate: false, persistent: false, maxAge: 8, cooldown: 24 },  // Green - celebration
+  P3: { color: '#3B82F6', vibrate: false, persistent: false, maxAge: 4, cooldown: 4 },   // Blue - tip
+}
+
+// Cooldown tracking pour éviter spam
+interface CooldownEntry {
+  dedupKey: string
+  lastSentAt: string
 }
 
 // Category emojis
@@ -69,23 +80,48 @@ export const CATEGORY_EMOJI: Record<MessageCategory, string> = {
   system: '⚙️',
 }
 
+// ============= USER PREFERENCES =============
+
+export interface MessagePreferences {
+  // Opt-in pour alertes P0 nutrition (ex: "8h sans manger")
+  enableUrgentNutritionAlerts: boolean
+  // Opt-in pour tips quotidiens P3
+  enableDailyTips: boolean
+  // Heures silencieuses (pas de vibration)
+  quietHoursStart: number // 0-23
+  quietHoursEnd: number // 0-23
+}
+
+export const DEFAULT_PREFERENCES: MessagePreferences = {
+  enableUrgentNutritionAlerts: false, // Off par défaut - pas intrusif
+  enableDailyTips: true,
+  quietHoursStart: 22,
+  quietHoursEnd: 8,
+}
+
 // ============= STORE =============
 
 interface MessageCenterState {
   messages: LymiaMessage[]
   lastShownId: string | null
+  preferences: MessagePreferences
+  cooldowns: CooldownEntry[]
 
   // Actions
-  addMessage: (message: Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>) => string
+  addMessage: (message: Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>) => string | null
   markAsRead: (id: string) => void
   dismiss: (id: string) => void
   dismissAll: () => void
   clearExpired: () => void
+  updatePreferences: (prefs: Partial<MessagePreferences>) => void
+  resetCooldown: (dedupKey: string) => void
 
   // Getters
   getActiveMessages: () => LymiaMessage[]
   getPriorityMessage: () => LymiaMessage | null
   getUnreadCount: () => number
+  canSendMessage: (dedupKey: string, priority: MessagePriority) => boolean
+  isInQuietHours: () => boolean
 }
 
 export const useMessageCenter = create<MessageCenterState>()(
@@ -93,10 +129,46 @@ export const useMessageCenter = create<MessageCenterState>()(
     (set, get) => ({
       messages: [],
       lastShownId: null,
+      preferences: DEFAULT_PREFERENCES,
+      cooldowns: [],
+
+      // Vérifie si on peut envoyer un message (cooldown pas expiré)
+      canSendMessage: (dedupKey: string, priority: MessagePriority) => {
+        if (!dedupKey) return true
+        const { cooldowns } = get()
+        const entry = cooldowns.find(c => c.dedupKey === dedupKey)
+        if (!entry) return true
+
+        const config = PRIORITY_CONFIG[priority]
+        const cooldownMs = config.cooldown * 60 * 60 * 1000
+        const lastSent = new Date(entry.lastSentAt).getTime()
+        return Date.now() - lastSent > cooldownMs
+      },
+
+      // Vérifie si on est en heures silencieuses
+      isInQuietHours: () => {
+        const { preferences } = get()
+        const hour = new Date().getHours()
+        const { quietHoursStart, quietHoursEnd } = preferences
+
+        // Gestion du cas où quiet hours traverse minuit
+        if (quietHoursStart > quietHoursEnd) {
+          return hour >= quietHoursStart || hour < quietHoursEnd
+        }
+        return hour >= quietHoursStart && hour < quietHoursEnd
+      },
 
       addMessage: (messageData) => {
-        const id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const { dedupKey } = messageData
         const config = PRIORITY_CONFIG[messageData.priority]
+
+        // Vérifier cooldown si dedupKey fourni
+        if (dedupKey && !get().canSendMessage(dedupKey, messageData.priority)) {
+          console.log(`[MessageCenter] Message blocked by cooldown: ${dedupKey}`)
+          return null
+        }
+
+        const id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
         const message: LymiaMessage = {
           ...messageData,
@@ -107,9 +179,33 @@ export const useMessageCenter = create<MessageCenterState>()(
           dismissed: false,
         }
 
-        set((state) => ({
-          messages: [message, ...state.messages].slice(0, 50), // Keep max 50 messages
-        }))
+        set((state) => {
+          // Smart eviction: garder 50 max, mais priorité aux P0/P1
+          let newMessages = [message, ...state.messages]
+          if (newMessages.length > 50) {
+            // Trier par priorité puis date, supprimer les moins importants
+            newMessages = newMessages
+              .sort((a, b) => {
+                const priorityOrder = { P0: 0, P1: 1, P2: 2, P3: 3 }
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                  return priorityOrder[a.priority] - priorityOrder[b.priority]
+                }
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              })
+              .slice(0, 50)
+          }
+
+          // Mettre à jour cooldown si dedupKey
+          let newCooldowns = state.cooldowns
+          if (dedupKey) {
+            newCooldowns = [
+              ...state.cooldowns.filter(c => c.dedupKey !== dedupKey),
+              { dedupKey, lastSentAt: new Date().toISOString() }
+            ].slice(-30) // Garder max 30 cooldowns
+          }
+
+          return { messages: newMessages, cooldowns: newCooldowns }
+        })
 
         return id
       },
@@ -148,6 +244,18 @@ export const useMessageCenter = create<MessageCenterState>()(
         }))
       },
 
+      updatePreferences: (prefs) => {
+        set((state) => ({
+          preferences: { ...state.preferences, ...prefs },
+        }))
+      },
+
+      resetCooldown: (dedupKey) => {
+        set((state) => ({
+          cooldowns: state.cooldowns.filter(c => c.dedupKey !== dedupKey),
+        }))
+      },
+
       getActiveMessages: () => {
         const now = new Date().toISOString()
         return get().messages.filter((m) => {
@@ -183,6 +291,8 @@ export const useMessageCenter = create<MessageCenterState>()(
       partialize: (state) => ({
         messages: state.messages.slice(0, 20), // Persist only last 20
         lastShownId: state.lastShownId,
+        preferences: state.preferences,
+        cooldowns: state.cooldowns.slice(-20), // Persist recent cooldowns
       }),
     }
   )
@@ -190,37 +300,49 @@ export const useMessageCenter = create<MessageCenterState>()(
 
 // ============= MESSAGE GENERATORS =============
 
+type GeneratedMessage = Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>
+
 /**
  * Generate contextual messages based on user data
+ * Respecte les preferences utilisateur et le système de cooldown
  */
-export function generateDailyMessages(userData: {
-  caloriesConsumed: number
-  caloriesTarget: number
-  proteinsPercent: number
-  waterPercent: number
-  sleepHours: number | null
-  streak: number
-  lastMealTime: Date | null
-  plaisirAvailable: number
-  plaisirUsed: number
-}): Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>[] {
-  const messages: Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>[] = []
+export function generateDailyMessages(
+  userData: {
+    caloriesConsumed: number
+    caloriesTarget: number
+    proteinsPercent: number
+    waterPercent: number
+    sleepHours: number | null
+    streak: number
+    lastMealTime: Date | null
+    plaisirAvailable: number
+    plaisirUsed: number
+  },
+  preferences?: MessagePreferences
+): GeneratedMessage[] {
+  const messages: GeneratedMessage[] = []
   const now = new Date()
   const hour = now.getHours()
+  const prefs = preferences || DEFAULT_PREFERENCES
 
-  // P0: No meal for 8+ hours (during daytime)
+  // P1: No meal for 8+ hours (downgraded from P0 - moins intrusif)
+  // Devient P0 SEULEMENT si opt-in activé par l'utilisateur
   if (userData.lastMealTime && hour >= 8 && hour <= 22) {
     const hoursSinceLastMeal = (now.getTime() - userData.lastMealTime.getTime()) / (1000 * 60 * 60)
     if (hoursSinceLastMeal >= 8) {
+      const isUrgent = prefs.enableUrgentNutritionAlerts && hoursSinceLastMeal >= 10
       messages.push({
-        priority: 'P0',
-        type: 'alert',
+        priority: isUrgent ? 'P0' : 'P1',
+        type: isUrgent ? 'alert' : 'action',
         category: 'nutrition',
         title: 'Tu as faim ?',
-        message: `Ca fait ${Math.round(hoursSinceLastMeal)}h que tu n'as rien mange. Prends soin de toi !`,
+        message: `Ça fait ${Math.round(hoursSinceLastMeal)}h que tu n'as rien mangé. Prends soin de toi !`,
         emoji: '🍽️',
         actionLabel: 'Ajouter un repas',
         actionRoute: 'AddMeal',
+        reason: `${Math.round(hoursSinceLastMeal)}h sans repas enregistré`,
+        confidence: Math.min(0.9, hoursSinceLastMeal / 12), // Plus c'est long, plus on est sûr
+        dedupKey: 'nutrition-long-fast',
       })
     }
   }
@@ -231,9 +353,12 @@ export function generateDailyMessages(userData: {
       priority: 'P1',
       type: 'action',
       category: 'nutrition',
-      title: 'Proteines a rattraper',
-      message: `Tu es a ${userData.proteinsPercent}% de ton objectif proteines. Pense a en ajouter ce soir.`,
+      title: 'Protéines à rattraper',
+      message: `Tu es à ${userData.proteinsPercent}% de ton objectif protéines. Pense à en ajouter ce soir.`,
       emoji: '🥩',
+      reason: `Protéines à ${userData.proteinsPercent}% après 18h`,
+      confidence: 0.8,
+      dedupKey: 'nutrition-low-protein',
     })
   }
 
@@ -246,6 +371,9 @@ export function generateDailyMessages(userData: {
       title: 'Hydrate-toi',
       message: `Seulement ${userData.waterPercent}% de ton objectif eau. Un verre d'eau ?`,
       emoji: '💧',
+      reason: `Hydratation à ${userData.waterPercent}% après 14h`,
+      confidence: 0.7,
+      dedupKey: 'hydration-low',
     })
   }
 
@@ -256,8 +384,11 @@ export function generateDailyMessages(userData: {
       type: 'celebration',
       category: 'progress',
       title: `${userData.streak} jours de suite !`,
-      message: 'Ta regularite est impressionnante. Continue comme ca !',
+      message: 'Ta régularité est impressionnante. Continue comme ça !',
       emoji: '🔥',
+      reason: `Série de ${userData.streak} jours (multiple de 7)`,
+      confidence: 1,
+      dedupKey: `streak-${userData.streak}`,
     })
   }
 
@@ -270,6 +401,9 @@ export function generateDailyMessages(userData: {
       title: 'Belle nuit !',
       message: `${userData.sleepHours}h de sommeil. Ton corps te remercie.`,
       emoji: '😴',
+      reason: `${userData.sleepHours}h de sommeil >= 7h`,
+      confidence: 0.9,
+      dedupKey: 'sleep-good',
     })
   }
 
@@ -282,30 +416,39 @@ export function generateDailyMessages(userData: {
       title: 'Repas plaisir disponible',
       message: `+${userData.plaisirAvailable} kcal bonus cette semaine. Fais-toi plaisir !`,
       emoji: '🎁',
+      reason: `${userData.plaisirAvailable} kcal plaisir non utilisées`,
+      confidence: 0.85,
+      dedupKey: 'plaisir-available',
     })
   }
 
-  // P3: Morning tip
-  if (hour >= 7 && hour <= 9) {
+  // P3: Morning tip (si tips activés)
+  if (prefs.enableDailyTips && hour >= 7 && hour <= 9) {
     messages.push({
       priority: 'P3',
       type: 'tip',
       category: 'wellness',
       title: 'Bien commencer',
-      message: 'Un verre d\'eau au reveil aide ton metabolisme a demarrer.',
+      message: "Un verre d'eau au réveil aide ton métabolisme à démarrer.",
       emoji: '☀️',
+      reason: 'Tip matinal entre 7h et 9h',
+      confidence: 0.6,
+      dedupKey: 'tip-morning-water',
     })
   }
 
-  // P3: Bad sleep
-  if (userData.sleepHours && userData.sleepHours < 6) {
+  // P3: Bad sleep (si tips activés)
+  if (prefs.enableDailyTips && userData.sleepHours && userData.sleepHours < 6) {
     messages.push({
       priority: 'P3',
       type: 'tip',
       category: 'sleep',
-      title: 'Sommeil leger',
-      message: `${userData.sleepHours}h seulement. Essaie de te coucher plus tot ce soir.`,
+      title: 'Sommeil léger',
+      message: `${userData.sleepHours}h seulement. Essaie de te coucher plus tôt ce soir.`,
       emoji: '🌙',
+      reason: `${userData.sleepHours}h de sommeil < 6h`,
+      confidence: 0.7,
+      dedupKey: 'sleep-bad',
     })
   }
 
@@ -350,4 +493,5 @@ export default {
   toast,
   PRIORITY_CONFIG,
   CATEGORY_EMOJI,
+  DEFAULT_PREFERENCES,
 }

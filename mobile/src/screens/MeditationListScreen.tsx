@@ -158,7 +158,7 @@ export default function MeditationListScreen() {
               </Text>
             </View>
             <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>
-              streak
+              série
             </Text>
           </View>
         </View>

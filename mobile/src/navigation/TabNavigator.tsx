@@ -20,6 +20,7 @@ import ProfileScreen from '../screens/ProfileScreen'
 import { colors, shadows } from '../constants/theme'
 import { useCoachStore } from '../stores/coach-store'
 import { useUserStore } from '../stores/user-store'
+import { useMessageCenter } from '../services/message-center'
 
 const Tab = createBottomTabNavigator()
 
@@ -46,11 +47,14 @@ const TabIcon = ({
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
-  const unreadCount = useCoachStore((state) => state.unreadCount)
+  const oldUnreadCount = useCoachStore((state) => state.unreadCount)
   const hasSeenCoachWelcome = useUserStore((state) => state.hasSeenCoachWelcome)
 
-  // Add 1 to badge count if welcome message hasn't been seen
-  const coachBadgeCount = unreadCount + (hasSeenCoachWelcome ? 0 : 1)
+  // New MessageCenter unread count
+  const messageUnreadCount = useMessageCenter((state) => state.getUnreadCount())
+
+  // Combine old coach messages + new MessageCenter messages + welcome message
+  const coachBadgeCount = oldUnreadCount + messageUnreadCount + (hasSeenCoachWelcome ? 0 : 1)
 
   return (
     <Tab.Navigator

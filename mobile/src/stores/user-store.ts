@@ -4,6 +4,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { UserProfile, NutritionalNeeds, WeightEntry, NutritionInfo } from '../types'
 import { LymIABrain, type UserContext } from '../services/lymia-brain'
 
+// Keys of all persisted stores to clear on full reset
+const ALL_STORE_KEYS = [
+  'presence-user-store',
+  'presence-gamification',
+  'presence-caloric-bank',
+  'presence-meals-store',
+  'lym-message-center',
+  'presence-wellness',
+  'presence-coach-store',
+  'presence-meditation',
+  'presence-metabolic-boost',
+  'presence-wellness-program',
+  'presence-sport-program',
+]
+
 interface NutritionGoals {
   calories: number
   proteins: number
@@ -36,6 +51,7 @@ interface UserState {
   updateProfile: (updates: Partial<UserProfile>) => void
   clearProfile: () => void
   resetStore: () => void
+  resetAllData: () => Promise<void> // Clear ALL app data (all stores)
   addWeightEntry: (entry: WeightEntry) => void
   setOnboarded: (value: boolean) => void
   setHasSeenCoachWelcome: (value: boolean) => void
@@ -162,6 +178,19 @@ export const useUserStore = create<UserState>()(
 
       resetStore: () => {
         set({ profile: null, isOnboarded: false, hasSeenCoachWelcome: false, weightHistory: [], nutritionGoals: null })
+      },
+
+      resetAllData: async () => {
+        console.log('[UserStore] Resetting ALL app data...')
+        // Clear all persisted stores from AsyncStorage
+        try {
+          await AsyncStorage.multiRemove(ALL_STORE_KEYS)
+          console.log('[UserStore] All store data cleared from AsyncStorage')
+        } catch (error) {
+          console.error('[UserStore] Error clearing stores:', error)
+        }
+        // Reset current store state
+        set({ profile: null, isOnboarded: false, hasSeenCoachWelcome: false, weightHistory: [], nutritionGoals: null, lastRAGUpdate: null })
       },
 
       addWeightEntry: (entry) => {

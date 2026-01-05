@@ -22,10 +22,15 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius } from '../../constants/theme'
 import {
   useMessageCenter,
+  generateDailyMessages,
   PRIORITY_CONFIG,
   CATEGORY_EMOJI,
   type LymiaMessage,
 } from '../../services/message-center'
+import { useUserStore } from '../../stores/user-store'
+import { useMealsStore } from '../../stores/meals-store'
+import { useGamificationStore } from '../../stores/gamification-store'
+import { useCaloricBankStore } from '../../stores/caloric-bank-store'
 
 interface UnifiedCoachBubbleProps {
   compact?: boolean // For smaller spaces
@@ -39,19 +44,59 @@ export default function UnifiedCoachBubble({
   const navigation = useNavigation()
   const { colors } = useTheme()
 
+  // MessageCenter
   const priorityMessage = useMessageCenter((s) => s.getPriorityMessage())
   const unreadCount = useMessageCenter((s) => s.getUnreadCount())
+  const preferences = useMessageCenter((s) => s.preferences)
+  const addMessage = useMessageCenter((s) => s.addMessage)
   const markAsRead = useMessageCenter((s) => s.markAsRead)
   const dismiss = useMessageCenter((s) => s.dismiss)
   const clearExpired = useMessageCenter((s) => s.clearExpired)
 
+  // User data for message generation
+  const { nutritionGoals } = useUserStore()
+  const { getTodayData } = useMealsStore()
+  const { currentStreak } = useGamificationStore()
+  const { getPlaisirSuggestion } = useCaloricBankStore()
+
   // Animation for attention
   const pulseAnim = React.useRef(new Animated.Value(1)).current
 
-  // Clear expired messages on mount
+  // Generate messages on mount
   useEffect(() => {
     clearExpired()
-  }, [clearExpired])
+
+    // Generate contextual messages
+    const todayData = getTodayData()
+    const plaisirInfo = getPlaisirSuggestion()
+
+    const proteinsPercent = nutritionGoals?.proteins
+      ? Math.round((todayData.totalNutrition.proteins / nutritionGoals.proteins) * 100)
+      : 0
+    const waterPercent = Math.round((todayData.hydration / 2000) * 100)
+
+    const lastMeal = todayData.meals.length > 0
+      ? todayData.meals.reduce((latest, meal) => {
+          const mealTime = new Date(`${meal.date}T${meal.time}`)
+          return mealTime > latest ? mealTime : latest
+        }, new Date(0))
+      : null
+
+    const newMessages = generateDailyMessages({
+      caloriesConsumed: todayData.totalNutrition.calories,
+      caloriesTarget: nutritionGoals?.calories || 2000,
+      proteinsPercent,
+      waterPercent,
+      sleepHours: null,
+      streak: currentStreak,
+      lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
+      plaisirAvailable: plaisirInfo.budget,
+      plaisirUsed: 2 - plaisirInfo.remainingPlaisirMeals,
+    }, preferences)
+
+    // Add messages (cooldown system prevents duplicates)
+    newMessages.forEach(msg => addMessage(msg))
+  }, []) // Run once on mount
 
   // Pulse animation for P0 messages
   useEffect(() => {
@@ -167,8 +212,8 @@ export default function UnifiedCoachBubble({
           styles.container,
           {
             backgroundColor: colors.bg.elevated,
-            borderLeftWidth: 4,
-            borderLeftColor: config.color,
+            borderWidth: 1,
+            borderColor: `${config.color}40`,
           },
         ]}
       >

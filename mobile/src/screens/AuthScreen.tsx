@@ -52,7 +52,7 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
 
   const { signInWithGoogleToken, signOut } = useAuthStore()
-  const { profile, clearProfile } = useUserStore()
+  const { profile, resetAllData } = useUserStore()
 
   const handleGoogleSignIn = async () => {
     if (!isGoogleAuthConfigured()) {
@@ -108,7 +108,7 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
   const handleUseAnotherAccount = () => {
     Alert.alert(
       'Utiliser un autre compte',
-      'Tu vas être déconnecté(e) pour pouvoir te connecter avec un autre compte. Continuer ?',
+      'Toutes tes données locales (repas, progrès, série) seront effacées. Continuer ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -119,8 +119,8 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
             setLoadingMethod(null)
             try {
               await signOut()
-              // Reset local profile/onboarding so the flow restarts cleanly
-              clearProfile()
+              // Reset ALL local data (all stores) so the flow restarts cleanly
+              await resetAllData()
               setCurrentView('main')
               setPendingVerificationEmail('')
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)

@@ -341,7 +341,7 @@ export default function ProfileScreen() {
             <View style={styles.statItem}>
               <Flame size={20} color={colors.warning} />
               <Text style={[styles.statValue, { color: colors.text.primary }]}>12</Text>
-              <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Streak</Text>
+              <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Série</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
             <View style={styles.statItem}>

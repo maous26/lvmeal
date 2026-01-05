@@ -1,13 +1,8 @@
 /**
  * CoachScreen - Flux intelligent de conseils LymIA
  *
- * Un seul flux priorisé qui affiche :
- * - Alertes (prioritaires)
- * - Célébrations (motivantes)
- * - Analyses (insights)
- * - Conseils (tips quotidiens)
- *
- * Plus d'onglets - juste l'intelligence de LymIA.
+ * Migré vers MessageCenter unifié.
+ * Affiche tous les messages du système avec priorité visuelle.
  */
 
 import React, { useEffect, useCallback, useState } from 'react'
@@ -19,7 +14,6 @@ import {
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
-  Linking,
   Modal,
 } from 'react-native'
 import {
@@ -39,11 +33,11 @@ import {
   BarChart3,
   Bell,
   PartyPopper,
-  ExternalLink,
   Bot,
   TrendingUp,
   History,
   Trash2,
+  Settings,
 } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
@@ -51,11 +45,19 @@ import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius, shadows } from '../constants/theme'
-import { useCoachStore, type CoachItem, type CoachItemType, type CoachItemCategory } from '../stores/coach-store'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
-import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useCaloricBankStore } from '../stores/caloric-bank-store'
+import {
+  useMessageCenter,
+  generateDailyMessages,
+  PRIORITY_CONFIG,
+  CATEGORY_EMOJI,
+  type LymiaMessage,
+  type MessageCategory,
+  type MessageType,
+} from '../services/message-center'
 
 // ============= WELCOME CARD COMPONENT =============
 
@@ -184,51 +186,49 @@ const welcomeStyles = StyleSheet.create({
   },
 })
 
-// Configuration des types
-const typeConfig: Record<CoachItemType, { icon: typeof Lightbulb; label: string; color: string }> = {
-  tip: { icon: Lightbulb, label: 'Conseil', color: staticColors.accent.primary },
-  analysis: { icon: BarChart3, label: 'Analyse', color: staticColors.secondary.primary },
-  alert: { icon: Bell, label: 'Alerte', color: staticColors.warning },
-  celebration: { icon: PartyPopper, label: 'Bravo !', color: staticColors.success },
+// Configuration des types (mapping MessageType → visuel)
+const typeConfig: Record<MessageType, { icon: typeof Lightbulb; label: string; defaultColor: string }> = {
+  tip: { icon: Lightbulb, label: 'Conseil', defaultColor: staticColors.accent.primary },
+  insight: { icon: BarChart3, label: 'Analyse', defaultColor: staticColors.secondary.primary },
+  alert: { icon: Bell, label: 'Alerte', defaultColor: staticColors.warning },
+  celebration: { icon: PartyPopper, label: 'Bravo !', defaultColor: staticColors.success },
+  action: { icon: AlertTriangle, label: 'Action', defaultColor: staticColors.warning },
 }
 
 // Configuration des catégories
-const categoryConfig: Record<CoachItemCategory, { icon: typeof Apple; bgColor: string }> = {
-  nutrition: { icon: Apple, bgColor: `${staticColors.success}15` },
-  metabolism: { icon: Flame, bgColor: `${staticColors.warning}15` },
-  wellness: { icon: Heart, bgColor: `${staticColors.error}15` },
-  sport: { icon: Dumbbell, bgColor: `${staticColors.accent.primary}15` },
-  hydration: { icon: Droplets, bgColor: `${staticColors.info}15` },
-  sleep: { icon: Moon, bgColor: `${staticColors.secondary.primary}15` },
-  stress: { icon: Brain, bgColor: `${staticColors.warning}15` },
-  progress: { icon: Trophy, bgColor: `${staticColors.success}15` },
-  cooking: { icon: Apple, bgColor: `${staticColors.accent.primary}15` },
+const categoryIcons: Record<MessageCategory, typeof Apple> = {
+  nutrition: Apple,
+  hydration: Droplets,
+  sleep: Moon,
+  sport: Dumbbell,
+  stress: Brain,
+  progress: Trophy,
+  wellness: Heart,
+  system: Settings,
 }
 
-// ============= ITEM CARD COMPONENT =============
+// ============= MESSAGE CARD COMPONENT =============
 
-interface ItemCardProps {
-  item: CoachItem
+interface MessageCardProps {
+  message: LymiaMessage
   onRead: () => void
   onDismiss: () => void
   onAction?: (route: string) => void
   colors: ReturnType<typeof useTheme>['colors']
 }
 
-function ItemCard({ item, onRead, onDismiss, onAction, colors }: ItemCardProps) {
-  const config = typeConfig[item.type]
-  const catConfig = categoryConfig[item.category]
-  const Icon = config.icon
-  const CategoryIcon = catConfig.icon
+function MessageCard({ message, onRead, onDismiss, onAction, colors }: MessageCardProps) {
+  const typeConf = typeConfig[message.type]
+  const priorityConf = PRIORITY_CONFIG[message.priority]
+  const CategoryIcon = categoryIcons[message.category]
+  const emoji = message.emoji || CATEGORY_EMOJI[message.category]
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    if (!item.isRead) onRead()
+    if (!message.read) onRead()
 
-    if (item.actionRoute) {
-      onAction?.(item.actionRoute)
-    } else if (item.sourceUrl) {
-      Linking.openURL(item.sourceUrl)
+    if (message.actionRoute) {
+      onAction?.(message.actionRoute)
     }
   }
 
@@ -237,51 +237,58 @@ function ItemCard({ item, onRead, onDismiss, onAction, colors }: ItemCardProps) 
     onDismiss()
   }
 
+  const canDismiss = !priorityConf.persistent
+
   return (
     <TouchableOpacity
       style={[
-        styles.itemCard,
-        { backgroundColor: colors.bg.elevated },
-        !item.isRead && styles.itemCardUnread,
+        styles.messageCard,
+        {
+          backgroundColor: colors.bg.elevated,
+          borderWidth: 1,
+          borderColor: `${priorityConf.color}30`,
+        },
+        !message.read && { borderColor: `${priorityConf.color}60` },
       ]}
       onPress={handlePress}
       activeOpacity={0.8}
     >
       {/* Header */}
-      <View style={styles.itemHeader}>
-        <View style={[styles.itemIcon, { backgroundColor: catConfig.bgColor }]}>
-          <CategoryIcon size={18} color={config.color} />
+      <View style={styles.messageHeader}>
+        <View style={[styles.messageIcon, { backgroundColor: `${priorityConf.color}15` }]}>
+          <Text style={{ fontSize: 18 }}>{emoji}</Text>
         </View>
-        <View style={styles.itemHeaderText}>
-          <Text style={[styles.itemType, { color: config.color }]}>{config.label}</Text>
-          {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: config.color }]} />}
+        <View style={styles.messageHeaderText}>
+          <Text style={[styles.messageType, { color: priorityConf.color }]}>
+            {typeConf.label}
+          </Text>
+          {!message.read && <View style={[styles.unreadDot, { backgroundColor: priorityConf.color }]} />}
         </View>
-        <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <X size={18} color={colors.text.muted} />
-        </TouchableOpacity>
+        {canDismiss && (
+          <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <X size={18} color={colors.text.muted} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Content */}
-      <Text style={[styles.itemTitle, { color: colors.text.primary }]}>{item.title}</Text>
-      <Text style={[styles.itemMessage, { color: colors.text.secondary }]}>{item.message}</Text>
+      <Text style={[styles.messageTitle, { color: colors.text.primary }]}>{message.title}</Text>
+      <Text style={[styles.messageText, { color: colors.text.secondary }]}>{message.message}</Text>
 
-      {/* Source */}
-      {item.source && (
-        <View style={styles.sourceRow}>
-          <Text style={[styles.sourceText, { color: colors.text.muted }]}>
-            Source: {item.source}
-          </Text>
-          {item.sourceUrl && <ExternalLink size={12} color={colors.text.muted} />}
-        </View>
+      {/* Reason (transparence) */}
+      {message.reason && (
+        <Text style={[styles.reasonText, { color: colors.text.muted }]}>
+          💡 {message.reason}
+        </Text>
       )}
 
       {/* Action */}
-      {(item.actionLabel || item.actionRoute) && (
-        <View style={[styles.actionButton, { backgroundColor: `${config.color}15` }]}>
-          <Text style={[styles.actionText, { color: config.color }]}>
-            {item.actionLabel || 'Voir plus'}
+      {message.actionLabel && (
+        <View style={[styles.actionButton, { backgroundColor: `${priorityConf.color}15` }]}>
+          <Text style={[styles.actionText, { color: priorityConf.color }]}>
+            {message.actionLabel}
           </Text>
-          <ChevronRight size={16} color={config.color} />
+          <ChevronRight size={16} color={priorityConf.color} />
         </View>
       )}
     </TouchableOpacity>
@@ -295,60 +302,69 @@ export default function CoachScreen() {
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
 
-  const { items, historyItems, unreadCount, generateItemsWithAI, markAsRead, dismissItem, setContext, clearHistory } = useCoachStore()
-  const [showHistory, setShowHistory] = useState(false)
+  // MessageCenter
+  const messages = useMessageCenter((s) => s.messages)
+  const preferences = useMessageCenter((s) => s.preferences)
+  const addMessage = useMessageCenter((s) => s.addMessage)
+  const markAsRead = useMessageCenter((s) => s.markAsRead)
+  const dismiss = useMessageCenter((s) => s.dismiss)
+  const clearExpired = useMessageCenter((s) => s.clearExpired)
+  const getActiveMessages = useMessageCenter((s) => s.getActiveMessages)
+  const getUnreadCount = useMessageCenter((s) => s.getUnreadCount)
+
+  // User data
   const { profile, nutritionGoals, hasSeenCoachWelcome, setHasSeenCoachWelcome } = useUserStore()
   const { getTodayData } = useMealsStore()
-  const wellnessStore = useWellnessStore()
-  const { currentStreak, currentLevel, totalXP } = useGamificationStore()
+  const { currentStreak } = useGamificationStore()
+  const { getPlaisirSuggestion } = useCaloricBankStore()
 
-  // Generate context and items on mount
-  useEffect(() => {
+  // Generate messages on mount/refresh
+  const generateMessages = useCallback(() => {
     const todayData = getTodayData()
-    const todayEntry = wellnessStore.getTodayEntry?.() || {}
+    const plaisirInfo = getPlaisirSuggestion()
 
-    if (profile && nutritionGoals) {
-      setContext({
-        // Profile data
-        firstName: profile.firstName,
-        goal: profile.goal,
-        dietType: profile.dietType,
-        allergies: profile.allergies,
-        weight: profile.weight,
-        // Nutrition goals and consumption
-        caloriesTarget: nutritionGoals.calories,
-        proteinTarget: nutritionGoals.proteins,
-        caloriesConsumed: todayData.totalNutrition.calories,
-        proteinConsumed: todayData.totalNutrition.proteins,
-        carbsConsumed: todayData.totalNutrition.carbs,
-        fatsConsumed: todayData.totalNutrition.fats,
-        // Hydration
-        waterConsumed: todayData.hydration,
-        waterTarget: 2000,
-        // Wellness
-        sleepHours: (todayEntry as any).sleepHours,
-        stressLevel: (todayEntry as any).stressLevel,
-        energyLevel: (todayEntry as any).energyLevel,
-        // Gamification
-        streak: currentStreak,
-        level: currentLevel,
-        xp: totalXP,
-        // Meals for RAG
-        recentMeals: todayData.meals,
-      })
+    // Calculer les pourcentages
+    const proteinsPercent = nutritionGoals?.proteins
+      ? Math.round((todayData.totalNutrition.proteins / nutritionGoals.proteins) * 100)
+      : 0
+    const waterPercent = Math.round((todayData.hydration / 2000) * 100)
 
-      if (items.length === 0) {
-        generateItemsWithAI()
-      }
-    }
-  }, [profile, nutritionGoals])
+    // Trouver le dernier repas
+    const lastMeal = todayData.meals.length > 0
+      ? todayData.meals.reduce((latest, meal) => {
+          const mealTime = new Date(`${meal.date}T${meal.time}`)
+          return mealTime > latest ? mealTime : latest
+        }, new Date(0))
+      : null
+
+    const newMessages = generateDailyMessages({
+      caloriesConsumed: todayData.totalNutrition.calories,
+      caloriesTarget: nutritionGoals?.calories || 2000,
+      proteinsPercent,
+      waterPercent,
+      sleepHours: null, // TODO: intégrer wellness store
+      streak: currentStreak,
+      lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
+      plaisirAvailable: plaisirInfo.budget,
+      plaisirUsed: 2 - plaisirInfo.remainingPlaisirMeals,
+    }, preferences)
+
+    // Ajouter les messages (le cooldown empêche les doublons)
+    newMessages.forEach(msg => addMessage(msg))
+  }, [getTodayData, nutritionGoals, currentStreak, getPlaisirSuggestion, preferences, addMessage])
+
+  useEffect(() => {
+    clearExpired()
+    generateMessages()
+  }, [])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    await generateItemsWithAI()
+    clearExpired()
+    generateMessages()
     setRefreshing(false)
-  }, [generateItemsWithAI])
+  }, [clearExpired, generateMessages])
 
   const handleAction = (route: string) => {
     // @ts-ignore
@@ -360,13 +376,17 @@ export default function CoachScreen() {
     setHasSeenCoachWelcome(true)
   }
 
-  // Organize items by priority (dismissItem removes from array, no dismissed property)
-  const alerts = items.filter(i => i.type === 'alert')
-  const celebrations = items.filter(i => i.type === 'celebration')
-  const analyses = items.filter(i => i.type === 'analysis')
-  const tips = items.filter(i => i.type === 'tip')
+  // Get active messages organized by priority
+  const activeMessages = getActiveMessages()
+  const unreadCount = getUnreadCount()
 
-  const hasItems = alerts.length + celebrations.length + analyses.length + tips.length > 0
+  // Organize by type for sections
+  const alerts = activeMessages.filter(m => m.type === 'alert' || m.priority === 'P0')
+  const actions = activeMessages.filter(m => m.type === 'action' && m.priority !== 'P0')
+  const celebrations = activeMessages.filter(m => m.type === 'celebration')
+  const tips = activeMessages.filter(m => m.type === 'tip' || m.type === 'insight')
+
+  const hasMessages = activeMessages.length > 0
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -387,25 +407,12 @@ export default function CoachScreen() {
                 {unreadCount > 0 ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}` : 'Tes conseils personnalisés'}
               </Text>
             </View>
-            <View style={styles.headerRight}>
-              {historyItems.length > 0 && (
-                <TouchableOpacity
-                  style={[styles.historyButton, { backgroundColor: colors.bg.secondary }]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                    setShowHistory(true)
-                  }}
-                >
-                  <History size={18} color={colors.text.secondary} />
-                </TouchableOpacity>
-              )}
-              <LinearGradient
-                colors={[staticColors.accent.primary, staticColors.secondary.primary]}
-                style={styles.avatarGradient}
-              >
-                <Bot size={24} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
+            <LinearGradient
+              colors={[staticColors.accent.primary, staticColors.secondary.primary]}
+              style={styles.avatarGradient}
+            >
+              <Bot size={24} color="#FFFFFF" />
+            </LinearGradient>
           </View>
         </View>
 
@@ -419,29 +426,31 @@ export default function CoachScreen() {
         )}
 
         {/* Content */}
-        {!hasItems ? (
+        {!hasMessages ? (
           <View style={styles.emptyState}>
             <Sparkles size={48} color={colors.text.tertiary} />
-            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Aucune notification</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Tout va bien !</Text>
             <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
               Continue à tracker tes repas pour recevoir des conseils personnalisés de LymIA.
             </Text>
           </View>
         ) : (
           <>
-            {/* Alerts - Priority */}
+            {/* Alerts - Priority P0/P1 */}
             {alerts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <AlertTriangle size={16} color={staticColors.warning} />
-                  <Text style={[styles.sectionTitle, { color: staticColors.warning }]}>Alertes</Text>
+                  <AlertTriangle size={16} color={PRIORITY_CONFIG.P0.color} />
+                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P0.color }]}>
+                    Alertes
+                  </Text>
                 </View>
-                {alerts.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onRead={() => markAsRead(item.id)}
-                    onDismiss={() => dismissItem(item.id)}
+                {alerts.map((msg) => (
+                  <MessageCard
+                    key={msg.id}
+                    message={msg}
+                    onRead={() => markAsRead(msg.id)}
+                    onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
                     colors={colors}
                   />
@@ -449,19 +458,43 @@ export default function CoachScreen() {
               </View>
             )}
 
-            {/* Celebrations */}
+            {/* Actions - P1 */}
+            {actions.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Bell size={16} color={PRIORITY_CONFIG.P1.color} />
+                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P1.color }]}>
+                    Actions suggérées
+                  </Text>
+                </View>
+                {actions.map((msg) => (
+                  <MessageCard
+                    key={msg.id}
+                    message={msg}
+                    onRead={() => markAsRead(msg.id)}
+                    onDismiss={() => dismiss(msg.id)}
+                    onAction={handleAction}
+                    colors={colors}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Celebrations - P2 */}
             {celebrations.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Trophy size={16} color={staticColors.success} />
-                  <Text style={[styles.sectionTitle, { color: staticColors.success }]}>Félicitations</Text>
+                  <Trophy size={16} color={PRIORITY_CONFIG.P2.color} />
+                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P2.color }]}>
+                    Félicitations
+                  </Text>
                 </View>
-                {celebrations.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onRead={() => markAsRead(item.id)}
-                    onDismiss={() => dismissItem(item.id)}
+                {celebrations.map((msg) => (
+                  <MessageCard
+                    key={msg.id}
+                    message={msg}
+                    onRead={() => markAsRead(msg.id)}
+                    onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
                     colors={colors}
                   />
@@ -469,39 +502,21 @@ export default function CoachScreen() {
               </View>
             )}
 
-            {/* Analyses */}
-            {analyses.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <BarChart3 size={16} color={staticColors.secondary.primary} />
-                  <Text style={[styles.sectionTitle, { color: staticColors.secondary.primary }]}>Analyses</Text>
-                </View>
-                {analyses.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onRead={() => markAsRead(item.id)}
-                    onDismiss={() => dismissItem(item.id)}
-                    onAction={handleAction}
-                    colors={colors}
-                  />
-                ))}
-              </View>
-            )}
-
-            {/* Tips */}
+            {/* Tips - P3 */}
             {tips.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Lightbulb size={16} color={staticColors.accent.primary} />
-                  <Text style={[styles.sectionTitle, { color: staticColors.accent.primary }]}>Conseils</Text>
+                  <Lightbulb size={16} color={PRIORITY_CONFIG.P3.color} />
+                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P3.color }]}>
+                    Conseils
+                  </Text>
                 </View>
-                {tips.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onRead={() => markAsRead(item.id)}
-                    onDismiss={() => dismissItem(item.id)}
+                {tips.map((msg) => (
+                  <MessageCard
+                    key={msg.id}
+                    message={msg}
+                    onRead={() => markAsRead(msg.id)}
+                    onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
                     colors={colors}
                   />
@@ -513,90 +528,6 @@ export default function CoachScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      {/* History Modal */}
-      <Modal
-        visible={showHistory}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowHistory(false)}
-      >
-        <View style={[styles.historyModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.historyModalContent, { backgroundColor: colors.bg.primary }]}>
-            {/* Header */}
-            <View style={styles.historyModalHeader}>
-              <View style={styles.historyModalTitleRow}>
-                <History size={20} color={colors.accent.primary} />
-                <Text style={[styles.historyModalTitle, { color: colors.text.primary }]}>
-                  Historique ({historyItems.length})
-                </Text>
-              </View>
-              <View style={styles.historyModalActions}>
-                {historyItems.length > 0 && (
-                  <TouchableOpacity
-                    style={[styles.clearHistoryButton, { backgroundColor: `${staticColors.error}15` }]}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                      clearHistory()
-                    }}
-                  >
-                    <Trash2 size={16} color={staticColors.error} />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity onPress={() => setShowHistory(false)}>
-                  <X size={24} color={colors.text.secondary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* History list */}
-            <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
-              {historyItems.length === 0 ? (
-                <View style={styles.historyEmpty}>
-                  <History size={40} color={colors.text.tertiary} />
-                  <Text style={[styles.historyEmptyText, { color: colors.text.muted }]}>
-                    Aucun conseil archivé
-                  </Text>
-                </View>
-              ) : (
-                historyItems.map((item) => {
-                  const config = typeConfig[item.type]
-                  const catConfig = categoryConfig[item.category]
-                  const CategoryIcon = catConfig.icon
-
-                  return (
-                    <View
-                      key={item.id}
-                      style={[styles.historyItem, { backgroundColor: colors.bg.elevated }]}
-                    >
-                      <View style={styles.historyItemHeader}>
-                        <View style={[styles.historyItemIcon, { backgroundColor: catConfig.bgColor }]}>
-                          <CategoryIcon size={14} color={config.color} />
-                        </View>
-                        <Text style={[styles.historyItemType, { color: config.color }]}>
-                          {config.label}
-                        </Text>
-                        <Text style={[styles.historyItemDate, { color: colors.text.muted }]}>
-                          {new Date(item.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        </Text>
-                      </View>
-                      <Text style={[styles.historyItemTitle, { color: colors.text.primary }]}>
-                        {item.title}
-                      </Text>
-                      <Text
-                        style={[styles.historyItemMessage, { color: colors.text.secondary }]}
-                        numberOfLines={2}
-                      >
-                        {item.message}
-                      </Text>
-                    </View>
-                  )
-                })
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   )
 }
@@ -660,22 +591,19 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     fontWeight: '600',
   },
-  itemCard: {
+  // Message card styles
+  messageCard: {
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     ...shadows.sm,
   },
-  itemCardUnread: {
-    borderLeftWidth: 3,
-    borderLeftColor: staticColors.accent.primary,
-  },
-  itemHeader: {
+  messageHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  itemIcon: {
+  messageIcon: {
     width: 32,
     height: 32,
     borderRadius: 10,
@@ -683,13 +611,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.sm,
   },
-  itemHeaderText: {
+  messageHeaderText: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  itemType: {
+  messageType: {
     ...typography.caption,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -699,25 +627,20 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  itemTitle: {
+  messageTitle: {
     ...typography.bodyMedium,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
-  itemMessage: {
+  messageText: {
     ...typography.body,
     lineHeight: 22,
     marginBottom: spacing.sm,
   },
-  sourceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  sourceText: {
+  reasonText: {
     ...typography.caption,
     fontStyle: 'italic',
+    marginBottom: spacing.sm,
   },
   actionButton: {
     flexDirection: 'row',
@@ -734,103 +657,5 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
-  },
-  // Header with history button
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  historyButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  // History Modal styles
-  historyModalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  historyModalContent: {
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    paddingBottom: spacing['3xl'],
-    maxHeight: '80%',
-  },
-  historyModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  historyModalTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  historyModalTitle: {
-    ...typography.h4,
-    fontWeight: '600',
-  },
-  historyModalActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  clearHistoryButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  historyList: {
-    flex: 1,
-  },
-  historyEmpty: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl * 2,
-    gap: spacing.md,
-  },
-  historyEmptyText: {
-    ...typography.body,
-  },
-  historyItem: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  historyItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  historyItemIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  historyItemType: {
-    ...typography.caption,
-    fontWeight: '600',
-    flex: 1,
-  },
-  historyItemDate: {
-    ...typography.caption,
-  },
-  historyItemTitle: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  historyItemMessage: {
-    ...typography.small,
-    lineHeight: 18,
   },
 })

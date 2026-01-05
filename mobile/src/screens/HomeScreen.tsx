@@ -373,7 +373,9 @@ export default function HomeScreen() {
         </View>
 
         {/* Unified Coach Bubble - Single communication point */}
-        <UnifiedCoachBubble />
+        <View style={{ marginBottom: spacing.lg }}>
+          <UnifiedCoachBubble />
+        </View>
 
         {/* Main Calories Widget */}
         <View style={[styles.caloriesSection, { backgroundColor: colors.bg.elevated }, shadows.md]}>

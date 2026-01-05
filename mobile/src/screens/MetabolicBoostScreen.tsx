@@ -145,7 +145,7 @@ export default function MetabolicBoostScreen() {
   const handleUnenroll = () => {
     Alert.alert(
       'Se désinscrire du programme ?',
-      'Tu perdras ta progression actuelle (semaine, streak, logs). Tu pourras rejoindre à nouveau plus tard mais tu recommenceras à zéro.',
+      'Tu perdras ta progression actuelle (semaine, série, logs). Tu pourras rejoindre à nouveau plus tard mais tu recommenceras à zéro.',
       [
         { text: 'Annuler', style: 'cancel' },
         {

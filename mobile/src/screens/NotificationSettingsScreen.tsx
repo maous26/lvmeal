@@ -175,7 +175,7 @@ export default function NotificationSettingsScreen() {
                 Célébrations
               </Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                Streaks, badges débloqués et objectifs atteints
+                Séries, badges débloqués et objectifs atteints
               </Text>
             </View>
             <Switch
