@@ -344,7 +344,7 @@ async def root():
 
             // Build deep link with the fragment params
             var params = hash.substring(1); // Remove the #
-            var deepLink = 'lym://auth/callback?' + params;
+            var deepLink = 'presence://auth/callback?' + params;
 
             // Update button href
             document.getElementById('openAppBtn').href = deepLink;
@@ -653,7 +653,7 @@ async def auth_callback(request: Request):
     params = dict(request.query_params)
 
     # Build deep link URL with tokens
-    deep_link = "lym://auth/callback"
+    deep_link = "presence://auth/callback"
     if params:
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         deep_link = f"{deep_link}?{query_string}"
@@ -762,7 +762,7 @@ async def auth_reset_password(request: Request):
     params = dict(request.query_params)
 
     # Build deep link URL with tokens
-    deep_link = "lym://auth/reset-password"
+    deep_link = "presence://auth/reset-password"
     if params:
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         deep_link = f"{deep_link}?{query_string}"
