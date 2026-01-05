@@ -175,6 +175,27 @@ function normalizeQuery(query: string): string {
     .trim()
 }
 
+/**
+ * Normalize a name for comparison (remove accents)
+ */
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+/**
+ * Get singular form of a French word (simple heuristic)
+ * "lentilles" -> "lentille", "carottes" -> "carotte"
+ */
+function getSingularForm(word: string): string | null {
+  if (word.length > 3 && word.endsWith('s')) {
+    return word.slice(0, -1)
+  }
+  return null
+}
+
 function detectServingUnit(name: string, category?: string): ServingUnit {
   const nameLower = name.toLowerCase()
   const categoryLower = (category || '').toLowerCase()
@@ -221,37 +242,44 @@ async function searchCiqual(query: string, limit: number): Promise<FoodItem[]> {
   if (!foods.length || !searchIndex?.length) return []
 
   const normalizedQuery = normalizeQuery(query)
+  const singularQuery = getSingularForm(normalizedQuery)
   const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1)
+  // Also get singular forms of query words for matching
+  const singularQueryWords = queryWords.map(w => getSingularForm(w)).filter(Boolean) as string[]
 
   // Score each food
   const scored: { score: number; id: string; name: string }[] = []
 
   for (const item of searchIndex) {
-    const normalizedName = item.name
+    const normalizedName = normalizeName(item.name)
     // Split on spaces, commas, parentheses, slashes, hyphens, and apostrophes
     const nameWords = normalizedName.split(/[\s,()/''-]+/).filter(w => w.length > 1)
 
-    // For multi-word queries, ALL words must be present
+    // For multi-word queries, ALL words must be present (check both plural and singular forms)
     if (queryWords.length > 1) {
-      const allWordsPresent = queryWords.every(qw =>
-        nameWords.some(nw => nw === qw || nw.startsWith(qw))
-      )
+      const allWordsPresent = queryWords.every((qw, idx) => {
+        const singular = singularQueryWords[idx]
+        return nameWords.some(nw =>
+          nw === qw || nw.startsWith(qw) ||
+          (singular && (nw === singular || nw.startsWith(singular)))
+        )
+      })
       if (!allWordsPresent) continue
     }
 
     let score = 0
 
     // === EXACT MATCH BONUS ===
-    if (normalizedName === normalizedQuery) {
+    if (normalizedName === normalizedQuery || (singularQuery && normalizedName === singularQuery)) {
       score = 1000 // Perfect match
     }
     // === WORD BOUNDARY MATCHING ===
     else {
-      // Check if query matches a complete word in the name
-      const queryIsCompleteWord = nameWords.some(w => w === normalizedQuery)
+      // Check if query matches a complete word in the name (also check singular form)
+      const queryIsCompleteWord = nameWords.some(w => w === normalizedQuery || (singularQuery && w === singularQuery))
       // First word exactly matches OR first word starts with query (for single-word queries)
-      const firstWordExactMatch = nameWords[0] === normalizedQuery
-      const firstWordStartsWithQuery = nameWords[0]?.startsWith(normalizedQuery)
+      const firstWordExactMatch = nameWords[0] === normalizedQuery || (singularQuery && nameWords[0] === singularQuery)
+      const firstWordStartsWithQuery = nameWords[0]?.startsWith(normalizedQuery) || (singularQuery && nameWords[0]?.startsWith(singularQuery))
 
       // For single-word queries, prioritize exact word matches over substring matches
       // This prevents "laitue" from ranking higher than "lait entier" when searching "lait"
