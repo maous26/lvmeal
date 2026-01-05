@@ -29,6 +29,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
   const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.3)'
+  const footerHeight = 52 + spacing.lg + spacing.md + insets.bottom // button + paddings
 
   // Smooth fade-in animation from splash screen
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -62,7 +63,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: footerHeight + spacing.lg }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Image */}
@@ -113,44 +114,50 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             </View>
           </View>
 
-          {/* CTA Button */}
-          <Button
-            onPress={onGetStarted}
-            size="lg"
-            fullWidth
-            icon={<ChevronRight size={20} color="#FFFFFF" />}
-            iconPosition="right"
-            style={{
-              backgroundColor: colors.accent.primary,
-              ...shadows.glowPrimary,
-              marginTop: spacing.lg,
-            }}
-          >
-            Commencer mon parcours
-          </Button>
-
           {/* Micro-copy */}
           <Text style={[styles.microCopy, { color: colors.text.muted }]}>
             Configuration en quelques étapes
           </Text>
-
-          {/* Already have an account link */}
-          {onHaveAccount && (
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                onHaveAccount()
-              }}
-              style={styles.haveAccountButton}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
-                J'ai déjà un compte
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       </ScrollView>
+
+      {/* Fixed CTA footer (always visible) */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.bg.primary }]}>
+        <TouchableOpacity
+          onPress={onGetStarted}
+          style={{
+            backgroundColor: '#FF6B5B',
+            paddingVertical: spacing.lg,
+            paddingHorizontal: spacing.xl,
+            borderRadius: radius.xl,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', marginRight: spacing.sm }}>
+            Commencer mon parcours
+          </Text>
+          <ChevronRight size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {onHaveAccount && (
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              onHaveAccount()
+            }}
+            style={styles.haveAccountButton}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
+              J'ai déjà un compte
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </Animated.View>
   )
 }
@@ -166,7 +173,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   imageContainer: {
-    height: height * 0.45,
+    height: Math.min(height * 0.42, 340),
     position: 'relative',
   },
   heroImage: {
@@ -225,6 +232,16 @@ const styles = StyleSheet.create({
     ...typography.caption,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.06)',
   },
   haveAccountButton: {
     paddingVertical: spacing.md,

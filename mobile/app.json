@@ -17,6 +17,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.presence.nutrition",
+      "associatedDomains": [
+        "applinks:lym1-production.up.railway.app"
+      ],
       "infoPlist": {
         "NSCameraUsageDescription": "Presence utilise la caméra pour scanner les aliments et codes-barres.",
         "NSPhotoLibraryUsageDescription": "Presence accède à vos photos pour analyser les repas."
@@ -39,6 +42,30 @@
         "ACCESS_NETWORK_STATE",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "presence"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "lym1-production.up.railway.app",
+              "pathPrefix": "/auth"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "plugins": [

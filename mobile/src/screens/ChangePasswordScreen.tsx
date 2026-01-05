@@ -1,8 +1,9 @@
 /**
  * ChangePasswordScreen - Update password for email accounts
  *
- * Allows authenticated users to:
- * - Change their password
+ * Allows users to:
+ * - Change their password (when authenticated)
+ * - Reset their password via deep link (when coming from reset email)
  * - Validates password strength
  */
 
@@ -19,27 +20,39 @@ import {
   Platform,
   ScrollView,
 } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native'
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows } from '../constants/theme'
 import { updatePassword } from '../services/email-auth-service'
+import type { RootStackParamList } from '../navigation/RootNavigator'
+
+type ChangePasswordRouteProp = RouteProp<RootStackParamList, 'ChangePassword'>
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation()
+  const route = useRoute<ChangePasswordRouteProp>()
   const { colors } = useTheme()
 
-  const [currentPassword, setCurrentPassword] = useState('')
+  // Check if coming from deep link (password reset flow)
+  const fromDeepLink = (route.params as any)?.fromDeepLink === true
+
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // Title based on context
+  const screenTitle = fromDeepLink ? 'Nouveau mot de passe' : 'Modifier le mot de passe'
+  const successTitle = fromDeepLink ? 'Mot de passe réinitialisé' : 'Mot de passe modifié'
+  const successDescription = fromDeepLink
+    ? 'Ton mot de passe a été réinitialisé avec succès. Tu peux maintenant te connecter.'
+    : 'Ton mot de passe a été modifié avec succès.'
 
   const handleSubmit = async () => {
     setError(null)
@@ -66,7 +79,6 @@ export default function ChangePasswordScreen() {
         setSuccess(true)
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
         // Clear form
-        setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
       } else {
@@ -104,11 +116,11 @@ export default function ChangePasswordScreen() {
           </View>
 
           <Text style={[styles.successTitle, { color: colors.text.primary }]}>
-            Mot de passe modifié
+            {successTitle}
           </Text>
 
           <Text style={[styles.successDescription, { color: colors.text.secondary }]}>
-            Ton mot de passe a été modifié avec succès.
+            {successDescription}
           </Text>
 
           <TouchableOpacity
@@ -144,7 +156,7 @@ export default function ChangePasswordScreen() {
               <ArrowLeft size={20} color={colors.text.primary} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
-              Modifier le mot de passe
+              {screenTitle}
             </Text>
             <View style={styles.headerSpacer} />
           </View>

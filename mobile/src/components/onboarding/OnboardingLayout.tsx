@@ -7,12 +7,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Sparkles } from 'lucide-react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useTheme } from '../../contexts/ThemeContext'
-import { Button } from '../ui/Button'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
 
 interface OnboardingLayoutProps {
@@ -140,17 +139,22 @@ export function OnboardingLayout({
       {/* Footer with action */}
       {onNext && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.default }]}>
-          <Button
+          <TouchableOpacity
             onPress={onNext}
-            size="lg"
-            fullWidth
-            disabled={nextDisabled}
-            loading={loading}
-            variant={nextDisabled ? 'outline' : 'secondary'}
-            style={!nextDisabled ? shadows.glowCoral : undefined}
+            disabled={nextDisabled || loading}
+            activeOpacity={0.8}
+            style={[
+              styles.nextButton,
+              { backgroundColor: nextDisabled ? '#CCCCCC' : '#FF6B5B' },
+              !nextDisabled && shadows.glowCoral,
+            ]}
           >
-            {loading ? 'Chargement…' : nextLabel}
-          </Button>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.nextButtonText}>{nextLabel}</Text>
+            )}
+          </TouchableOpacity>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -249,6 +253,20 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
+  },
+  nextButton: {
+    width: '100%',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
   },
 })
 

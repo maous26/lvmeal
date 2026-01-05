@@ -1,7 +1,7 @@
 /**
- * Setup Choice Step - After Marketing Slides
+ * Setup Choice Step - Premium Dark Design
  *
- * Allows user to choose between quick setup (2min) or full personalization (5min)
+ * Dark background with hero image fade, white text, modern UI
  */
 
 import React from 'react'
@@ -11,22 +11,39 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Dimensions,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Zap, Sparkles, Clock, ChevronRight } from 'lucide-react-native'
+import { Zap, Sparkles, Clock, ChevronRight, Shield } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { spacing, radius, typography } from '../../constants/theme'
+
+const { width, height } = Dimensions.get('window')
 
 interface StepSetupChoiceProps {
   onQuickSetup: () => void
   onFullSetup: () => void
 }
 
+// Dark theme colors
+const dark = {
+  bg: '#0A0A0A',
+  card: '#1A1A1A',
+  cardBorder: '#2A2A2A',
+  cardHighlight: '#1E2A3A',
+  cardHighlightBorder: '#3B82F6',
+  text: '#FFFFFF',
+  textSecondary: '#A0A0A0',
+  textMuted: '#606060',
+  accent: '#3B82F6',
+  accentLight: '#3B82F620',
+  warning: '#F59E0B',
+  warningLight: '#F59E0B20',
+}
+
 export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoiceProps) {
-  const { colors } = useTheme()
   const insets = useSafeAreaInsets()
 
   const handleQuick = () => {
@@ -40,102 +57,94 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      {/* Logo */}
-      <View style={[styles.logoContainer, { paddingTop: insets.top + spacing.xl }]}>
+    <View style={[styles.container, { backgroundColor: dark.bg }]}>
+      {/* Hero Image with Gradient Fade */}
+      <View style={styles.heroContainer}>
         <Image
-          source={require('../../../logo1.png')}
-          style={styles.logo}
-          resizeMode="contain"
+          source={require('../../../assets/photo4.jpeg')}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(10,10,10,0.6)', dark.bg]}
+          locations={[0, 0.5, 1]}
+          style={styles.heroGradient}
         />
       </View>
 
-      {/* Title - Welcoming message */}
-      <View style={styles.titleContainer}>
-        <Text style={[styles.welcomeTitle, { color: colors.text.primary }]}>
-          Bienvenue.
-        </Text>
-        <Text style={[styles.welcomeMessage, { color: colors.text.secondary }]}>
-          Ici, tu n'as rien à réussir.{'\n'}
-          Juste à avancer, à ton rythme.
-        </Text>
-        <Text style={[styles.welcomeSubtext, { color: colors.text.tertiary }]}>
-          On commencera simplement, quand tu voudras.
-        </Text>
-        <Text style={[styles.questionText, { color: colors.text.primary }]}>
-          Que veux-tu faire maintenant ?
-        </Text>
-      </View>
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Title */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.welcomeTitle}>Bienvenue.</Text>
+          <Text style={styles.welcomeMessage}>
+            Ici, tu n'as rien à réussir.{'\n'}
+            Juste à avancer, à ton rythme.
+          </Text>
+        </View>
 
-      {/* Options */}
-      <View style={styles.optionsContainer}>
-        {/* Quick Setup */}
-        <TouchableOpacity
-          style={[styles.optionCard, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}
-          onPress={handleQuick}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.optionIcon, { backgroundColor: colors.warning + '20' }]}>
-            <Zap size={28} color={colors.warning} />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-              Express
-            </Text>
-            <View style={styles.timeRow}>
-              <Clock size={14} color={colors.text.tertiary} />
-              <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
-                2 min
+        {/* Options */}
+        <View style={styles.optionsContainer}>
+          {/* Quick Setup */}
+          <TouchableOpacity
+            style={[styles.optionCard, { backgroundColor: dark.card, borderColor: dark.cardBorder }]}
+            onPress={handleQuick}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.optionIcon, { backgroundColor: dark.warningLight }]}>
+              <Zap size={24} color={dark.warning} />
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle}>Express</Text>
+              <View style={styles.timeRow}>
+                <Clock size={12} color={dark.textMuted} />
+                <Text style={styles.timeText}>2 min</Text>
+              </View>
+              <Text style={styles.optionDescription}>
+                L'essentiel pour démarrer
               </Text>
             </View>
-            <Text style={[styles.optionDescription, { color: colors.text.secondary }]}>
-              L'essentiel pour démarrer rapidement
-            </Text>
-          </View>
-          <ChevronRight size={24} color={colors.text.tertiary} />
-        </TouchableOpacity>
+            <ChevronRight size={20} color={dark.textMuted} />
+          </TouchableOpacity>
 
-        {/* Full Setup - Recommended */}
-        <TouchableOpacity
-          style={[
-            styles.optionCard,
-            styles.optionCardHighlight,
-            { backgroundColor: colors.accent.primary + '10', borderColor: colors.accent.primary }
-          ]}
-          onPress={handleFull}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.recommendedBadge, { backgroundColor: colors.bg.elevated, borderColor: colors.border.light }]}>
-            <Text style={[styles.recommendedText, { color: colors.accent.primary }]}>
-              Recommandé
-            </Text>
-          </View>
-          <View style={[styles.optionIcon, { backgroundColor: colors.accent.light }]}>
-            <Sparkles size={28} color={colors.accent.primary} />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-              Personnalisé
-            </Text>
-            <View style={styles.timeRow}>
-              <Clock size={14} color={colors.text.tertiary} />
-              <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
-                5 min
+          {/* Full Setup - Recommended */}
+          <TouchableOpacity
+            style={[
+              styles.optionCard,
+              { backgroundColor: dark.cardHighlight, borderColor: dark.cardHighlightBorder }
+            ]}
+            onPress={handleFull}
+            activeOpacity={0.8}
+          >
+            <View style={styles.recommendedBadge}>
+              <Text style={styles.recommendedText}>Recommandé</Text>
+            </View>
+            <View style={[styles.optionIcon, { backgroundColor: dark.accentLight }]}>
+              <Sparkles size={24} color={dark.accent} />
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionTitle}>Personnalisé</Text>
+              <View style={styles.timeRow}>
+                <Clock size={12} color={dark.textMuted} />
+                <Text style={styles.timeText}>5 min</Text>
+              </View>
+              <Text style={styles.optionDescription}>
+                Des conseils adaptés à ton profil
               </Text>
             </View>
-            <Text style={[styles.optionDescription, { color: colors.text.secondary }]}>
-              Des conseils vraiment adaptés à ton profil
-            </Text>
-          </View>
-          <ChevronRight size={24} color={colors.accent.primary} />
-        </TouchableOpacity>
+            <ChevronRight size={20} color={dark.accent} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Footer */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.xl }]}>
-        <Text style={[styles.footerText, { color: colors.text.muted }]}>
-          Tes données restent privées et sécurisées
-        </Text>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+        <View style={styles.footerContent}>
+          <Shield size={14} color={dark.textMuted} />
+          <Text style={styles.footerText}>
+            Données privées et sécurisées
+          </Text>
+        </View>
       </View>
     </View>
   )
@@ -145,38 +154,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  logoContainer: {
-    alignItems: 'center',
-    paddingBottom: spacing.xl,
+  heroContainer: {
+    height: height * 0.35,
+    position: 'relative',
   },
-  logo: {
-    width: 80,
-    height: 80,
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '70%',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+    marginTop: -spacing.xl,
   },
   titleContainer: {
-    paddingHorizontal: spacing.xl,
     marginBottom: spacing.xl,
   },
   welcomeTitle: {
-    ...typography.h1,
-    marginBottom: spacing.md,
+    fontSize: 36,
+    fontWeight: '700',
+    color: dark.text,
+    marginBottom: spacing.sm,
+    letterSpacing: -0.5,
   },
   welcomeMessage: {
-    ...typography.lg,
-    lineHeight: 28,
-    marginBottom: spacing.md,
-  },
-  welcomeSubtext: {
-    ...typography.body,
-    fontStyle: 'italic',
-    marginBottom: spacing.xl,
-  },
-  questionText: {
-    ...typography.bodyMedium,
+    fontSize: 17,
+    lineHeight: 26,
+    color: dark.textSecondary,
   },
   optionsContainer: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
   optionCard: {
@@ -184,29 +197,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     borderRadius: radius.xl,
-    borderWidth: 2,
+    borderWidth: 1,
     gap: spacing.md,
-  },
-  optionCardHighlight: {
-    position: 'relative',
   },
   recommendedBadge: {
     position: 'absolute',
     top: -10,
     left: spacing.lg,
-    borderWidth: 1,
+    backgroundColor: dark.accent,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: radius.sm,
   },
   recommendedText: {
-    ...typography.caption,
+    fontSize: 11,
     fontWeight: '600',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   optionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -214,29 +227,38 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    ...typography.h4,
-    marginBottom: 4,
+    fontSize: 17,
+    fontWeight: '600',
+    color: dark.text,
+    marginBottom: 2,
   },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   timeText: {
-    ...typography.caption,
+    fontSize: 12,
+    color: dark.textMuted,
   },
   optionDescription: {
-    ...typography.small,
-    lineHeight: 18,
+    fontSize: 13,
+    color: dark.textSecondary,
   },
   footer: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  footerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
   },
   footerText: {
-    ...typography.caption,
+    fontSize: 12,
+    color: dark.textMuted,
   },
 })
 

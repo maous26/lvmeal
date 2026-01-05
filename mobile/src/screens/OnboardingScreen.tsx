@@ -444,15 +444,6 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     }
   }, [pendingQuickProfile, finalizeQuickSetup, finalizeOnboarding])
 
-  const handleCloudSyncSkip = useCallback(async () => {
-    // User skipped cloud sync - finalize anyway based on mode
-    if (pendingQuickProfile) {
-      await finalizeQuickSetup()
-    } else {
-      await finalizeOnboarding()
-    }
-  }, [pendingQuickProfile, finalizeQuickSetup, finalizeOnboarding])
-
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1
     if (prevIndex >= 0) {
@@ -550,7 +541,6 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
         return (
           <StepCloudSync
             onComplete={handleCloudSyncComplete}
-            onSkip={handleCloudSyncSkip}
           />
         )
       default:
@@ -567,8 +557,9 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     )
   }
 
-  // Don't show back button for first operational step (basic-info) - can't go back to setup-choice
-  const showBackButton = currentStep !== 'basic-info' && stepIndex > 2
+  // Show back button for all steps except the first analysis step
+  // basic-info can go back to setup-choice
+  const showBackButton = stepIndex > 2
 
   return (
     <OnboardingLayout

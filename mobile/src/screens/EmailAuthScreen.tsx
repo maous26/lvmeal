@@ -287,6 +287,13 @@ export default function EmailAuthScreen({
             {error && (
               <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
                 <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+                {error.includes('déjà utilisée') && isSignUp && (
+                  <TouchableOpacity onPress={toggleMode} style={styles.errorAction}>
+                    <Text style={[styles.errorActionText, { color: colors.accent.primary }]}>
+                      Se connecter →
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 
@@ -407,6 +414,15 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.body,
     textAlign: 'center',
+  },
+  errorAction: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  errorActionText: {
+    ...typography.bodyMedium,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   submitButton: {
     paddingVertical: spacing.md,

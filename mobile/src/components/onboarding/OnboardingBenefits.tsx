@@ -209,22 +209,28 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           ))}
         </View>
 
-        <Button
+        <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
             handleNext()
           }}
-          size="lg"
-          fullWidth
-          icon={<ChevronRight size={20} color="#FFFFFF" />}
-          iconPosition="right"
           style={{
-            backgroundColor: colors.accent.primary,
-            ...shadows.glowPrimary,
+            backgroundColor: '#FF6B5B',
+            paddingVertical: spacing.lg,
+            paddingHorizontal: spacing.xl,
+            borderRadius: radius.xl,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
           }}
+          activeOpacity={0.8}
         >
-          {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
-        </Button>
+          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', marginRight: spacing.sm }}>
+            {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
+          </Text>
+          <ChevronRight size={20} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
     </View>
   )

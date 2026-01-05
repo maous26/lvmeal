@@ -9,6 +9,8 @@ import * as ExpoSplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 
 import { RootNavigator } from './src/navigation'
+import { linkingConfig, isAuthDeepLink, getAuthAction } from './src/navigation/linking'
+import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
@@ -39,6 +41,11 @@ ExpoSplashScreen.preventAutoHideAsync()
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
+  const [pendingDeepLink, setPendingDeepLink] = useState<{
+    action: 'reset-password' | 'callback'
+    url: string
+  } | null>(null)
+  const navigationRef = React.useRef<any>(null)
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -119,6 +126,33 @@ export default Sentry.wrap(function App() {
     return () => subscription.remove()
   }, [])
 
+  // Handle deep links for auth
+  useEffect(() => {
+    // Process pending deep link after navigation is ready
+    if (pendingDeepLink && navigationRef.current?.isReady()) {
+      console.log('[App] Processing pending deep link:', pendingDeepLink.action)
+
+      const processDeepLink = async () => {
+        const result = await handleDeepLink(pendingDeepLink.url)
+
+        if (result.success && result.type === 'reset-password') {
+          // Navigate to change password screen
+          navigationRef.current?.navigate('ChangePassword', { fromDeepLink: true })
+        } else if (result.success && result.type === 'email-verified') {
+          // Email verified - the auth state will update automatically
+          console.log('[App] Email verified via deep link')
+        } else if (!result.success) {
+          console.error('[App] Deep link error:', result.error)
+          // Could show an alert here if needed
+        }
+
+        setPendingDeepLink(null)
+      }
+
+      processDeepLink()
+    }
+  }, [pendingDeepLink])
+
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady && fontsLoaded) {
       await ExpoSplashScreen.hideAsync()
@@ -141,7 +175,40 @@ export default Sentry.wrap(function App() {
         <ThemeProvider>
           <ToastProvider>
             <AgentTriggersProvider>
-              <NavigationContainer>
+              <NavigationContainer
+                ref={navigationRef}
+                linking={{
+                  ...linkingConfig,
+                  // Custom handler for auth deep links
+                  async getInitialURL() {
+                    const url = await linkingConfig.getInitialURL?.()
+                    if (url && isAuthDeepLink(url)) {
+                      const action = getAuthAction(url)
+                      if (action) {
+                        console.log('[App] Auth deep link on launch:', action)
+                        setPendingDeepLink({ action, url })
+                        return null // Don't let React Navigation handle it directly
+                      }
+                    }
+                    return url
+                  },
+                  subscribe(listener) {
+                    // Wrap the listener to intercept auth deep links
+                    const wrappedListener = (url: string) => {
+                      if (isAuthDeepLink(url)) {
+                        const action = getAuthAction(url)
+                        if (action) {
+                          console.log('[App] Auth deep link while open:', action)
+                          setPendingDeepLink({ action, url })
+                          return // Don't pass to React Navigation
+                        }
+                      }
+                      listener(url)
+                    }
+                    return linkingConfig.subscribe?.(wrappedListener) || (() => {})
+                  },
+                }}
+              >
                 <RootNavigator />
               </NavigationContainer>
             </AgentTriggersProvider>

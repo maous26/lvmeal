@@ -73,7 +73,7 @@ export type RootStackParamList = {
   MealInputSettings: undefined
   ScaleSettings: undefined
   BackupSettings: undefined
-  ChangePassword: undefined
+  ChangePassword: { fromDeepLink?: boolean } | undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()

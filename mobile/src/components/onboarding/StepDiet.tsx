@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { radius, spacing, typography } from '../../constants/theme'
-import type { DietType, ReligiousDiet, UserProfile } from '../../types'
+import type { DietType, UserProfile } from '../../types'
 import { useTheme } from '../../contexts/ThemeContext'
 
 interface StepDietProps {
@@ -18,31 +18,18 @@ const dietTypes: { value: DietType; label: string; emoji: string; description: s
   { value: 'paleo', label: 'Paleo', emoji: '🥩', description: 'Alimentation ancestrale' },
 ]
 
-const religiousOptions: { value: 'halal' | 'casher'; label: string; emoji: string; description: string }[] = [
-  { value: 'halal', label: 'Halal', emoji: '🌙', description: 'Selon les préceptes islamiques' },
-  { value: 'casher', label: 'Casher', emoji: '✡️', description: 'Selon les lois juives' },
-]
-
-const commonAllergies = ['Gluten', 'Lactose', 'Arachides', 'Fruits à coque', 'Œufs', 'Soja', 'Crustacés', 'Poisson']
+const dietaryRestrictions = ['Halal', 'Casher', 'Gluten', 'Lactose', 'Arachides', 'Fruits à coque', 'Œufs', 'Soja', 'Crustacés', 'Poisson']
 
 export function StepDiet({ data, onChange }: StepDietProps) {
   const { colors } = useTheme()
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>(data.allergies || [])
 
-  const toggleAllergy = (allergy: string) => {
-    const updated = selectedAllergies.includes(allergy)
-      ? selectedAllergies.filter((a) => a !== allergy)
-      : [...selectedAllergies, allergy]
+  const toggleRestriction = (restriction: string) => {
+    const updated = selectedAllergies.includes(restriction)
+      ? selectedAllergies.filter((a) => a !== restriction)
+      : [...selectedAllergies, restriction]
     setSelectedAllergies(updated)
     onChange({ ...data, allergies: updated })
-  }
-
-  const toggleReligiousDiet = (value: 'halal' | 'casher') => {
-    if (data.religiousDiet === value) {
-      onChange({ ...data, religiousDiet: null })
-    } else {
-      onChange({ ...data, religiousDiet: value })
-    }
   }
 
   return (
@@ -94,69 +81,23 @@ export function StepDiet({ data, onChange }: StepDietProps) {
         </View>
       </View>
 
-      {/* Religious dietary options */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionIcon}>🙏</Text>
-          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Restriction religieuse</Text>
-          <Text style={[styles.optionalBadge, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
-            Optionnel
-          </Text>
-        </View>
-        <View style={styles.religiousRow}>
-          {religiousOptions.map((option) => {
-            const isSelected = data.religiousDiet === option.value
-
-            return (
-              <Pressable
-                key={option.value}
-                onPress={() => toggleReligiousDiet(option.value)}
-                style={[
-                  styles.religiousOption,
-                  {
-                    backgroundColor: colors.bg.elevated,
-                    borderColor: isSelected ? colors.warning : colors.border.light,
-                  },
-                  isSelected && { backgroundColor: colors.warningLight },
-                ]}
-              >
-                <Text style={styles.religiousEmoji}>{option.emoji}</Text>
-                <View style={styles.religiousContent}>
-                  <Text style={[styles.religiousLabel, { color: isSelected ? colors.warning : colors.text.primary }]}>
-                    {option.label}
-                  </Text>
-                  <Text style={[styles.religiousDescription, { color: colors.text.tertiary }]}>
-                    {option.description}
-                  </Text>
-                </View>
-                {isSelected && (
-                  <View style={[styles.checkmark, { backgroundColor: colors.warning }]}>
-                    <Text style={[styles.checkmarkText, { color: colors.text.inverse }]}>✓</Text>
-                  </View>
-                )}
-              </Pressable>
-            )
-          })}
-        </View>
-      </View>
-
-      {/* Allergies */}
+      {/* Dietary Restrictions */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionIcon}>⚠️</Text>
-          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Allergies ou intolérances</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Restriction alimentaire</Text>
           <Text style={[styles.optionalBadge, { color: colors.text.tertiary, backgroundColor: colors.bg.tertiary }]}>
             Optionnel
           </Text>
         </View>
         <View style={styles.allergiesRow}>
-          {commonAllergies.map((allergy) => {
-            const isSelected = selectedAllergies.includes(allergy)
+          {dietaryRestrictions.map((restriction) => {
+            const isSelected = selectedAllergies.includes(restriction)
 
             return (
               <Pressable
-                key={allergy}
-                onPress={() => toggleAllergy(allergy)}
+                key={restriction}
+                onPress={() => toggleRestriction(restriction)}
                 style={[
                   styles.allergyChip,
                   {
@@ -166,7 +107,7 @@ export function StepDiet({ data, onChange }: StepDietProps) {
                 ]}
               >
                 <Text style={[styles.allergyText, { color: isSelected ? colors.error : colors.text.secondary }]}>
-                  {allergy}
+                  {restriction}
                 </Text>
               </Pressable>
             )
@@ -248,40 +189,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     textAlign: 'center',
     marginTop: 2,
-  },
-  religiousRow: {
-    gap: spacing.sm,
-  },
-  religiousOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.default,
-    borderRadius: radius.lg,
-    borderWidth: 2,
-  },
-  religiousEmoji: {
-    fontSize: 28,
-    marginRight: spacing.md,
-  },
-  religiousContent: {
-    flex: 1,
-  },
-  religiousLabel: {
-    ...typography.smallMedium,
-  },
-  religiousDescription: {
-    ...typography.caption,
-  },
-  checkmark: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmarkText: {
-    fontSize: 14,
-    fontWeight: '600',
   },
   allergiesRow: {
     flexDirection: 'row',
