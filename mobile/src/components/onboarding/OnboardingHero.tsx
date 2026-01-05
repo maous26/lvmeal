@@ -6,6 +6,7 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
+  ScrollView,
   Animated,
   Easing,
 } from 'react-native'
@@ -59,90 +60,97 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
       ]}
     >
-      {/* Hero Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={require('../../../assets/Photo1.jpg')}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={require('../../../assets/Photo1.jpg')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
 
-        {/* Gradient overlay for text readability */}
-        <LinearGradient
-          colors={['transparent', overlayMid, colors.bg.primary]}
-          locations={[0, 0.5, 1]}
-          style={styles.imageOverlay}
-        />
-      </View>
-
-      {/* Content */}
-      <View style={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}>
-        {/* Brand */}
-        <View style={styles.brandContainer}>
-          <Text style={[styles.brandName, { color: colors.accent.primary }]}>
-            Love Your Meal
-          </Text>
+          {/* Gradient overlay for text readability */}
+          <LinearGradient
+            colors={['transparent', overlayMid, colors.bg.primary]}
+            locations={[0, 0.5, 1]}
+            style={styles.imageOverlay}
+          />
         </View>
 
-        {/* Main headline */}
-        <Text style={[styles.headline, { color: colors.text.primary }]}>
-          Reprends le contrôle{'\n'}de ton alimentation
-        </Text>
-
-        {/* Subheadline */}
-        <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
-          Sans frustration. Sans régime strict.{'\n'}
-          Juste toi, tes objectifs et un coach bienveillant.
-        </Text>
-
-        {/* Trust badges */}
-        <View style={styles.trustBadges}>
-          <View style={[styles.badge, { backgroundColor: colors.success + '15' }]}>
-            <Text style={styles.badgeEmoji}>✓</Text>
-            <Text style={[styles.badgeText, { color: colors.success }]}>100% personnalisé</Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: colors.accent.light }]}>
-            <Text style={styles.badgeEmoji}>🤖</Text>
-            <Text style={[styles.badgeText, { color: colors.accent.primary }]}>Coach IA intégré</Text>
-          </View>
-        </View>
-
-        {/* CTA Button */}
-        <Button
-          onPress={onGetStarted}
-          size="lg"
-          fullWidth
-          icon={<ChevronRight size={20} color="#FFFFFF" />}
-          iconPosition="right"
-          style={{
-            backgroundColor: colors.accent.primary,
-            ...shadows.glowPrimary,
-          }}
-        >
-          Commencer mon parcours
-        </Button>
-
-        {/* Micro-copy */}
-        <Text style={[styles.microCopy, { color: colors.text.muted }]}>
-          Configuration en quelques étapes
-        </Text>
-
-        {/* Already have an account link */}
-        {onHaveAccount && (
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              onHaveAccount()
-            }}
-            style={styles.haveAccountButton}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
-              J'ai déjà un compte
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Brand */}
+          <View style={styles.brandContainer}>
+            <Text style={[styles.brandName, { color: colors.accent.primary }]}>
+              Love Your Meal
             </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          </View>
+
+          {/* Main headline */}
+          <Text style={[styles.headline, { color: colors.text.primary }]}>
+            Reprends le contrôle{'\n'}de ton alimentation
+          </Text>
+
+          {/* Subheadline */}
+          <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
+            Sans frustration. Sans régime strict.{'\n'}
+            Juste toi, tes objectifs et un coach bienveillant.
+          </Text>
+
+          {/* Trust badges */}
+          <View style={styles.trustBadges}>
+            <View style={[styles.badge, { backgroundColor: colors.success + '15' }]}>
+              <Text style={styles.badgeEmoji}>✓</Text>
+              <Text style={[styles.badgeText, { color: colors.success }]}>100% personnalisé</Text>
+            </View>
+            <View style={[styles.badge, { backgroundColor: colors.accent.light }]}>
+              <Text style={styles.badgeEmoji}>🧑‍🏫</Text>
+              <Text style={[styles.badgeText, { color: colors.accent.primary }]}>Coach intégré</Text>
+            </View>
+          </View>
+
+          {/* CTA Button */}
+          <Button
+            onPress={onGetStarted}
+            size="lg"
+            fullWidth
+            icon={<ChevronRight size={20} color="#FFFFFF" />}
+            iconPosition="right"
+            style={{
+              backgroundColor: colors.accent.primary,
+              ...shadows.glowPrimary,
+              marginTop: spacing.lg,
+            }}
+          >
+            Commencer mon parcours
+          </Button>
+
+          {/* Micro-copy */}
+          <Text style={[styles.microCopy, { color: colors.text.muted }]}>
+            Configuration en quelques étapes
+          </Text>
+
+          {/* Already have an account link */}
+          {onHaveAccount && (
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                onHaveAccount()
+              }}
+              style={styles.haveAccountButton}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
+                J'ai déjà un compte
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </Animated.View>
   )
 }
@@ -150,6 +158,12 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   imageContainer: {
     height: height * 0.45,
@@ -167,10 +181,8 @@ const styles = StyleSheet.create({
     height: 100,
   },
   content: {
-    flex: 1,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    justifyContent: 'space-between',
   },
   brandContainer: {
     marginBottom: spacing.sm,
