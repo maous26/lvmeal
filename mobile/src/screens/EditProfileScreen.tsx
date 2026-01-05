@@ -254,7 +254,7 @@ function AllergyPicker({ selected, onChange }: AllergyPickerProps) {
 
 export default function EditProfileScreen() {
   const navigation = useNavigation()
-  const { profile, setProfile, nutritionGoals } = useUserStore()
+  const { profile, updateProfile: storeUpdateProfile, nutritionGoals } = useUserStore()
 
   // Local state for editing
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>(profile || {})
@@ -296,25 +296,24 @@ export default function EditProfileScreen() {
     // Recalculate nutritional needs based on new profile
     const newNeeds = calculateNeeds(editedProfile)
 
-    const updatedProfile: Partial<UserProfile> = {
+    const updates: Partial<UserProfile> = {
       ...editedProfile,
       nutritionalNeeds: newNeeds,
       updatedAt: new Date().toISOString(),
     }
 
-    // Save to store
-    setProfile(updatedProfile)
+    // Save to store using updateProfile (keeps isOnboarded intact)
+    storeUpdateProfile(updates)
 
-    // Simulate API save
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    // Brief delay for UX
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     setIsSaving(false)
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
-    Alert.alert('Profil mis à jour', 'Vos modifications ont été enregistrées avec succès.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ])
-  }, [editedProfile, setProfile, navigation])
+    // Go back immediately after success
+    navigation.goBack()
+  }, [editedProfile, storeUpdateProfile, navigation])
 
   const toggleSection = (section: SectionKey) => {
     setExpandedSection(expandedSection === section ? null : section)

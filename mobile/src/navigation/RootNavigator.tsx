@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 import TabNavigator from './TabNavigator'
 import { OnboardingScreen } from '../screens/OnboardingScreen'
+import AuthScreen from '../screens/AuthScreen'
 import AddMealScreen from '../screens/AddMealScreen'
 import WeeklyPlanScreen from '../screens/WeeklyPlanScreen'
 import MetabolicBoostScreen from '../screens/MetabolicBoostScreen'
@@ -21,10 +22,13 @@ import MealInputSettingsScreen from '../screens/MealInputSettingsScreen'
 import ScaleSettingsScreen from '../screens/ScaleSettingsScreen'
 import BackupSettingsScreen from '../screens/BackupSettingsScreen'
 import { useUserStore } from '../stores/user-store'
+import { useAuthStore } from '../stores/auth-store'
+import { isGoogleSignedIn, getCachedGoogleUser } from '../services/google-auth-service'
 import type { MealType, Recipe } from '../types'
 import type { RecipeComplexity } from '../components/dashboard/QuickActionsWidget'
 
 export type RootStackParamList = {
+  Auth: undefined
   Onboarding: undefined
   Main: undefined
   AddMeal: { type?: string }
@@ -72,7 +76,59 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 export default function RootNavigator() {
-  const { isOnboarded } = useUserStore()
+  const { isOnboarded, profile, setOnboarded } = useUserStore()
+  const { isAuthenticated } = useAuthStore()
+  const [showAuth, setShowAuth] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  // Check if user has cached Google auth on mount
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      try {
+        // Check if user has cached Google credentials
+        const cachedUser = await getCachedGoogleUser()
+        const signedIn = await isGoogleSignedIn()
+
+        if (cachedUser || signedIn) {
+          // User has previous auth, check if they completed onboarding
+          if (profile?.onboardingCompleted || isOnboarded) {
+            // Returning user with completed profile - go straight to app
+            setOnboarded(true)
+          } else {
+            // Has auth but no profile - show auth then onboarding
+            setShowAuth(true)
+          }
+        } else {
+          // No cached auth - show auth screen for new users
+          setShowAuth(!isOnboarded)
+        }
+      } catch (error) {
+        console.error('[RootNavigator] Auth check error:', error)
+        setShowAuth(!isOnboarded)
+      } finally {
+        setIsCheckingAuth(false)
+      }
+    }
+
+    checkExistingAuth()
+  }, [])
+
+  // Handle auth completion
+  const handleAuthenticated = (isNewUser: boolean) => {
+    if (isNewUser) {
+      // New user - go to onboarding
+      setShowAuth(false)
+    } else {
+      // Returning user - go straight to main
+      setOnboarded(true)
+      setShowAuth(false)
+    }
+  }
+
+  // Show nothing while checking auth state
+  if (isCheckingAuth) {
+    return null
+  }
 
   return (
     <Stack.Navigator
@@ -80,9 +136,18 @@ export default function RootNavigator() {
         headerShown: false,
         animation: 'slide_from_right',
       }}
-      initialRouteName={isOnboarded ? 'Main' : 'Onboarding'}
+      initialRouteName={isOnboarded ? 'Main' : showAuth ? 'Auth' : 'Onboarding'}
     >
-      {!isOnboarded ? (
+      {showAuth && !isOnboarded ? (
+        <Stack.Screen name="Auth">
+          {(props) => (
+            <AuthScreen
+              {...props}
+              onAuthenticated={handleAuthenticated}
+            />
+          )}
+        </Stack.Screen>
+      ) : !isOnboarded ? (
         <Stack.Screen name="Onboarding">
           {(props) => (
             <OnboardingScreen
