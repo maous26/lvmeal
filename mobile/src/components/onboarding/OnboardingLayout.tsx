@@ -146,13 +146,8 @@ export function OnboardingLayout({
             fullWidth
             disabled={nextDisabled}
             loading={loading}
-            style={[
-              {
-                // Use secondary (coral) for the primary onboarding CTA
-                backgroundColor: nextDisabled ? colors.border.default : colors.secondary.primary,
-              },
-              !nextDisabled ? shadows.glowCoral : undefined,
-            ]}
+            variant={nextDisabled ? 'outline' : 'secondary'}
+            style={!nextDisabled ? shadows.glowCoral : undefined}
           >
             {loading ? 'Chargement…' : nextLabel}
           </Button>
