@@ -265,6 +265,7 @@ export const useUserStore = create<UserState>()(
       partialize: (state) => ({
         profile: state.profile,
         isOnboarded: state.isOnboarded,
+        hasSeenCoachWelcome: state.hasSeenCoachWelcome,
         weightHistory: state.weightHistory,
         nutritionGoals: state.nutritionGoals,
         lastRAGUpdate: state.lastRAGUpdate,

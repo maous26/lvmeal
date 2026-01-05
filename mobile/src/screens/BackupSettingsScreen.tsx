@@ -22,6 +22,7 @@ import {
   Share,
   Image,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { useNavigation } from '@react-navigation/native'
 import {
   ArrowLeft,
@@ -47,11 +48,12 @@ import { Card } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius } from '../constants/theme'
 import { useAuthStore } from '../stores/auth-store'
-import { useGoogleAuthConfig } from '../services/google-auth-service'
+import { signInWithGoogle, signInWithGoogleToken, isGoogleAuthConfigured as checkGoogleConfigured } from '../services/google-auth-service'
 
 export default function BackupSettingsScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
+  const toast = useToast()
 
   // Auth store
   const {
@@ -79,32 +81,39 @@ export default function BackupSettingsScreen() {
     isGoogleConfigured,
   } = useAuthStore()
 
-  // Google Auth hook
-  const [request, response, promptAsync] = useGoogleAuthConfig()
-
   // Local state
   const [isLoading, setIsLoading] = useState(false)
   const [showBackupOptions, setShowBackupOptions] = useState(false)
 
-  // Handle Google auth response
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response
-      if (authentication?.accessToken) {
-        handleGoogleSignIn(authentication.accessToken)
-      }
-    }
-  }, [response])
-
-  const handleGoogleSignIn = async (accessToken: string) => {
+  // Handle Google Sign-In button press
+  const handleGoogleSignInPress = async () => {
     setIsLoading(true)
     try {
-      const result = await signInWithGoogleToken(accessToken)
-      if (result.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      console.log('[BackupSettings] Starting Google Sign-In...')
+      const result = await signInWithGoogle()
+      console.log('[BackupSettings] Result:', JSON.stringify(result))
+
+      // STRICT CHECK: Must have success=true AND user with email AND (accessToken OR idToken)
+      if (result.success && result.user?.email && (result.accessToken || result.idToken)) {
+        console.log('[BackupSettings] Auth successful, user:', result.user.email)
+        
+        // Pass both tokens to store
+        const storeResult = await signInWithGoogleToken(result.accessToken || '', result.idToken)
+        
+        if (storeResult.success) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          toast.success('Connexion réussie')
+        } else {
+          console.log('[BackupSettings] Store sync failed:', storeResult.error)
+          toast.error(storeResult.error || 'Erreur de synchronisation')
+        }
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de se connecter')
+        console.log('[BackupSettings] Auth failed or incomplete:', result.error)
+        toast.error(result.error || 'Authentification incomplète')
       }
+    } catch (error: any) {
+      console.error('[BackupSettings] Error:', error)
+      toast.error(error?.message || 'Erreur de connexion Google')
     } finally {
       setIsLoading(false)
     }
@@ -144,8 +153,9 @@ export default function BackupSettingsScreen() {
       const result = await triggerSync()
       if (result.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        toast.success('Synchronisation terminee')
       } else {
-        Alert.alert('Erreur de sync', result.error || 'Réessayez plus tard')
+        toast.error(result.error || 'Erreur de sync, reessayez')
       }
     } finally {
       setIsLoading(false)
@@ -164,8 +174,9 @@ export default function BackupSettingsScreen() {
           title: 'LYM Backup',
         })
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        toast.success('Sauvegarde creee')
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible de créer la sauvegarde')
+        toast.error(result.error || 'Impossible de creer la sauvegarde')
       }
     } finally {
       setIsLoading(false)
@@ -192,12 +203,12 @@ export default function BackupSettingsScreen() {
 
       if (restoreResult.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        Alert.alert('Succès', 'Vos données ont été restaurées')
+        toast.success('Donnees restaurees')
       } else {
-        Alert.alert('Erreur', restoreResult.error || 'Fichier invalide')
+        toast.error(restoreResult.error || 'Fichier invalide')
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de lire le fichier')
+      toast.error('Impossible de lire le fichier')
     } finally {
       setIsLoading(false)
     }
@@ -312,19 +323,19 @@ export default function BackupSettingsScreen() {
 
               {isGoogleConfigured() ? (
                 <TouchableOpacity
-                  style={[styles.googleButton, { backgroundColor: '#4285F4' }]}
-                  onPress={() => promptAsync()}
-                  disabled={!request || isLoading}
+                  style={[styles.googleButton, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DADCE0' }]}
+                  onPress={handleGoogleSignInPress}
+                  disabled={isLoading || !checkGoogleConfigured()}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color="#4285F4" />
                   ) : (
                     <>
                       <Image
-                        source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
+                        source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
                         style={styles.googleIcon}
                       />
-                      <Text style={styles.googleButtonText}>Continuer avec Google</Text>
+                      <Text style={styles.googleButtonTextDark}>Continuer avec Google</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -635,6 +646,10 @@ const styles = StyleSheet.create({
   googleButtonText: {
     ...typography.bodyMedium,
     color: '#FFFFFF',
+  },
+  googleButtonTextDark: {
+    ...typography.bodyMedium,
+    color: '#3C4043',
   },
   notConfiguredBanner: {
     flexDirection: 'row',

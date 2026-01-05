@@ -24,7 +24,7 @@
     },
     "android": {
       "package": "com.presence.nutrition",
-      "versionCode": 1,
+      "versionCode": 10,
       "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -57,7 +57,17 @@
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "LYM utilise le microphone pour la saisie vocale de vos repas.",
+          "speechRecognitionPermission": "LYM utilise la reconnaissance vocale pour décrire vos repas."
+        }
+      ],
+      "react-native-health-connect",
+      "./plugins/withHealthConnect.js",
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {

@@ -38,7 +38,7 @@ import {
   CaloricBalance,
   ProgramsWidget,
   ProgressWidget,
-  CoachInsights,
+  UnifiedCoachBubble,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows } from '../constants/theme'
@@ -372,8 +372,8 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Coach Insights Widget - Compact mode */}
-        <CoachInsights compact />
+        {/* Unified Coach Bubble - Single communication point */}
+        <UnifiedCoachBubble />
 
         {/* Main Calories Widget */}
         <View style={[styles.caloriesSection, { backgroundColor: colors.bg.elevated }, shadows.md]}>

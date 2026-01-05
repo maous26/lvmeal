@@ -11,6 +11,7 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 import { RootNavigator } from './src/navigation'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
+import { ToastProvider } from './src/components/ui/Toast'
 import { SplashScreen } from './src/components/SplashScreen'
 import { clearFoodSearchCache } from './src/services/food-search'
 import {
@@ -22,6 +23,7 @@ import { loadStaticRecipes } from './src/services/static-recipes'
 import { analytics } from './src/services/analytics-service'
 import { errorReporting } from './src/services/error-reporting-service'
 import { lymInsights } from './src/services/lym-insights-service'
+import { configureGoogleSignIn } from './src/services/google-auth-service'
 
 // Initialize Sentry
 Sentry.init({
@@ -57,6 +59,9 @@ export default Sentry.wrap(function App() {
 
         // Initialize LYM Insights (Supabase-based, bienveillant analytics)
         await lymInsights.initialize()
+
+        // Configure Google Sign-In for native builds
+        configureGoogleSignIn()
 
         // OPTIMIZATION: Pre-load static recipes in parallel with other init tasks
         // This prevents latency during meal plan generation
@@ -134,11 +139,13 @@ export default Sentry.wrap(function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AgentTriggersProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-          </AgentTriggersProvider>
+          <ToastProvider>
+            <AgentTriggersProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+            </AgentTriggersProvider>
+          </ToastProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -18,6 +18,7 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
   X,
@@ -37,6 +38,7 @@ import { useUserStore } from '../stores/user-store'
 export default function PaywallScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
+  const toast = useToast()
   const { profile } = useUserStore()
   const {
     subscribe,
@@ -69,7 +71,7 @@ export default function PaywallScreen() {
         [{ text: 'Parfait', onPress: () => navigation.goBack() }]
       )
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur est survenue. Réessaie plus tard.')
+      toast.error('Une erreur est survenue. Reessaie plus tard.')
     } finally {
       setIsLoading(false)
     }
@@ -83,7 +85,7 @@ export default function PaywallScreen() {
 
   const handleRestorePurchases = () => {
     // TODO: Intégrer RevenueCat restore
-    Alert.alert('Restauration', 'Aucun achat à restaurer pour le moment.')
+    toast.info('Aucun achat a restaurer')
   }
 
   return (

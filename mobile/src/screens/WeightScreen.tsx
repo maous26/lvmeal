@@ -18,11 +18,11 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Alert,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   ChevronLeft,
@@ -63,6 +63,7 @@ const SUPPORTED_SCALES: { id: string; type: DeviceType; name: string; icon: stri
 export default function WeightScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
+  const toast = useToast()
 
   // Stores
   const { profile, weightHistory, addWeightEntry } = useUserStore()
@@ -137,7 +138,7 @@ export default function WeightScreen() {
   const handleAddWeight = useCallback(() => {
     const weight = parseFloat(newWeight)
     if (isNaN(weight) || weight <= 0) {
-      Alert.alert('Erreur', 'Veuillez entrer un poids valide')
+      toast.error('Veuillez entrer un poids valide')
       return
     }
 
@@ -186,9 +187,9 @@ export default function WeightScreen() {
       })
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-      Alert.alert('Connecté', `${deviceName} a été connecté avec succès`)
+      toast.success(`${deviceName} connecte`)
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de connecter l\'appareil')
+      toast.error('Impossible de connecter l\'appareil')
     } finally {
       setConnectingDevice(null)
       setConnecting(false)

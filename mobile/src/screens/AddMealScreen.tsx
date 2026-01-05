@@ -15,6 +15,7 @@ import {
   Modal,
   Dimensions,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
@@ -225,6 +226,7 @@ function getPresets(unit: ServingUnit): number[] {
 export default function AddMealScreen() {
   const navigation = useNavigation()
   const route = useRoute()
+  const toast = useToast()
   const { type = 'lunch', openDiscover = false } = (route.params as { type?: MealType; openDiscover?: boolean }) || {}
 
   const { addMeal, recentFoods = [], favoriteFoods = [], addToFavorites, removeFromFavorites, getDailyNutrition, currentDate } = useMealsStore()
@@ -503,7 +505,7 @@ export default function AddMealScreen() {
 
   const handleSaveMeal = () => {
     if (selectedFoods.length === 0) {
-      Alert.alert('Aucun aliment', 'Veuillez ajouter au moins un aliment')
+      toast.error('Veuillez ajouter au moins un aliment')
       return
     }
 
@@ -599,7 +601,7 @@ export default function AddMealScreen() {
   // AI Recipe suggestion handler - Now uses RAG for intelligent source selection
   const handleAISuggest = async () => {
     if (!profile || !nutritionGoals) {
-      Alert.alert('Profil requis', 'Configurez votre profil pour utiliser LymIA.')
+      toast.error('Configurez votre profil pour utiliser LymIA')
       return
     }
 
@@ -679,7 +681,7 @@ export default function AddMealScreen() {
           // Also set selectedRecipe for adding to meal log
           setSelectedRecipe(aiRecipe)
         } else {
-          Alert.alert('Aucun resultat', result.error || 'Impossible de trouver un repas correspondant.')
+          toast.error(result.error || 'Aucun repas trouve')
         }
       } else {
         // Full plan generation (1, 3 or 7 days)
@@ -713,13 +715,13 @@ export default function AddMealScreen() {
             ]
           )
         } else {
-          Alert.alert('Erreur', 'Impossible de generer le plan repas.')
+          toast.error('Impossible de generer le plan repas')
         }
       }
     } catch (error) {
       console.error('RAG meal generation error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-      Alert.alert('Erreur', `Impossible de generer une suggestion: ${errorMessage}`)
+      toast.error(`Erreur: ${errorMessage}`)
     } finally {
       setIsSuggesting(false)
     }
@@ -843,7 +845,7 @@ export default function AddMealScreen() {
     // Save the rating
     rateAIRecipe(selectedRecipe.id, userRating, userComment)
 
-    Alert.alert('Merci!', 'Votre note a ete enregistree. Cette recette apparaitra dans vos suggestions.')
+    toast.success('Note enregistree !')
   }
 
   // Add recipe to meal

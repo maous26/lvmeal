@@ -21,6 +21,7 @@ import {
 } from '../services/cloud-sync-service'
 import {
   signInWithGoogle,
+  signInWithGoogleToken as signInWithGoogleTokenService,
   signOutGoogle,
   getCachedGoogleUser,
   isGoogleAuthConfigured,
@@ -68,7 +69,7 @@ export interface AuthState {
   initialize: () => Promise<void>
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signInWithGoogleToken: (accessToken: string) => Promise<{ success: boolean; error?: string }>
+  signInWithGoogleToken: (accessToken: string, idToken?: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   enableSync: () => Promise<void>
   disableSync: () => void
@@ -243,11 +244,12 @@ export const useAuthStore = create<AuthState>()(
       // ========================================
       // Sign in with Google OAuth token
       // ========================================
-      signInWithGoogleToken: async (accessToken: string) => {
+      signInWithGoogleToken: async (accessToken: string, idToken?: string) => {
         set({ syncStatus: 'syncing', lastError: null })
 
         try {
-          const result = await signInWithGoogle(accessToken)
+          // Call the service with BOTH tokens
+          const result = await signInWithGoogleTokenService(accessToken, idToken)
 
           if (result.success && result.user) {
             set({

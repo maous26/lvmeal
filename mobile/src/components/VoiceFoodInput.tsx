@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,
   Text,
@@ -11,10 +11,26 @@ import {
   Alert,
   Platform,
 } from 'react-native'
-import { X, Check, Edit2, AlertCircle } from 'lucide-react-native'
+import { X, Check, Edit2, AlertCircle, Mic, MicOff } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
-// Note: expo-speech is for TTS, for STT we'll use a different approach
-// For now, we'll use a text-based fallback with AI analysis
+import Constants from 'expo-constants'
+
+// Check if running in Expo Go (native modules not available)
+const isExpoGo = Constants.executionEnvironment === 'storeClient' ? false : Constants.executionEnvironment === 'standalone' ? false : true
+
+// Conditionally import expo-speech-recognition
+let ExpoSpeechRecognitionModule: any = null
+let useSpeechRecognitionEvent: (event: string, callback: (e: any) => void) => void = () => {}
+
+if (!isExpoGo) {
+  try {
+    const speechModule = require('expo-speech-recognition')
+    ExpoSpeechRecognitionModule = speechModule.ExpoSpeechRecognitionModule
+    useSpeechRecognitionEvent = speechModule.useSpeechRecognitionEvent
+  } catch (e) {
+    console.warn('[VoiceFoodInput] expo-speech-recognition not available')
+  }
+}
 
 import { Card, Button, Badge } from './ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
@@ -40,29 +56,108 @@ export default function VoiceFoodInput({
   const [analyzedFoods, setAnalyzedFoods] = useState<AnalyzedFood[]>([])
   const [selectedFoods, setSelectedFoods] = useState<Set<number>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  const [isListening, setIsListening] = useState(false)
+  const [partialTranscript, setPartialTranscript] = useState('')
+  const [speechAvailable, setSpeechAvailable] = useState<boolean | null>(null)
+
+  // Check speech recognition availability on mount
+  useEffect(() => {
+    checkSpeechAvailability()
+  }, [])
+
+  const checkSpeechAvailability = () => {
+    // In Expo Go, speech recognition is not available
+    if (isExpoGo || !ExpoSpeechRecognitionModule) {
+      setSpeechAvailable(false)
+      return
+    }
+    try {
+      const available = ExpoSpeechRecognitionModule.isRecognitionAvailable()
+      setSpeechAvailable(available)
+    } catch {
+      setSpeechAvailable(false)
+    }
+  }
+
+  // Speech recognition event handlers
+  useSpeechRecognitionEvent('start', () => {
+    setIsListening(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+  })
+
+  useSpeechRecognitionEvent('end', () => {
+    setIsListening(false)
+  })
+
+  useSpeechRecognitionEvent('result', (event) => {
+    if (event.isFinal) {
+      const finalText = event.results[0]?.transcript || ''
+      setTranscript((prev) => (prev ? `${prev} ${finalText}` : finalText))
+      setPartialTranscript('')
+    } else {
+      setPartialTranscript(event.results[0]?.transcript || '')
+    }
+  })
+
+  useSpeechRecognitionEvent('error', (event) => {
+    console.log('[VoiceFoodInput] Speech error:', event.error)
+    setIsListening(false)
+    if (event.error !== 'no-speech') {
+      setError(`Erreur de reconnaissance: ${event.message || event.error}`)
+    }
+  })
 
   const resetState = () => {
     setTranscript('')
+    setPartialTranscript('')
     setIsAnalyzing(false)
     setIsEditing(false)
+    setIsListening(false)
     setAnalyzedFoods([])
     setSelectedFoods(new Set())
     setError(null)
   }
 
   const handleClose = () => {
+    if (isListening) {
+      ExpoSpeechRecognitionModule.stop()
+    }
     resetState()
     onClose()
   }
 
-  // Note: Real voice recognition requires native build (@react-native-voice/voice)
-  // In Expo Go / dev mode, we use text input as fallback
-  // Production will have real speech-to-text with:
-  // - Silence detection (pause > 1.5s to stop)
-  // - Filler word handling (euh, hmm, etc.)
-  // - Partial results for live feedback
+  // Start/stop voice recognition
+  const toggleListening = useCallback(async () => {
+    if (isListening) {
+      await ExpoSpeechRecognitionModule.stop()
+      setIsListening(false)
+    } else {
+      try {
+        // Request permissions if needed
+        const permissionResult = await ExpoSpeechRecognitionModule.requestPermissionsAsync()
+        if (!permissionResult.granted) {
+          Alert.alert(
+            'Permission requise',
+            'Autorisez l\'accès au microphone pour utiliser la saisie vocale.',
+            [{ text: 'OK' }]
+          )
+          return
+        }
 
-  const isDevMode = __DEV__
+        // Start recognition with French language
+        ExpoSpeechRecognitionModule.start({
+          lang: 'fr-FR',
+          interimResults: true,
+          continuous: true,
+        })
+      } catch (err) {
+        console.log('[VoiceFoodInput] Start error:', err)
+        setError('Impossible de démarrer la reconnaissance vocale')
+      }
+    }
+  }, [isListening])
+
+  const isDevMode = !speechAvailable
 
   const handleAnalyze = async () => {
     if (!transcript.trim()) {
@@ -198,8 +293,8 @@ export default function VoiceFoodInput({
           {/* Voice Input Section */}
           {!isEditing && analyzedFoods.length === 0 && (
             <View style={styles.voiceSection}>
-              {/* Dev mode banner */}
-              {isDevMode && (
+              {/* Dev mode banner - only show if speech not available */}
+              {isDevMode && speechAvailable === false && (
                 <View style={styles.devBanner}>
                   <Text style={styles.devBannerIcon}>🧪</Text>
                   <View style={styles.devBannerContent}>
@@ -211,18 +306,85 @@ export default function VoiceFoodInput({
                 </View>
               )}
 
-              {/* Main input button - goes directly to text input in dev mode */}
-              <TouchableOpacity
-                style={styles.voiceButton}
-                onPress={() => setIsEditing(true)}
-                disabled={isAnalyzing}
-              >
-                <Edit2 size={48} color={colors.accent.primary} />
-              </TouchableOpacity>
+              {/* Real voice input when available */}
+              {speechAvailable ? (
+                <>
+                  <TouchableOpacity
+                    style={[
+                      styles.voiceButton,
+                      isListening && styles.voiceButtonActive,
+                    ]}
+                    onPress={toggleListening}
+                    disabled={isAnalyzing}
+                  >
+                    {isListening ? (
+                      <MicOff size={48} color="#FFFFFF" />
+                    ) : (
+                      <Mic size={48} color={colors.accent.primary} />
+                    )}
+                  </TouchableOpacity>
 
-              <Text style={styles.voiceInstructions}>
-                Décris ton repas
-              </Text>
+                  {isListening && (
+                    <View style={styles.listeningIndicator}>
+                      <View style={styles.listeningDot} />
+                      <Text style={styles.listeningText}>Écoute en cours...</Text>
+                    </View>
+                  )}
+
+                  {/* Live transcript display */}
+                  {(transcript || partialTranscript) && (
+                    <View style={styles.liveTranscript}>
+                      <Text style={styles.liveTranscriptText}>
+                        {transcript}
+                        {partialTranscript && (
+                          <Text style={styles.partialTranscriptText}> {partialTranscript}</Text>
+                        )}
+                      </Text>
+                    </View>
+                  )}
+
+                  <Text style={styles.voiceInstructions}>
+                    {isListening ? 'Parle maintenant' : 'Appuie pour parler'}
+                  </Text>
+
+                  {transcript && !isListening && (
+                    <View style={styles.actionButtons}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onPress={() => setIsEditing(true)}
+                      >
+                        <Edit2 size={16} color={colors.accent.primary} />
+                        <Text style={styles.editButtonText}>Modifier</Text>
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onPress={handleAnalyze}
+                        disabled={isAnalyzing}
+                      >
+                        <Check size={16} color="#FFFFFF" />
+                        <Text style={styles.buttonTextSmall}>Analyser</Text>
+                      </Button>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Fallback to text input when speech not available */}
+                  <TouchableOpacity
+                    style={styles.voiceButton}
+                    onPress={() => setIsEditing(true)}
+                    disabled={isAnalyzing}
+                  >
+                    <Edit2 size={48} color={colors.accent.primary} />
+                  </TouchableOpacity>
+
+                  <Text style={styles.voiceInstructions}>
+                    Décris ton repas
+                  </Text>
+                </>
+              )}
 
               <Text style={styles.exampleText}>
                 Ex: "J'ai mangé un sandwich poulet avec une salade et un café"
@@ -445,6 +607,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  voiceButtonActive: {
+    backgroundColor: colors.error,
+  },
+  listeningIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  listeningDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.error,
+  },
+  listeningText: {
+    ...typography.small,
+    color: colors.error,
+  },
+  liveTranscript: {
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    width: '100%',
+    minHeight: 60,
+  },
+  liveTranscriptText: {
+    ...typography.body,
+    color: colors.text.primary,
+  },
+  partialTranscriptText: {
+    color: colors.text.muted,
+    fontStyle: 'italic',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  editButtonText: {
+    ...typography.smallMedium,
+    color: colors.accent.primary,
+    marginLeft: spacing.xs,
+  },
+  buttonTextSmall: {
+    ...typography.smallMedium,
+    color: '#FFFFFF',
+    marginLeft: spacing.xs,
   },
   voiceInstructions: {
     ...typography.h4,

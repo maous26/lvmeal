@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   Dimensions,
   TextInput,
-  Alert,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, ChevronLeft, Settings, Bluetooth } from 'lucide-react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Path, Circle, Defs, LinearGradient as SvgGradient, Stop, Line, Text as SvgText } from 'react-native-svg'
@@ -39,6 +39,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ProgressScreen() {
   const { colors } = useTheme()
   const navigation = useNavigation<NavigationProp>()
+  const toast = useToast()
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
   const [weightRange, setWeightRange] = useState<WeightRange>('1M')
   const [activeTab, setActiveTab] = useState<TabType>('weight')
@@ -154,7 +155,7 @@ export default function ProgressScreen() {
   const handleAddWeight = useCallback(() => {
     const weight = parseFloat(newWeight)
     if (isNaN(weight) || weight < 30 || weight > 300) {
-      Alert.alert('Erreur', 'Veuillez entrer un poids valide (30-300 kg)')
+      toast.error('Veuillez entrer un poids valide (30-300 kg)')
       return
     }
 

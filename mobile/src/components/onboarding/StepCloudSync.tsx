@@ -5,7 +5,7 @@
  * for cloud backup and sync across devices.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -18,14 +18,10 @@ import {
 import { ArrowRight } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import Constants from 'expo-constants'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius } from '../../constants/theme'
 import { useAuthStore } from '../../stores/auth-store'
-import { useGoogleAuthConfig, isGoogleAuthConfigured } from '../../services/google-auth-service'
-
-// Check if running in Expo Go
-const isExpoGo = Constants.appOwnership === 'expo'
+import { signInWithGoogle, isGoogleAuthConfigured } from '../../services/google-auth-service'
 
 interface StepCloudSyncProps {
   onComplete: (connected: boolean) => void
@@ -39,60 +35,40 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
   // Auth store
   const { signInWithGoogleToken } = useAuthStore()
 
-  // Google Auth hook
-  const [request, response, promptAsync] = useGoogleAuthConfig()
-
-  // Handle Google auth response
-  useEffect(() => {
-    console.log('[StepCloudSync] Google Auth Response:', JSON.stringify(response, null, 2))
-    console.log('[StepCloudSync] Request object:', request ? {
-      url: request.url,
-      redirectUri: request.redirectUri,
-      clientId: request.clientId,
-    } : 'No request')
-
-    if (response?.type === 'success') {
-      const { authentication } = response
-      if (authentication?.accessToken) {
-        handleGoogleSignIn(authentication.accessToken)
-      }
-    } else if (response?.type === 'error') {
-      setIsLoading(false)
-      console.error('[StepCloudSync] Google Auth Error:', response.error)
-      // Log more details about the error
-      console.error('[StepCloudSync] Error details:', JSON.stringify(response, null, 2))
-      Alert.alert(
-        'Erreur Google Auth',
-        `${response.error?.message || 'Erreur inconnue'}\n\nRedirect URI attendue: https://auth.expo.io/@maous/presence`
-      )
-    }
-  }, [response])
-
-  const handleGoogleSignIn = async (accessToken: string) => {
-    setIsLoading(true)
-    try {
-      const result = await signInWithGoogleToken(accessToken)
-      if (result.success) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        onComplete(true)
-      } else {
-        Alert.alert('Erreur', result.error || 'Impossible de se connecter')
-        setIsLoading(false)
-      }
-    } catch {
-      setIsLoading(false)
-      Alert.alert('Erreur', 'Une erreur est survenue')
-    }
-  }
-
   const handleGooglePress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setIsLoading(true)
+
     try {
-      // Use proxy in Expo Go for OAuth redirect handling
-      await promptAsync({ useProxy: isExpoGo })
-    } catch {
+      console.log('[StepCloudSync] Starting Google Sign-In...')
+      const result = await signInWithGoogle()
+      console.log('[StepCloudSync] Result:', JSON.stringify(result))
+
+      // STRICT CHECK: Must have success=true AND user with email AND (accessToken OR idToken)
+      if (result.success && result.user?.email && (result.accessToken || result.idToken)) {
+        console.log('[StepCloudSync] Auth successful, user:', result.user.email)
+        
+        // Store in auth store with both tokens
+        const storeResult = await signInWithGoogleToken(result.accessToken || '', result.idToken)
+        
+        if (storeResult.success) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          onComplete(true)
+        } else {
+          console.log('[StepCloudSync] Store sync failed:', storeResult.error)
+          Alert.alert('Erreur de synchronisation', storeResult.error || 'Impossible de synchroniser avec le cloud.')
+          setIsLoading(false)
+        }
+      } else {
+        console.log('[StepCloudSync] Auth failed or incomplete:', result.error)
+        const errorMsg = result.error || 'Authentification incomplète. Veuillez réessayer.'
+        Alert.alert('Erreur', errorMsg)
+        setIsLoading(false)
+      }
+    } catch (error: any) {
+      console.error('[StepCloudSync] Error:', error)
       setIsLoading(false)
+      Alert.alert('Erreur', error?.message || 'Une erreur est survenue')
     }
   }
 
@@ -101,7 +77,7 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
     onSkip()
   }
 
-  const isGoogleConfigured = isGoogleAuthConfigured()
+  const googleConfigured = isGoogleAuthConfigured()
 
   return (
     <View style={styles.container}>
@@ -119,44 +95,63 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
         <View style={[styles.avatarPlaceholder, { borderColor: colors.border.light }]}>
           <Text style={[styles.avatarEmoji]}>👤</Text>
         </View>
-        <View style={[styles.syncBadge, { backgroundColor: colors.accent.primary }]}>
-          <Text style={styles.syncBadgeText}>☁️</Text>
-        </View>
       </View>
 
       {/* Title */}
       <Text style={[styles.title, { color: colors.text.primary }]}>
-        Retrouve tes données partout
+        Sauvegarder mes données
       </Text>
 
       {/* Description */}
       <Text style={[styles.description, { color: colors.text.secondary }]}>
-        Connecte-toi pour ne jamais perdre ta progression et la retrouver sur tous tes appareils.
+        Connecte-toi avec Google pour sauvegarder tes données et les retrouver sur tous tes appareils.
       </Text>
 
-      {/* Google Button */}
-      {isGoogleConfigured ? (
+      {/* Benefits */}
+      <View style={styles.benefits}>
+        <View style={styles.benefitRow}>
+          <Text style={styles.benefitIcon}>☁️</Text>
+          <Text style={[styles.benefitText, { color: colors.text.secondary }]}>
+            Sauvegarde automatique dans le cloud
+          </Text>
+        </View>
+        <View style={styles.benefitRow}>
+          <Text style={styles.benefitIcon}>📱</Text>
+          <Text style={[styles.benefitText, { color: colors.text.secondary }]}>
+            Synchronisation multi-appareils
+          </Text>
+        </View>
+        <View style={styles.benefitRow}>
+          <Text style={styles.benefitIcon}>🔒</Text>
+          <Text style={[styles.benefitText, { color: colors.text.secondary }]}>
+            Données sécurisées et privées
+          </Text>
+        </View>
+      </View>
+
+      {/* Google Sign In Button */}
+      {googleConfigured ? (
         <TouchableOpacity
-          style={[styles.googleButton]}
+          style={[styles.googleButton, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DADCE0' }]}
           onPress={handleGooglePress}
-          disabled={!request || isLoading}
+          disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#4285F4" />
           ) : (
             <>
               <Image
                 source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
                 style={styles.googleIcon}
               />
-              <Text style={styles.googleButtonText}>Continuer avec Google</Text>
+              <Text style={styles.googleButtonTextDark}>Continuer avec Google</Text>
             </>
           )}
         </TouchableOpacity>
       ) : (
         <View style={[styles.notConfiguredBanner, { backgroundColor: colors.bg.secondary }]}>
-          <Text style={[styles.notConfiguredText, { color: colors.text.secondary }]}>
-            Configuration Google non disponible
+          <Text style={[styles.notConfiguredText, { color: colors.text.tertiary }]}>
+            Connexion Google non disponible
           </Text>
         </View>
       )}
@@ -167,11 +162,17 @@ export function StepCloudSync({ onComplete, onSkip }: StepCloudSyncProps) {
         onPress={handleSkip}
         disabled={isLoading}
       >
-        <Text style={[styles.skipButtonText, { color: colors.text.tertiary }]}>
-          Plus tard
+        <Text style={[styles.skipText, { color: colors.text.tertiary }]}>
+          Peut-être plus tard
         </Text>
         <ArrowRight size={16} color={colors.text.tertiary} />
       </TouchableOpacity>
+
+      {/* Privacy Note */}
+      <Text style={[styles.privacyNote, { color: colors.text.tertiary }]}>
+        Tes données restent sur ton appareil même sans connexion.
+        Tu pourras te connecter plus tard dans les paramètres.
+      </Text>
     </View>
   )
 }
@@ -180,49 +181,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: spacing.xl,
+    paddingTop: spacing['2xl'],
   },
   logoContainer: {
+    width: 60,
+    height: 60,
     marginBottom: spacing.xl,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: '100%',
+    height: '100%',
   },
   avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-    position: 'relative',
-  },
-  avatarPlaceholder: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarEmoji: {
-    fontSize: 40,
-  },
-  syncBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  syncBadgeText: {
-    fontSize: 18,
+    fontSize: 32,
   },
   title: {
     ...typography.h2,
@@ -233,51 +222,74 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: spacing['2xl'],
-    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  benefits: {
+    width: '100%',
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  benefitIcon: {
+    fontSize: 20,
+  },
+  benefitText: {
+    ...typography.body,
+    flex: 1,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderRadius: radius.lg,
-    gap: spacing.md,
     width: '100%',
-    marginBottom: spacing.lg,
-    backgroundColor: '#4285F4',
+    gap: spacing.sm,
+    minHeight: 48,
   },
   googleIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 4,
+    width: 20,
+    height: 20,
   },
   googleButtonText: {
     ...typography.bodyMedium,
     color: '#FFFFFF',
-    fontWeight: '600',
+  },
+  googleButtonTextDark: {
+    ...typography.bodyMedium,
+    color: '#3C4043',
   },
   notConfiguredBanner: {
-    padding: spacing.lg,
-    borderRadius: radius.lg,
     width: '100%',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
     alignItems: 'center',
-    marginBottom: spacing.lg,
   },
   notConfiguredText: {
-    ...typography.body,
-    textAlign: 'center',
+    ...typography.small,
   },
   skipButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: spacing.lg,
     gap: spacing.xs,
-    paddingVertical: spacing.md,
   },
-  skipButtonText: {
+  skipText: {
     ...typography.body,
+  },
+  privacyNote: {
+    ...typography.small,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: spacing.lg,
+    position: 'absolute',
+    bottom: spacing.xl,
   },
 })
 

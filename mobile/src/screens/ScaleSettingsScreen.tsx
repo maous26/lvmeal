@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native'
+import { useToast } from '../components/ui/Toast'
 import { useNavigation } from '@react-navigation/native'
 import {
   ArrowLeft,
@@ -42,6 +43,7 @@ import {
 export default function ScaleSettingsScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
+  const toast = useToast()
   const { profile, addWeightEntry } = useUserStore()
 
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
@@ -82,7 +84,7 @@ export default function ScaleSettingsScreen() {
       }
     } catch (error) {
       console.error('Connection error:', error)
-      Alert.alert('Erreur', 'Impossible de se connecter. Réessayez.')
+      toast.error('Impossible de se connecter. Reessayez.')
     } finally {
       setIsLoading(false)
     }
@@ -121,23 +123,13 @@ export default function ScaleSettingsScreen() {
         setSyncedCount(imported)
         setLastSync(new Date())
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-
-        Alert.alert(
-          'Synchronisation réussie',
-          `${imported} mesure${imported > 1 ? 's' : ''} importée${imported > 1 ? 's' : ''} depuis votre balance.`,
-          [{ text: 'OK' }]
-        )
+        toast.success(`${imported} mesure${imported > 1 ? 's' : ''} importee${imported > 1 ? 's' : ''}`)
       } else {
-        Alert.alert(
-          'Aucune donnée',
-          'Aucune mesure trouvée. Assurez-vous que votre balance synchronise avec ' +
-          (Platform.OS === 'ios' ? 'Apple Santé' : 'Health Connect') + '.',
-          [{ text: 'OK' }]
-        )
+        toast.info('Aucune mesure trouvee')
       }
     } catch (error) {
       console.error('Sync error:', error)
-      Alert.alert('Erreur de synchronisation', 'Réessayez dans quelques instants.')
+      toast.error('Erreur de synchronisation')
     } finally {
       setIsSyncing(false)
     }

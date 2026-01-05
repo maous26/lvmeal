@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, createContext, useContext, useState, useCallback } from 'react'
 import { View, Text, StyleSheet, Animated, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Haptics from 'expo-haptics'
 import { colors, radius, spacing, typography, shadows } from '../../constants/theme'
+import { setToastHandler, type ToastMessage } from '../../services/message-center'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -15,6 +17,91 @@ interface ToastProps {
     label: string
     onPress: () => void
   }
+}
+
+// ============= TOAST CONTEXT =============
+
+interface ToastContextValue {
+  show: (type: ToastType, message: string, duration?: number) => void
+  success: (message: string) => void
+  error: (message: string) => void
+  info: (message: string) => void
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null)
+
+export function useToast() {
+  const context = useContext(ToastContext)
+  if (!context) {
+    // Return no-op functions if not in provider (for safety)
+    return {
+      show: () => {},
+      success: () => {},
+      error: () => {},
+      info: () => {},
+    }
+  }
+  return context
+}
+
+// ============= TOAST PROVIDER =============
+
+interface ToastState {
+  visible: boolean
+  message: string
+  type: ToastType
+  duration: number
+}
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toast, setToast] = useState<ToastState>({
+    visible: false,
+    message: '',
+    type: 'info',
+    duration: 2500,
+  })
+
+  const show = useCallback((type: ToastType, message: string, duration = 2500) => {
+    // Haptic feedback
+    if (type === 'success') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    } else if (type === 'error') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+    }
+
+    setToast({ visible: true, message, type, duration })
+  }, [])
+
+  const hide = useCallback(() => {
+    setToast((prev) => ({ ...prev, visible: false }))
+  }, [])
+
+  // Convenience methods
+  const success = useCallback((message: string) => show('success', message, 2000), [show])
+  const error = useCallback((message: string) => show('error', message, 3000), [show])
+  const info = useCallback((message: string) => show('info', message, 2500), [show])
+
+  // Register global handler for MessageCenter
+  useEffect(() => {
+    setToastHandler((toastMsg: ToastMessage) => {
+      const type = toastMsg.type === 'success' ? 'success' : toastMsg.type === 'error' ? 'error' : 'info'
+      show(type, toastMsg.message, toastMsg.duration)
+    })
+    return () => setToastHandler(() => {})
+  }, [show])
+
+  return (
+    <ToastContext.Provider value={{ show, success, error, info }}>
+      {children}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onDismiss={hide}
+      />
+    </ToastContext.Provider>
+  )
 }
 
 const ICONS: Record<ToastType, string> = {

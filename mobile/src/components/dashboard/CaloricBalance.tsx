@@ -94,7 +94,7 @@ export function CaloricBalance({
               <Gift size={20} color={colors.accent.primary} />
               <View style={styles.setupText}>
                 <Text style={styles.setupTitle}>Votre cycle plaisir commence !</Text>
-                <Text style={styles.setupSubtitle}>Economisez chaque jour pour le jour 7</Text>
+                <Text style={styles.setupSubtitle}>Economisez 200 kcal pour debloquer un repas plaisir des le jour 3</Text>
               </View>
             </View>
             <Button variant="primary" size="sm" onPress={onConfirmStart || (() => {})}>
@@ -137,9 +137,9 @@ export function CaloricBalance({
             <Gift size={16} color="#FFFFFF" />
           </View>
           <View style={styles.infoBoxContent}>
-            <Text style={styles.infoBoxTitle}>Jour plaisir le jour 7</Text>
+            <Text style={styles.infoBoxTitle}>1 a 2 repas plaisir par semaine</Text>
             <Text style={styles.infoBoxText}>
-              Chaque calorie economisee s'ajoute a votre solde pour un repas plaisir merite !
+              Des le jour 3 avec 200 kcal economisees, debloque un repas plaisir (max 600 kcal/repas).
             </Text>
           </View>
         </View>
@@ -194,12 +194,12 @@ export function CaloricBalance({
                 <Text style={styles.modalSectionTitle}>Le principe</Text>
               </View>
               <Text style={styles.modalSectionText}>
-                Mangez un peu moins que votre objectif pendant 6 jours, et profitez d'un repas plaisir le 7eme jour !
+                Economisez des calories au quotidien et debloque jusqu'a 2 repas plaisir par semaine !
               </Text>
               <View style={styles.modalExample}>
                 <Text style={styles.modalExampleText}>
-                  Exemple : Economisez {maxDailyVariance} kcal/jour pendant 6 jours =
-                  <Text style={styles.modalExampleHighlight}> +{formatNumber(maxCredit)} kcal</Text> pour vous faire plaisir !
+                  Des 200 kcal economisees (a partir du jour 3), tu peux te faire plaisir avec
+                  <Text style={styles.modalExampleHighlight}> max 600 kcal</Text> par repas bonus.
                 </Text>
               </View>
             </View>
@@ -213,15 +213,15 @@ export function CaloricBalance({
               <View style={styles.stepsList}>
                 <Text style={styles.stepItem}>
                   <Text style={styles.stepNumber}>1. </Text>
-                  Mangez legerement sous votre objectif (jusqu'a {maxDailyVariance} kcal/jour)
+                  Mange legerement sous ton objectif pour accumuler des calories
                 </Text>
                 <Text style={styles.stepItem}>
                   <Text style={styles.stepNumber}>2. </Text>
-                  Votre solde s'accumule automatiquement
+                  A partir du jour 3 et 200 kcal economisees : repas plaisir debloque !
                 </Text>
                 <Text style={styles.stepItem}>
                   <Text style={styles.stepNumber}>3. </Text>
-                  Le jour 7 : utilisez votre solde pour un repas genereux !
+                  Max 600 kcal par repas plaisir, jusqu'a 2 fois par semaine
                 </Text>
               </View>
             </View>
@@ -230,14 +230,14 @@ export function CaloricBalance({
             <View style={[styles.modalSection, styles.plaisirSection]}>
               <View style={styles.modalSectionHeader}>
                 <Gift size={20} color="#10B981" />
-                <Text style={styles.modalSectionTitle}>Votre jour plaisir</Text>
+                <Text style={styles.modalSectionTitle}>Tes repas plaisir</Text>
               </View>
               <Text style={styles.modalSectionText}>
-                Le 7eme jour, profitez de votre solde accumule.
-                Vous pourrez manger jusqu'a {formatNumber(dailyTarget + maxCredit)} kcal !
+                Choisis quelque chose qui te fait vraiment envie — pas juste plus de la meme chose.
+                Si ton solde depasse 600 kcal, repartis-le sur 2 repas.
               </Text>
               <Text style={styles.plaisirHint}>
-                C'est votre recompense bien meritee.
+                C'est ta recompense bien meritee, savoure-la !
               </Text>
             </View>
           </ScrollView>
