@@ -148,9 +148,10 @@ export function OnboardingLayout({
             loading={loading}
             style={[
               {
-                backgroundColor: nextDisabled ? colors.border.default : colors.accent.primary,
+                // Use secondary (coral) for the primary onboarding CTA
+                backgroundColor: nextDisabled ? colors.border.default : colors.secondary.primary,
               },
-              !nextDisabled ? shadows.default : undefined,
+              !nextDisabled ? shadows.glowCoral : undefined,
             ]}
           >
             {loading ? 'Chargement…' : nextLabel}
