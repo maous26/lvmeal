@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.presence.nutrition",
-      "versionCode": 11,
+      "versionCode": 12,
       "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

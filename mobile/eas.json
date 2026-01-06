@@ -1,9 +1,25 @@
 {
   "cli": {
-    "version": ">= 7.0.0"
+    "version": ">= 7.0.0",
+    "requireCommit": true
   },
   "build": {
+    "base": {
+      "env": {
+        "EXPO_PUBLIC_OPENAI_API_KEY": "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",
+        "EXPO_PUBLIC_RAPIDAPI_KEY": "7ab3c50b59mshef5d331907bd424p16332ajsn5ea4bf90e1b9",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ymuwxjidwnkgnrziryrm.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltdXd4amlkd25rZ25yemlyeXJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5MzQ5MjAsImV4cCI6MjA4MjUxMDkyMH0.9ivS6_dgkpvklbLXhQ1UXYTeOTdqNdoI4uXSQEJ9Q3M",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "798753543413-lapf769u63d6tb7t3n0prfab2ir43t7h.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "798753543413-fr199m16nt69199iba06trtj47mp9llu.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "798753543413-nmvodqsqgg7til0ggas1aplt249ovm6f.apps.googleusercontent.com",
+        "EXPO_PUBLIC_DSPY_URL": "https://lym1-production.up.railway.app",
+        "EXPO_PUBLIC_AMPLITUDE_API_KEY": "aa1b0b3320ad5b843ce51a3a74f17464",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://392c47826462d4b0e1c9e0f75c59fe79@o4510635440668672.ingest.de.sentry.io/4510640128524368"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "android": {
@@ -11,6 +27,7 @@
       }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "android": {
         "buildType": "apk",
@@ -18,6 +35,7 @@
       }
     },
     "production": {
+      "extends": "base",
       "android": {
         "buildType": "app-bundle"
       },
