@@ -21,7 +21,7 @@ import type { RootStackParamList } from '../navigation/RootNavigator'
 import { Card, Badge, ProgressBar, CircularProgress } from '../components/ui'
 import { GamificationPanel } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius, shadows } from '../constants/theme'
+import { colors as staticColors, fonts, spacing, typography, radius, shadows } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore, TIERS, ACHIEVEMENTS } from '../stores/gamification-store'
@@ -1174,6 +1174,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h2,
+    fontFamily: fonts.serif.bold,
   },
 
   // Tab Selector

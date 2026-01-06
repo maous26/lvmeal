@@ -22,7 +22,7 @@ import * as Haptics from 'expo-haptics'
 import { Alert } from 'react-native'
 
 import { Card, ProgressBar } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { colors, fonts, spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { formatNumber, getRelativeDate, getDateKey } from '../lib/utils'
@@ -679,6 +679,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h2,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   dateSelector: {
     flexDirection: 'row',

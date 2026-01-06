@@ -12,6 +12,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Easing,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { ChevronRight, X, Sparkles } from 'lucide-react-native'
@@ -19,7 +20,7 @@ import * as Haptics from 'expo-haptics'
 
 import { Card } from '../ui'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, typography, radius } from '../../constants/theme'
+import { spacing, typography, radius, fonts } from '../../constants/theme'
 import {
   useMessageCenter,
   generateDailyMessages,
@@ -98,27 +99,32 @@ export default function UnifiedCoachBubble({
     newMessages.forEach(msg => addMessage(msg))
   }, []) // Run once on mount
 
-  // Pulse animation for P0 messages
+  // Breathing animation (4% scale) - runs for all messages, more pronounced for P0
   useEffect(() => {
-    if (priorityMessage?.priority === 'P0') {
-      const pulse = Animated.loop(
+    if (priorityMessage) {
+      const breathingScale = priorityMessage.priority === 'P0' ? 1.04 : 1.02
+      const breathingDuration = priorityMessage.priority === 'P0' ? 1000 : 1500
+
+      const breathing = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.02,
-            duration: 800,
+            toValue: breathingScale,
+            duration: breathingDuration,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 800,
+            duration: breathingDuration,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
         ])
       )
-      pulse.start()
-      return () => pulse.stop()
+      breathing.start()
+      return () => breathing.stop()
     }
-  }, [priorityMessage?.priority, pulseAnim])
+  }, [priorityMessage?.id, priorityMessage?.priority, pulseAnim])
 
   // Vibrate for P0 messages
   useEffect(() => {
@@ -311,7 +317,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   coachName: {
-    ...typography.caption,
+    fontSize: 14,
+    fontFamily: fonts.serif.semibold,
     fontWeight: '600',
   },
   unreadBadge: {
@@ -322,7 +329,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   title: {
-    ...typography.bodySemibold,
+    fontSize: 16,
+    fontFamily: fonts.serif.semibold,
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   message: {
@@ -363,7 +372,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyTitle: {
-    ...typography.bodySemibold,
+    fontSize: 16,
+    fontFamily: fonts.serif.semibold,
+    fontWeight: '600',
   },
   emptyText: {
     ...typography.small,

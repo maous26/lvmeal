@@ -26,7 +26,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { Button } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { colors, spacing, typography, radius, fonts } from '../constants/theme'
 import { useTheme } from '../contexts/ThemeContext'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -339,7 +339,7 @@ export default function RecipeDetailScreen() {
           <View style={styles.ratingSection}>
             <Text style={styles.sectionTitle}>Noter cette recette</Text>
             <Text style={styles.ratingSubtitle}>
-              Les recettes les mieux notees apparaitront dans vos suggestions
+              Les recettes les mieux notees apparaitront dans tes suggestions
             </Text>
 
             <View style={styles.starsContainer}>
@@ -351,8 +351,8 @@ export default function RecipeDetailScreen() {
                 >
                   <Star
                     size={32}
-                    color="#F59E0B"
-                    fill={star <= userRating ? '#F59E0B' : 'transparent'}
+                    color="#D4A574"
+                    fill={star <= userRating ? '#D4A574' : 'transparent'}
                   />
                 </TouchableOpacity>
               ))}
@@ -522,6 +522,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h3,
+    fontFamily: fonts.serif.bold,
     color: colors.text.primary,
     marginBottom: spacing.sm,
   },
@@ -555,6 +556,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.bodyMedium,
+    fontFamily: fonts.serif.semibold,
     color: colors.text.primary,
     marginBottom: spacing.md,
   },
@@ -661,6 +663,7 @@ const styles = StyleSheet.create({
   },
   addToMealTitle: {
     ...typography.bodyMedium,
+    fontFamily: fonts.serif.semibold,
     color: colors.text.primary,
     marginBottom: spacing.md,
   },
@@ -696,7 +699,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#009FEB',
+    backgroundColor: '#4A6741',  // Vert Mousse
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     borderRadius: radius.xl,
@@ -719,7 +722,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   favActionButtonPrimary: {
-    backgroundColor: '#009FEB',
+    backgroundColor: '#4A6741',  // Vert Mousse
   },
   favActionButtonOutline: {
     backgroundColor: 'transparent',

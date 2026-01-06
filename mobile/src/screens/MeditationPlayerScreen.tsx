@@ -100,7 +100,7 @@ export default function MeditationPlayerScreen() {
     } catch (error) {
       Alert.alert(
         'Erreur',
-        'Impossible de générer l\'audio. Vérifiez votre connexion internet.',
+        'Impossible de générer l\'audio. Vérifie ta connexion internet.',
         [{ text: 'OK' }]
       )
     } finally {

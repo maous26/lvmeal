@@ -1,17 +1,31 @@
 /**
  * ProgramsWidget - Widget compact récapitulatif des programmes actifs
+ * Design: Organic Luxury - Vert Mousse & Terre Cuite
  * Affiche uniquement si l'utilisateur est inscrit à au moins un programme
  */
 
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { ChevronRight, Zap, Heart, Check } from 'lucide-react-native'
+import { ChevronRight, Zap, Leaf, Check } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useTheme } from '../../contexts/ThemeContext'
+import { GlassCard } from '../ui/GlassCard'
 import { spacing, typography, radius } from '../../constants/theme'
 import { useMetabolicBoostStore } from '../../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../../stores/wellness-program-store'
+
+// Organic color palette matching ProgramsScreen
+const PROGRAM_COLORS = {
+  metabolic: {
+    gradient: ['#E2DCCA', '#D4A574'] as const,
+    accent: '#C87863',
+  },
+  wellness: {
+    gradient: ['#EDF3EC', '#B8CBB4'] as const,
+    accent: '#4A6741',
+  },
+}
 
 interface ProgramsWidgetProps {
   onPress?: () => void
@@ -48,78 +62,82 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
   const activeCount = (isMetabolicEnrolled ? 1 : 0) + (isWellnessEnrolled ? 1 : 0)
 
   return (
-    <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.bg.elevated }]}
-      onPress={handlePress}
-      activeOpacity={0.8}
-    >
-      <View style={styles.content}>
-        <View style={styles.left}>
-          <View style={styles.iconsRow}>
-            {isMetabolicEnrolled && (
-              <LinearGradient
-                colors={['#FEF3C7', '#FDE68A']}
-                style={styles.iconBadge}
-              >
-                <Zap size={14} color="#D97706" />
-              </LinearGradient>
-            )}
-            {isWellnessEnrolled && (
-              <LinearGradient
-                colors={['#EDE9FE', '#DDD6FE']}
-                style={[styles.iconBadge, isMetabolicEnrolled && styles.iconOverlap]}
-              >
-                <Heart size={14} color="#7C3AED" />
-              </LinearGradient>
-            )}
+    <GlassCard style={styles.container} variant="subtle">
+      <TouchableOpacity
+        style={styles.touchable}
+        onPress={handlePress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.content}>
+          <View style={styles.left}>
+            <View style={styles.iconsRow}>
+              {isMetabolicEnrolled && (
+                <LinearGradient
+                  colors={PROGRAM_COLORS.metabolic.gradient}
+                  style={styles.iconBadge}
+                >
+                  <Zap size={14} color={PROGRAM_COLORS.metabolic.accent} />
+                </LinearGradient>
+              )}
+              {isWellnessEnrolled && (
+                <LinearGradient
+                  colors={PROGRAM_COLORS.wellness.gradient}
+                  style={[styles.iconBadge, isMetabolicEnrolled && styles.iconOverlap]}
+                >
+                  <Leaf size={14} color={PROGRAM_COLORS.wellness.accent} />
+                </LinearGradient>
+              )}
+            </View>
+            <View style={styles.textContent}>
+              <Text style={[styles.title, { color: colors.text.primary }]}>
+                {activeCount} programme{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''}
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
+                {isMetabolicEnrolled && `Boost métabolique Semaine ${metabolicWeek}`}
+                {isMetabolicEnrolled && isWellnessEnrolled && ' · '}
+                {isWellnessEnrolled && `Bien-être Semaine ${wellnessWeek}`}
+              </Text>
+            </View>
           </View>
-          <View style={styles.textContent}>
-            <Text style={[styles.title, { color: colors.text.primary }]}>
-              {activeCount} programme{activeCount > 1 ? 's' : ''} actif{activeCount > 1 ? 's' : ''}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              {isMetabolicEnrolled && `Boost métabolique Semaine ${metabolicWeek}`}
-              {isMetabolicEnrolled && isWellnessEnrolled && ' · '}
-              {isWellnessEnrolled && `Bien-être Semaine ${wellnessWeek}`}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.right}>
-          {/* Progress indicators */}
-          <View style={styles.progressBars}>
-            {isMetabolicEnrolled && (
-              <View style={styles.miniProgress}>
-                <View
-                  style={[
-                    styles.miniProgressFill,
-                    { width: `${metabolicProgress}%`, backgroundColor: '#F59E0B' }
-                  ]}
-                />
-              </View>
-            )}
-            {isWellnessEnrolled && (
-              <View style={styles.miniProgress}>
-                <View
-                  style={[
-                    styles.miniProgressFill,
-                    { width: `${wellnessProgress}%`, backgroundColor: '#8B5CF6' }
-                  ]}
-                />
-              </View>
-            )}
+          <View style={styles.right}>
+            {/* Progress indicators with organic colors */}
+            <View style={styles.progressBars}>
+              {isMetabolicEnrolled && (
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(200, 120, 99, 0.2)' }]}>
+                  <View
+                    style={[
+                      styles.miniProgressFill,
+                      { width: `${metabolicProgress}%`, backgroundColor: PROGRAM_COLORS.metabolic.accent }
+                    ]}
+                  />
+                </View>
+              )}
+              {isWellnessEnrolled && (
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(74, 103, 65, 0.2)' }]}>
+                  <View
+                    style={[
+                      styles.miniProgressFill,
+                      { width: `${wellnessProgress}%`, backgroundColor: PROGRAM_COLORS.wellness.accent }
+                    ]}
+                  />
+                </View>
+              )}
+            </View>
+            <ChevronRight size={18} color={colors.text.muted} />
           </View>
-          <ChevronRight size={18} color={colors.text.muted} />
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </GlassCard>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    // GlassCard handles borderRadius
+  },
+  touchable: {
+    // Full touch area
   },
   content: {
     flexDirection: 'row',
@@ -168,7 +186,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    // backgroundColor set dynamically with organic colors
     overflow: 'hidden',
   },
   miniProgressFill: {

@@ -25,7 +25,7 @@ import {
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius } from '../constants/theme'
+import { spacing, typography, radius, fonts } from '../constants/theme'
 import { useMeditationStore } from '../stores/meditation-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
 import { MEDITATION_SESSIONS, type MeditationSession } from '../services/meditation-tts-service'
@@ -259,7 +259,7 @@ export default function MeditationListScreen() {
         <View style={[styles.infoCard, { backgroundColor: colors.bg.tertiary }]}>
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
             Les méditations sont générées par IA et cachées localement pour une écoute hors-ligne.
-            Chaque session est débloquée selon votre progression dans le programme Bien-être.
+            Chaque session est débloquée selon ta progression dans le programme Bien-être.
           </Text>
         </View>
 
@@ -294,6 +294,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   headerSubtitle: {
     fontSize: 12,

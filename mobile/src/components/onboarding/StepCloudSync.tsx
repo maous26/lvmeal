@@ -101,7 +101,7 @@ export function StepCloudSync({ onComplete }: StepCloudSyncProps) {
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
-          source={require('../../../logo1.png')}
+          source={require('../../../assets/logo5.png')}
           style={styles.logo}
           resizeMode="contain"
         />

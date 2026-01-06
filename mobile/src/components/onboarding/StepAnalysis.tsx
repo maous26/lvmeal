@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { View, Text, StyleSheet, ActivityIndicator, Animated, Easing } from 'react-native'
 import { Card } from '../ui/Card'
 import { radius, spacing, typography } from '../../constants/theme'
 import type { UserProfile, NutritionalNeeds, NutritionInfo } from '../../types'
@@ -21,6 +21,51 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
   const [showResults, setShowResults] = useState(false)
   const [personalizedNeeds, setPersonalizedNeeds] = useState<CalorieRecommendation | null>(null)
   const [loadingMessage, setLoadingMessage] = useState('Analyse en cours...')
+
+  // Celebration animations
+  const scaleAnim = useRef(new Animated.Value(0)).current
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const successScale = useRef(new Animated.Value(0.8)).current
+  const successFade = useRef(new Animated.Value(0)).current
+
+  // Run celebration animation when results show
+  useEffect(() => {
+    if (showResults) {
+      // Success badge animation (bounce in)
+      Animated.parallel([
+        Animated.spring(successScale, {
+          toValue: 1,
+          friction: 4,
+          tension: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(successFade, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start()
+
+      // Content fade in with scale
+      Animated.sequence([
+        Animated.delay(200),
+        Animated.parallel([
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 5,
+            tension: 40,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 400,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start()
+    }
+  }, [showResults])
 
   useEffect(() => {
     async function calculateRAGNeeds() {
@@ -106,8 +151,17 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
 
   return (
     <View style={styles.container}>
-      {/* Success message */}
-      <View style={[styles.success, { backgroundColor: colors.accent.light }]}>
+      {/* Success message with bounce animation */}
+      <Animated.View
+        style={[
+          styles.success,
+          { backgroundColor: colors.accent.light },
+          {
+            opacity: successFade,
+            transform: [{ scale: successScale }],
+          },
+        ]}
+      >
         <View style={styles.successIcon}>
           <Text style={styles.successEmoji}>✓</Text>
         </View>
@@ -119,9 +173,15 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
             Voici tes objectifs personnalisés
           </Text>
         </View>
-      </View>
+      </Animated.View>
 
-      {/* Calories target */}
+      {/* Calories target with zoom-in animation */}
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        }}
+      >
       <Card style={[styles.caloriesCard, { backgroundColor: colors.bg.elevated }]}>
         <View style={styles.caloriesHeader}>
           <Text style={styles.caloriesIcon}>🔥</Text>
@@ -154,6 +214,7 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
           </View>
         )}
       </Card>
+      </Animated.View>
 
       {/* Macros breakdown */}
       <View style={styles.macrosSection}>

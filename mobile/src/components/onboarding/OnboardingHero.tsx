@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronRight } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { spacing, radius, typography, shadows, fonts, organicPalette } from '../../constants/theme'
 import { Button } from '../ui/Button'
 
 const { width, height } = Dimensions.get('window')
@@ -28,7 +28,8 @@ interface OnboardingHeroProps {
 export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
   const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
-  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.3)'
+  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(250,249,247,0.3)'
+  const offWhite = '#FAF9F7'
   const footerHeight = 52 + spacing.lg + spacing.md + insets.bottom // button + paddings
 
   // Smooth fade-in animation from splash screen
@@ -57,7 +58,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
     <Animated.View
       style={[
         styles.container,
-        { backgroundColor: colors.bg.primary },
+        { backgroundColor: offWhite },
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
       ]}
     >
@@ -76,7 +77,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
           {/* Gradient overlay for text readability */}
           <LinearGradient
-            colors={['transparent', overlayMid, colors.bg.primary]}
+            colors={['transparent', overlayMid, offWhite]}
             locations={[0, 0.5, 1]}
             style={styles.imageOverlay}
           />
@@ -87,30 +88,30 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
           {/* Brand */}
           <View style={styles.brandContainer}>
             <Text style={[styles.brandName, { color: colors.accent.primary }]}>
-              Love Your Meal
+              LYM
             </Text>
           </View>
 
           {/* Main headline */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
-            Reprends le contrôle{'\n'}de ton alimentation
+            Retrouve le plaisir{'\n'}de bien manger
           </Text>
 
           {/* Subheadline */}
           <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
-            Sans frustration. Sans régime strict.{'\n'}
-            Juste toi, tes objectifs et un coach bienveillant.
+            Pas un énième tracker. Un vrai compagnon{'\n'}
+            qui s'adapte à toi, sans pression.
           </Text>
 
           {/* Trust badges */}
           <View style={styles.trustBadges}>
             <View style={[styles.badge, { backgroundColor: colors.success + '15' }]}>
               <Text style={styles.badgeEmoji}>✓</Text>
-              <Text style={[styles.badgeText, { color: colors.success }]}>100% personnalisé</Text>
+              <Text style={[styles.badgeText, { color: colors.success }]}>Sur-mesure</Text>
             </View>
             <View style={[styles.badge, { backgroundColor: colors.accent.light }]}>
-              <Text style={styles.badgeEmoji}>🧑‍🏫</Text>
-              <Text style={[styles.badgeText, { color: colors.accent.primary }]}>Coach intégré</Text>
+              <Text style={styles.badgeEmoji}>♡</Text>
+              <Text style={[styles.badgeText, { color: colors.accent.primary }]}>Zéro culpabilité</Text>
             </View>
           </View>
 
@@ -122,11 +123,11 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
       </ScrollView>
 
       {/* Fixed CTA footer (always visible) */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.bg.primary }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md, backgroundColor: offWhite }]}>
         <TouchableOpacity
           onPress={onGetStarted}
           style={{
-            backgroundColor: '#FF6B5B',
+            backgroundColor: organicPalette.clay,
             paddingVertical: spacing.lg,
             paddingHorizontal: spacing.xl,
             borderRadius: radius.xl,
@@ -137,7 +138,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', marginRight: spacing.sm }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm }}>
             Commencer mon parcours
           </Text>
           <ChevronRight size={20} color="#FFFFFF" />
@@ -196,16 +197,20 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   headline: {
-    ...typography.h1,
+    fontSize: 36,
+    lineHeight: 42,
+    fontFamily: fonts.serif.bold,
+    letterSpacing: -0.3,
     marginBottom: spacing.md,
   },
   subheadline: {
     ...typography.lg,
+    fontFamily: fonts.sans.regular,
     lineHeight: 28,
     marginBottom: spacing.lg,
   },

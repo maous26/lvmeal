@@ -24,6 +24,9 @@ import {
   Flame,
   Trophy,
   Sparkles,
+  Beef,
+  Wheat,
+  Droplets,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
@@ -34,6 +37,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 import * as Haptics from 'expo-haptics'
 
 import { Card } from '../components/ui'
+import { GlassCard } from '../components/ui/GlassCard'
+import { LiquidProgress } from '../components/dashboard/LiquidProgress'
 import {
   CaloricBalance,
   ProgramsWidget,
@@ -41,7 +46,7 @@ import {
   UnifiedCoachBubble,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, shadows } from '../constants/theme'
+import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -53,12 +58,12 @@ import type { MealType } from '../types'
 
 const { width } = Dimensions.get('window')
 
-// Meal config function that uses dynamic colors
+// Meal config function that uses dynamic organic colors
 const getMealConfig = (colors: typeof import('../constants/theme').lightColors): Record<MealType, { label: string; icon: string; color: string; gradient: readonly [string, string] }> => ({
-  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning, gradient: ['#FCD34D', '#F59E0B'] as const },
-  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary, gradient: ['#38BDF8', '#0EA5E9'] as const },
-  snack: { label: 'Collation', icon: '🍎', color: colors.success, gradient: ['#34D399', '#10B981'] as const },
-  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary, gradient: ['#FB7185', '#F43F5E'] as const },
+  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning, gradient: ['#E3BE91', '#D4A574'] as const },      // Caramel
+  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary, gradient: ['#5C7A52', '#4A6741'] as const },         // Mousse
+  snack: { label: 'Collation', icon: '🍎', color: colors.success, gradient: ['#7A9E7E', '#5C8A5E'] as const },               // Sauge
+  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary, gradient: ['#D09789', '#C87863'] as const },        // Terre Cuite
 })
 
 const mealOrder: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
@@ -256,8 +261,8 @@ export default function HomeScreen() {
   const effectiveCalories = baseGoals.calories + (baseGoals.sportCaloriesBonus || 0)
   const goals = { ...baseGoals, calories: effectiveCalories }
 
-  const greeting = getGreeting()
-  const userName = profile?.firstName || profile?.name?.split(' ')[0] || 'Utilisateur'
+  const userName = profile?.firstName || profile?.name?.split(' ')[0] || ''
+  const greeting = getGreeting(userName || undefined)
   const userInitials = userName.substring(0, 2).toUpperCase()
 
   // Date navigation
@@ -377,8 +382,8 @@ export default function HomeScreen() {
           <UnifiedCoachBubble />
         </View>
 
-        {/* Main Calories Widget */}
-        <View style={[styles.caloriesSection, { backgroundColor: colors.bg.elevated }, shadows.md]}>
+        {/* Main Calories Widget - Glassmorphism + LiquidProgress */}
+        <GlassCard style={styles.caloriesSection} variant="elevated" delay={100}>
           <View style={styles.caloriesHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Aujourd'hui</Text>
             <View style={[styles.calorieBadge, { backgroundColor: colors.accent.light }]}>
@@ -389,45 +394,42 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <View style={styles.caloriesContent}>
-            <CircularProgress
+          <View style={styles.caloriesContentCentered}>
+            <LiquidProgress
               value={totals.calories}
               max={goals.calories}
-              size={160}
-              strokeWidth={14}
-              colors={colors}
+              size={200}
+              strokeWidth={16}
             />
-
-            <View style={styles.caloriesStats}>
-              <View style={styles.calorieStatItem}>
-                <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
-                <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Consommé</Text>
-                <Text style={[styles.calorieStatValue, { color: colors.text.primary }]}>
-                  {formatNumber(totals.calories)}
-                </Text>
-              </View>
-              <View style={styles.calorieStatItem}>
-                <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
-                <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Objectif</Text>
-                <Text style={[styles.calorieStatValue, { color: colors.text.primary }]}>
-                  {formatNumber(goals.calories)}
-                </Text>
-              </View>
-              {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
-                <View style={styles.calorieStatItem}>
-                  <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
-                  <Text style={[styles.calorieStatLabel, { color: colors.text.tertiary }]}>Bonus sport</Text>
-                  <Text style={[styles.calorieStatValue, { color: colors.warning }]}>
-                    +{baseGoals.sportCaloriesBonus}
-                  </Text>
-                </View>
-              )}
-            </View>
           </View>
-        </View>
 
-        {/* Macros Widget */}
-        <View style={[styles.macrosSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+          {/* Condensed stats row */}
+          <View style={styles.caloriesStatsRow}>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(totals.calories)} consommées
+              </Text>
+            </View>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(goals.calories)} objectif
+              </Text>
+            </View>
+            {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
+              <View style={styles.calorieStatChip}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
+                <Text style={[styles.calorieStatChipText, { color: colors.warning }]}>
+                  +{baseGoals.sportCaloriesBonus} sport
+                </Text>
+              </View>
+            )}
+          </View>
+        </GlassCard>
+
+        {/* Macros Widget - Glassmorphism avec gradients organiques */}
+        <GlassCard style={styles.macrosSection} delay={200}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
             Macronutriments
           </Text>
@@ -437,8 +439,8 @@ export default function HomeScreen() {
             current={totals.proteins}
             target={goals.proteins}
             color={colors.nutrients.proteins}
-            gradientColors={['#38BDF8', '#0284C7']}
-            icon={<Text style={{ fontSize: 14 }}>🥩</Text>}
+            gradientColors={['#5C7A52', '#4A6741']}
+            icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
           />
 
           <MacroProgressBar
@@ -446,8 +448,8 @@ export default function HomeScreen() {
             current={totals.carbs}
             target={goals.carbs}
             color={colors.nutrients.carbs}
-            gradientColors={['#FBBF24', '#F59E0B']}
-            icon={<Text style={{ fontSize: 14 }}>🍞</Text>}
+            gradientColors={['#E3BE91', '#D4A574']}
+            icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
           />
 
           <MacroProgressBar
@@ -455,13 +457,13 @@ export default function HomeScreen() {
             current={totals.fats}
             target={goals.fats}
             color={colors.nutrients.fats}
-            gradientColors={['#C084FC', '#A855F7']}
-            icon={<Text style={{ fontSize: 14 }}>🥑</Text>}
+            gradientColors={['#B8A0CC', '#9B7BB8']}
+            icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
           />
-        </View>
+        </GlassCard>
 
-        {/* Meals Section */}
-        <View style={[styles.mealsSection, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+        {/* Meals Section - GlassCard */}
+        <GlassCard style={styles.mealsSection} delay={300}>
           <View style={styles.mealsSectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Journal des repas</Text>
             <View style={styles.dateSelector}>
@@ -563,7 +565,7 @@ export default function HomeScreen() {
               </View>
             )
           })}
-        </View>
+        </GlassCard>
 
         {/* Programs Widget - Compact summary, navigates to Programs tab */}
         <View style={styles.programsWidgetContainer}>
@@ -657,6 +659,7 @@ const styles = StyleSheet.create({
   userName: {
     ...typography.h4,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   headerIconButton: {
     width: 40,
@@ -681,14 +684,13 @@ const styles = StyleSheet.create({
   statValue: {
     ...typography.bodyMedium,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   statLabel: {
     ...typography.caption,
   },
-  // Calories Section
+  // Calories Section - Updated for GlassCard + LiquidProgress
   caloriesSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   caloriesHeader: {
@@ -700,6 +702,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.h4,
     fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
   },
   calorieBadge: {
     flexDirection: 'row',
@@ -712,6 +715,13 @@ const styles = StyleSheet.create({
   calorieBadgeText: {
     ...typography.captionMedium,
   },
+  // New centered layout for LiquidProgress
+  caloriesContentCentered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  // Old layout kept for reference
   caloriesContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -721,11 +731,32 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     letterSpacing: -1,
+    fontFamily: fonts.serif.bold,
   },
   caloriesRemainingLabel: {
     ...typography.caption,
     marginTop: 2,
   },
+  // New stats row layout
+  caloriesStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  calorieStatChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(74, 103, 65, 0.08)', // Légère teinte verte
+  },
+  calorieStatChipText: {
+    ...typography.caption,
+  },
+  // Old individual stat items
   caloriesStats: {
     flex: 1,
     marginLeft: spacing.lg,
@@ -749,10 +780,8 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     fontWeight: '600',
   },
-  // Macros Section
+  // Macros Section - GlassCard handles padding & borderRadius
   macrosSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   macroItem: {
@@ -799,10 +828,8 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: radius.full,
   },
-  // Meals Section
+  // Meals Section - GlassCard handles padding & borderRadius
   mealsSection: {
-    borderRadius: radius.xl,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   mealsSectionHeader: {

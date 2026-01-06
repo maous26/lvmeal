@@ -37,7 +37,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius } from '../constants/theme'
+import { colors as staticColors, spacing, typography, radius, fonts } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
 import {
   loadStaticRecipes,
@@ -48,12 +48,13 @@ import { NutriScoreBadge } from '../components/ui'
 import type { Recipe, MealType } from '../types'
 
 // Category configurations - Filtres pertinents et fonctionnels
+// Organic Luxury palette colors
 const CATEGORIES = [
-  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#F59E0B' },
-  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#EF4444' },
-  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#8B5CF6' },
-  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#22C55E' },
-  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#10B981' },
+  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#D4A574' },      // Caramel
+  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#4A6741' },       // Vert Mousse
+  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#C87863' },           // Terre Cuite
+  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#7A9E7E' },      // Sauge
+  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#9B7BB8' },     // Lavande
 ]
 
 const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
@@ -1003,6 +1004,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontWeight: '600',
     letterSpacing: 1,
+    fontFamily: fonts.serif.bold,
   },
   viewAllText: {
     ...typography.small,
@@ -1068,6 +1070,7 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: '#FFFFFF',
     marginBottom: 4,
+    fontFamily: fonts.serif.semibold,
   },
   recipeMeta: {
     flexDirection: 'row',
@@ -1148,6 +1151,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...typography.h3,
     fontWeight: '600',
+    fontFamily: fonts.serif.bold,
   },
   modalCloseButton: {
     width: 36,

@@ -86,7 +86,7 @@ export default function NotificationSettingsScreen() {
       >
         {/* Description */}
         <Text style={[styles.description, { color: colors.text.secondary }]}>
-          Configurez les notifications intelligentes de votre coach IA. Ces notifications vous aident à atteindre vos objectifs.
+          Configure les notifications intelligentes de ton coach IA. Ces notifications t'aident à atteindre tes objectifs.
         </Text>
 
         {/* Master Toggle */}
@@ -131,7 +131,7 @@ export default function NotificationSettingsScreen() {
                 Insights quotidiens
               </Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                Conseil personnalisé chaque matin à 9h basé sur vos données
+                Conseil personnalisé chaque matin à 9h basé sur tes données
               </Text>
             </View>
             <Switch
@@ -194,7 +194,7 @@ export default function NotificationSettingsScreen() {
             Comment ça marche ?
           </Text>
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            Votre coach IA analyse vos données de nutrition, sommeil et activité pour vous envoyer des conseils personnalisés. Plus vous utilisez l'app, plus les insights sont pertinents.
+            Ton coach IA analyse tes données de nutrition, sommeil et activité pour t'envoyer des conseils personnalisés. Plus tu utilises l'app, plus les insights sont pertinents.
           </Text>
         </Card>
       </ScrollView>

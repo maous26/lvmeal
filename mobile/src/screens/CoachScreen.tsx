@@ -44,7 +44,7 @@ import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius, shadows } from '../constants/theme'
+import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -88,21 +88,24 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
 
       {/* Welcome message */}
       <Text style={[welcomeStyles.greeting, { color: colors.accent.primary }]}>
-        Salut {firstName} ! 👋
+        Salut {firstName} !
       </Text>
       <Text style={[welcomeStyles.title, { color: colors.text.primary }]}>
-        Je suis LymIA, ton coach nutrition
+        Bienvenue sur LYM
       </Text>
 
       <View style={[welcomeStyles.messageBox, { backgroundColor: colors.bg.secondary }]}>
         <Text style={[welcomeStyles.message, { color: colors.text.primary }]}>
-          Bienvenue ! Ici tu trouveras mes conseils personnalisés, analyses et alertes pour t'accompagner dans ton parcours nutrition.
+          LYM, c'est{' '}
+          <Text style={{ fontWeight: '600', fontStyle: 'italic' }}>Love Your Meal</Text>
+          {' '}— parce que bien manger, c'est le premier pas vers le bien-être.
         </Text>
         <Text style={[welcomeStyles.message, { color: colors.text.secondary, marginTop: spacing.sm }]}>
-          Mon rôle : t'aider à atteindre tes objectifs{' '}
+          Ici, pas de simple tracker. Un vrai{' '}
           <Text style={{ fontWeight: '600', color: colors.text.primary }}>
-            sans frustration ni culpabilité
-          </Text>.
+            accompagnement personnalisé
+          </Text>
+          {' '}pour t'aider à atteindre tes objectifs, sans frustration.
         </Text>
       </View>
 
@@ -113,7 +116,7 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
             <TrendingUp size={16} color={staticColors.success} />
           </View>
           <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
-            Suivi intelligent de tes repas
+            Conseils adaptés à ton profil
           </Text>
         </View>
         <View style={welcomeStyles.featureItem}>
@@ -121,7 +124,7 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
             <Heart size={16} color={staticColors.secondary.primary} />
           </View>
           <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
-            Bienveillance avant tout
+            Bienveillance, zéro culpabilité
           </Text>
         </View>
       </View>
@@ -154,7 +157,9 @@ const welcomeStyles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   title: {
-    ...typography.h3,
+    fontSize: 22,
+    fontFamily: fonts.serif.semibold,
+    fontWeight: '600',
     marginBottom: spacing.md,
   },
   messageBox: {
@@ -551,7 +556,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    ...typography.h1,
+    fontSize: 32,
+    fontFamily: fonts.serif.bold,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
@@ -570,7 +577,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   emptyTitle: {
-    ...typography.h2,
+    fontSize: 24,
+    fontFamily: fonts.serif.semibold,
+    fontWeight: '600',
     textAlign: 'center',
   },
   emptySubtitle: {
@@ -628,7 +637,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   messageTitle: {
-    ...typography.bodyMedium,
+    fontSize: 16,
+    fontFamily: fonts.serif.semibold,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },

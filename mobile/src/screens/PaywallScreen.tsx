@@ -34,6 +34,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../contexts/ThemeContext'
 import { useOnboardingStore, SUBSCRIPTION_PRICE } from '../stores/onboarding-store'
 import { useUserStore } from '../stores/user-store'
+import { fonts } from '../constants/theme'
 
 export default function PaywallScreen() {
   const navigation = useNavigation()
@@ -306,6 +307,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 28,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
     textAlign: 'center',
     lineHeight: 36,
     marginBottom: 12,
@@ -324,6 +326,7 @@ const styles = StyleSheet.create({
   benefitsTitle: {
     fontSize: 18,
     fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
     marginBottom: 20,
   },
   benefitsList: {
@@ -386,6 +389,7 @@ const styles = StyleSheet.create({
   priceAmount: {
     fontSize: 36,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   pricePeriod: {
     fontSize: 16,

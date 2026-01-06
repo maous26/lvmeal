@@ -152,7 +152,7 @@ export function MealInputMethodsGrid({ onMethodSelect }: MealInputMethodsGridPro
         >
           <Info size={16} color={colors.accent.primary} />
           <Text style={styles.suggestionText}>
-            Vous utilisez souvent "{ALL_INPUT_METHODS.find(m => m.id === suggestedMethod)?.label}".
+            Tu utilises souvent "{ALL_INPUT_METHODS.find(m => m.id === suggestedMethod)?.label}".
             <Text style={styles.suggestionAction}> Épingler ?</Text>
           </Text>
         </TouchableOpacity>

@@ -91,11 +91,12 @@ export function calculateAge(birthDate: string): number {
   return age
 }
 
-export function getGreeting(): string {
+export function getGreeting(firstName?: string): string {
   const hour = new Date().getHours()
-  if (hour < 12) return 'Bonjour'
-  if (hour < 18) return 'Bon après-midi'
-  return 'Bonsoir'
+  const name = firstName ? ` ${firstName}` : ''
+  if (hour < 12) return `Bonjour${name}`
+  if (hour < 18) return `Bon après-midi${name}`
+  return `Bonsoir${name}`
 }
 
 export function generateId(): string {

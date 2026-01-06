@@ -1,82 +1,119 @@
 // Love Your Meal - Design System Theme
-// Direction artistique : Bienveillant, Professionnel, Confiance
-// Palette principale : Bleu (confiance) + Corail (chaleur)
+// Direction artistique : Organic Luxury - Nature, Bien-être, Élégance
+// Palette principale : Vert Mousse (sérénité) + Terre Cuite (chaleur)
+
+// =============================================================================
+// FONTS - Organic Luxury Typography
+// =============================================================================
+export const fonts = {
+  // Serif pour titres luxueux (Playfair Display)
+  serif: {
+    regular: 'PlayfairDisplay_400Regular',
+    medium: 'PlayfairDisplay_500Medium',
+    semibold: 'PlayfairDisplay_600SemiBold',
+    bold: 'PlayfairDisplay_700Bold',
+  },
+  // Sans-serif pour corps de texte (Inter)
+  sans: {
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
+  },
+}
+
+// =============================================================================
+// ORGANIC PALETTE - Couleurs naturelles et apaisantes
+// =============================================================================
+export const organicPalette = {
+  sage: '#7A9E7E',       // Vert Sauge - doux et apaisant
+  sand: '#E2DCCA',       // Sable Chaud - neutre chaleureux
+  stone: '#8B8680',      // Pierre - gris terreux
+  moss: '#4A6741',       // Mousse - vert profond luxueux
+  clay: '#B8856C',       // Argile - terre naturelle
+  ocean: '#2D7A9C',      // Bleu Océan - profond et calme
+  lavender: '#9B7BB8',   // Lavande - douceur
+  caramel: '#D4A574',    // Caramel - chaleur douce
+}
 
 // =============================================================================
 // LIGHT THEME (Default)
 // =============================================================================
 export const lightColors = {
-  // Backgrounds - Crème chaleureux
+  // Backgrounds - Crème chaud organique
   bg: {
-    primary: '#FAFAF9',
-    secondary: '#F5F5F3',
-    tertiary: '#EFEEEC',
+    primary: '#FDFCFA',      // Crème chaud
+    secondary: '#F7F5F2',    // Beige pâle
+    tertiary: '#F0EDE8',     // Sable très clair
     elevated: '#FFFFFF',
-    overlay: 'rgba(0, 70, 110, 0.6)',
+    overlay: 'rgba(74, 103, 65, 0.6)', // Overlay vert mousse
   },
 
-  // Text - Charbon doux
+  // Text - Charbon doux avec teinte chaude
   text: {
-    primary: '#1A2B3C',
-    secondary: '#4A5E72',
-    tertiary: '#7A8FA6',
-    muted: '#B0BFCF',
+    primary: '#2D3A2E',      // Charbon avec teinte verte
+    secondary: '#4A5E4C',    // Gris-vert moyen
+    tertiary: '#7A8B7C',     // Gris-vert clair
+    muted: '#A8B5AA',        // Gris-vert désaturé
     inverse: '#FFFFFF',
   },
 
-  // Primary - Bleu Confiance
+  // Primary - Vert Mousse (luxe naturel)
   accent: {
-    primary: '#009FEB',
-    secondary: '#0080C9',
-    hover: '#007AB8',
-    light: '#EFF8FF',
-    muted: '#B6E3FF',
+    primary: '#4A6741',      // Vert Mousse profond
+    secondary: '#5C7A52',    // Vert Mousse clair
+    hover: '#3D5636',        // Vert Mousse foncé
+    light: '#EDF3EC',        // Vert très pâle
+    muted: '#B8CBB4',        // Vert désaturé
   },
 
-  // Secondary - Corail Chaleur
+  // Secondary - Terre Cuite (chaleur naturelle)
   secondary: {
-    primary: '#FF6B5B',
-    hover: '#E84C3D',
-    light: '#FFF5F3',
-    muted: '#FFD4CC',
+    primary: '#C87863',      // Terre Cuite
+    hover: '#B56A56',        // Terre Cuite foncé
+    light: '#FBF5F3',        // Terre Cuite très pâle
+    muted: '#E5CFC9',        // Terre Cuite désaturé
   },
 
-  // Semantic
-  success: '#10B981',
-  successLight: '#ECFDF5',
-  warning: '#F59E0B',
-  warningLight: '#FFFBEB',
-  error: '#EF4444',
-  errorLight: '#FEF2F2',
-  info: '#3B82F6',
-  infoLight: '#EFF6FF',
+  // Semantic - Ajustés pour palette organique
+  success: '#5C8A5E',        // Vert naturel
+  successLight: '#EDF5EE',
+  warning: '#D4A574',        // Caramel
+  warningLight: '#FDF8F3',
+  error: '#C75D5D',          // Rouge terre
+  errorLight: '#FDF2F2',
+  info: '#2D7A9C',           // Océan
+  infoLight: '#EEF6F9',
 
-  // Nutrients - Couleurs vives pour les macros
+  // Nutrients - Palette organique douce
   nutrients: {
-    calories: '#FF6B5B',
-    proteins: '#009FEB',
-    carbs: '#F59E0B',
-    fats: '#A855F7',
-    fiber: '#10B981',
-    water: '#06B6D4',
+    calories: '#C87863',     // Terre cuite
+    proteins: '#4A6741',     // Mousse
+    carbs: '#D4A574',        // Caramel doux
+    fats: '#9B7BB8',         // Lavande
+    fiber: '#7A9E7E',        // Sauge
+    water: '#6BA3BE',        // Océan clair
   },
 
-  // Borders
+  // Borders - Teintes chaudes
   border: {
-    light: '#E8E8E4',
-    default: '#D4D4CD',
-    medium: '#A3A39A',
-    focus: '#009FEB',
+    light: '#EDE9E3',        // Beige très clair
+    default: '#D8D2C8',      // Sable moyen
+    medium: '#B5AFA5',       // Pierre claire
+    focus: '#4A6741',        // Vert mousse
   },
 
-  // Gamification
+  // Gamification - Teintes naturelles
   gamification: {
-    bronze: '#CD7F32',
-    silver: '#C0C0C0',
-    gold: '#FFD700',
-    platinum: '#E5E4E2',
-    diamond: '#B9F2FF',
+    bronze: '#B8856C',       // Argile
+    silver: '#A8B5AA',       // Sauge désaturé
+    gold: '#D4A574',         // Caramel
+    platinum: '#E2DCCA',     // Sable
+    diamond: '#7A9E7E',      // Sauge
   },
+
+  // Organic specific
+  organic: organicPalette,
 }
 
 // =============================================================================
@@ -160,58 +197,66 @@ export const darkColors = {
 export const colors = lightColors
 
 // =============================================================================
-// SHADOWS
+// SHADOWS - Teintes organiques vertes/terreuses
 // =============================================================================
 export const shadows = {
   xs: {
-    shadowColor: 'rgba(0, 70, 110, 0.06)',
+    shadowColor: 'rgba(74, 103, 65, 0.06)',  // Vert mousse
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 1,
     shadowRadius: 2,
     elevation: 1,
   },
   sm: {
-    shadowColor: 'rgba(0, 70, 110, 0.08)',
+    shadowColor: 'rgba(74, 103, 65, 0.08)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 2,
   },
   default: {
-    shadowColor: 'rgba(0, 70, 110, 0.10)',
+    shadowColor: 'rgba(74, 103, 65, 0.10)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 4,
   },
   md: {
-    shadowColor: 'rgba(0, 70, 110, 0.12)',
+    shadowColor: 'rgba(74, 103, 65, 0.12)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 24,
     elevation: 8,
   },
   lg: {
-    shadowColor: 'rgba(0, 70, 110, 0.16)',
+    shadowColor: 'rgba(74, 103, 65, 0.16)',
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 1,
     shadowRadius: 48,
     elevation: 16,
   },
-  // Glow effects for CTAs
+  // Glow effects organiques
   glowPrimary: {
-    shadowColor: '#009FEB',
+    shadowColor: '#4A6741',    // Vert mousse
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
     elevation: 8,
   },
-  glowCoral: {
-    shadowColor: '#FF6B5B',
+  glowSecondary: {
+    shadowColor: '#C87863',    // Terre cuite
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
     elevation: 8,
+  },
+  // Glass card shadow
+  glass: {
+    shadowColor: 'rgba(74, 103, 65, 0.12)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 32,
+    elevation: 6,
   },
 }
 
@@ -246,104 +291,121 @@ export const radius = {
 }
 
 // =============================================================================
-// TYPOGRAPHY
+// TYPOGRAPHY - Organic Luxury (Playfair Display + Inter)
 // =============================================================================
 export const typography = {
-  // Display - for hero/splash screens
+  // Display - for hero/splash screens (Serif luxueux)
   display: {
     fontSize: 48,
     lineHeight: 52,
     fontWeight: '700' as const,
-    letterSpacing: -1.5,
+    fontFamily: fonts.serif.bold,
+    letterSpacing: -0.5,
   },
-  // Headings
+  // Headings (Serif luxueux)
   h1: {
     fontSize: 36,
     lineHeight: 42,
     fontWeight: '700' as const,
-    letterSpacing: -1,
+    fontFamily: fonts.serif.bold,
+    letterSpacing: -0.3,
   },
   h2: {
     fontSize: 28,
     lineHeight: 34,
     fontWeight: '600' as const,
-    letterSpacing: -0.5,
+    fontFamily: fonts.serif.semibold,
+    letterSpacing: -0.2,
   },
   h3: {
     fontSize: 22,
     lineHeight: 28,
     fontWeight: '600' as const,
-    letterSpacing: -0.3,
+    fontFamily: fonts.serif.semibold,
+    letterSpacing: 0,
   },
   h4: {
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600' as const,
-    letterSpacing: -0.2,
+    fontFamily: fonts.serif.semibold,
+    letterSpacing: 0,
   },
-  // Body text
+  // Body text (Sans-serif Inter)
   lg: {
     fontSize: 18,
     lineHeight: 28,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   md: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   body: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   bodyMedium: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '500' as const,
+    fontFamily: fonts.sans.medium,
   },
   bodySemibold: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600' as const,
+    fontFamily: fonts.sans.semibold,
   },
   // Small text
   sm: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   small: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   smallMedium: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500' as const,
+    fontFamily: fonts.sans.medium,
   },
   // Caption
   xs: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   caption: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as const,
+    fontFamily: fonts.sans.regular,
   },
   captionMedium: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '500' as const,
+    fontFamily: fonts.sans.medium,
   },
   // Labels
   label: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500' as const,
+    fontFamily: fonts.sans.medium,
     letterSpacing: 0.2,
   },
   // Button text
@@ -351,12 +413,14 @@ export const typography = {
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '600' as const,
+    fontFamily: fonts.sans.semibold,
     letterSpacing: 0.3,
   },
   buttonSm: {
     fontSize: 14,
     lineHeight: 18,
     fontWeight: '600' as const,
+    fontFamily: fonts.sans.semibold,
     letterSpacing: 0.2,
   },
 }
@@ -380,6 +444,7 @@ export const animations = {
 }
 
 export default {
+  fonts,
   colors,
   lightColors,
   darkColors,

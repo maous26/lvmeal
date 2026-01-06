@@ -172,7 +172,7 @@ export async function signInWithEmail(
         return {
           success: false,
           needsVerification: true,
-          error: 'Veuillez vérifier votre email avant de vous connecter',
+          error: 'Vérifie ton email avant de te connecter',
         }
       }
 

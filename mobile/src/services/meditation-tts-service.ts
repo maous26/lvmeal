@@ -37,37 +37,37 @@ export const MEDITATION_SESSIONS: MeditationSession[] = [
     phase: 'foundations',
     durationMinutes: 10,
     script: `Bienvenue dans cette méditation de scan corporel.
-Installez-vous confortablement, allongé ou assis.
-Fermez doucement les yeux.
+Installe-toi confortablement, allongé ou assis.
+Ferme doucement les yeux.
 
-Commencez par prendre trois grandes respirations profondes.
-Inspirez... et expirez lentement.
+Commence par prendre trois grandes respirations profondes.
+Inspire... et expire lentement.
 
-Portez maintenant votre attention sur vos pieds.
-Ressentez le contact avec le sol ou le matelas.
-Relâchez toute tension dans vos orteils, vos voûtes plantaires, vos chevilles.
+Porte maintenant ton attention sur tes pieds.
+Ressens le contact avec le sol ou le matelas.
+Relâche toute tension dans tes orteils, tes voûtes plantaires, tes chevilles.
 
-Remontez doucement vers vos mollets et vos genoux.
-Laissez-les se détendre complètement.
+Remonte doucement vers tes mollets et tes genoux.
+Laisse-les se détendre complètement.
 
-Continuez vers vos cuisses et votre bassin.
-Sentez le poids de votre corps s'enfoncer confortablement.
+Continue vers tes cuisses et ton bassin.
+Sens le poids de ton corps s'enfoncer confortablement.
 
-Votre ventre se relâche à chaque expiration.
-Votre dos s'enfonce un peu plus dans le support.
+Ton ventre se relâche à chaque expiration.
+Ton dos s'enfonce un peu plus dans le support.
 
-Vos épaules s'abaissent naturellement.
-Vos bras, vos mains, vos doigts se détendent.
+Tes épaules s'abaissent naturellement.
+Tes bras, tes mains, tes doigts se détendent.
 
-Relâchez votre mâchoire, votre front, le contour de vos yeux.
-Tout votre visage est paisible.
+Relâche ta mâchoire, ton front, le contour de tes yeux.
+Tout ton visage est paisible.
 
-Restez quelques instants dans cette sensation de calme total.
-Votre corps entier est détendu, présent, en paix.
+Reste quelques instants dans cette sensation de calme total.
+Ton corps entier est détendu, présent, en paix.
 
-Quand vous serez prêt, reprenez doucement conscience de l'espace autour de vous.
-Bougez légèrement vos doigts, vos orteils.
-Et ouvrez les yeux quand vous le souhaitez.
+Quand tu seras prêt, reprends doucement conscience de l'espace autour de toi.
+Bouge légèrement tes doigts, tes orteils.
+Et ouvre les yeux quand tu le souhaites.
 
 Merci pour cette pratique.`,
   },
@@ -78,39 +78,39 @@ Merci pour cette pratique.`,
     phase: 'foundations',
     durationMinutes: 10,
     script: `Bienvenue dans cette méditation sur le souffle.
-Trouvez une position confortable et fermez les yeux.
+Trouve une position confortable et ferme les yeux.
 
-Votre souffle est votre ancre.
+Ton souffle est ton ancre.
 Il est toujours là, disponible, patient.
 
-Commencez simplement par observer votre respiration naturelle.
-Ne cherchez pas à la modifier.
+Commence simplement par observer ta respiration naturelle.
+Ne cherche pas à la modifier.
 Juste observer.
 
-Où sentez-vous le souffle le plus clairement ?
+Où sens-tu le souffle le plus clairement ?
 Peut-être au niveau des narines, ce léger flux d'air frais à l'inspiration.
 Peut-être dans la poitrine qui se soulève et s'abaisse.
 Peut-être dans le ventre qui se gonfle et se dégonfle.
 
-Choisissez cet endroit et restez-y.
+Choisis cet endroit et restes-y.
 
-À chaque inspiration, vous êtes présent.
-À chaque expiration, vous vous détendez un peu plus.
+À chaque inspiration, tu es présent.
+À chaque expiration, tu te détends un peu plus.
 
-Si votre esprit vagabonde, c'est normal.
+Si ton esprit vagabonde, c'est normal.
 C'est la nature de l'esprit.
-Reconnaissez simplement cette pensée, et revenez doucement au souffle.
+Reconnais simplement cette pensée, et reviens doucement au souffle.
 
-Inspirez... conscience.
-Expirez... relâchement.
+Inspire... conscience.
+Expire... relâchement.
 
-Votre souffle est votre refuge permanent.
-Il est toujours là pour vous ramener au moment présent.
+Ton souffle est ton refuge permanent.
+Il est toujours là pour te ramener au moment présent.
 
-Continuez à respirer tranquillement pendant quelques instants.
+Continue à respirer tranquillement pendant quelques instants.
 
-Quand vous serez prêt, reprenez conscience de votre environnement.
-Gardez cette sensation de calme avec vous.
+Quand tu seras prêt, reprends conscience de ton environnement.
+Garde cette sensation de calme avec toi.
 
 Merci pour cette pratique.`,
   },
@@ -121,39 +121,39 @@ Merci pour cette pratique.`,
     phase: 'awareness',
     durationMinutes: 12,
     script: `Bienvenue dans cette pratique de mouvement conscient.
-Vous pouvez rester assis ou debout pour cette méditation.
+Tu peux rester assis ou debout pour cette méditation.
 
-Commencez par fermer les yeux et prendre quelques respirations profondes.
+Commence par fermer les yeux et prendre quelques respirations profondes.
 
 Nous allons bouger avec lenteur et attention.
 Chaque mouvement devient une méditation.
 
-Commencez par incliner doucement la tête vers la droite.
-Sentez l'étirement sur le côté gauche de votre cou.
-Restez là quelques respirations.
+Commence par incliner doucement la tête vers la droite.
+Sens l'étirement sur le côté gauche de ton cou.
+Reste là quelques respirations.
 
-Revenez au centre.
-Inclinez maintenant vers la gauche.
-Sentez, respirez, observez.
+Reviens au centre.
+Incline maintenant vers la gauche.
+Sens, respire, observe.
 
-Revenez au centre.
+Reviens au centre.
 
-Roulez doucement les épaules vers l'arrière.
+Roule doucement les épaules vers l'arrière.
 Une épaule après l'autre.
-Sentez les muscles de votre dos qui s'étirent.
+Sens les muscles de ton dos qui s'étirent.
 
-Si vous êtes assis, étirez vos bras vers le ciel.
-Grandissez-vous vers le haut à l'inspiration.
-Relâchez les bras à l'expiration.
+Si tu es assis, étire tes bras vers le ciel.
+Grandis-toi vers le haut à l'inspiration.
+Relâche les bras à l'expiration.
 
-Écoutez les messages de votre corps dans chaque mouvement.
-Votre corps sait ce dont il a besoin.
-Faites-lui confiance.
+Écoute les messages de ton corps dans chaque mouvement.
+Ton corps sait ce dont il a besoin.
+Fais-lui confiance.
 
-Terminez par quelques respirations profondes.
-Ressentez l'énergie qui circule dans tout votre corps.
+Termine par quelques respirations profondes.
+Ressens l'énergie qui circule dans tout ton corps.
 
-Vous pouvez ouvrir les yeux quand vous le souhaitez.
+Tu peux ouvrir les yeux quand tu le souhaites.
 
 Merci pour cette pratique.`,
   },
@@ -164,45 +164,45 @@ Merci pour cette pratique.`,
     phase: 'awareness',
     durationMinutes: 8,
     script: `Bienvenue dans cette pratique de la technique STOP.
-C'est un outil simple et puissant pour vos journées chargées.
+C'est un outil simple et puissant pour tes journées chargées.
 
 STOP signifie :
-S - Stop. Arrêtez-vous.
-T - Take a breath. Prenez une respiration.
-O - Observe. Observez ce qui se passe.
-P - Proceed. Repartez avec conscience.
+S - Stop. Arrête-toi.
+T - Take a breath. Prends une respiration.
+O - Observe. Observe ce qui se passe.
+P - Proceed. Repars avec conscience.
 
 Pratiquons ensemble.
 
 S - STOP.
-En ce moment, vous vous arrêtez.
-Quoi que vous fassiez, vous faites une pause.
+En ce moment, tu t'arrêtes.
+Quoi que tu fasses, tu fais une pause.
 
 T - TAKE A BREATH.
-Prenez une grande inspiration.
-Sentez l'air entrer dans vos poumons.
-Expirez lentement.
+Prends une grande inspiration.
+Sens l'air entrer dans tes poumons.
+Expire lentement.
 
 O - OBSERVE.
-Qu'est-ce qui se passe dans votre corps ?
+Qu'est-ce qui se passe dans ton corps ?
 Y a-t-il des tensions ? Où ?
-Quelles pensées traversent votre esprit ?
+Quelles pensées traversent ton esprit ?
 Quelles émotions sont présentes ?
-Observez sans juger.
+Observe sans juger.
 
 P - PROCEED.
-Maintenant, vous pouvez repartir.
+Maintenant, tu peux repartir.
 Mais avec conscience.
 Avec un peu plus de clarté.
 
-Vous pouvez utiliser cette technique n'importe quand.
+Tu peux utiliser cette technique n'importe quand.
 Avant une réunion importante.
-Quand vous vous sentez stressé.
+Quand tu te sens stressé.
 En transition entre deux activités.
 
-C'est votre bouton pause intérieur.
+C'est ton bouton pause intérieur.
 
-Utilisez-le souvent.
+Utilise-le souvent.
 
 Merci pour cette pratique.`,
   },
@@ -213,47 +213,47 @@ Merci pour cette pratique.`,
     phase: 'awareness',
     durationMinutes: 12,
     script: `Bienvenue dans cette méditation sur les émotions.
-Installez-vous confortablement et fermez les yeux.
+Installe-toi confortablement et ferme les yeux.
 
 Aujourd'hui, nous allons explorer nos émotions avec bienveillance.
 
-Commencez par quelques respirations profondes.
-Créez un espace intérieur d'accueil.
+Commence par quelques respirations profondes.
+Crée un espace intérieur d'accueil.
 
-Maintenant, demandez-vous doucement :
+Maintenant, demande-toi doucement :
 Quelle émotion est présente en ce moment ?
 
 Peut-être de la joie, de la tristesse, de l'anxiété, de la colère, de la peur.
 Peut-être un mélange.
 Ou peut-être quelque chose de plus subtil.
 
-Quelle que soit l'émotion, ne la repoussez pas.
-Accueillez-la comme une visiteuse.
+Quelle que soit l'émotion, ne la repousse pas.
+Accueille-la comme une visiteuse.
 
-Où sentez-vous cette émotion dans votre corps ?
+Où sens-tu cette émotion dans ton corps ?
 Peut-être une tension dans la poitrine.
 Un nœud dans l'estomac.
 Une chaleur dans le visage.
 
-Respirez directement vers cet endroit.
-Envoyez-y de la douceur, de l'espace.
+Respire directement vers cet endroit.
+Envoie-y de la douceur, de l'espace.
 
-Dites-vous intérieurement :
+Dis-toi intérieurement :
 C'est ok de ressentir cela.
 Cette émotion a le droit d'être là.
 Elle passera, comme toutes les émotions passent.
 
-Continuez à respirer avec elle.
+Continue à respirer avec elle.
 Pas contre elle.
 Avec elle.
 
-Sentez peut-être l'émotion qui s'adoucit légèrement.
+Sens peut-être l'émotion qui s'adoucit légèrement.
 Ou peut-être pas. Les deux sont ok.
 
-Terminez en vous remerciant pour ce moment de courage.
+Termine en te remerciant pour ce moment de courage.
 Explorer nos émotions demande de la bravoure.
 
-Ouvrez les yeux quand vous êtes prêt.
+Ouvre les yeux quand tu es prêt.
 
 Merci pour cette pratique.`,
   },
@@ -264,41 +264,41 @@ Merci pour cette pratique.`,
     phase: 'balance',
     durationMinutes: 10,
     script: `Bienvenue dans cette méditation sur l'écoute.
-Gardez les yeux ouverts ou fermés, comme vous préférez.
+Garde les yeux ouverts ou fermés, comme tu préfères.
 
 Nous allons développer notre capacité d'écoute profonde.
 
-Commencez par quelques respirations pour vous centrer.
+Commence par quelques respirations pour te centrer.
 
-Maintenant, portez votre attention sur les sons autour de vous.
+Maintenant, porte ton attention sur les sons autour de toi.
 Les sons proches.
 Les sons lointains.
 
-N'essayez pas de les identifier ou de les juger.
-Écoutez-les simplement comme de la musique.
+N'essaie pas de les identifier ou de les juger.
+Écoute-les simplement comme de la musique.
 Des notes qui apparaissent et disparaissent.
 
-Peut-être entendez-vous :
+Peut-être entends-tu :
 Le bruit de la climatisation.
 Des oiseaux au loin.
 Le trafic.
 Le silence entre les sons.
 
 Chaque son est parfait tel qu'il est.
-Vous n'avez rien à changer.
+Tu n'as rien à changer.
 Juste écouter.
 
-Cette qualité d'écoute, vous pouvez l'appliquer aux autres.
-Écouter quelqu'un sans préparer votre réponse.
+Cette qualité d'écoute, tu peux l'appliquer aux autres.
+Écouter quelqu'un sans préparer ta réponse.
 Sans juger.
 Avec une présence totale.
 
-C'est un cadeau rare que vous pouvez offrir.
+C'est un cadeau rare que tu peux offrir.
 
-Continuez à écouter quelques instants.
-Puis, doucement, revenez à votre respiration.
+Continue à écouter quelques instants.
+Puis, doucement, reviens à ta respiration.
 
-Gardez cette qualité d'écoute avec vous aujourd'hui.
+Garde cette qualité d'écoute avec toi aujourd'hui.
 
 Merci pour cette pratique.`,
   },
@@ -309,46 +309,46 @@ Merci pour cette pratique.`,
     phase: 'balance',
     durationMinutes: 12,
     script: `Bienvenue dans cette méditation de bienveillance.
-Fermez les yeux et installez-vous confortablement.
+Ferme les yeux et installe-toi confortablement.
 
 Nous allons cultiver l'amour bienveillant envers nous-mêmes et les autres.
 
-Commencez par vous visualiser vous-même.
-Imaginez-vous assis là, en train de méditer.
-Avec toutes vos qualités et vos imperfections.
+Commence par te visualiser toi-même.
+Imagine-toi assis là, en train de méditer.
+Avec toutes tes qualités et tes imperfections.
 
-Répétez intérieurement ces phrases :
+Répète intérieurement ces phrases :
 Puissé-je être heureux.
 Puissé-je être en paix.
 Puissé-je être en bonne santé.
 Puissé-je vivre avec aisance.
 
-Sentez la chaleur de ces vœux envers vous-même.
+Sens la chaleur de ces vœux envers toi-même.
 
-Maintenant, pensez à quelqu'un que vous aimez.
-Un ami, un membre de votre famille.
-Visualisez son visage souriant.
+Maintenant, pense à quelqu'un que tu aimes.
+Un ami, un membre de ta famille.
+Visualise son visage souriant.
 
-Envoyez-lui les mêmes vœux :
+Envoie-lui les mêmes vœux :
 Puisses-tu être heureux.
 Puisses-tu être en paix.
 Puisses-tu être en bonne santé.
 Puisses-tu vivre avec aisance.
 
-Étendez maintenant ce cercle.
-Pensez à quelqu'un de neutre. Peut-être un voisin, un commerçant.
-Envoyez-lui ces mêmes vœux de bonheur et de paix.
+Étends maintenant ce cercle.
+Pense à quelqu'un de neutre. Peut-être un voisin, un commerçant.
+Envoie-lui ces mêmes vœux de bonheur et de paix.
 
-Et si vous le pouvez, pensez à quelqu'un avec qui vous avez des difficultés.
-Sans forcer, envoyez-lui aussi ces vœux.
+Et si tu le peux, pense à quelqu'un avec qui tu as des difficultés.
+Sans forcer, envoie-lui aussi ces vœux.
 
-Finalement, étendez cette bienveillance à tous les êtres.
+Finalement, étends cette bienveillance à tous les êtres.
 Puissent tous les êtres être heureux.
 Puissent tous les êtres être en paix.
 
-Restez quelques instants dans cette lumière d'amour universel.
+Reste quelques instants dans cette lumière d'amour universel.
 
-Ouvrez les yeux quand vous êtes prêt.
+Ouvre les yeux quand tu es prêt.
 
 Merci pour cette pratique.`,
   },
@@ -361,42 +361,42 @@ Merci pour cette pratique.`,
     script: `Bienvenue dans cette dernière méditation du programme.
 Félicitations pour être arrivé jusqu'ici.
 
-Fermez les yeux et prenez quelques respirations profondes.
+Ferme les yeux et prends quelques respirations profondes.
 
-Au cours de ces huit semaines, vous avez acquis des outils précieux.
+Au cours de ces huit semaines, tu as acquis des outils précieux.
 Le scan corporel pour relâcher les tensions.
 L'ancre du souffle pour revenir au présent.
-Le mouvement conscient pour habiter votre corps.
+Le mouvement conscient pour habiter ton corps.
 La technique STOP pour les moments difficiles.
 L'espace émotionnel pour accueillir ce qui est.
-L'écoute active pour vous connecter aux autres.
-La bienveillance pour ouvrir votre cœur.
+L'écoute active pour te connecter aux autres.
+La bienveillance pour ouvrir ton cœur.
 
-Tous ces outils sont maintenant en vous.
-Ils font partie de vous.
+Tous ces outils sont maintenant en toi.
+Ils font partie de toi.
 
-La pleine conscience n'est plus quelque chose que vous faites.
-C'est quelque chose que vous êtes.
+La pleine conscience n'est plus quelque chose que tu fais.
+C'est quelque chose que tu es.
 
-Vous pouvez accéder à cet espace de paix à tout moment.
+Tu peux accéder à cet espace de paix à tout moment.
 Un souffle suffit.
 Une pause suffit.
 Une intention suffit.
 
-Vous êtes libre.
+Tu es libre.
 Libre de choisir comment répondre à la vie.
 Libre de revenir au présent quand l'esprit s'égare.
-Libre de vous traiter avec compassion.
+Libre de te traiter avec compassion.
 
-Cette liberté est votre droit de naissance.
-Personne ne peut vous l'enlever.
+Cette liberté est ton droit de naissance.
+Personne ne peut te l'enlever.
 
-Continuez à pratiquer, même quelques minutes par jour.
+Continue à pratiquer, même quelques minutes par jour.
 La méditation est comme un muscle. Elle se renforce avec l'usage.
 
-Je vous souhaite un chemin de paix, de conscience et de joie.
+Je te souhaite un chemin de paix, de conscience et de joie.
 
-Ouvrez les yeux quand vous êtes prêt.
+Ouvre les yeux quand tu es prêt.
 
 Merci infiniment pour cette pratique.
 Namaste.`,

@@ -43,7 +43,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { Card, Button } from '../components/ui'
-import { colors, spacing, typography, radius, shadows } from '../constants/theme'
+import { colors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useMealPlanStore, type PlannedMealItem, type ShoppingList } from '../stores/meal-plan-store'
@@ -140,7 +140,7 @@ export default function WeeklyPlanScreen() {
     if (!nutritionGoals || !profile) {
       Alert.alert(
         'Profil incomplet',
-        'Veuillez configurer vos objectifs nutritionnels dans les parametres.'
+        'Configure tes objectifs nutritionnels dans les parametres.'
       )
       return
     }
@@ -217,7 +217,7 @@ export default function WeeklyPlanScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     Alert.alert(
       'Supprimer ce repas',
-      `Voulez-vous supprimer "${meal.name}" ?`,
+      `Veux-tu supprimer "${meal.name}" ?`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -261,7 +261,7 @@ export default function WeeklyPlanScreen() {
     if (validatedMeals.length === 0) {
       Alert.alert(
         'Aucun repas valide',
-        'Validez d\'abord les repas que vous souhaitez cuisiner en appuyant sur le bouton check de chaque repas.'
+        'Valide d\'abord les repas que tu souhaites cuisiner en appuyant sur le bouton check de chaque repas.'
       )
       return
     }
@@ -297,7 +297,7 @@ export default function WeeklyPlanScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     Alert.alert(
       'Annuler le plan',
-      'Voulez-vous vraiment annuler ce plan ? Toutes les modifications seront perdues.',
+      'Veux-tu vraiment annuler ce plan ? Toutes les modifications seront perdues.',
       [
         { text: 'Non', style: 'cancel' },
         {
@@ -329,7 +329,7 @@ export default function WeeklyPlanScreen() {
     addXP(50, 'Plan de repas enregistre')
     Alert.alert(
       'Plan enregistre',
-      `${validatedMeals.length} repas valides ont ete enregistres dans votre plan.`,
+      `${validatedMeals.length} repas valides ont ete enregistres dans ton plan.`,
       [{ text: 'Super!' }]
     )
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -768,7 +768,7 @@ export default function WeeklyPlanScreen() {
                 <View style={styles.cheatMealBanner}>
                   <PartyPopper size={16} color={colors.warning} />
                   <Text style={styles.cheatMealText}>
-                    Bravo ! Vous avez debloque un repas plaisir !
+                    Bravo ! Tu as debloque un repas plaisir !
                   </Text>
                 </View>
               )}
@@ -947,6 +947,7 @@ const styles = StyleSheet.create({
   headerText: {
     ...typography.h4,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   headerRight: {
     width: 40,
@@ -979,6 +980,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    fontFamily: fonts.serif.bold,
   },
   generateDescription: {
     ...typography.body,
@@ -1324,6 +1326,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...typography.h4,
     color: colors.text.primary,
+    fontFamily: fonts.serif.semibold,
   },
   moveMealName: {
     ...typography.bodyMedium,
@@ -1413,6 +1416,7 @@ const styles = StyleSheet.create({
   shoppingTitle: {
     ...typography.h4,
     color: colors.text.primary,
+    fontFamily: fonts.serif.semibold,
   },
   shoppingContent: {
     flex: 1,

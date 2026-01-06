@@ -711,7 +711,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
                 <Globe size={16} color="#06B6D4" />
               </View>
               <Text style={styles.sectionTitle}>
-                {searchQuery ? 'Resultats de recherche' : 'Selectionnees pour vous'}
+                {searchQuery ? 'Resultats de recherche' : 'Selectionnees pour toi'}
               </Text>
             </View>
             {filteredRecipes.length > 0 && (

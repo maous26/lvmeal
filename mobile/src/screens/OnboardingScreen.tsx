@@ -35,17 +35,17 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
   'setup-choice': { title: '', subtitle: '' }, // Has its own layout
   'quick-setup': { title: '', subtitle: '' }, // Has its own layout
   'basic-info': {
-    title: 'Faisons connaissance',
-    subtitle: 'TON PROFIL',
+    title: 'Ton Profil Unique',
+    subtitle: 'QUI ES-TU',
     valueProposition: "Ces infos permettent de calculer précisément tes besoins caloriques et de personnaliser tes recommandations.",
   },
   activity: {
-    title: 'Comment tu bouges ?',
+    title: 'Ton Rythme de Vie',
     subtitle: 'TON ACTIVITÉ',
     valueProposition: "Ton niveau d'activité influence directement tes besoins énergétiques. On adapte tout à ton rythme de vie réel.",
   },
   goal: {
-    title: 'Ton objectif principal',
+    title: 'Ta Transformation',
     subtitle: 'TA MOTIVATION',
     valueProposition: "Chaque objectif a sa stratégie. On adapte les conseils et les macros pour t'aider à y arriver.",
   },
@@ -55,17 +55,17 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     valueProposition: "Ces choix orientent les conseils, sans créer de contraintes. Tu pourras changer quand tu veux.",
   },
   diet: {
-    title: 'Comment tu manges ?',
+    title: 'Ton Style Alimentaire',
     subtitle: 'TES PRÉFÉRENCES',
     valueProposition: "Pour te proposer des recettes et conseils qui correspondent vraiment à ton mode d'alimentation.",
   },
   cooking: {
-    title: 'Et en cuisine ?',
+    title: 'Ton Art Culinaire',
     subtitle: 'TON STYLE',
     valueProposition: "On adapte les recettes à ton niveau et au temps dont tu disposes. Pas de pression !",
   },
   metabolism: {
-    title: 'Ton historique alimentaire',
+    title: 'Ta Signature Métabolique',
     subtitle: 'MIEUX TE COMPRENDRE',
     valueProposition: "Ces questions nous aident à détecter si tu as besoin d'une approche plus douce. Zéro jugement, que de la bienveillance.",
   },
@@ -80,12 +80,12 @@ const stepConfig: Record<OnboardingStep, { title: string; subtitle: string; valu
     valueProposition: "Des outils optionnels pour soutenir ton équilibre au quotidien.",
   },
   lifestyle: {
-    title: 'Tes habitudes de vie',
-    subtitle: 'TON ÉQUILIBRE',
+    title: 'Ton Équilibre',
+    subtitle: 'TES HABITUDES',
     valueProposition: "Le sommeil et le stress impactent directement ton métabolisme. On prend tout en compte !",
   },
   analysis: {
-    title: 'Ton programme est prêt !',
+    title: 'Ton Parcours Commence',
     subtitle: 'RÉCAPITULATIF',
   },
   'cloud-sync': {

@@ -20,7 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { spacing, radius, typography, shadows, fonts, organicPalette } from '../../constants/theme'
 import { MockHomePreview } from './MockHomePreview'
 import { Button } from '../ui/Button'
 
@@ -48,17 +48,18 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   const insets = useSafeAreaInsets()
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.3)'
+  const offWhite = '#FAF9F7'
+  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(250,249,247,0.3)'
   const purple = colors.nutrients.fats
 
   const benefits: BenefitSlide[] = [
     {
       id: 'easy',
       icon: <Camera size={28} color="#FFFFFF" />,
-      title: 'Simple, vraiment.',
+      title: 'Simple comme bonjour.',
       subtitle: 'FACILITÉ',
       description:
-        "Un repas, une photo, quelques mots.\nPas besoin d'être précis ou parfait : LYM te comprend et t'aide à avancer.",
+        "Une photo, quelques mots, c'est tout.\nPas de calculs, pas de pesée.\nTu manges, tu notes, tu avances.",
       imagePlaceholder: 'Photo de quelqu\'un prenant en photo son assiette',
       image: require('../../../assets/photo2.jpg'),
       accentColor: colors.accent.primary,
@@ -66,10 +67,10 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
     {
       id: 'personalized',
       icon: <Sparkles size={28} color="#FFFFFF" />,
-      title: 'Adapté à ton rythme.',
+      title: 'Fait pour toi.',
       subtitle: 'PERSONNALISATION',
       description:
-        "Ton quotidien, ton énergie, tes habitudes.\nLYM s'adapte à toi dans le temps, sans te demander d'en faire plus.",
+        "Tes goûts, ton rythme, ta vie.\nTout est pensé autour de qui tu es vraiment, pas d'un idéal impossible.",
       imagePlaceholder: 'Interface personnalisée',
       useMockPreview: true,
       accentColor: purple,
@@ -77,20 +78,20 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
     {
       id: 'kind',
       icon: <Heart size={28} color="#FFFFFF" />,
-      title: 'Sans jugement. Jamais.',
-      subtitle: 'CONFIANCE',
+      title: 'Zéro culpabilité.',
+      subtitle: 'BIENVEILLANCE',
       description:
-        "Les écarts, les pauses, les semaines chargées font partie du chemin.\nLYM t'aide à reprendre, pas à te reprocher.",
+        "Un écart ? Une pause ? C'est humain.\nIci, chaque jour est une nouvelle chance.\nOn avance ensemble, sans pression.",
       imagePlaceholder: 'Personnes épanouies',
       accentColor: colors.secondary.primary,
     },
     {
       id: 'duration',
       icon: <TrendingUp size={28} color="#FFFFFF" />,
-      title: 'Un équilibre qui tient.',
-      subtitle: 'DURÉE',
+      title: 'Des résultats qui durent.',
+      subtitle: 'DURABILITÉ',
       description:
-        "Pas de régime.\nPas de pression constante.\nUne structure souple pour avancer dans la vraie vie.",
+        "Fini les régimes yo-yo.\nTu construis des habitudes saines,\nà ton rythme, pour la vie.",
       imagePlaceholder: 'Équilibre de vie',
       image: require('../../../assets/photo3.jpeg'),
       accentColor: colors.success,
@@ -139,7 +140,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           </LinearGradient>
         )}
         <LinearGradient
-          colors={['transparent', overlayMid, colors.bg.primary]}
+          colors={['transparent', overlayMid, offWhite]}
           locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
@@ -161,7 +162,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+    <View style={[styles.container, { backgroundColor: offWhite }]}>
       {/* Header with skip */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -215,7 +216,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
             handleNext()
           }}
           style={{
-            backgroundColor: '#FF6B5B',
+            backgroundColor: organicPalette.clay,
             paddingVertical: spacing.lg,
             paddingHorizontal: spacing.xl,
             borderRadius: radius.xl,
@@ -226,7 +227,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', marginRight: spacing.sm }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm }}>
             {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
           </Text>
           <ChevronRight size={20} color="#FFFFFF" />
@@ -318,15 +319,18 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.captionMedium,
+    fontFamily: fonts.sans.semibold,
     letterSpacing: 2,
     marginBottom: spacing.sm,
   },
   title: {
     ...typography.h2,
+    fontFamily: fonts.serif.bold,
     marginBottom: spacing.md,
   },
   description: {
     ...typography.body,
+    fontFamily: fonts.sans.regular,
     lineHeight: 26,
   },
   bottom: {

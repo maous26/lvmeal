@@ -270,7 +270,7 @@ export default function EditProfileScreen() {
     if (hasChanges) {
       Alert.alert(
         'Modifications non enregistrées',
-        'Voulez-vous enregistrer vos modifications avant de quitter ?',
+        'Veux-tu enregistrer tes modifications avant de quitter ?',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -364,7 +364,7 @@ export default function EditProfileScreen() {
               <View style={styles.sectionContent}>
                 <Input
                   label="Prénom"
-                  placeholder="Votre prénom"
+                  placeholder="Ton prénom"
                   value={editedProfile.firstName || ''}
                   onChangeText={(text) => updateProfile({ firstName: text })}
                   autoCapitalize="words"
@@ -410,7 +410,7 @@ export default function EditProfileScreen() {
                     updateProfile({ targetWeight: parseFloat(text) || undefined })
                   }
                   keyboardType="decimal-pad"
-                  hint="Laissez vide pour maintenir votre poids"
+                  hint="Laisse vide pour maintenir ton poids"
                 />
               </View>
             )}

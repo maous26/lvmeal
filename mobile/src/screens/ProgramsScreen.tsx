@@ -1,5 +1,6 @@
 /**
  * ProgramsScreen - Hub des programmes de transformation
+ * Design: Organic Luxury - Vert Mousse & Terre Cuite
  *
  * Affiche les programmes disponibles selon le profil utilisateur :
  * - Boost Métabolique (12 semaines)
@@ -28,14 +29,32 @@ import {
   CheckCircle2,
   Lock,
   Play,
+  Leaf,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius } from '../constants/theme'
+import { GlassCard } from '../components/ui/GlassCard'
+import { spacing, typography, radius, shadows, organicPalette, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
+
+// Organic color palette for programs
+const PROGRAM_COLORS = {
+  metabolic: {
+    gradient: ['#E2DCCA', '#D4A574', '#C87863'] as const, // Sable -> Caramel -> Terre Cuite
+    accent: '#C87863',      // Terre Cuite
+    accentLight: 'rgba(200, 120, 99, 0.15)',
+    icon: '#B56A56',
+  },
+  wellness: {
+    gradient: ['#EDF3EC', '#B8CBB4', '#7A9E7E'] as const, // Vert pâle -> Mousse désaturé -> Sauge
+    accent: '#4A6741',      // Mousse
+    accentLight: 'rgba(74, 103, 65, 0.15)',
+    icon: '#4A6741',
+  },
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -104,23 +123,19 @@ export default function ProgramsScreen() {
           </Text>
         </View>
 
-        {/* Metabolic Boost Program */}
-        <TouchableOpacity
-          style={[styles.programCard, { backgroundColor: colors.bg.elevated }]}
-          onPress={() => isMetabolicEnrolled ? handleProgramPress('metabolic') : null}
-          activeOpacity={isMetabolicEnrolled ? 0.8 : 1}
-        >
+        {/* Metabolic Boost Program - Organic Luxury Design */}
+        <GlassCard style={styles.programCard} variant="elevated" delay={100} noPadding>
           <LinearGradient
-            colors={['#FEF3C7', '#FDE68A', '#FCD34D']}
+            colors={PROGRAM_COLORS.metabolic.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.programBanner}
           >
-            <View style={styles.programIcon}>
-              <Zap size={32} color="#D97706" />
+            <View style={[styles.programIcon, { backgroundColor: 'rgba(255, 255, 255, 0.85)' }]}>
+              <Zap size={32} color={PROGRAM_COLORS.metabolic.icon} />
             </View>
             {isMetabolicEnrolled && (
-              <View style={styles.progressBadge}>
+              <View style={[styles.progressBadge, { backgroundColor: PROGRAM_COLORS.metabolic.accent }]}>
                 <Text style={styles.progressBadgeText}>{Math.round(metabolicProgress)}%</Text>
               </View>
             )}
@@ -132,8 +147,8 @@ export default function ProgramsScreen() {
                 Boost Métabolique
               </Text>
               {isMetabolicEnrolled && (
-                <View style={[styles.activeBadge, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                  <Text style={[styles.activeBadgeText, { color: '#D97706' }]}>Actif</Text>
+                <View style={[styles.activeBadge, { backgroundColor: PROGRAM_COLORS.metabolic.accentLight }]}>
+                  <Text style={[styles.activeBadgeText, { color: PROGRAM_COLORS.metabolic.accent }]}>Actif</Text>
                 </View>
               )}
             </View>
@@ -155,7 +170,7 @@ export default function ProgramsScreen() {
 
             {isMetabolicEnrolled ? (
               <TouchableOpacity
-                style={[styles.programButton, { backgroundColor: '#F59E0B' }]}
+                style={[styles.programButton, { backgroundColor: PROGRAM_COLORS.metabolic.accent }]}
                 onPress={() => handleProgramPress('metabolic')}
               >
                 <Play size={16} color="#FFFFFF" />
@@ -166,7 +181,7 @@ export default function ProgramsScreen() {
               </TouchableOpacity>
             ) : isEligibleForMetabolic ? (
               <TouchableOpacity
-                style={[styles.programButton, { backgroundColor: '#F59E0B' }]}
+                style={[styles.programButton, { backgroundColor: PROGRAM_COLORS.metabolic.accent }]}
                 onPress={() => handleEnroll('metabolic')}
               >
                 <Sparkles size={16} color="#FFFFFF" />
@@ -182,25 +197,21 @@ export default function ProgramsScreen() {
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </GlassCard>
 
-        {/* Wellness Program */}
-        <TouchableOpacity
-          style={[styles.programCard, { backgroundColor: colors.bg.elevated }]}
-          onPress={() => isWellnessEnrolled ? handleProgramPress('wellness') : null}
-          activeOpacity={isWellnessEnrolled ? 0.8 : 1}
-        >
+        {/* Wellness Program - Organic Luxury Design */}
+        <GlassCard style={styles.programCard} variant="elevated" delay={200} noPadding>
           <LinearGradient
-            colors={['#EDE9FE', '#DDD6FE', '#C4B5FD']}
+            colors={PROGRAM_COLORS.wellness.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.programBanner}
           >
-            <View style={styles.programIcon}>
-              <Heart size={32} color="#7C3AED" />
+            <View style={[styles.programIcon, { backgroundColor: 'rgba(255, 255, 255, 0.85)' }]}>
+              <Leaf size={32} color={PROGRAM_COLORS.wellness.icon} />
             </View>
             {isWellnessEnrolled && (
-              <View style={[styles.progressBadge, { backgroundColor: '#7C3AED' }]}>
+              <View style={[styles.progressBadge, { backgroundColor: PROGRAM_COLORS.wellness.accent }]}>
                 <Text style={styles.progressBadgeText}>{Math.round(wellnessProgress)}%</Text>
               </View>
             )}
@@ -212,8 +223,8 @@ export default function ProgramsScreen() {
                 Bien-être
               </Text>
               {isWellnessEnrolled && (
-                <View style={[styles.activeBadge, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
-                  <Text style={[styles.activeBadgeText, { color: '#7C3AED' }]}>Actif</Text>
+                <View style={[styles.activeBadge, { backgroundColor: PROGRAM_COLORS.wellness.accentLight }]}>
+                  <Text style={[styles.activeBadgeText, { color: PROGRAM_COLORS.wellness.accent }]}>Actif</Text>
                 </View>
               )}
             </View>
@@ -235,7 +246,7 @@ export default function ProgramsScreen() {
 
             {isWellnessEnrolled ? (
               <TouchableOpacity
-                style={[styles.programButton, { backgroundColor: '#8B5CF6' }]}
+                style={[styles.programButton, { backgroundColor: PROGRAM_COLORS.wellness.accent }]}
                 onPress={() => handleProgramPress('wellness')}
               >
                 <Play size={16} color="#FFFFFF" />
@@ -246,7 +257,7 @@ export default function ProgramsScreen() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.programButton, { backgroundColor: '#8B5CF6' }]}
+                style={[styles.programButton, { backgroundColor: PROGRAM_COLORS.wellness.accent }]}
                 onPress={() => handleEnroll('wellness')}
               >
                 <Sparkles size={16} color="#FFFFFF" />
@@ -255,7 +266,7 @@ export default function ProgramsScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </TouchableOpacity>
+        </GlassCard>
 
         {/* Info card */}
         <View style={[styles.infoCard, { backgroundColor: colors.bg.secondary }]}>
@@ -286,15 +297,15 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
+    fontFamily: fonts.serif.bold,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
   },
   programCard: {
-    borderRadius: radius.xl,
-    overflow: 'hidden',
     marginBottom: spacing.lg,
+    // GlassCard handles borderRadius and overflow
   },
   programBanner: {
     height: 100,
@@ -335,6 +346,7 @@ const styles = StyleSheet.create({
   },
   programTitle: {
     ...typography.h2,
+    fontFamily: fonts.serif.semibold,
   },
   activeBadge: {
     paddingHorizontal: spacing.sm,

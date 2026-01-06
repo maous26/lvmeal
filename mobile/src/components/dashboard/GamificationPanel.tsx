@@ -84,7 +84,7 @@ export function GamificationPanel({ compact = false, onViewAll }: GamificationPa
     <Card style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Votre progression</Text>
+        <Text style={styles.title}>Ta progression</Text>
         {onViewAll && (
           <Pressable onPress={onViewAll} style={styles.viewAllButton}>
             <Text style={styles.viewAllText}>Achievements</Text>

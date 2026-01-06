@@ -260,7 +260,7 @@ export async function signInWithEmail(
         return { success: false, error: 'Email ou mot de passe incorrect' }
       }
       if (error.message.includes('Email not confirmed')) {
-        return { success: false, error: 'Veuillez vérifier votre email avant de vous connecter' }
+        return { success: false, error: 'Vérifie ton email avant de te connecter' }
       }
       if (error.message.includes('invalid format') ||
           error.message.includes('Unable to validate')) {

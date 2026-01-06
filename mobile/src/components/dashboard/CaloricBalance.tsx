@@ -93,7 +93,7 @@ export function CaloricBalance({
             <View style={styles.setupContent}>
               <Gift size={20} color={colors.accent.primary} />
               <View style={styles.setupText}>
-                <Text style={styles.setupTitle}>Votre cycle plaisir commence !</Text>
+                <Text style={styles.setupTitle}>Ton cycle plaisir commence !</Text>
                 <Text style={styles.setupSubtitle}>Economisez 200 kcal pour debloquer un repas plaisir des le jour 3</Text>
               </View>
             </View>

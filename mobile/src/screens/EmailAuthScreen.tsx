@@ -26,7 +26,7 @@ import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, shadows } from '../constants/theme'
+import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useAuthStore } from '../stores/auth-store'
 import { useUserStore } from '../stores/user-store'
 
@@ -178,7 +178,7 @@ export default function EmailAuthScreen({
                 <Mail size={20} color={colors.text.tertiary} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
-                  placeholder="votre@email.com"
+                  placeholder="ton@email.com"
                   placeholderTextColor={colors.text.muted}
                   value={email}
                   onChangeText={(text) => {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.h3,
-    fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
   },
   headerSpacer: {
     width: 40,

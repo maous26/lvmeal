@@ -60,7 +60,7 @@ export default function MealInputSettingsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
       Alert.alert(
         'Maximum atteint',
-        'Vous pouvez épingler jusqu\'à 4 méthodes. Désépinglez-en une pour en ajouter une autre.',
+        'Tu peux épingler jusqu\'à 4 méthodes. Désépingles-en une pour en ajouter une autre.',
         [{ text: 'OK' }]
       )
       return
@@ -207,9 +207,9 @@ export default function MealInputSettingsScreen() {
           </View>
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
             • Les méthodes épinglées apparaissent en haut de l'écran d'ajout{'\n'}
-            • Vous pouvez en épingler jusqu'à 4{'\n'}
+            • Tu peux en épingler jusqu'à 4{'\n'}
             • Les autres restent accessibles dans "Autres méthodes"{'\n'}
-            • Personnalisez selon vos habitudes !
+            • Personnalise selon tes habitudes !
           </Text>
         </Card>
 

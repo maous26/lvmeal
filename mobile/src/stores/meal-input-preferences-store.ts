@@ -57,7 +57,7 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     iconName: 'Mic',
     color: '#8B5CF6',
     bgColor: '#F3E8FF',
-    description: 'Dicter votre repas à voix haute'
+    description: 'Dicte ton repas à voix haute'
   },
   {
     id: 'barcode',
@@ -93,7 +93,7 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     iconName: 'Heart',
     color: '#EC4899',
     bgColor: '#FDF2F8',
-    description: 'Accéder à vos aliments et recettes favoris'
+    description: 'Accède à tes aliments et recettes favoris'
   },
 ]
 

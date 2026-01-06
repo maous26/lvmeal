@@ -198,7 +198,7 @@ function ScanningOverlay({ isAnalyzing }: { isAnalyzing: boolean }) {
       <View style={scanStyles.statusContainer}>
         <BlurView intensity={40} tint="dark" style={scanStyles.statusBlur}>
           <Zap size={16} color="#10B981" />
-          <Text style={scanStyles.statusText}>LymIA analyse votre repas...</Text>
+          <Text style={scanStyles.statusText}>LymIA analyse ton repas...</Text>
         </BlurView>
       </View>
     </View>
@@ -535,7 +535,7 @@ export default function PhotoFoodScanner({
     if (!hasKey) {
       Alert.alert(
         'Configuration requise',
-        'Veuillez configurer votre clé API OpenAI dans les paramètres pour utiliser la reconnaissance photo.',
+        'Configure ta clé API OpenAI dans les paramètres pour utiliser la reconnaissance photo.',
         [{ text: 'OK', onPress: handleClose }]
       )
       return
@@ -673,7 +673,7 @@ export default function PhotoFoodScanner({
           </View>
           <Text style={styles.permissionTitle}>Accès caméra requis</Text>
           <Text style={styles.permissionText}>
-            Pour analyser vos repas avec l'IA, autorisez l'accès à la caméra.
+            Pour analyser tes repas avec l'IA, autorise l'accès à la caméra.
           </Text>
           <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
             <LinearGradient
@@ -731,7 +731,7 @@ export default function PhotoFoodScanner({
               <View style={styles.instructions}>
                 <BlurView intensity={50} tint="dark" style={styles.instructionBlur}>
                   <Text style={styles.instructionText}>
-                    Cadrez votre repas dans le viseur
+                    Cadre ton repas dans le viseur
                   </Text>
                 </BlurView>
               </View>

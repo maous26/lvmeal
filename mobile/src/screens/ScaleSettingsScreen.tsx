@@ -78,7 +78,7 @@ export default function ScaleSettingsScreen() {
       } else {
         Alert.alert(
           'Permissions requises',
-          'Veuillez autoriser l\'accès au poids dans les paramètres de votre téléphone.',
+          'Autorise l\'accès au poids dans les paramètres de ton téléphone.',
           [{ text: 'OK' }]
         )
       }
@@ -187,7 +187,7 @@ export default function ScaleSettingsScreen() {
               <Text style={[styles.statusDescription, { color: colors.text.secondary }]}>
                 {isConnected
                   ? `Synchronisé avec ${platformName}`
-                  : `Connectez-vous à ${platformName} pour importer vos mesures`
+                  : `Connecte-toi à ${platformName} pour importer tes mesures`
                 }
               </Text>
 
@@ -251,7 +251,7 @@ export default function ScaleSettingsScreen() {
                   : 'Health Connect nécessite un build de production. Cette fonctionnalité sera disponible dans l\'app publiée.'}
               </Text>
               <Text style={[styles.warningHint, { color: colors.text.tertiary }]}>
-                En attendant, vous pouvez ajouter vos mesures manuellement dans l'onglet Progrès.
+                En attendant, tu peux ajouter tes mesures manuellement dans l'onglet Progrès.
               </Text>
             </View>
           </Card>

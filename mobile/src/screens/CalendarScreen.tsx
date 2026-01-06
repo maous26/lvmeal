@@ -35,7 +35,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { colors, fonts, spacing, typography, radius } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useMealPlanStore, type PlannedMealItem } from '../stores/meal-plan-store'
@@ -455,6 +455,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   todayButton: {
     paddingHorizontal: spacing.md,

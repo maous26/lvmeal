@@ -624,17 +624,17 @@ export function getCompatibleScales(): Array<{ name: string; brand: string }> {
 export function getScaleSetupInstructions(): string[] {
   if (Platform.OS === 'ios') {
     return [
-      "1. Configurez votre balance avec l'app du fabricant (Withings, Mi Fit, etc.)",
-      "2. Dans l'app de la balance, activez la synchronisation avec Apple Santé",
-      '3. Pesez-vous - les données seront envoyées automatiquement',
-      '4. Revenez ici et appuyez sur Synchroniser',
+      "1. Configure ta balance avec l'app du fabricant (Withings, Mi Fit, etc.)",
+      "2. Dans l'app de la balance, active la synchronisation avec Apple Santé",
+      '3. Pèse-toi - les données seront envoyées automatiquement',
+      '4. Reviens ici et appuie sur Synchroniser',
     ]
   } else if (Platform.OS === 'android') {
     return [
-      '1. Installez Google Health Connect depuis le Play Store',
-      "2. Configurez votre balance avec l'app du fabricant",
-      "3. Dans l'app de la balance, activez Health Connect",
-      '4. Pesez-vous et revenez ici pour synchroniser',
+      '1. Installe Google Health Connect depuis le Play Store',
+      "2. Configure ta balance avec l'app du fabricant",
+      "3. Dans l'app de la balance, active Health Connect",
+      '4. Pèse-toi et reviens ici pour synchroniser',
     ]
   }
   return ["L'intégration santé n'est pas disponible sur cette plateforme."]

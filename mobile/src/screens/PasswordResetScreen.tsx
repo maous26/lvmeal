@@ -156,7 +156,7 @@ export default function PasswordResetScreen({
               <Mail size={20} color={colors.text.tertiary} />
               <TextInput
                 style={[styles.input, { color: colors.text.primary }]}
-                placeholder="votre@email.com"
+                placeholder="ton@email.com"
                 placeholderTextColor={colors.text.muted}
                 value={email}
                 onChangeText={setEmail}

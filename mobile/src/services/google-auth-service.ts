@@ -239,7 +239,7 @@ export async function signInWithGoogle(): Promise<GoogleAuthResult> {
       if (error.code === '12500' || error.code === 'DEVELOPER_ERROR' || error.message?.includes('DEVELOPER_ERROR')) {
         return {
           success: false,
-          error: 'Erreur de configuration (12500). Vérifiez que le SHA-1 de votre build est bien enregistré dans la console Google Cloud.'
+          error: 'Erreur de configuration (12500). Vérifie que le SHA-1 de ton build est bien enregistré dans la console Google Cloud.'
         }
       }
     }

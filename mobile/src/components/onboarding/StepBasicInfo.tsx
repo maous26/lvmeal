@@ -21,7 +21,7 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
     <View style={styles.container}>
       <Input
         label="Prénom"
-        placeholder="Votre prénom"
+        placeholder="Ton prénom"
         value={data.firstName || ''}
         onChangeText={(text) => onChange({ ...data, firstName: text })}
         autoCapitalize="words"
@@ -30,7 +30,7 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
 
       <Select
         label="Genre"
-        placeholder="Sélectionnez votre genre"
+        placeholder="Sélectionne ton genre"
         value={data.gender}
         options={genderOptions}
         onChange={(value) => onChange({ ...data, gender: value })}
@@ -71,7 +71,7 @@ export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
         value={data.targetWeight?.toString() || ''}
         onChangeText={(text) => onChange({ ...data, targetWeight: parseFloat(text) || undefined })}
         keyboardType="decimal-pad"
-        hint="Laissez vide si vous souhaitez maintenir votre poids"
+        hint="Laisse vide si tu souhaites maintenir ton poids"
         containerStyle={styles.input}
       />
     </View>

@@ -186,7 +186,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
         category: 'Favori',
         mealType: currentMealType,
         emoji: '❤️',
-        reason: 'Un de vos favoris',
+        reason: 'Un de tes favoris',
         tags: ['Favori', `${recipe.rating || 5}★`],
         imageUrl: recipe.imageUrl,
         rating: recipe.rating || 5,

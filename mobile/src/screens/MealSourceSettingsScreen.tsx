@@ -49,7 +49,7 @@ const mealSourceOptions: Array<{
     key: 'balanced',
     label: 'Équilibré',
     description: 'Mix intelligent de toutes les sources',
-    details: 'L\'IA sélectionne la meilleure source selon le type de repas et vos objectifs. Recommandé pour la plupart des utilisateurs.',
+    details: 'L\'IA sélectionne la meilleure source selon le type de repas et tes objectifs. Recommandé pour la plupart des utilisateurs.',
     icon: 'Database',
   },
 ]
@@ -154,7 +154,7 @@ export default function MealSourceSettingsScreen() {
         {/* Info */}
         <Card style={[styles.infoCard, { backgroundColor: colors.accent.light }]}>
           <Text style={[styles.infoText, { color: colors.accent.primary }]}>
-            💡 Vous pouvez changer cette préférence à tout moment. Les nouveaux repas générés utiliseront la source sélectionnée.
+            💡 Tu peux changer cette préférence à tout moment. Les nouveaux repas générés utiliseront la source sélectionnée.
           </Text>
         </Card>
       </ScrollView>

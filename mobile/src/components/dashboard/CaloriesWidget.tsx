@@ -94,10 +94,10 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
   const effectiveTarget = target + sportBonus
   const remaining = Math.max(0, effectiveTarget - consumed + burned)
 
-  // Dynamic gradient colors based on theme
+  // Dynamic gradient colors - Organic Luxury palette (Vert Mousse)
   const gradientColors = isDark
-    ? ['#0080C9', '#005580'] as const
-    : ['#009FEB', '#0080C9'] as const
+    ? ['#3D5636', '#2D4028'] as const    // Dark mode: Mousse foncé
+    : ['#4A6741', '#3D5636'] as const    // Light mode: Mousse -> Mousse foncé
 
   return (
     <View style={styles.container}>

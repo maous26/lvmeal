@@ -8,11 +8,13 @@
  * - Compact horizontal layout
  */
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   View,
   Text,
   StyleSheet,
+  Animated,
+  Easing,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Rect, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
@@ -72,6 +74,7 @@ function MacroRow({
   unit,
   gradientColors,
   icon,
+  delay = 0,
 }: {
   label: string
   value: number
@@ -79,12 +82,44 @@ function MacroRow({
   unit: string
   gradientColors: [string, string]
   icon: string
+  delay?: number
 }) {
   const percentage = Math.round(Math.min((value / max) * 100, 100))
   const remaining = Math.max(0, max - value)
 
+  // Staggered animation
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(20)).current
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        delay,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        delay,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [])
+
   return (
-    <View style={styles.macroRow}>
+    <Animated.View
+      style={[
+        styles.macroRow,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
       <View style={styles.macroHeader}>
         <View style={styles.macroLabelRow}>
           <Text style={styles.macroIcon}>{icon}</Text>
@@ -108,7 +143,7 @@ function MacroRow({
           {remaining}{unit} restant
         </Text>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -125,15 +160,16 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
         </View>
       </View>
 
-      {/* Macros */}
+      {/* Macros - Organic Luxury gradients with staggered animation */}
       <View style={styles.macrosContainer}>
         <MacroRow
           label="Proteines"
           value={proteins.value}
           max={proteins.max}
           unit="g"
-          gradientColors={['#0077B6', '#00A8E8']}
+          gradientColors={['#4A6741', '#5C7A52']}  // Vert Mousse
           icon="🥩"
+          delay={0}
         />
 
         <MacroRow
@@ -141,8 +177,9 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
           value={carbs.value}
           max={carbs.max}
           unit="g"
-          gradientColors={['#F59E0B', '#FBBF24']}
+          gradientColors={['#D4A574', '#E3BE91']}  // Caramel
           icon="🌾"
+          delay={100}
         />
 
         <MacroRow
@@ -150,8 +187,9 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
           value={fats.value}
           max={fats.max}
           unit="g"
-          gradientColors={['#A855F7', '#C084FC']}
+          gradientColors={['#9B7BB8', '#B8A0CC']}  // Lavande
           icon="🥑"
+          delay={200}
         />
       </View>
     </View>

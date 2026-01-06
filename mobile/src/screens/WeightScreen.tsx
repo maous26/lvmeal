@@ -46,6 +46,7 @@ import { useUserStore } from '../stores/user-store'
 import { useDevicesStore, DEVICE_INFO } from '../stores/devices-store'
 import { useGamificationStore, XP_REWARDS } from '../stores/gamification-store'
 import { useTheme } from '../contexts/ThemeContext'
+import { fonts } from '../constants/theme'
 import type { WeightEntry, DeviceType } from '../types'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
@@ -414,7 +415,7 @@ export default function WeightScreen() {
                 Aucune pesée enregistrée
               </Text>
               <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-                Ajoutez votre première pesée pour suivre votre progression
+                Ajoute ta première pesée pour suivre ta progression
               </Text>
             </View>
           )}
@@ -581,7 +582,7 @@ export default function WeightScreen() {
               {/* Weight Input */}
               <View style={styles.inputSection}>
                 <Text style={[styles.inputLabel, { color: colors.text.tertiary }]}>
-                  Entrez votre poids actuel
+                  Entre ton poids actuel
                 </Text>
 
                 <View style={styles.inputRow}>
@@ -677,7 +678,7 @@ export default function WeightScreen() {
               <View style={[styles.infoBox, { backgroundColor: colors.infoLight }]}>
                 <Info size={20} color={colors.info} />
                 <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-                  Connectez vos appareils pour synchroniser automatiquement votre poids.
+                  Connecte tes appareils pour synchroniser automatiquement ton poids.
                 </Text>
               </View>
 
@@ -761,6 +762,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   card: {
     marginHorizontal: 20,

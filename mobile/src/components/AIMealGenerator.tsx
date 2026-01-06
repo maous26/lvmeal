@@ -57,7 +57,7 @@ export default function AIMealGenerator({
     if (!hasKey) {
       Alert.alert(
         'Configuration requise',
-        'Veuillez configurer votre cle API OpenAI dans les parametres pour utiliser les fonctionnalites IA.',
+        'Configure ta clé API OpenAI dans les paramètres pour utiliser les fonctionnalités IA.',
         [{ text: 'OK' }]
       )
       return
@@ -139,7 +139,7 @@ export default function AIMealGenerator({
           </View>
 
           {/* Custom Prompt */}
-          <Text style={styles.sectionTitle}>Ou decrivez votre envie</Text>
+          <Text style={styles.sectionTitle}>Ou décris ton envie</Text>
           <TextInput
             style={styles.customInput}
             placeholder="Ex: Un plat reconfortant avec du poulet et des legumes de saison..."

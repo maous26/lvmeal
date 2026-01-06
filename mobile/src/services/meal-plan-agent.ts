@@ -271,7 +271,7 @@ async function searchFoodDatabases(
           amount: `${food.servingSize || 100}${food.servingUnit || 'g'}`,
           calories: food.nutrition.calories,
         }],
-        instructions: ['Prêt à consommer ou à préparer selon vos préférences.'],
+        instructions: ['Prêt à consommer ou à préparer selon tes préférences.'],
         isValidated: false,
         source: actualSource as 'ciqual' | 'openfoodfacts',
       }

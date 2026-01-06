@@ -126,7 +126,7 @@ export default function BackupSettingsScreen() {
   const handleSignOut = () => {
     Alert.alert(
       'Se déconnecter',
-      'Vos données locales seront conservées. Voulez-vous continuer ?',
+      'Tes données locales seront conservées. Veux-tu continuer ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -339,7 +339,7 @@ export default function BackupSettingsScreen() {
                       Modifier le mot de passe
                     </Text>
                     <Text style={[styles.settingDescription, { color: colors.text.tertiary }]}>
-                      Changer votre mot de passe
+                      Changer ton mot de passe
                     </Text>
                   </View>
                   <ChevronRight size={20} color={colors.text.tertiary} />
@@ -352,10 +352,10 @@ export default function BackupSettingsScreen() {
             <View style={styles.signInPrompt}>
               <Cloud size={40} color={colors.accent.primary} />
               <Text style={[styles.signInTitle, { color: colors.text.primary }]}>
-                Connectez-vous pour synchroniser
+                Connecte-toi pour synchroniser
               </Text>
               <Text style={[styles.signInDescription, { color: colors.text.tertiary }]}>
-                Vos données seront sauvegardées automatiquement et accessibles sur tous vos appareils.
+                Tes données seront sauvegardées automatiquement et accessibles sur tous tes appareils.
               </Text>
 
               {isGoogleConfigured() ? (
@@ -552,7 +552,7 @@ export default function BackupSettingsScreen() {
         <Card style={[styles.infoCard, { backgroundColor: colors.bg.secondary }]}>
           <Smartphone size={20} color={colors.text.secondary} />
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            Vos données sont stockées localement sur votre appareil. La synchronisation cloud vous permet de les retrouver sur un autre appareil.
+            Tes données sont stockées localement sur ton appareil. La synchronisation cloud te permet de les retrouver sur un autre appareil.
           </Text>
         </Card>
       </ScrollView>

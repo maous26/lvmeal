@@ -52,7 +52,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { Card, Button, Badge, NutriScoreBadge } from '../components/ui'
-import { colors, spacing, typography, radius, shadows } from '../constants/theme'
+import { colors, fonts, spacing, typography, radius, shadows } from '../constants/theme'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useRecipesStore } from '../stores/recipes-store'
@@ -601,7 +601,7 @@ export default function AddMealScreen() {
   // AI Recipe suggestion handler - Now uses RAG for intelligent source selection
   const handleAISuggest = async () => {
     if (!profile || !nutritionGoals) {
-      toast.error('Configurez votre profil pour utiliser LymIA')
+      toast.error('Configure ton profil pour utiliser LymIA')
       return
     }
 
@@ -1423,7 +1423,7 @@ export default function AddMealScreen() {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
                             Alert.alert(
                               'Supprimer des favoris',
-                              `Retirer "${food.name}" de vos favoris ?`,
+                              `Retirer "${food.name}" de tes favoris ?`,
                               [
                                 { text: 'Annuler', style: 'cancel' },
                                 {
@@ -1445,7 +1445,7 @@ export default function AddMealScreen() {
                     <Apple size={48} color={colors.text.muted} />
                     <Text style={styles.emptyStateText}>Aucun aliment favori</Text>
                     <Text style={styles.emptyStateSubtext}>
-                      Ajoutez des aliments a vos favoris lors de la recherche
+                      Ajoute des aliments a tes favoris lors de la recherche
                     </Text>
                   </View>
                 )}
@@ -1502,7 +1502,7 @@ export default function AddMealScreen() {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
                             Alert.alert(
                               'Supprimer des favoris',
-                              `Retirer "${recipe.title}" de vos favoris ?`,
+                              `Retirer "${recipe.title}" de tes favoris ?`,
                               [
                                 { text: 'Annuler', style: 'cancel' },
                                 {
@@ -2181,7 +2181,7 @@ export default function AddMealScreen() {
                   <View style={styles.ratingSection}>
                     <Text style={styles.recipeDetailSectionTitle}>Noter cette recette</Text>
                     <Text style={styles.ratingSubtitle}>
-                      Les recettes les mieux notees apparaitront dans vos suggestions
+                      Les recettes les mieux notees apparaitront dans tes suggestions
                     </Text>
 
                     {/* Star Rating */}
@@ -2330,6 +2330,7 @@ const styles = StyleSheet.create({
   headerText: {
     ...typography.h4,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   saveButton: {
     padding: spacing.sm,

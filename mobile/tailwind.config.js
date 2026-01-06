@@ -8,99 +8,111 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary Blue - Trust, Calm, Professionalism
+        // Primary Moss Green - Serenity, Nature, Trust
         primary: {
-          50: '#EFF8FF',
-          100: '#DEF0FF',
-          200: '#B6E3FF',
-          300: '#75CFFF',
-          400: '#2CB8FF',
-          500: '#009FEB', // Main primary
-          600: '#0080C9',
-          700: '#0066A3',
-          800: '#005586',
-          900: '#00476F',
-          950: '#002D4A',
+          50: '#EDF3EC',
+          100: '#DCE7DA',
+          200: '#B8CBB4',
+          300: '#94AF8F',
+          400: '#6E8E68',
+          500: '#4A6741', // Main primary - Vert Mousse
+          600: '#3D5636',
+          700: '#30442B',
+          800: '#243320',
+          900: '#172215',
+          950: '#0B110A',
         },
-        // Secondary Coral - Warmth, Energy, Appetite
-        coral: {
-          50: '#FFF5F3',
-          100: '#FFEBE7',
-          200: '#FFD4CC',
-          300: '#FFB3A6',
-          400: '#FF8A75',
-          500: '#FF6B5B', // Main coral
-          600: '#E84C3D',
-          700: '#C43A2D',
-          800: '#A13229',
-          900: '#852E28',
-          950: '#481410',
+        // Secondary Terracotta - Warmth, Earth, Appetite
+        terracotta: {
+          50: '#FBF5F3',
+          100: '#F7EBE7',
+          200: '#E5CFC9',
+          300: '#D9B5AB',
+          400: '#D09789',
+          500: '#C87863', // Main terracotta - Terre Cuite
+          600: '#B56A56',
+          700: '#965749',
+          800: '#77453C',
+          900: '#5D372F',
+          950: '#321C18',
         },
-        // Neutral - Elegant grays
+        // Organic palette
+        organic: {
+          sage: '#7A9E7E',
+          sand: '#E2DCCA',
+          stone: '#8B8680',
+          moss: '#4A6741',
+          clay: '#B8856C',
+          ocean: '#2D7A9C',
+          lavender: '#9B7BB8',
+          caramel: '#D4A574',
+        },
+        // Neutral - Warm grays
         neutral: {
-          50: '#FAFAF9',
-          100: '#F5F5F3',
-          200: '#E8E8E4',
-          300: '#D4D4CD',
-          400: '#A3A39A',
-          500: '#737369',
-          600: '#5C5C54',
-          700: '#4A4A44',
-          800: '#3D3D38',
-          900: '#262622',
-          950: '#171714',
+          50: '#FDFCFA',
+          100: '#F7F5F2',
+          200: '#EDE9E3',
+          300: '#D8D2C8',
+          400: '#B5AFA5',
+          500: '#8B8680',
+          600: '#6B665F',
+          700: '#4A4640',
+          800: '#3A3632',
+          900: '#2D2A27',
+          950: '#1A1816',
         },
-        // Success - Green for positive feedback
+        // Success - Natural green
         success: {
-          50: '#ECFDF5',
-          100: '#D1FAE5',
-          200: '#A7F3D0',
-          300: '#6EE7B7',
-          400: '#34D399',
-          500: '#10B981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065F46',
-          900: '#064E3B',
+          50: '#EDF5EE',
+          100: '#DAEADC',
+          200: '#B5D5B9',
+          300: '#90C096',
+          400: '#6BAB73',
+          500: '#5C8A5E',
+          600: '#4A704C',
+          700: '#3B593D',
+          800: '#2D422E',
+          900: '#1E2C1F',
         },
-        // Warning - Amber
+        // Warning - Caramel
         warning: {
-          50: '#FFFBEB',
-          100: '#FEF3C7',
-          200: '#FDE68A',
-          300: '#FCD34D',
-          400: '#FBBF24',
-          500: '#F59E0B',
-          600: '#D97706',
-          700: '#B45309',
-          800: '#92400E',
-          900: '#78350F',
+          50: '#FDF8F3',
+          100: '#FAF1E7',
+          200: '#F5E3CF',
+          300: '#EDD4B3',
+          400: '#E3BE91',
+          500: '#D4A574',
+          600: '#C08B56',
+          700: '#9E6F42',
+          800: '#7B5634',
+          900: '#5A3F26',
         },
-        // Error - Red
+        // Error - Earth red
         error: {
-          50: '#FEF2F2',
-          100: '#FEE2E2',
-          200: '#FECACA',
-          300: '#FCA5A5',
-          400: '#F87171',
-          500: '#EF4444',
-          600: '#DC2626',
-          700: '#B91C1C',
-          800: '#991B1B',
-          900: '#7F1D1D',
+          50: '#FDF2F2',
+          100: '#FADDDD',
+          200: '#F5BBBB',
+          300: '#E99999',
+          400: '#D97777',
+          500: '#C75D5D',
+          600: '#A54949',
+          700: '#833939',
+          800: '#612C2C',
+          900: '#3F1E1E',
         },
-        // Nutrients - Specific colors for macros
+        // Nutrients - Organic colors
         nutrient: {
-          calories: '#FF6B5B',
-          proteins: '#0080C9',
-          carbs: '#F59E0B',
-          fats: '#A855F7',
-          fiber: '#10B981',
-          water: '#06B6D4',
+          calories: '#C87863',  // Terracotta
+          proteins: '#4A6741',  // Moss
+          carbs: '#D4A574',     // Caramel
+          fats: '#9B7BB8',      // Lavender
+          fiber: '#7A9E7E',     // Sage
+          water: '#6BA3BE',     // Ocean light
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['PlayfairDisplay', 'Georgia', 'serif'],
       },
       fontSize: {
         'display': ['48px', { lineHeight: '52px', fontWeight: '700' }],
@@ -130,11 +142,12 @@ module.exports = {
         '22': '88px',
       },
       boxShadow: {
-        'soft': '0 2px 8px rgba(0, 70, 110, 0.08)',
-        'medium': '0 4px 16px rgba(0, 70, 110, 0.12)',
-        'strong': '0 8px 32px rgba(0, 70, 110, 0.16)',
-        'glow-primary': '0 0 20px rgba(0, 159, 235, 0.3)',
-        'glow-coral': '0 0 20px rgba(255, 107, 91, 0.3)',
+        'soft': '0 2px 8px rgba(74, 103, 65, 0.08)',
+        'medium': '0 4px 16px rgba(74, 103, 65, 0.12)',
+        'strong': '0 8px 32px rgba(74, 103, 65, 0.16)',
+        'glow-primary': '0 0 20px rgba(74, 103, 65, 0.35)',
+        'glow-secondary': '0 0 20px rgba(200, 120, 99, 0.35)',
+        'glass': '0 8px 32px rgba(74, 103, 65, 0.12)',
       },
     },
   },

@@ -176,7 +176,7 @@ export default function VoiceFoodInput({
 
   const handleAnalyze = async () => {
     if (!transcript.trim()) {
-      Alert.alert('Texte vide', 'Veuillez decrire votre repas')
+      Alert.alert('Texte vide', 'Décris ton repas')
       return
     }
 
@@ -185,7 +185,7 @@ export default function VoiceFoodInput({
     if (!hasKey) {
       Alert.alert(
         'Configuration requise',
-        'Veuillez configurer votre cle API OpenAI dans les parametres pour utiliser l\'analyse vocale.',
+        'Configure ta clé API OpenAI dans les paramètres pour utiliser l\'analyse vocale.',
         [{ text: 'OK' }]
       )
       return
@@ -212,7 +212,7 @@ export default function VoiceFoodInput({
           foods_count: result.foods.length,
         })
       } else if (result.foods.length === 0) {
-        setError('Aucun aliment identifie dans votre description')
+        setError('Aucun aliment identifié dans ta description')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
         analytics.trackAIFeature('voice_input', false, durationMs, {
           error_type: 'no_foods_detected',
@@ -468,7 +468,7 @@ export default function VoiceFoodInput({
           {analyzedFoods.length > 0 && (
             <>
               <View style={styles.transcriptPreview}>
-                <Text style={styles.transcriptPreviewLabel}>Votre description:</Text>
+                <Text style={styles.transcriptPreviewLabel}>Ta description:</Text>
                 <Text style={styles.transcriptPreviewText}>{transcript}</Text>
                 <TouchableOpacity
                   onPress={() => {

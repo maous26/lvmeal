@@ -19,12 +19,12 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
   const todayEntry = getEntryForDate(today)
   const score = todayScore()
 
-  // Score color
+  // Score color - Organic Luxury palette
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981' // emerald
-    if (score >= 60) return '#3B82F6' // blue
-    if (score >= 40) return '#F59E0B' // amber
-    return '#EF4444' // red
+    if (score >= 80) return '#4A6741' // Vert Mousse - excellent
+    if (score >= 60) return '#7A9E7E' // Sauge - good
+    if (score >= 40) return '#D4A574' // Caramel - warning
+    return '#C87863' // Terre cuite - needs attention
   }
 
   const stressLabels = ['Zen', 'Calme', 'Ok', 'Haut', 'Max']
@@ -36,7 +36,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.iconContainer}>
-              <Sparkles size={16} color="#6366F1" />
+              <Sparkles size={16} color="#4A6741" />
             </View>
             <Text style={styles.title}>Bien-etre</Text>
           </View>
@@ -49,11 +49,11 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
           </View>
         </View>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Organic colors */}
         <View style={styles.statsGrid}>
           {/* Sleep */}
           <View style={styles.statItem}>
-            <Moon size={16} color="#6366F1" />
+            <Moon size={16} color="#9B7BB8" />
             <Text style={styles.statValue}>
               {todayEntry?.sleepHours || '--'}h
             </Text>
@@ -61,7 +61,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
 
           {/* Water */}
           <View style={styles.statItem}>
-            <Droplets size={16} color="#06B6D4" />
+            <Droplets size={16} color="#6BA3BE" />
             <Text style={styles.statValue}>
               {todayEntry?.waterLiters?.toFixed(1) || '--'}L
             </Text>
@@ -69,7 +69,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
 
           {/* Stress */}
           <View style={styles.statItem}>
-            <Brain size={16} color="#F43F5E" />
+            <Brain size={16} color="#C87863" />
             <Text style={styles.statValue}>
               {todayEntry?.stressLevel ? stressLabels[todayEntry.stressLevel - 1] : '--'}
             </Text>
@@ -77,7 +77,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
 
           {/* Steps */}
           <View style={styles.statItem}>
-            <Activity size={16} color="#10B981" />
+            <Activity size={16} color="#7A9E7E" />
             <Text style={styles.statValue}>
               {todayEntry?.steps ? `${Math.round(todayEntry.steps / 1000)}k` : '--'}
             </Text>
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     padding: spacing.xs,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: 'rgba(74, 103, 65, 0.1)', // Vert mousse
   },
   title: {
     ...typography.smallMedium,

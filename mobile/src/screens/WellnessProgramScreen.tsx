@@ -51,7 +51,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, Button } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { colors, spacing, typography, radius, fonts } from '../constants/theme'
 import {
   useWellnessProgramStore,
   WELLNESS_PHASE_CONFIGS,
@@ -824,6 +824,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   subtitle: {
     ...typography.small,
@@ -866,6 +867,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    fontFamily: fonts.serif.bold,
   },
   heroSubtitle: {
     ...typography.body,

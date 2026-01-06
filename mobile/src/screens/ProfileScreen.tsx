@@ -36,7 +36,7 @@ import * as Haptics from 'expo-haptics'
 
 import { Card, Button } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius } from '../constants/theme'
+import { spacing, typography, radius, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
@@ -169,7 +169,7 @@ export default function ProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
     Alert.alert(
       'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ? Vous retournerez à l\'écran d\'onboarding.',
+      'Es-tu sûr de vouloir te déconnecter ? Tu retourneras à l\'écran d\'onboarding.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
     Alert.alert(
       'Réinitialiser les données',
-      'Cette action supprimera toutes vos données. Cette action est irréversible.',
+      'Cette action supprimera toutes tes données. Cette action est irréversible.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -233,7 +233,7 @@ export default function ProfileScreen() {
     if (isMetabolicEnrolled) {
       Alert.alert(
         'Quitter le programme',
-        'Êtes-vous sûr de vouloir quitter le programme Métabolisme ? Votre progression sera conservée.',
+        'Es-tu sûr de vouloir quitter le programme Métabolisme ? Ta progression sera conservée.',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -251,7 +251,7 @@ export default function ProfileScreen() {
     } else {
       Alert.alert(
         'Rejoindre le programme',
-        'Le programme Métabolisme vous aide à relancer votre métabolisme en douceur sur 9 semaines.',
+        'Le programme Métabolisme t\'aide à relancer ton métabolisme en douceur sur 9 semaines.',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -273,7 +273,7 @@ export default function ProfileScreen() {
     if (isWellnessEnrolled) {
       Alert.alert(
         'Quitter le programme',
-        'Êtes-vous sûr de vouloir quitter le programme Bien-être ? Votre progression sera conservée.',
+        'Es-tu sûr de vouloir quitter le programme Bien-être ? Ta progression sera conservée.',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -291,7 +291,7 @@ export default function ProfileScreen() {
     } else {
       Alert.alert(
         'Rejoindre le programme',
-        'Le programme Bien-être vous accompagne pour améliorer votre sommeil, gérer le stress et cultiver la sérénité sur 8 semaines.',
+        'Le programme Bien-être t\'accompagne pour améliorer ton sommeil, gérer le stress et cultiver la sérénité sur 8 semaines.',
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -476,7 +476,7 @@ export default function ProfileScreen() {
             activeOpacity={canToggleMetabolic || isMetabolicEnrolled ? 0.7 : 1}
           >
             <View style={[styles.programIcon, styles.programIconMetabolic, isMetabolicEnrolled && styles.programIconMetabolicActive]}>
-              <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.warning} />
+              <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : '#C87863'} />
             </View>
             <View style={styles.programInfo}>
               <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleMetabolic && !isMetabolicEnrolled && { color: colors.text.muted }]}>
@@ -492,8 +492,8 @@ export default function ProfileScreen() {
               value={isMetabolicEnrolled}
               onValueChange={handleToggleMetabolic}
               disabled={!canToggleMetabolic && !isMetabolicEnrolled}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(245, 158, 11, 0.3)' }}
-              thumbColor={isMetabolicEnrolled ? colors.warning : colors.text.tertiary}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(200, 120, 99, 0.3)' }}
+              thumbColor={isMetabolicEnrolled ? '#C87863' : colors.text.tertiary}
               ios_backgroundColor={colors.bg.tertiary}
             />
           </TouchableOpacity>
@@ -505,7 +505,7 @@ export default function ProfileScreen() {
             activeOpacity={canToggleWellness || isWellnessEnrolled ? 0.7 : 1}
           >
             <View style={[styles.programIcon, styles.programIconWellness, isWellnessEnrolled && styles.programIconWellnessActive]}>
-              <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.secondary.primary} />
+              <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : '#4A6741'} />
             </View>
             <View style={styles.programInfo}>
               <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleWellness && !isWellnessEnrolled && { color: colors.text.muted }]}>
@@ -521,8 +521,8 @@ export default function ProfileScreen() {
               value={isWellnessEnrolled}
               onValueChange={handleToggleWellness}
               disabled={!canToggleWellness && !isWellnessEnrolled}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(139, 92, 246, 0.3)' }}
-              thumbColor={isWellnessEnrolled ? colors.secondary.primary : colors.text.tertiary}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(74, 103, 65, 0.3)' }}
+              thumbColor={isWellnessEnrolled ? '#4A6741' : colors.text.tertiary}
               ios_backgroundColor={colors.bg.tertiary}
             />
           </TouchableOpacity>
@@ -692,6 +692,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h2,
+    fontFamily: fonts.serif.bold,
   },
   profileCard: {
     marginBottom: spacing.lg,
@@ -719,6 +720,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     ...typography.bodySemibold,
+    fontFamily: fonts.serif.semibold,
   },
   profileEmail: {
     ...typography.small,
@@ -763,6 +765,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.bodyMedium,
+    fontFamily: fonts.serif.semibold,
   },
   sectionEditButton: {
     width: 32,
@@ -893,16 +896,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   programIconMetabolic: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    backgroundColor: 'rgba(200, 120, 99, 0.15)',  // Terre Cuite light
   },
   programIconMetabolicActive: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#C87863',  // Terre Cuite
   },
   programIconWellness: {
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    backgroundColor: 'rgba(74, 103, 65, 0.15)',   // Vert Mousse light
   },
   programIconWellnessActive: {
-    backgroundColor: '#FF6B5B',
+    backgroundColor: '#4A6741',  // Vert Mousse
   },
   programItemBorder: {
     borderBottomWidth: 1,
@@ -953,7 +956,7 @@ const styles = StyleSheet.create({
   },
   progressLinkTitle: {
     ...typography.bodyMedium,
-    fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
   },
   progressLinkSubtitle: {
     ...typography.small,

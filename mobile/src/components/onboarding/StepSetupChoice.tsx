@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Zap, Sparkles, Clock, ChevronRight, Shield } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
-import { spacing, radius, typography } from '../../constants/theme'
+import { spacing, radius, typography, fonts } from '../../constants/theme'
 
 const { width, height } = Dimensions.get('window')
 
@@ -134,6 +134,13 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
             </View>
             <ChevronRight size={20} color={dark.accent} />
           </TouchableOpacity>
+
+          {/* Social proof */}
+          <View style={styles.socialProof}>
+            <Text style={styles.socialProofText}>
+              Choisi par 87% de nos membres pour plus de précision
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -179,14 +186,15 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 36,
-    fontWeight: '700',
+    fontFamily: fonts.serif.bold,
     color: dark.text,
     marginBottom: spacing.sm,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   welcomeMessage: {
     fontSize: 17,
     lineHeight: 26,
+    fontFamily: fonts.sans.regular,
     color: dark.textSecondary,
   },
   optionsContainer: {
@@ -212,6 +220,7 @@ const styles = StyleSheet.create({
   recommendedText: {
     fontSize: 11,
     fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
     color: '#FFFFFF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -228,7 +237,7 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
     color: dark.text,
     marginBottom: 2,
   },
@@ -240,10 +249,12 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 12,
+    fontFamily: fonts.sans.regular,
     color: dark.textMuted,
   },
   optionDescription: {
     fontSize: 13,
+    fontFamily: fonts.sans.regular,
     color: dark.textSecondary,
   },
   footer: {
@@ -258,7 +269,19 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+    fontFamily: fonts.sans.regular,
     color: dark.textMuted,
+  },
+  socialProof: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  socialProofText: {
+    fontSize: 12,
+    fontFamily: fonts.sans.regular,
+    color: dark.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 })
 

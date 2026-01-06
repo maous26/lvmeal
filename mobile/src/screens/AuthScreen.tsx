@@ -25,7 +25,7 @@ import { Mail } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, shadows } from '../constants/theme'
+import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import {
   signInWithGoogle,
   isGoogleAuthConfigured,
@@ -181,7 +181,7 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
       {/* Logo & App Name */}
       <View style={styles.header}>
         <Image
-          source={require('../../logo1.png')}
+          source={require('../../assets/logo5.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   appName: {
     ...typography.h1,
-    fontWeight: '700',
+    fontFamily: fonts.serif.bold,
     letterSpacing: 2,
   },
   tagline: {
@@ -303,6 +303,7 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     ...typography.h2,
+    fontFamily: fonts.serif.bold,
     marginBottom: spacing.md,
   },
   welcomeText: {

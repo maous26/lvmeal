@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
-  "generatedAt": "2026-01-02T16:28:47.415Z",
-  "totalRecipes": 293,
+  "generatedAt": "2026-01-06T14:38:36.809Z",
+  "totalRecipes": 322,
   "recipes": [
     {
       "id": "https://www.lecker.de/fruehstueck-muesli-34908.html",
@@ -25767,6 +25767,2647 @@
       "sourceUrl": "https://eatsmarter.de/rezepte/schoko-riegel-mit-karamell",
       "originalTitle": "Schoko-Riegel mit Karamell",
       "enrichedAt": "2026-01-02T16:28:26.523Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/meeresfruechtesuppe-mit-tofu",
+      "titleFr": "Soupe de fruits de mer au tofu épicé",
+      "descriptionFr": "Savourez une délicieuse soupe réconfortante alliant la fraîcheur des fruits de mer et la texture du tofu. Parfumée au kimchi et relevée par le gochujang, cette soupe est à la fois nourrissante et pleine de saveurs. Idéale pour un dîner léger et sain !",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Huile de soja",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Gochujang (pâte de piment)",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Courgette",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Kimchi",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de poisson (ou de légumes)",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Mélange de fruits de mer (surgelés)",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Tofu ferme",
+          "amount": 500,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez l'oignon et coupez la courgette en dés.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile de soja à feu moyen. Ajoutez l'oignon et faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Incorporez le gochujang et mélangez bien pour enrober l'oignon.",
+        "Étape 4: Ajoutez la courgette et le kimchi. Faites sauter pendant environ 5 minutes.",
+        "Étape 5: Versez le bouillon de poisson (ou de légumes) et laissez mijoter pendant 10 minutes.",
+        "Étape 6: Ajoutez les fruits de mer congelés et le tofu coupé en cubes. Laissez cuire encore 5 à 7 minutes jusqu'à ce que les fruits de mer soient cuits.",
+        "Étape 7: Assaisonnez avec le sel et la sauce soja selon votre goût.",
+        "Étape 8: Servez chaud, garni de coriandre ou d'oignons verts si désiré."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 35,
+        "carbs": 50,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 4,
+        "saturatedFat": 2,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette soupe est riche en protéines grâce aux fruits de mer et au tofu, tout en étant faible en sucres et en graisses saturées. Elle offre un bon équilibre de macronutriments et des fibres provenant des légumes, ce qui en fait un choix très sain pour le dîner.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/meeresfruechtesuppe-mit-tofu-436968.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/meeresfruechtesuppe-mit-tofu",
+      "originalTitle": "Meeresfrüchtesuppe mit Tofu",
+      "enrichedAt": "2026-01-06T14:27:19.474Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/auberginensalat-mit-joghurt",
+      "titleFr": "Salade d'aubergines au yaourt",
+      "descriptionFr": "Découvrez cette salade d'aubergines savoureuse et crémeuse, parfaite pour un petit-déjeuner équilibré. Avec des poivrons colorés et une touche d'ail, elle est aussi nutritive que délicieuse. Le yaourt apporte une onctuosité irrésistible !",
+      "ingredientsFr": [
+        {
+          "name": "Aubergines",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron rouge",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron jaune",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron vert",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C (390°F).",
+        "Étape 2: Lavez les aubergines et coupez-les en dés. Disposez-les sur une plaque de cuisson, arrosez d'un peu d'huile d'olive et saupoudrez de sel.",
+        "Étape 3: Faites rôtir les aubergines au four pendant environ 25 minutes, jusqu'à ce qu'elles soient tendres et légèrement dorées.",
+        "Étape 4: Pendant ce temps, lavez et coupez les poivrons en petits dés. Hachez finement les gousses d'ail.",
+        "Étape 5: Dans un grand bol, mélangez les aubergines rôties, les poivrons et l'ail. Laissez refroidir légèrement.",
+        "Étape 6: Incorporez le yaourt nature à la préparation. Mélangez soigneusement pour bien enrober les légumes.",
+        "Étape 7: Ajustez l'assaisonnement avec du sel selon votre goût. Vous pouvez également ajouter des herbes fraîches comme du persil ou de la menthe.",
+        "Étape 8: Servez frais, accompagné de pain complet ou de galettes."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 12,
+        "carbs": 40,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 10,
+        "saturatedFat": 4,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette salade est riche en fibres et en vitamines, grâce aux légumes variés. Le yaourt apporte des protéines et des probiotiques, ce qui favorise la santé intestinale. C'est un choix très sain pour commencer la journée.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2009/5/Auberginensalat-mit-Joghurt-4a0c03e428e68.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/auberginensalat-mit-joghurt",
+      "originalTitle": "Auberginensalat mit Joghurt",
+      "enrichedAt": "2026-01-06T14:27:17.527Z"
+    },
+    {
+      "id": "https://www.lecker.de/power-wrap-72063.html",
+      "titleFr": "Wrap Énergétique au Saumon Fumé",
+      "descriptionFr": "Savourez ce wrap frais et nourrissant, parfait pour votre déjeuner. Composé de saumon fumé riche en oméga-3, d'avocat crémeux et de laitue croquante, il vous apportera énergie et vitalité tout au long de la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Minirömersalat",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Avocat",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Saumon fumé",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Tortillas de blé avec graines de lin",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "Crème à salade",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez et essorez le Minirömersalat, puis coupez-le en morceaux.",
+        "Étape 2: Coupez l'avocat en deux, retirez le noyau et récupérez la chair avec une cuillère. Écrasez-la légèrement avec une fourchette.",
+        "Étape 3: Dans un bol, mélangez l'avocat écrasé avec le jus de citron, du sel et du poivre.",
+        "Étape 4: Prenez une tortilla et étalez une cuillère de crème à salade sur toute sa surface.",
+        "Étape 5: Disposez quelques feuilles de Minirömersalat sur la crème, puis ajoutez des tranches de saumon fumé.",
+        "Étape 6: Étalez un peu de purée d'avocat sur le saumon, puis ajoutez encore un peu de laitue si désiré.",
+        "Étape 7: Roulez la tortilla en serrant bien, puis coupez-la en deux pour une présentation agréable.",
+        "Étape 8: Répétez pour les autres tortillas et servez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 620,
+        "proteins": 32,
+        "carbs": 56,
+        "fats": 30,
+        "sugar": 2,
+        "fiber": 10,
+        "saturatedFat": 5,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce wrap est riche en protéines grâce au saumon fumé et en graisses saines provenant de l'avocat. Il contient également des fibres, favorables à la digestion, et reste dans les limites recommandées de sodium et de graisses saturées.",
+      "imageUrl": "https://images.lecker.de/,id=a5f52a09,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/power-wrap-72063.html",
+      "originalTitle": "Power-Wrap",
+      "enrichedAt": "2026-01-06T14:27:35.447Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/rindfleisch-thaisalat",
+      "titleFr": "Salade Thaï au Bœuf Rôti",
+      "descriptionFr": "Cette salade thaïlandaise au bœuf rôti est à la fois fraîche et savoureuse. Elle combine des légumes croquants et une vinaigrette acidulée pour un repas léger et nourrissant, parfait pour un dîner équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Bœuf rôti",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Concombre",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Oignon rouge",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Oignons nouveaux",
+          "amount": 4,
+          "unit": "unité"
+        },
+        {
+          "name": "Sauce aux huîtres",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Jus de citron vert",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Piment",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Huile",
+          "amount": 2,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Cuisez le bœuf rôti à votre convenance, puis laissez-le reposer avant de le couper en fines tranches.",
+        "Étape 2: Lavez et coupez le concombre en fines rondelles.",
+        "Étape 3: Émincez l'oignon rouge et les oignons nouveaux.",
+        "Étape 4: Dans un grand saladier, combinez le bœuf, le concombre, l'oignon rouge et les oignons nouveaux.",
+        "Étape 5: Dans un petit bol, mélangez la sauce aux huîtres, la sauce soja, le jus de citron vert, le piment émincé, et l'huile pour créer la vinaigrette.",
+        "Étape 6: Versez la vinaigrette sur la salade et mélangez bien pour enrober tous les ingrédients.",
+        "Étape 7: Ajoutez la coriandre fraîche et assaisonnez avec du poivre selon votre goût.",
+        "Étape 8: Servez immédiatement pour profiter de la fraîcheur des ingrédients."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 40,
+        "carbs": 15,
+        "fats": 20,
+        "sugar": 4,
+        "fiber": 3,
+        "saturatedFat": 5,
+        "sodium": 490
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce au bœuf et fournit des légumes frais, ce qui en fait un plat équilibré. La vinaigrette à base de sauce soja et de sauce aux huîtres est savoureuse mais doit être utilisée avec modération pour contrôler le sodium.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Rindfleisch-Thaisalat-4bb0d97924df7.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/rindfleisch-thaisalat",
+      "originalTitle": "Rindfleisch-Thaisalat",
+      "enrichedAt": "2026-01-06T14:28:24.024Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/misosuppe-mit-tofu-10543534.html",
+      "titleFr": "Soupe Miso au Tofu",
+      "descriptionFr": "Découvrez cette délicieuse soupe miso au tofu, un plat réconfortant et sain, parfait pour un dîner léger. Avec sa base umami et ses légumes croquants, cette soupe est à la fois nourrissante et riche en saveurs.",
+      "ingredientsFr": [
+        {
+          "name": "Miso",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "Tofu fumé",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Ciboule",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Carotte",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Nori",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, faites chauffer le bouillon de légumes à feu moyen.",
+        "Étape 2: Pendant ce temps, coupez le tofu fumé en dés et les carottes en fines rondelles.",
+        "Étape 3: Ajoutez les carottes et le tofu au bouillon chaud et laissez mijoter pendant environ 5 minutes.",
+        "Étape 4: Pendant que les légumes cuisent, émincez finement les ciboules.",
+        "Étape 5: Une fois les carottes tendres, retirez une petite quantité de bouillon dans un bol et dissolvez-y le miso.",
+        "Étape 6: Incorporez le mélange de miso dans la casserole et mélangez bien sans faire bouillir.",
+        "Étape 7: Ajoutez les ciboules émincées et, si désiré, émiettez le nori sur le dessus.",
+        "Étape 8: Servez chaud dans des bols et dégustez!"
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 14,
+        "carbs": 22,
+        "fats": 8,
+        "sugar": 3,
+        "fiber": 4,
+        "saturatedFat": 1,
+        "sodium": 482
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette soupe est riche en protéines grâce au tofu et faible en calories. Le miso apporte des probiotiques bénéfiques pour la santé intestinale, tandis que les légumes ajoutent des fibres et des vitamines essentielles.",
+      "imageUrl": "https://image.brigitte.de/11539472/t/DU/v3/w1440/r1/-/misosuppe-mit-tofu-bild.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/misosuppe-mit-tofu-10543534.html",
+      "originalTitle": "Misosuppe mit Tofu",
+      "enrichedAt": "2026-01-06T14:28:38.780Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/gemueseeintopf-mit-tofu-11231908.html",
+      "titleFr": "Ragoût de légumes au tofu",
+      "descriptionFr": "Ce ragoût de légumes coloré et réconfortant, enrichi de tofu, est parfait pour un dîner sain et savoureux. Les carottes croquantes et le kohlrabi se marient à merveille dans une sauce crémeuse à base de soja, offrant une expérience gustative délicieuse et nourrissante.",
+      "ingredientsFr": [
+        {
+          "name": "carottes",
+          "amount": 225,
+          "unit": "g"
+        },
+        {
+          "name": "kohlrabi",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "oignons verts",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "huile de colza",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 350,
+          "unit": "ml"
+        },
+        {
+          "name": "crème soja",
+          "amount": 250,
+          "unit": "ml"
+        },
+        {
+          "name": "feuille de laurier",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "petits pois surgelés",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "tofu",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "persil plat",
+          "amount": 1,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez les carottes et coupez-les en rondelles. Épluchez le kohlrabi et coupez-le en dés.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile de colza à feu moyen. Ajoutez les oignons verts émincés et faites-les revenir pendant 2-3 minutes.",
+        "Étape 3: Ajoutez les carottes et le kohlrabi dans la casserole et faites revenir pendant environ 5 minutes.",
+        "Étape 4: Versez le bouillon de légumes et ajoutez la feuille de laurier. Laissez mijoter pendant 10 minutes.",
+        "Étape 5: Ajoutez la crème soja et les petits pois surgelés. Mélangez bien et laissez cuire encore 5 minutes.",
+        "Étape 6: Pendant ce temps, coupez le tofu en cubes et faites-le dorer dans une poêle antiadhésive sans matière grasse pendant 4-5 minutes.",
+        "Étape 7: Incorporez le tofu doré dans le ragoût, ajoutez le jus de citron, le sel et le poivre selon votre goût.",
+        "Étape 8: Servez chaud, garni de persil plat frais haché."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 22,
+        "carbs": 40,
+        "fats": 20,
+        "sugar": 7,
+        "fiber": 8,
+        "saturatedFat": 2,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en légumes, en protéines végétales et faible en graisses saturées, ce qui en fait une option de dîner très saine. Les fibres des légumes contribuent à la satiété et à une bonne digestion.",
+      "imageUrl": "https://image.brigitte.de/11231910/t/-J/v3/w1440/r1/-/gemueseeintopf-mit-tofu.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/gemueseeintopf-mit-tofu-11231908.html",
+      "originalTitle": "Gemüseeintopf mit Tofu",
+      "enrichedAt": "2026-01-06T14:28:42.657Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/gemueseeintopf-mit-tofu-0",
+      "titleFr": "Ragoût de légumes au tofu",
+      "descriptionFr": "Ce ragoût réconfortant allie la douceur des légumes de saison à la texture savoureuse du tofu fumé. Parfait pour un dîner équilibré, il est riche en nutriments et plein de saveurs.",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 1200,
+          "unit": "ml"
+        },
+        {
+          "name": "Pois jaunes décortiqués",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "Feuille de laurier",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Choux de Bruxelles",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Pommes de terre à chair farineuse",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Kohlrabi",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Céleri-rave",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Carottes",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Poireau",
+          "amount": 0.5,
+          "unit": "tige"
+        },
+        {
+          "name": "Tofu fumé",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Céleri",
+          "amount": 1,
+          "unit": "branche"
+        },
+        {
+          "name": "Vinaigre de cidre",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincer l'oignon et les gousses d'ail, puis les faire revenir dans une grande casserole avec l'huile végétale à feu moyen jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajouter le bouillon de légumes et porter à ébullition.",
+        "Étape 3: Incorporer les pois jaunes décortiqués et la feuille de laurier, puis réduire le feu et laisser mijoter pendant environ 15 minutes.",
+        "Étape 4: Pendant ce temps, préparer les légumes: couper les choux de Bruxelles en deux, les pommes de terre en dés, le kohlrabi en cubes, le céleri-rave en dés, les carottes en rondelles et le poireau en morceaux.",
+        "Étape 5: Ajouter tous les légumes dans la casserole et continuer à cuire pendant 20 minutes, ou jusqu'à ce que les légumes soient tendres.",
+        "Étape 6: Couper le tofu fumé en cubes et l'ajouter au ragoût, puis assaisonner avec le vinaigre de cidre, le sel et le poivre.",
+        "Étape 7: Laisser mijoter encore 5 minutes pour réchauffer le tofu et bien mélanger les saveurs.",
+        "Étape 8: Servir chaud, garni de céleri haché pour une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 22,
+        "carbs": 60,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 12,
+        "saturatedFat": 2,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce ragoût est très équilibré, riche en fibres et en protéines grâce au tofu et aux légumes. Il est faible en graisses saturées et en sodium, ce qui en fait un choix sain pour un dîner.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/gemueseeintopf-mit-tofu-447216.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/gemueseeintopf-mit-tofu-0",
+      "originalTitle": "Gemüseeintopf mit Tofu",
+      "enrichedAt": "2026-01-06T14:29:06.109Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/ananas-smoothie-10534108.html",
+      "titleFr": "Smoothie Fraîcheur à l'Ananas",
+      "descriptionFr": "Commencez votre journée avec ce smoothie rafraîchissant à l'ananas et à la banane. Parfait pour un petit-déjeuner nutritif, il combine des fruits juteux et une touche d'acidité de la limette pour un goût irrésistible. Simple et rapide à préparer, il vous apporte énergie et vitalité.",
+      "ingredientsFr": [
+        {
+          "name": "Ananas frais",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de limette",
+          "amount": 20,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez l'ananas en morceaux et placez-les dans un mixeur.",
+        "Étape 2: Épluchez la banane et ajoutez-la au mixeur.",
+        "Étape 3: Pressez une limette pour obtenir environ 20 ml de jus et ajoutez-le au mélange.",
+        "Étape 4: Ajoutez environ 100 ml d'eau ou de lait végétal pour obtenir la consistance désirée.",
+        "Étape 5: Mixez le tout à haute vitesse jusqu'à obtention d'une texture lisse.",
+        "Étape 6: Goûtez et ajustez le jus de limette si besoin pour plus d'acidité.",
+        "Étape 7: Versez le smoothie dans un verre et décorez avec une tranche d'ananas ou une feuille de menthe, si désiré.",
+        "Étape 8: Servez immédiatement et savourez ce smoothie énergisant."
+      ],
+      "nutrition": {
+        "calories": 240,
+        "proteins": 2,
+        "carbs": 60,
+        "fats": 1,
+        "sugar": 18,
+        "fiber": 4,
+        "saturatedFat": 0,
+        "sodium": 5
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce smoothie est riche en vitamines et minéraux grâce à ses ingrédients naturels. Il fournit une bonne dose de glucides sains et de fibres, tout en étant faible en graisses et en sodium, ce qui en fait un choix excellent pour un petit-déjeuner équilibré.",
+      "imageUrl": "https://image.brigitte.de/11512404/t/M8/v3/w1440/r1/-/ananas-smoothie-bild.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/ananas-smoothie-10534108.html",
+      "originalTitle": "Ananas-Smoothie",
+      "enrichedAt": "2026-01-06T14:28:58.103Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/joghurt-mit-honig-10531124.html",
+      "titleFr": "Yaourt au Miel et Noix",
+      "descriptionFr": "Ce yaourt au miel et aux noix est un petit-déjeuner gourmand et sain qui vous apportera énergie et vitalité. La douceur du miel se marie parfaitement avec le croquant des noix, tout en étant rafraîchi par le jus de citron. Une recette simple et rapide à préparer pour bien commencer la journée !",
+      "ingredientsFr": [
+        {
+          "name": "yaourt crémeux",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "noix",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "miel",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "citron",
+          "amount": 1,
+          "unit": "unité"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, versez le yaourt crémeux.",
+        "Étape 2: Ajoutez le miel au yaourt et mélangez bien jusqu'à obtenir une consistance homogène.",
+        "Étape 3: Concassez les noix grossièrement et incorporez-les au mélange.",
+        "Étape 4: Pressez le jus du citron et ajoutez-le au mélange, puis mélangez à nouveau.",
+        "Étape 5: Répartissez le mélange de yaourt dans quatre bols ou verrines.",
+        "Étape 6: Décorez le dessus avec quelques morceaux de noix supplémentaires et un filet de miel si désiré.",
+        "Étape 7: Réfrigérez pendant 10 minutes avant de servir pour un goût encore plus frais.",
+        "Étape 8: Dégustez votre yaourt au miel et aux noix, parfait pour bien commencer la journée !"
+      ],
+      "nutrition": {
+        "calories": 305,
+        "proteins": 12,
+        "carbs": 42,
+        "fats": 13,
+        "sugar": 15,
+        "fiber": 2,
+        "saturatedFat": 3,
+        "sodium": 50
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée grâce à la présence de protéines, de bonnes graisses et de glucides provenant des noix et du miel. Cependant, le taux de sucre est relativement élevé, il est donc conseillé de consommer ce plat avec modération.",
+      "imageUrl": "https://image.brigitte.de/10531122/t/cW/v6/w1440/r1/-/f27319819cc3b2032d04d38db3ae490a-greco-joghurt.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/joghurt-mit-honig-10531124.html",
+      "originalTitle": "Joghurt mit Honig",
+      "enrichedAt": "2026-01-06T14:29:20.204Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/toast-mit-ziegenkaesecreme-10549680.html",
+      "titleFr": "Toast à la crème de fromage de chèvre et clémentine",
+      "descriptionFr": "Ce toast est une délicieuse combinaison de fromage de chèvre crémeux et de clémentine juteuse, parfait pour un petit-déjeuner énergisant. La touche de cumin et de piment doux apporte une note exotique, tandis que le tout est rehaussé par la douceur des dattes et le croquant des graines de grenade.",
+      "ingredientsFr": [
+        {
+          "name": "Clémentine",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Fromage de chèvre",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Quark maigre",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Paprika doux",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Toast multi-grains",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Dattes",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Oignon vert",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Graines de grenade",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, écrasez le fromage de chèvre et le quark maigre avec une fourchette jusqu'à obtenir une consistance crémeuse.",
+        "Étape 2: Ajoutez le jus de citron, le sel, le cumin et le paprika doux à la préparation, puis mélangez bien.",
+        "Étape 3: Toastez le pain multi-grains jusqu'à ce qu'il soit doré et croustillant.",
+        "Étape 4: Pendant ce temps, épluchez la clémentine et séparez les quartiers.",
+        "Étape 5: Coupez les dattes en petits morceaux et émincez l'oignon vert.",
+        "Étape 6: Une fois le pain toastez, étalez généreusement la crème de fromage de chèvre sur le dessus.",
+        "Étape 7: Disposez les quartiers de clémentine, les morceaux de dattes et l'oignon vert sur le toast.",
+        "Étape 8: Terminez en parsemant de graines de grenade pour une touche de croquant et servez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 20,
+        "carbs": 40,
+        "fats": 18,
+        "sugar": 10,
+        "fiber": 4,
+        "saturatedFat": 6,
+        "sodium": 300
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée, riche en protéines et en fibres, tout en étant modérée en sucres et en graisses saturées. Elle fournit une bonne dose de vitamines et minéraux grâce à l'ajout de fruits et de légumes.",
+      "imageUrl": "https://image.brigitte.de/10549678/t/ER/v5/w1440/r1/-/ab-toastmitzieg--904f28f6fd9c73944dc0757d6c12d308-ab-toastmitzieg--.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/toast-mit-ziegenkaesecreme-10549680.html",
+      "originalTitle": "Toast mit Ziegenkäsecreme",
+      "enrichedAt": "2026-01-06T14:30:02.095Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/shrimp-toast-0",
+      "titleFr": "Toast de Crevettes",
+      "descriptionFr": "Savourez ces toasts de crevettes croustillants, un mélange parfait de saveurs marines et de textures délicates. Parfaits pour un petit-déjeuner énergisant, ils sont à la fois délicieux et nutritifs.",
+      "ingredientsFr": [
+        {
+          "name": "pain de mie",
+          "amount": 8,
+          "unit": "tranches"
+        },
+        {
+          "name": "crevettes géantes (cuisinées)",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "châtaignes d'eau",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "blanc d'œuf",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "fécule de maïs",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignons nouveaux",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "vin de riz",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "huile d'arachide",
+          "amount": 500,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les crevettes, les châtaignes d'eau, la gousse d'ail pelée, le blanc d'œuf, la fécule de maïs, les oignons nouveaux hachés, le vin de riz, le sel et le poivre. Mixez jusqu'à obtenir une pâte homogène.",
+        "Étape 2: Étalez la préparation de crevettes sur chaque tranche de pain de mie en une couche uniforme.",
+        "Étape 3: Faites chauffer l'huile d'arachide dans une poêle profonde à feu moyen.",
+        "Étape 4: Une fois l'huile chaude, déposez délicatement les tranches de pain préparées dans l'huile.",
+        "Étape 5: Faites frémir chaque toast pendant environ 3-4 minutes de chaque côté, jusqu'à ce qu'ils soient dorés et croustillants.",
+        "Étape 6: Retirez les toasts de la poêle et déposez-les sur du papier absorbant pour éliminer l'excès d'huile.",
+        "Étape 7: Servez chaud, accompagné d'une sauce de votre choix ou d'une salade verte pour une touche de fraîcheur.",
+        "Étape 8: Profitez de votre toast de crevettes pour un petit-déjeuner nutritif et équilibré!"
+      ],
+      "nutrition": {
+        "calories": 438,
+        "proteins": 28,
+        "carbs": 41,
+        "fats": 18,
+        "sugar": 1,
+        "fiber": 2,
+        "saturatedFat": 3,
+        "sodium": 390
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en protéines grâce aux crevettes et offre une bonne source de glucides. Cependant, la friture augmente le contenu en matières grasses. Pour une option plus saine, envisagez de griller les toasts au lieu de les frire.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/shrimp-toast-404906.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/shrimp-toast-0",
+      "originalTitle": "Shrimp Toast",
+      "enrichedAt": "2026-01-06T14:30:03.722Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/monster-toast",
+      "titleFr": "Monster-Toast Savoureux",
+      "descriptionFr": "Commencez votre journée avec ce Monster-Toast plein de saveurs et de textures ! Ce petit-déjeuner copieux combine fromage frais, salami et légumes croquants pour un repas à la fois nourrissant et délicieux.",
+      "ingredientsFr": [
+        {
+          "name": "Fromage frais",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Concentré de tomates",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika en poudre",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Tranches de fromage",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "Concombre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Olives noires",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "Pain de mie",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "Tranches de salami",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Légumes au choix",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, mélangez le fromage frais avec le concentré de tomates, le sel, le poivre et le paprika jusqu'à obtenir une consistance homogène.",
+        "Étape 2: Lavez et coupez le concombre en tranches fines.",
+        "Étape 3: Prenez une tranche de pain de mie et étalez une généreuse couche du mélange de fromage frais sur un côté.",
+        "Étape 4: Disposez une tranche de fromage sur le fromage frais, puis ajoutez quelques tranches de salami.",
+        "Étape 5: Ajoutez quelques tranches de concombre et des légumes au choix pour le croquant.",
+        "Étape 6: Refermez le toast avec une autre tranche de pain de mie et répétez l'opération pour les autres portions.",
+        "Étape 7: Faites chauffer une poêle à feu moyen et faites dorer les toasts des deux côtés jusqu'à ce qu'ils soient bien dorés et croustillants.",
+        "Étape 8: Servez chaud, décoré d'olives noires."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 25,
+        "carbs": 40,
+        "fats": 22,
+        "sugar": 3,
+        "fiber": 2,
+        "saturatedFat": 10,
+        "sodium": 480
+      },
+      "healthScore": 65,
+      "healthNotes": "Cette recette est correcte sur le plan nutritionnel, contenant des protéines et des légumes, mais attention à la teneur en graisses saturées et en sodium provenant du salami et du fromage.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/2017-07/istock000069248783small-kopie-750x500.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/monster-toast",
+      "originalTitle": "Monster-Toast",
+      "enrichedAt": "2026-01-06T14:30:04.534Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/toast-hawaii-0",
+      "titleFr": "Toast Hawaï",
+      "descriptionFr": "Découvrez le Toast Hawaï, une délicieuse combinaison de pain grillé, de jambon savoureux, de fromage fondant et d'ananas juteux. Ce petit-déjeuner sucré-salé est non seulement réconfortant, mais également parfait pour bien commencer la journée avec une touche d'exotisme.",
+      "ingredientsFr": [
+        {
+          "name": "pain de mie",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "jambon cuit",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "fromage",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "ananas en tranches",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "cerises confites",
+          "amount": 8,
+          "unit": "pièces"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C.",
+        "Étape 2: Sur une plaque de cuisson, disposez les tranches de pain de mie.",
+        "Étape 3: Sur chaque tranche de pain, déposez une tranche de jambon, puis une tranche de fromage.",
+        "Étape 4: Ajoutez une tranche d'ananas sur le fromage.",
+        "Étape 5: Enfournez les toasts pendant 10 à 15 minutes, jusqu'à ce que le fromage soit fondu et légèrement doré.",
+        "Étape 6: Retirez les toasts du four et décorez chaque toast avec une cerise confite.",
+        "Étape 7: Servez chaud et savourez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 300,
+        "proteins": 18,
+        "carbs": 35,
+        "fats": 10,
+        "sugar": 8,
+        "fiber": 2,
+        "saturatedFat": 4,
+        "sodium": 480
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est correcte sur le plan nutritionnel, apportant un bon équilibre entre protéines et glucides. Cependant, elle pourrait être améliorée en choisissant un pain complet ou en utilisant du fromage allégé pour réduire la teneur en graisses saturées.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2009/6/Toast-Hawaii-4a34e17d396a2.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/toast-hawaii-0",
+      "originalTitle": "Toast Hawaii",
+      "enrichedAt": "2026-01-06T14:30:15.377Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/hawai-toast",
+      "titleFr": "Toast Hawaïen",
+      "descriptionFr": "Savourez ce délicieux toast hawaïen, parfait pour un petit-déjeuner équilibré. Avec son mélange de pain croustillant, d'ananas juteux, de jambon maigre et d'œuf, il apporte une touche d'exotisme et de fraîcheur. Idéal pour bien commencer la journée !",
+      "ingredientsFr": [
+        {
+          "name": "pain de mie",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "ananas frais",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "jambon cuit maigre",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "œufs",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "fromage à fondre",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 10,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre grill ou votre four à 200°C.",
+        "Étape 2: Faites chauffer une poêle avec un peu d'huile d'olive et faites-y cuire les œufs au plat. Salez et poivrez selon votre goût.",
+        "Étape 3: Pendant ce temps, toastez les tranches de pain de mie jusqu'à ce qu'elles soient dorées.",
+        "Étape 4: Sur chaque tranche de pain, déposez une tranche de jambon, suivie d'une tranche d'ananas.",
+        "Étape 5: Ajoutez l'œuf au plat sur l'ananas et terminez par une tranche de fromage.",
+        "Étape 6: Placez les toasts sur une plaque de cuisson et enfournez pendant environ 5 minutes, ou jusqu'à ce que le fromage soit bien fondu.",
+        "Étape 7: Sortez les toasts du four, laissez refroidir légèrement avant de servir.",
+        "Étape 8: Dégustez vos toasts hawaïens chauds, accompagnés d'une salade de fruits si désiré."
+      ],
+      "nutrition": {
+        "calories": 410,
+        "proteins": 30,
+        "carbs": 40,
+        "fats": 18,
+        "sugar": 6,
+        "fiber": 3,
+        "saturatedFat": 7,
+        "sodium": 750
+      },
+      "healthScore": 65,
+      "healthNotes": "Ce toast hawaïen est une bonne source de protéines et contient des glucides complexes, mais le sodium est un peu élevé à cause du jambon. Pour une option plus saine, vous pouvez utiliser du jambon à teneur réduite en sodium.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/12/Hawai-Toast-4cf7bf802bb7a.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/hawai-toast",
+      "originalTitle": "Hawai Toast",
+      "enrichedAt": "2026-01-06T14:30:45.916Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/suesskartoffel-toast",
+      "titleFr": "Toast de Patate Douce",
+      "descriptionFr": "Commencez votre journée avec ce toast de patate douce nutritif, garni d'avocat crémeux et d'œuf parfait. C'est un petit-déjeuner à la fois savoureux et sain, qui vous apportera l'énergie nécessaire pour bien démarrer votre matinée.",
+      "ingredientsFr": [
+        {
+          "name": "patate douce",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "avocat",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "tomate cerise",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "œuf",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "jambon",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "cresson",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "fromage frais",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "banane",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "pépites de chocolat",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C (390°F).",
+        "Étape 2: Pelez la patate douce et coupez-la en tranches d'environ 1 cm d'épaisseur.",
+        "Étape 3: Disposez les tranches de patate douce sur une plaque de cuisson recouverte de papier sulfurisé et enfournez pendant 20 à 25 minutes jusqu'à ce qu'elles soient tendres.",
+        "Étape 4: Pendant ce temps, faites cuire l'œuf dans une petite casserole d'eau bouillante pendant 6 à 7 minutes pour obtenir un œuf mollet.",
+        "Étape 5: Écrasez l'avocat et assaisonnez-le avec un peu de sel et de poivre.",
+        "Étape 6: Une fois les tranches de patate douce cuites, étalez le fromage frais sur le dessus, puis ajoutez l'avocat écrasé.",
+        "Étape 7: Coupez la tomate cerise en deux et disposez-la sur le toast, puis ajoutez le jambon et le cresson.",
+        "Étape 8: Écalez l'œuf, coupez-le en deux et placez-le sur le toast. Ajoutez des pépites de chocolat sur la banane coupée en rondelles à côté en guise de douceur."
+      ],
+      "nutrition": {
+        "calories": 375,
+        "proteins": 20,
+        "carbs": 40,
+        "fats": 15,
+        "sugar": 8,
+        "fiber": 7,
+        "saturatedFat": 3,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en nutriments grâce à la patate douce, qui est une excellente source de vitamines et de fibres, et à l'avocat qui apporte des graisses saines. L'ajout d'œuf et de jambon fournit des protéines, rendant ce petit-déjeuner équilibré et satisfaisant.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/Suesskartoffel-Toast-susskartoffel-toasts.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/suesskartoffel-toast",
+      "originalTitle": "Süßkartoffel-Toast",
+      "enrichedAt": "2026-01-06T14:30:23.801Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/toast-hawaii-1",
+      "titleFr": "Toast Hawaïen",
+      "descriptionFr": "Savourez un toast hawaïen croustillant au petit-déjeuner, alliant la douceur de l'ananas à la richesse du jambon et du fromage fondu. Ce plat facile à préparer est parfait pour commencer la journée avec énergie et plaisir.",
+      "ingredientsFr": [
+        {
+          "name": "pain de mie",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "jambon cuit",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "ananas en tranches",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "fromage fondu",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "beurre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "cerises au marasquin",
+          "amount": 4,
+          "unit": "pièces"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C (392°F).",
+        "Étape 2: Faites fondre le beurre et badigeonnez chaque tranche de pain de mie sur une face.",
+        "Étape 3: Disposez les tranches de pain sur une plaque de cuisson, face beurrée vers le bas.",
+        "Étape 4: Sur chaque tranche de pain, ajoutez une tranche de jambon, suivie d'une tranche d'ananas et enfin une tranche de fromage fondu.",
+        "Étape 5: Enfournez pendant environ 10 minutes ou jusqu'à ce que le fromage soit bien fondu et légèrement doré.",
+        "Étape 6: Retirez du four et ajoutez une cerise au marasquin sur chaque toast pour une touche décorative.",
+        "Étape 7: Servez chaud et dégustez !"
+      ],
+      "nutrition": {
+        "calories": 330,
+        "proteins": 18,
+        "carbs": 30,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 800
+      },
+      "healthScore": 65,
+      "healthNotes": "Cette recette est relativement équilibrée, mais le sodium est élevé en raison du jambon. Pour une version plus saine, optez pour un jambon moins salé ou du jambon de poulet.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Toast-Hawaii-4bb10b8e63418.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/toast-hawaii-1",
+      "originalTitle": "Toast Hawaii",
+      "enrichedAt": "2026-01-06T14:30:58.898Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/hummus-15",
+      "titleFr": "Hummus Crémeux",
+      "descriptionFr": "Savourez ce hummus onctueux et riche en saveurs, parfait pour une collation saine et équilibrée. Avec sa texture veloutée et son goût délicat de sésame et de citron, il saura séduire vos papilles tout en étant nourrissant.",
+      "ingredientsFr": [
+        {
+          "name": "pois chiches secs",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "tahini",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "persil frais haché",
+          "amount": 2,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez les pois chiches et faites-les tremper dans de l'eau froide pendant 8 heures ou toute la nuit.",
+        "Étape 2: Égouttez les pois chiches et placez-les dans une casserole avec suffisamment d'eau pour les couvrir. Faites cuire à feu moyen pendant environ 1 à 1,5 heure, ou jusqu'à ce qu'ils soient tendres.",
+        "Étape 3: Une fois cuits, égouttez les pois chiches et laissez-les refroidir légèrement.",
+        "Étape 4: Dans un mixeur, ajoutez les pois chiches cuits, les gousses d'ail, le tahini, l'huile d'olive, le jus de citron, le cumin et le sel.",
+        "Étape 5: Mixez jusqu'à obtenir une texture lisse et crémeuse. Si nécessaire, ajoutez un peu d'eau pour ajuster la consistance.",
+        "Étape 6: Goûtez et ajustez l'assaisonnement si besoin (plus de sel, de citron ou de cumin selon votre goût).",
+        "Étape 7: Servez dans un bol, garni de persil frais haché et d'un filet d'huile d'olive.",
+        "Étape 8: Dégustez avec des légumes frais, des crackers ou du pain pita."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 9,
+        "carbs": 22,
+        "fats": 10,
+        "sugar": 1,
+        "fiber": 6,
+        "saturatedFat": 1,
+        "sodium": 300
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette de hummus est riche en protéines végétales et en fibres, ce qui en fait un excellent choix pour une collation saine. Elle contient des graisses saines provenant de l'huile d'olive et du tahini, tout en étant faible en sucres et en sodium.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/hummus-415148.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/hummus-15",
+      "originalTitle": "Hummus",
+      "enrichedAt": "2026-01-06T14:33:52.211Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/merguez-auf-hummus-11576308.html",
+      "titleFr": "Merguez sur Hummus Savoureux",
+      "descriptionFr": "Découvrez une collation irrésistible alliant la richesse des saveurs méditerranéennes avec la légèreté du hummus. Les merguez grillées ajoutent une touche épicée, tandis que les légumes croquants apportent fraîcheur et couleur à votre assiette.",
+      "ingredientsFr": [
+        {
+          "name": "Tomates cerises",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Mini concombre",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Bulbe de fenouil",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Pois chiches en conserve",
+          "amount": 1,
+          "unit": "boîte"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Tahini",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Merguez",
+          "amount": 2,
+          "unit": ""
+        },
+        {
+          "name": "Sésame noir",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer et égoutter les pois chiches. Mixer les pois chiches avec le tahini, l'ail, le jus de citron, 2 c. à soupe d'huile d'olive, le cumin et une pincée de sel jusqu'à obtenir une texture lisse.",
+        "Étape 2: Laver les tomates cerises et les couper en deux. Laver le mini concombre et le couper en petits dés. Couper le bulbe de fenouil en fines lamelles.",
+        "Étape 3: Dans un saladier, mélanger les tomates cerises, le concombre, le fenouil et assaisonner avec le reste de l'huile d'olive, du sel et un peu de jus de citron.",
+        "Étape 4: Dans une poêle, faire cuire les merguez à feu moyen jusqu'à ce qu'elles soient bien dorées et cuites à cœur.",
+        "Étape 5: Sur une assiette, étaler le hummus préparé en une couche épaisse.",
+        "Étape 6: Disposer les légumes marinés sur le hummus, puis couper les merguez en morceaux et les ajouter par-dessus.",
+        "Étape 7: Saupoudrer de sésame noir pour la garniture et servir immédiatement.",
+        "Étape 8: Déguster avec des légumes frais ou du pain pita pour une collation encore plus complète."
+      ],
+      "nutrition": {
+        "calories": 235,
+        "proteins": 16,
+        "carbs": 24,
+        "fats": 10,
+        "sugar": 4,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 420
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en protéines grâce aux pois chiches et aux merguez, tout en fournissant des fibres et des vitamines grâce aux légumes frais. Le ratio de graisses est raisonnable, mais il est conseillé de surveiller la consommation de merguez, riches en graisses saturées.",
+      "imageUrl": "https://image.brigitte.de/11576334/t/vL/v3/w1440/r1/-/merguez-auf-hummus.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/merguez-auf-hummus-11576308.html",
+      "originalTitle": "Merguez auf Hummus",
+      "enrichedAt": "2026-01-06T14:34:12.283Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/marinierter-lachs-10546672.html",
+      "titleFr": "Saumon Mariné aux Agrumes",
+      "descriptionFr": "Découvrez une recette délicieuse et saine de saumon mariné aux agrumes, parfaite pour un dîner léger. La fraîcheur du saumon se marie à merveille avec la douceur de l'orange et le parfum anisé du céleri et de l'aneth, offrant un plat riche en saveurs et en bienfaits nutritionnels.",
+      "ingredientsFr": [
+        {
+          "name": "filet de saumon",
+          "amount": 600,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 6,
+          "unit": "g"
+        },
+        {
+          "name": "poivre",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "céleri branche",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "aneth",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "graines de moutarde",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "jus d'orange",
+          "amount": 100,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, mélangez le jus d'orange, le sel, le poivre et les graines de moutarde pour préparer la marinade.",
+        "Étape 2: Placez le filet de saumon dans un plat et versez la marinade dessus. Assurez-vous que le saumon est bien enrobé.",
+        "Étape 3: Coupez le céleri en petits morceaux et ajoutez-le au plat avec le saumon.",
+        "Étape 4: Couvrez le plat avec du film plastique et laissez mariner au réfrigérateur pendant au moins 30 minutes.",
+        "Étape 5: Pendant ce temps, hachez finement l'aneth.",
+        "Étape 6: Préchauffez votre four à 180°C (350°F).",
+        "Étape 7: Retirez le saumon de la marinade et placez-le sur une plaque de cuisson recouverte de papier sulfurisé. Parsemez l'aneth sur le saumon.",
+        "Étape 8: Faites cuire le saumon au four pendant 15-20 minutes, jusqu'à ce qu'il soit cuit à votre goût."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 40,
+        "carbs": 10,
+        "fats": 20,
+        "sugar": 6,
+        "fiber": 2,
+        "saturatedFat": 4,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce au saumon, source d'acides gras oméga-3 bénéfiques pour la santé cardiaque. Les légumes ajoutent des fibres et des vitamines, tandis que le jus d'orange apporte une touche de fraîcheur sans excès de sucre.",
+      "imageUrl": "https://image.brigitte.de/11712604/t/IP/v3/w1440/r1/-/marinierter-lachs.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/marinierter-lachs-10546672.html",
+      "originalTitle": "Marinierter Lachs",
+      "enrichedAt": "2026-01-06T14:34:28.723Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/palak-tofu-12259422.html",
+      "titleFr": "Palak-Tofu Épicé",
+      "descriptionFr": "Ce plat savoureux allie le tofu riche en protéines à des épinards frais, créant un repas nourrissant et équilibré. L'ajout d'épices indiennes apporte chaleur et profondeur, rendant ce dîner à la fois réconfortant et stimulant pour vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "Épinards surgelés",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Gingembre frais",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Flocons de piment",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Tofu ferme",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Huile de cacahuète",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Oignon rouge",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Tomates",
+          "amount": 2,
+          "unit": ""
+        },
+        {
+          "name": "Cardamome en poudre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin en poudre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cannelle en poudre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Clous de girofle en poudre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Feuille de laurier",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 350,
+          "unit": "ml"
+        },
+        {
+          "name": "Garam Masala",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, chauffer l'huile de cacahuète à feu moyen et ajouter l'oignon rouge haché. Faire revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 2: Ajouter la gousse d'ail émincée et le gingembre râpé, puis cuire pendant 1 à 2 minutes jusqu'à ce qu'ils soient parfumés.",
+        "Étape 3: Incorporer les tomates coupées en dés et cuire jusqu'à ce qu'elles soient tendres.",
+        "Étape 4: Ajouter les épinards surgelés et remuer jusqu'à ce qu'ils soient bien mélangés et décongelés.",
+        "Étape 5: Ajouter le tofu coupé en cubes, les épices (cumin, cardamome, cannelle, clous de girofle, et garam masala), ainsi que la feuille de laurier. Mélanger soigneusement.",
+        "Étape 6: Verser le bouillon de légumes et porter à ébullition. Réduire le feu et laisser mijoter pendant 10 minutes.",
+        "Étape 7: Assaisonner avec du sel et des flocons de piment selon votre goût. Retirer la feuille de laurier avant de servir.",
+        "Étape 8: Servir chaud, accompagné de riz basmati ou de pain naan."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 30,
+        "carbs": 45,
+        "fats": 20,
+        "sugar": 5,
+        "fiber": 10,
+        "saturatedFat": 3,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au tofu et aux épinards, tout en étant faible en sucres et en graisses saturées. Les épices ajoutent des antioxydants, ce qui en fait un choix nutritif et équilibré.",
+      "imageUrl": "https://image.brigitte.de/12259414/t/qW/v3/w1440/r1/-/palak-tofu.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/palak-tofu-12259422.html",
+      "originalTitle": "Palak-Tofu",
+      "enrichedAt": "2026-01-06T14:34:49.847Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/tofu-moussaka",
+      "titleFr": "Moussaka de Tofu",
+      "descriptionFr": "Découvrez cette délicieuse Moussaka de Tofu, un plat réconfortant et savoureux qui allie légumes frais et protéines végétales. Parfait pour un dîner équilibré, il ravira les papilles tout en respectant une alimentation saine.",
+      "ingredientsFr": [
+        {
+          "name": "Pomme de terre",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Aubergine",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Courgette",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Tofu",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Tomates cerises",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "c."
+        },
+        {
+          "name": "Margarine",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Farine d'épeautre",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Boisson soja",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon",
+          "amount": 9,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Parmesan (râpé)",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Chapelure",
+          "amount": 15,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C.",
+        "Étape 2: Épluchez et coupez les pommes de terre en fines rondelles. Faites-les cuire dans de l'eau bouillante salée pendant environ 10 minutes.",
+        "Étape 3: Coupez l'aubergine et la courgette en tranches, et le poivron en dés. Dans une poêle, faites chauffer l'huile d'olive et faites revenir l'oignon et l'ail jusqu'à ce qu'ils soient translucides.",
+        "Étape 4: Ajoutez l'aubergine, la courgette et le poivron dans la poêle et faites cuire jusqu'à ce qu'ils soient tendres. Ajoutez les tomates cerises coupées en deux.",
+        "Étape 5: Dans un bol, émiettez le tofu et mélangez-le avec le jus de citron, le bouillon, la farine d'épeautre et un peu de sel. Bien mélanger pour obtenir une consistance crémeuse.",
+        "Étape 6: Dans un plat à gratin, disposez une couche de pommes de terre, une couche de légumes, puis une couche de mélange de tofu. Répétez jusqu'à épuisement des ingrédients.",
+        "Étape 7: Saupoudrez le dessus avec le parmesan râpé et la chapelure, puis ajoutez quelques noisettes de margarine.",
+        "Étape 8: Enfournez pendant environ 30 minutes, ou jusqu'à ce que le dessus soit doré."
+      ],
+      "nutrition": {
+        "calories": 455,
+        "proteins": 22,
+        "carbs": 50,
+        "fats": 20,
+        "sugar": 7,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au tofu et aux légumes, tout en étant faible en graisses saturées et en sodium, ce qui en fait une option saine pour un dîner nutritif.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Tofu-Moussaka-4bb0b6eee18dd.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 6,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/tofu-moussaka",
+      "originalTitle": "Tofu-Moussaka",
+      "enrichedAt": "2026-01-06T14:35:08.825Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/toast-mit-eiercreme",
+      "titleFr": "Toast à la crème d'œufs",
+      "descriptionFr": "Commencez votre journée avec ce toast à la crème d'œufs savoureuse et nourrissante. Riche en protéines et en saveurs, ce plat est parfait pour un petit-déjeuner équilibré qui vous donnera de l'énergie pour toute la matinée.",
+      "ingredientsFr": [
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Crème aigre",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Persil (haché)",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika doux",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Fromage à pâte dure (râpé)",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Pain complet (tranches)",
+          "amount": 4,
+          "unit": "tranche"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites cuire les œufs dans une casserole d'eau bouillante pendant environ 10 minutes pour obtenir des œufs durs.",
+        "Étape 2: Une fois cuits, retirez les œufs de l'eau et laissez-les refroidir sous l'eau froide.",
+        "Étape 3: Écalez les œufs et écrasez-les dans un bol à l'aide d'une fourchette.",
+        "Étape 4: Ajoutez la crème aigre, le persil haché, le paprika doux et le fromage râpé dans le bol et mélangez bien jusqu'à obtenir une consistance crémeuse.",
+        "Étape 5: Faites griller les tranches de pain complet jusqu'à ce qu'elles soient dorées et croustillantes.",
+        "Étape 6: Répartissez la crème d'œufs sur chaque tranche de pain grillé.",
+        "Étape 7: Servez immédiatement, accompagné d'une salade ou de légumes frais si désiré."
+      ],
+      "nutrition": {
+        "calories": 330,
+        "proteins": 19,
+        "carbs": 34,
+        "fats": 14,
+        "sugar": 2,
+        "fiber": 6,
+        "saturatedFat": 6,
+        "sodium": 400
+      },
+      "healthScore": 78,
+      "healthNotes": "Cette recette est équilibrée, riche en protéines et fournit des fibres grâce au pain complet. Le taux de graisses saturées est acceptable, et les ingrédients apportent des vitamines et minéraux essentiels.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2011/8/Toast-mit-Eiercreme-4e385e03b7118.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/toast-mit-eiercreme",
+      "originalTitle": "Toast mit Eiercreme",
+      "enrichedAt": "2026-01-06T14:35:24.428Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/fitness-toast",
+      "titleFr": "Fitness-Toast Énergisant",
+      "descriptionFr": "Commencez votre journée avec ce Fitness-Toast savoureux et équilibré. Avec sa combinaison de pain complet, d'œuf et de légumes frais, c'est le petit-déjeuner parfait pour booster votre énergie tout en restant léger. Simple et rapide à préparer, il ravira vos papilles tout en respectant vos objectifs nutritionnels.",
+      "ingredientsFr": [
+        {
+          "name": "Pain complet",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Fromage allégé",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Laitue",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Tomate",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Œuf",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Sauce cocktail légère",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre de chili",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites griller les tranches de pain complet jusqu'à ce qu'elles soient dorées.",
+        "Étape 2: Pendant ce temps, faites cuire l'œuf au plat ou à la coque selon votre préférence.",
+        "Étape 3: Lavez la laitue et la tomate, puis coupez la tomate en rondelles.",
+        "Étape 4: Sur chaque tranche de pain grillé, étalez une couche de sauce cocktail légère.",
+        "Étape 5: Disposez la laitue sur le pain, puis ajoutez les rondelles de tomate.",
+        "Étape 6: Placez l'œuf cuit sur le dessus des légumes.",
+        "Étape 7: Ajoutez une tranche de fromage allégé par-dessus l'œuf.",
+        "Étape 8: Saupoudrez de poudre de chili et de poivre au goût, puis servez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 22,
+        "carbs": 30,
+        "fats": 15,
+        "sugar": 3,
+        "fiber": 5,
+        "saturatedFat": 3,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce Fitness-Toast est riche en protéines et en fibres, ce qui en fait un excellent choix pour un petit-déjeuner nutritif. Les légumes frais ajoutent des vitamines et des minéraux essentiels, tandis que la sauce cocktail légère limite l'apport en calories. Un repas équilibré qui soutient une alimentation saine.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2008/5/Fitness-Toast-483d544485055.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/fitness-toast",
+      "originalTitle": "Fitness-Toast",
+      "enrichedAt": "2026-01-06T14:35:24.530Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/hummus-mit-krautsalat-11531896.html",
+      "titleFr": "Hummus au Chou Fermenté",
+      "descriptionFr": "Découvrez une collation saine et savoureuse avec ce hummus crémeux au chou fermenté. L'association du tahini et des pois chiches apporte une texture riche, tandis que le chou et les herbes fraîches ajoutent une touche de croquant et de fraîcheur. Un en-cas parfait pour une pause gourmande !",
+      "ingredientsFr": [
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Pois chiches en conserve",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "Chou fermenté",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Tahini",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Origan",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Citron",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Piment de Cayenne",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Brins de menthe",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "Brins de coriandre",
+          "amount": 2,
+          "unit": "unité"
+        },
+        {
+          "name": "Ciboule",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Mini concombre",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Radis",
+          "amount": 4,
+          "unit": "unité"
+        },
+        {
+          "name": "Graines de sésame",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez les pois chiches sous l'eau froide et égouttez-les.",
+        "Étape 2: Dans un mixeur, ajoutez les pois chiches, la gousse d'ail pelée, le tahini, l'origan, le paprika, le sel, le jus de citron et l'huile d'olive.",
+        "Étape 3: Mixez le tout jusqu'à obtenir une crème lisse, en ajoutant un peu d'eau si nécessaire pour ajuster la consistance.",
+        "Étape 4: Dans un saladier, mélangez le chou fermenté avec la ciboule émincée, le concombre coupé en dés, les radis tranchés, la menthe et la coriandre hachées.",
+        "Étape 5: Assaisonnez le mélange de chou avec un peu de sel et de piment de Cayenne selon votre goût.",
+        "Étape 6: Servez le hummus dans un bol, accompagné du salade de chou à côté.",
+        "Étape 7: Saupoudrez de graines de sésame sur le hummus pour garnir et apporter un croquant supplémentaire.",
+        "Étape 8: Dégustez avec des légumes croquants ou des crackers pour une collation saine et nourrissante."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 10,
+        "carbs": 30,
+        "fats": 9,
+        "sugar": 3,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et en protéines grâce aux pois chiches et au tahini, tout en étant faible en sucre et en graisses saturées. Le chou fermenté apporte des probiotiques bénéfiques pour la santé digestive.",
+      "imageUrl": "https://image.brigitte.de/11531920/t/uF/v3/w1440/r1/-/hummus-mit-krautsalat.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/hummus-mit-krautsalat-11531896.html",
+      "originalTitle": "Hummus mit Krautsalat",
+      "enrichedAt": "2026-01-06T14:35:49.299Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/hummus-sandwich",
+      "titleFr": "Sandwich Hummus au Chou Rouge",
+      "descriptionFr": "Découvrez ce sandwich savoureux et coloré qui allie la douceur du chou rouge et le crémeux du hummus. Parfait pour une collation saine, il est riche en saveurs et en nutriments, tout en étant facile à préparer.",
+      "ingredientsFr": [
+        {
+          "name": "Chou rouge",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Vinaigre de cidre",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Confiture de canneberges",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Carottes",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Céleri-rave",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Pomme",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Feuilles de salade",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Pois chiches",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Tahin",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre de piment",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Tranches de pain",
+          "amount": 4,
+          "unit": "unités"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer les pois chiches sous l'eau froide et les égoutter.",
+        "Étape 2: Dans un mixeur, ajouter les pois chiches, la gousse d'ail, le tahin, le jus de citron, le sel, le poivre et un peu d'eau. Mixer jusqu'à obtenir une consistance lisse.",
+        "Étape 3: Râper les carottes et le céleri-rave. Couper la pomme en petits morceaux.",
+        "Étape 4: Dans un saladier, mélanger le chou rouge finement tranché, les carottes, le céleri-rave, la pomme, le yaourt, le vinaigre de cidre et la confiture de canneberges. Assaisonner avec du sel et du poivre.",
+        "Étape 5: Étaler une couche de hummus sur chaque tranche de pain.",
+        "Étape 6: Ajouter un peu de mélange de chou rouge sur le hummus.",
+        "Étape 7: Garnir avec une feuille de salade et refermer le sandwich.",
+        "Étape 8: Couper en deux et servir immédiatement ou emballer pour une collation à emporter."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 10,
+        "carbs": 36,
+        "fats": 6,
+        "sugar": 5,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et en protéines grâce aux pois chiches et aux légumes. Elle est faible en graisses saturées et en sucres, ce qui en fait une collation saine et équilibrée.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-11364502.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/hummus-sandwich",
+      "originalTitle": "Hummus-Sandwich",
+      "enrichedAt": "2026-01-06T14:35:44.731Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/tofu-gulasch",
+      "titleFr": "Goulash de Tofu",
+      "descriptionFr": "Savourez ce goulash de tofu réconfortant, riche en légumes et en saveurs. Ce plat coloré est une excellente source de protéines et de fibres, parfait pour un dîner sain et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Tomates",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron rouge",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron jaune",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Tofu fumé",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Oignons",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Petites pommes de terre",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Paprika doux",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika fort",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 325,
+          "unit": "ml"
+        },
+        {
+          "name": "Persil",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Citron bio",
+          "amount": 0.5,
+          "unit": "unités"
+        },
+        {
+          "name": "Fécule de maïs",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez les tomates, les poivrons, les oignons et les pommes de terre en dés.",
+        "Étape 2: Dans une grande poêle, faites chauffer l'huile d'olive à feu moyen et ajoutez les oignons et l'ail émincés. Faites revenir jusqu'à ce qu'ils soient dorés.",
+        "Étape 3: Ajoutez les poivrons et faites cuire pendant environ 5 minutes jusqu'à ce qu'ils soient tendres.",
+        "Étape 4: Incorporez le tofu fumé coupé en dés et faites-le dorer légèrement.",
+        "Étape 5: Ajoutez les tomates, les pommes de terre, le paprika doux et le paprika fort. Mélangez bien.",
+        "Étape 6: Versez le bouillon de légumes et laissez mijoter à feu doux pendant environ 20 minutes, jusqu'à ce que les pommes de terre soient cuites.",
+        "Étape 7: Dans un petit bol, mélangez la fécule de maïs avec un peu d'eau pour former une pâte. Ajoutez-la dans la poêle pour épaissir le goulash.",
+        "Étape 8: Assaisonnez avec du sel et du poivre, puis ajoutez le jus de citron et le persil haché avant de servir."
+      ],
+      "nutrition": {
+        "calories": 525,
+        "proteins": 22,
+        "carbs": 62,
+        "fats": 20,
+        "sugar": 6,
+        "fiber": 10,
+        "saturatedFat": 3,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce goulash de tofu est riche en légumes, protéines et fibres, offrant un bon équilibre nutritionnel pour un dîner sain. Les graisses saturées et le sodium sont bien en dessous des limites recommandées.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/tofu-gulasch-5995.jpg",
+      "prepTime": 35,
+      "cookTime": 18,
+      "totalTime": 53,
+      "servings": 2,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/tofu-gulasch",
+      "originalTitle": "Tofu-Gulasch",
+      "enrichedAt": "2026-01-06T14:35:51.615Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/bruschetta-toast",
+      "titleFr": "Bruschetta aux Tomates Fraîches",
+      "descriptionFr": "Découvrez une délicieuse bruschetta aux tomates fraîches, parfaite pour un petit-déjeuner léger et sain. Avec une combinaison de saveurs fraîches et d'ingrédients nutritifs, cette recette vous apportera une dose d'énergie pour bien commencer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Tomates",
+          "amount": 600,
+          "unit": "g"
+        },
+        {
+          "name": "Échalote",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Brins de basilic",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Vinaigre balsamique blanc",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre de piment",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Tranches de pain toast",
+          "amount": 4,
+          "unit": "slices"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez les tomates et coupez-les en petits dés. Placez-les dans un saladier.",
+        "Étape 2: Émincez finement l'échalote et la gousse d'ail, puis ajoutez-les aux tomates.",
+        "Étape 3: Ajoutez les feuilles de basilic ciselées, l'huile d'olive, le vinaigre balsamique blanc, le sel et la poudre de piment au mélange de tomates.",
+        "Étape 4: Mélangez délicatement tous les ingrédients afin que les saveurs se marient bien.",
+        "Étape 5: Faites griller les tranches de pain toast jusqu'à ce qu'elles soient dorées et croustillantes.",
+        "Étape 6: Répartissez le mélange de tomates sur les tranches de pain grillé.",
+        "Étape 7: Servez immédiatement, en garnissant éventuellement de quelques feuilles de basilic supplémentaires."
+      ],
+      "nutrition": {
+        "calories": 320,
+        "proteins": 9,
+        "carbs": 42,
+        "fats": 14,
+        "sugar": 5,
+        "fiber": 6,
+        "saturatedFat": 2,
+        "sodium": 200
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette bruschetta est riche en légumes frais et en bonnes graisses grâce à l'huile d'olive. Elle apporte des fibres et des vitamines tout en étant faible en sucre et en sodium, ce qui en fait un choix très sain pour le petit-déjeuner.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-00117532.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/bruschetta-toast",
+      "originalTitle": "Bruschetta-Toast",
+      "enrichedAt": "2026-01-06T14:36:24.659Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/nudeln-mit-tofu-10531070.html",
+      "titleFr": "Udon au Tofu et Poireau",
+      "descriptionFr": "Savourez un plat réconfortant et nutritif de nouilles udon accompagnées de tofu croustillant et de poireau, le tout relevé d'une sauce soja délicate. Ce dîner équilibré est parfait pour une soirée relaxante, tout en étant riche en protéines et en saveurs.",
+      "ingredientsFr": [
+        {
+          "name": "tofu",
+          "amount": 175,
+          "unit": "g"
+        },
+        {
+          "name": "huile",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "nouilles udon",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "bouillon dashi",
+          "amount": 1750,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "sauce soja",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "poireau",
+          "amount": 1,
+          "unit": "tige"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez le tofu en cubes et faites-le mariner dans la sauce soja pendant environ 15 minutes.",
+        "Étape 2: Dans une poêle, chauffez l'huile à feu moyen et faites frémir le tofu mariné jusqu'à ce qu'il soit doré et croustillant de tous les côtés. Retirez-le et réservez.",
+        "Étape 3: Dans la même poêle, ajoutez le poireau coupé en rondelles et faites-le revenir jusqu'à ce qu'il soit tendre.",
+        "Étape 4: Pendant ce temps, faites cuire les nouilles udon selon les instructions du paquet. Égouttez et réservez.",
+        "Étape 5: Dans une casserole, faites chauffer le bouillon dashi avec le sucre et le sel jusqu'à ébullition.",
+        "Étape 6: Ajoutez les nouilles udon dans le bouillon et laissez mijoter pendant quelques minutes pour bien les imprégner des saveurs.",
+        "Étape 7: Incorporez le tofu croustillant et les poireaux dans la casserole avec les nouilles. Mélangez délicatement.",
+        "Étape 8: Servez chaud, garni de quelques feuilles de poireau pour une touche de couleur."
+      ],
+      "nutrition": {
+        "calories": 485,
+        "proteins": 21,
+        "carbs": 66,
+        "fats": 12,
+        "sugar": 1,
+        "fiber": 3,
+        "saturatedFat": 1,
+        "sodium": 490
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est riche en protéines grâce au tofu et aux nouilles, tout en restant modéré en graisses et en sucres. Les légumes ajoutent des fibres et des vitamines essentielles, ce qui en fait un choix de dîner équilibré.",
+      "imageUrl": "https://image.brigitte.de/11722536/t/14/v3/w1440/r1/-/nudeln-mit-tofu.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/nudeln-mit-tofu-10531070.html",
+      "originalTitle": "Nudeln mit Tofu",
+      "enrichedAt": "2026-01-06T14:37:53.282Z"
+    },
+    {
+      "id": "https://elavegan.com/de/teriyaki-tofu-suess-sauer/",
+      "titleFr": "Tofu Teriyaki Sucré-Salé",
+      "descriptionFr": "Découvrez un plat savoureux et équilibré avec notre Tofu Teriyaki Sucré-Salé, alliant des saveurs asiatiques à une touche de douceur. Parfaitement mariné, ce plat est accompagné de légumes croquants et de nouilles ou de riz, pour une expérience culinaire inoubliable.",
+      "ingredientsFr": [
+        {
+          "name": "Tofu ferme",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Fécule de maïs",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poudre d'oignon",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poudre d'ail",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre noir",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Gingembre frais râpé",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Ail frais haché",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Eau",
+          "amount": 120,
+          "unit": "ml"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Fécule de maïs (pour épaissir)",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Mirin ou sherry sec",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Nouilles ou riz cuit",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Légumes sautés au choix",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Huile en spray",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Ciboulette fraîche hachée",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Graines de sésame",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Égouttez le tofu et pressez-le pour enlever l'excès d'eau, puis coupez-le en cubes.",
+        "Étape 2: Dans un bol, mélangez la fécule de maïs, la poudre d'oignon, la poudre d'ail, le poivre et le sel. Enrobez les cubes de tofu avec ce mélange.",
+        "Étape 3: Faites chauffer une poêle antiadhésive avec un peu d'huile en spray à feu moyen et faites dorer le tofu jusqu'à ce qu'il soit croustillant de chaque côté.",
+        "Étape 4: Dans un autre bol, combinez le sirop d'érable, le gingembre, l'ail haché, la sauce soja, l'eau, le jus de citron et le mirin. Mélangez bien.",
+        "Étape 5: Versez le mélange de sauce dans la poêle avec le tofu et laissez mijoter pendant environ 5 minutes jusqu'à ce que la sauce épaississe.",
+        "Étape 6: Pendant ce temps, faites cuire les nouilles ou le riz selon les instructions du paquet, et faites sauter les légumes dans une autre poêle.",
+        "Étape 7: Servez le tofu teriyaki sur un lit de nouilles ou de riz, ajoutez les légumes sautés, et garnissez de ciboulette et de graines de sésame.",
+        "Étape 8: Dégustez chaud et savourez ce plat équilibré et plein de saveurs !"
+      ],
+      "nutrition": {
+        "calories": 520,
+        "proteins": 25,
+        "carbs": 65,
+        "fats": 15,
+        "sugar": 8,
+        "fiber": 5,
+        "saturatedFat": 1,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines grâce au tofu et fournit une bonne quantité de glucides complexes et de fibres grâce aux légumes et aux nouilles/riz. Les graisses sont principalement insaturées, ce qui contribue à un bon équilibre nutritionnel.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/02/glasierter-teriyaki-tofu-mit-süß-sauer-soße.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/teriyaki-tofu-suess-sauer/",
+      "originalTitle": "Teriyaki Tofu süß sauer",
+      "enrichedAt": "2026-01-06T14:38:03.830Z"
     }
   ]
 }

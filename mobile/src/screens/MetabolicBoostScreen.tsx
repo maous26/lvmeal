@@ -45,7 +45,7 @@ import { useNavigation } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 
 import { Card, Badge, ProgressBar, CircularProgress, Button } from '../components/ui'
-import { colors, spacing, typography, radius } from '../constants/theme'
+import { colors, spacing, typography, radius, fonts } from '../constants/theme'
 import { useMetabolicBoostStore, PHASE_CONFIGS, type MetabolicPhase } from '../stores/metabolic-boost-store'
 import { useDevicesStore, DEVICE_INFO } from '../stores/devices-store'
 import { useUserStore } from '../stores/user-store'
@@ -190,7 +190,7 @@ export default function MetabolicBoostScreen() {
     // In real app, this would trigger native health kit permissions
     Alert.alert(
       `Connecter ${DEVICE_INFO[type].name}`,
-      'Cette fonctionnalité nécessite les permissions de santé. Voulez-vous continuer ?',
+      'Cette fonctionnalité nécessite les permissions de santé. Veux-tu continuer ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -820,6 +820,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: colors.text.primary,
+    fontFamily: fonts.serif.bold,
   },
   subtitle: {
     ...typography.small,
@@ -844,6 +845,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    fontFamily: fonts.serif.bold,
   },
   heroSubtitle: {
     ...typography.body,
