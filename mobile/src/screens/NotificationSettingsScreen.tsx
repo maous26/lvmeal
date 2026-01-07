@@ -9,7 +9,7 @@ import {
   Switch,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { ArrowLeft, Sparkles, AlertTriangle, Award, Bell, BellOff } from 'lucide-react-native'
+import { ArrowLeft, Sparkles, AlertTriangle, Award, Bell, BellOff, Utensils, MessageCircle } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { Card } from '../components/ui'
@@ -20,11 +20,20 @@ import {
   scheduleDailyInsightNotification,
   cancelDailyInsightNotification,
 } from '../services/daily-insight-service'
+import {
+  setMealRemindersEnabled,
+  scheduleDailyMealReminders,
+} from '../services/meal-reminder-service'
+import {
+  setCoachNotificationsEnabled,
+  initializeCoachProactiveService,
+} from '../services/coach-proactive-service'
+import type { UserProfile } from '../types'
 
 export default function NotificationSettingsScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
-  const { notificationPreferences, updateNotificationPreferences } = useUserStore()
+  const { notificationPreferences, updateNotificationPreferences, profile } = useUserStore()
 
   const handleToggleDailyInsights = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -46,22 +55,56 @@ export default function NotificationSettingsScreen() {
     updateNotificationPreferences({ celebrationsEnabled: value })
   }
 
+  const handleToggleMealReminders = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    updateNotificationPreferences({ mealRemindersEnabled: value })
+    await setMealRemindersEnabled(value)
+    if (value && profile) {
+      await scheduleDailyMealReminders(profile as UserProfile)
+    }
+  }
+
+  const handleToggleCoachProactive = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    updateNotificationPreferences({ coachProactiveEnabled: value })
+    await setCoachNotificationsEnabled(value)
+    if (value && profile) {
+      await initializeCoachProactiveService(profile as UserProfile)
+    }
+  }
+
+  // Check if user has fasting configured
+  const hasFasting = profile?.lifestyleHabits?.fasting?.schedule &&
+    profile.lifestyleHabits.fasting.schedule !== 'none'
+
   const allEnabled = notificationPreferences.dailyInsightsEnabled &&
     notificationPreferences.alertsEnabled &&
-    notificationPreferences.celebrationsEnabled
+    notificationPreferences.celebrationsEnabled &&
+    notificationPreferences.mealRemindersEnabled &&
+    notificationPreferences.coachProactiveEnabled
 
-  const handleToggleAll = () => {
+  const handleToggleAll = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     const newValue = !allEnabled
     updateNotificationPreferences({
       dailyInsightsEnabled: newValue,
       alertsEnabled: newValue,
       celebrationsEnabled: newValue,
+      mealRemindersEnabled: newValue,
+      coachProactiveEnabled: newValue,
     })
     if (newValue) {
       scheduleDailyInsightNotification(9)
+      await setMealRemindersEnabled(true)
+      await setCoachNotificationsEnabled(true)
+      if (profile) {
+        await scheduleDailyMealReminders(profile as UserProfile)
+        await initializeCoachProactiveService(profile as UserProfile)
+      }
     } else {
       cancelDailyInsightNotification()
+      await setMealRemindersEnabled(false)
+      await setCoachNotificationsEnabled(false)
     }
   }
 
@@ -166,16 +209,16 @@ export default function NotificationSettingsScreen() {
           </View>
 
           {/* Celebrations */}
-          <View style={styles.notificationItem}>
+          <View style={[styles.notificationItem, styles.notificationItemBorder, { borderBottomColor: colors.border.light }]}>
             <View style={[styles.notificationIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
               <Award size={22} color={colors.success} />
             </View>
             <View style={styles.notificationInfo}>
               <Text style={[styles.notificationLabel, { color: colors.text.primary }]}>
-                Célébrations
+                Celebrations
               </Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                Séries, badges débloqués et objectifs atteints
+                Series, badges debloques et objectifs atteints
               </Text>
             </View>
             <Switch
@@ -183,6 +226,52 @@ export default function NotificationSettingsScreen() {
               onValueChange={handleToggleCelebrations}
               trackColor={{ false: colors.bg.tertiary, true: 'rgba(16, 185, 129, 0.3)' }}
               thumbColor={notificationPreferences.celebrationsEnabled ? colors.success : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
+
+          {/* Meal Reminders */}
+          <View style={[styles.notificationItem, styles.notificationItemBorder, { borderBottomColor: colors.border.light }]}>
+            <View style={[styles.notificationIcon, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
+              <Utensils size={22} color="#F97316" />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.notificationLabel, { color: colors.text.primary }]}>
+                Rappels repas
+              </Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                {hasFasting
+                  ? 'Rappels adaptes a ta fenetre de jeune intermittent'
+                  : 'Rappels pour petit-dej, dejeuner, gouter et diner'}
+              </Text>
+            </View>
+            <Switch
+              value={notificationPreferences.mealRemindersEnabled}
+              onValueChange={handleToggleMealReminders}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(249, 115, 22, 0.3)' }}
+              thumbColor={notificationPreferences.mealRemindersEnabled ? '#F97316' : colors.text.tertiary}
+              ios_backgroundColor={colors.bg.tertiary}
+            />
+          </View>
+
+          {/* Coach Proactive */}
+          <View style={styles.notificationItem}>
+            <View style={[styles.notificationIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+              <MessageCircle size={22} color="#8B5CF6" />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.notificationLabel, { color: colors.text.primary }]}>
+                Coach proactif
+              </Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                Conseils intelligents bases sur tes macros et progres
+              </Text>
+            </View>
+            <Switch
+              value={notificationPreferences.coachProactiveEnabled}
+              onValueChange={handleToggleCoachProactive}
+              trackColor={{ false: colors.bg.tertiary, true: 'rgba(139, 92, 246, 0.3)' }}
+              thumbColor={notificationPreferences.coachProactiveEnabled ? '#8B5CF6' : colors.text.tertiary}
               ios_backgroundColor={colors.bg.tertiary}
             />
           </View>

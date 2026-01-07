@@ -24,6 +24,13 @@ import {
 import {
   markOnboardingDayNotified,
 } from './src/services/onboarding-notifications-service'
+import {
+  checkAndScheduleReminders,
+} from './src/services/meal-reminder-service'
+import {
+  initializeCoachProactiveService,
+} from './src/services/coach-proactive-service'
+import { useUserStore } from './src/stores/user-store'
 import { initializeDailyInsightService } from './src/services/daily-insight-service'
 import { loadStaticRecipes } from './src/services/static-recipes'
 import { analytics } from './src/services/analytics-service'
@@ -95,6 +102,17 @@ export default Sentry.wrap(function App() {
         if (notificationsEnabled) {
           await initializeDailyInsightService()
           console.log('[App] Super Agent daily insights initialized')
+
+          // Schedule meal reminders based on user profile and fasting preferences
+          const profile = useUserStore.getState().profile
+          if (profile) {
+            await checkAndScheduleReminders(profile as any)
+            console.log('[App] Meal reminders scheduled')
+
+            // Initialize Coach proactive notifications
+            await initializeCoachProactiveService(profile as any)
+            console.log('[App] Coach proactive service initialized')
+          }
         }
 
         // Wait for preload tasks to complete
@@ -159,8 +177,26 @@ export default Sentry.wrap(function App() {
         }
       }
 
+      // Handle meal reminder notifications
+      if (data?.type === 'meal_reminder' && data?.mealType) {
+        console.log('[App] Meal reminder tapped:', data.mealType)
+        if (navigationRef.current?.isReady()) {
+          // Navigate to add meal screen with pre-selected meal type
+          navigationRef.current.navigate('AddMeal', { mealType: data.mealType })
+        }
+      }
+
+      // Handle Coach proactive notifications
+      if (data?.type === 'coach_proactive') {
+        console.log('[App] Coach notification tapped:', data.subtype)
+        if (navigationRef.current?.isReady()) {
+          // Navigate to home to see the coach widget
+          navigationRef.current.navigate('Main', { screen: 'Home' })
+        }
+      }
+
       // Handle deep links from notifications
-      if (data?.deepLink && data?.type !== 'onboarding') {
+      if (data?.deepLink && data?.type !== 'onboarding' && data?.type !== 'meal_reminder' && data?.type !== 'coach_proactive') {
         // Navigation will be handled by the NavigationContainer
         console.log('[App] Deep link:', data.deepLink)
       }

@@ -30,12 +30,22 @@ interface NutritionGoals {
   sportCaloriesBonus?: number
 }
 
-// Notification preferences for AI Coach
+// Notification preferences for AI Coach and Meal Reminders
 export interface NotificationPreferences {
   dailyInsightsEnabled: boolean
   alertsEnabled: boolean
   celebrationsEnabled: boolean
   lastNotificationDate: string | null
+  // Meal reminder preferences
+  mealRemindersEnabled: boolean
+  mealReminderTimes?: {
+    breakfast?: number // Hour 0-23
+    lunch?: number
+    snack?: number
+    dinner?: number
+  }
+  // Coach proactive notifications
+  coachProactiveEnabled: boolean
 }
 
 interface UserState {
@@ -211,6 +221,8 @@ export const useUserStore = create<UserState>()(
         dailyInsightsEnabled: true,
         alertsEnabled: true,
         celebrationsEnabled: true,
+        mealRemindersEnabled: true,
+        coachProactiveEnabled: true,
         lastNotificationDate: null,
       },
 
