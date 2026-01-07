@@ -18,6 +18,7 @@ export type MealInputMethod =
   | 'ai-meal'
   | 'discover-recipes'
   | 'favorites'
+  | 'custom-recipe'
 
 // Configuration d'une méthode d'input
 export interface MealInputMethodConfig {
@@ -93,7 +94,16 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     iconName: 'Heart',
     color: '#EC4899',
     bgColor: '#FDF2F8',
-    description: 'Accède à tes aliments et recettes favoris'
+    description: 'Accede a tes aliments et recettes favoris'
+  },
+  {
+    id: 'custom-recipe',
+    label: 'Ma recette',
+    labelShort: 'Recette',
+    iconName: 'ChefHat',
+    color: '#4A6741',
+    bgColor: '#E8F0E6',
+    description: 'Cree ta propre recette avec calcul des macros'
   },
 ]
 
@@ -141,6 +151,7 @@ export const useMealInputPreferencesStore = create<MealInputPreferencesState>()(
         'ai-meal': 0,
         'discover-recipes': 0,
         'favorites': 0,
+        'custom-recipe': 0,
       },
       lastUsedMethod: null,
 
@@ -221,6 +232,7 @@ export const useMealInputPreferencesStore = create<MealInputPreferencesState>()(
             'ai-meal': 0,
             'discover-recipes': 0,
             'favorites': 0,
+            'custom-recipe': 0,
           },
           lastUsedMethod: null,
         })

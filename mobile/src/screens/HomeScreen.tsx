@@ -44,6 +44,7 @@ import {
   ProgramsWidget,
   ProgressWidget,
   UnifiedCoachBubble,
+  HydrationWidget,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
@@ -257,9 +258,47 @@ export default function HomeScreen() {
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
-  const baseGoals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
+
+  // Use nutritionGoals if available, otherwise calculate from profile, or use sensible defaults
+  const getBaseGoals = () => {
+    if (nutritionGoals) return nutritionGoals
+
+    // Try to calculate from profile if available
+    if (profile?.weight && profile?.height && profile?.age) {
+      const { recalculateNutritionGoals } = useUserStore.getState()
+      recalculateNutritionGoals()
+      // Return temporary defaults while recalculating (cohérent avec la nouvelle formule)
+      const weight = profile.weight
+      const isWeightLoss = profile.goal === 'weight_loss'
+      const isMuscleGain = profile.goal === 'muscle_gain'
+      // Formule cohérente avec user-store.ts
+      const proteins = Math.round(weight * (isWeightLoss || isMuscleGain ? 2 : 1.6))
+      const fats = Math.round(weight * (isWeightLoss ? 0.9 : isMuscleGain ? 0.8 : 1))
+      // Glucides plafonnés à 150g pour weight_loss
+      const carbs = isWeightLoss ? 150 : isMuscleGain ? 200 : 180
+      return {
+        calories: isWeightLoss ? 1800 : isMuscleGain ? 2500 : 2000,
+        proteins,
+        carbs,
+        fats,
+      }
+    }
+
+    // Default fallback (should rarely happen)
+    return { calories: 1800, proteins: 120, carbs: 150, fats: 60 }
+  }
+
+  const baseGoals = getBaseGoals()
   const effectiveCalories = baseGoals.calories + (baseGoals.sportCaloriesBonus || 0)
   const goals = { ...baseGoals, calories: effectiveCalories }
+
+  // Sync calories with CaloricBank whenever totals change
+  useEffect(() => {
+    if (nutritionGoals) {
+      const { updateDailyBalance } = useCaloricBankStore.getState()
+      updateDailyBalance(currentDate, goals.calories, totals.calories)
+    }
+  }, [currentDate, totals.calories, goals.calories, nutritionGoals])
 
   const userName = profile?.firstName || profile?.name?.split(' ')[0] || ''
   const greeting = getGreeting(userName || undefined)
@@ -461,6 +500,11 @@ export default function HomeScreen() {
             icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
           />
         </GlassCard>
+
+        {/* Hydration Widget */}
+        <View style={styles.hydrationWidgetContainer}>
+          <HydrationWidget />
+        </View>
 
         {/* Meals Section - GlassCard */}
         <GlassCard style={styles.mealsSection} delay={300}>
@@ -959,6 +1003,10 @@ const styles = StyleSheet.create({
   },
   addMoreText: {
     ...typography.smallMedium,
+  },
+  // Hydration Widget Container
+  hydrationWidgetContainer: {
+    marginBottom: spacing.lg,
   },
   // Programs Widget Container
   programsWidgetContainer: {

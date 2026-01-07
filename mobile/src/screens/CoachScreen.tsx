@@ -45,7 +45,7 @@ import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
-import { useUserStore } from '../stores/user-store'
+import { useUserStore, useUserStoreHydration } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
@@ -350,8 +350,10 @@ export default function CoachScreen() {
       sleepHours: null, // TODO: intégrer wellness store
       streak: currentStreak,
       lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
-      plaisirAvailable: plaisirInfo.budget,
-      plaisirUsed: 2 - plaisirInfo.remainingPlaisirMeals,
+      // Repas plaisir: max 600 kcal/repas, max 2/semaine, à partir du jour 3
+      plaisirAvailable: plaisirInfo.available,
+      maxPlaisirPerMeal: plaisirInfo.maxPerMeal,
+      remainingPlaisirMeals: plaisirInfo.remainingPlaisirMeals,
     }, preferences)
 
     // Ajouter les messages (le cooldown empêche les doublons)
@@ -421,8 +423,8 @@ export default function CoachScreen() {
           </View>
         </View>
 
-        {/* Welcome Card - shown only once after onboarding */}
-        {!hasSeenCoachWelcome && (
+        {/* Welcome Card - shown only once after onboarding (wait for store hydration) */}
+        {useUserStoreHydration() && !hasSeenCoachWelcome && (
           <WelcomeCard
             firstName={profile?.firstName || 'toi'}
             onDismiss={handleDismissWelcome}

@@ -16,6 +16,12 @@ export interface DSPyUserContext {
   calories_today?: number
   target_calories?: number
   recent_patterns?: string[]
+  // Macro targets for goal-specific meal selection
+  macro_targets?: {
+    proteins: number   // Daily target in grams
+    carbs: number      // Daily target in grams
+    fats: number       // Daily target in grams
+  }
 }
 
 // ============= PASSAGES =============

@@ -140,7 +140,7 @@ export function SportWidget({ onPress }: SportWidgetProps) {
 
           {/* Sessions */}
           <View style={styles.statItem}>
-            <Trophy size={16} color="#F59E0B" />
+            <Trophy size={16} color="#D4A574" />
             <Text style={styles.statValue}>{totalSessionsCompleted}</Text>
             <Text style={styles.statLabel}>Seances</Text>
           </View>

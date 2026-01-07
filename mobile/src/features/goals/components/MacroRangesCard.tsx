@@ -38,7 +38,7 @@ function MacroRow({ label, value, min, max, unit, colors }: MacroRowProps) {
 
   // Position color (subtle, no judgment)
   const positionColor =
-    position === 'within' ? '#10B981' : position === 'below' ? '#F59E0B' : '#F59E0B'
+    position === 'within' ? '#10B981' : position === 'below' ? '#D4A574' : '#D4A574'
 
   return (
     <View style={styles.macroRow}>

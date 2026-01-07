@@ -18,8 +18,6 @@ import ProgramsScreen from '../screens/ProgramsScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 
 import { colors, shadows } from '../constants/theme'
-import { useCoachStore } from '../stores/coach-store'
-import { useUserStore } from '../stores/user-store'
 import { useMessageCenter } from '../services/message-center'
 
 const Tab = createBottomTabNavigator()
@@ -47,14 +45,11 @@ const TabIcon = ({
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
-  const oldUnreadCount = useCoachStore((state) => state.unreadCount)
-  const hasSeenCoachWelcome = useUserStore((state) => state.hasSeenCoachWelcome)
 
-  // New MessageCenter unread count
-  const messageUnreadCount = useMessageCenter((state) => state.getUnreadCount())
-
-  // Combine old coach messages + new MessageCenter messages + welcome message
-  const coachBadgeCount = oldUnreadCount + messageUnreadCount + (hasSeenCoachWelcome ? 0 : 1)
+  // Le CoachScreen n'affiche QUE les messages du MessageCenter
+  // Donc le badge doit refléter uniquement ces messages (pas le vieux CoachStore)
+  const messages = useMessageCenter((state) => state.messages)
+  const coachBadgeCount = messages.filter((m) => !m.read && !m.dismissed && (!m.expiresAt || new Date(m.expiresAt) > new Date())).length
 
   return (
     <Tab.Navigator

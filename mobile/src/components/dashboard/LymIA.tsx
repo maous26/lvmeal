@@ -156,7 +156,7 @@ export function LymIA({ className }: LymIAProps) {
         messages.push({
           id: 'adaptive-protein',
           type: 'tip',
-          icon: <Sparkles size={20} color="#F59E0B" />,
+          icon: <Sparkles size={20} color="#D4A574" />,
           title: ADAPTIVE_MESSAGES.protein.title,
           message: `Tu es a ${Math.round(proteinPercent)}% de ton objectif proteines. Pense a en ajouter a ton prochain repas.`,
           priority: 70,
@@ -223,7 +223,7 @@ export function LymIA({ className }: LymIAProps) {
       messages.push({
         id: `streak-${streakInfo.current}`,
         type: 'celebration',
-        icon: <Sparkles size={20} color="#F59E0B" />,
+        icon: <Sparkles size={20} color="#D4A574" />,
         title: `${streakInfo.current} jours de suite !`,
         message: isAdaptive
           ? ADAPTIVE_MESSAGES.celebration.message

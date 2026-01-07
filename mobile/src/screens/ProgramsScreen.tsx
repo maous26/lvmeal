@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.sm,
     right: spacing.sm,
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#D4A574',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.full,

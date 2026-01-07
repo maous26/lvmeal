@@ -100,22 +100,38 @@ class DSPyClient {
    * Check if DSPy backend is available
    */
   async checkHealth(): Promise<HealthCheckResponse | null> {
+    const now = Date.now()
+
+    // Use cached result if recent
+    if (this.isAvailable !== null && now - this.lastHealthCheck < this.healthCheckInterval) {
+      console.log('[DSPy Client] Using cached health check')
+      return this.isAvailable
+        ? { status: 'healthy', pipeline_ready: true, cache_size: 0 }
+        : null
+    }
+
+    console.log('[DSPy Client] Making health check request to:', DSPY_BACKEND_URL)
+    // Use shorter timeout (3s) for health check to avoid blocking meal generation
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+
     try {
-      const now = Date.now()
+      const response = await fetch(`${DSPY_BACKEND_URL}/health`, {
+        method: 'GET',
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
 
-      // Use cached result if recent
-      if (this.isAvailable !== null && now - this.lastHealthCheck < this.healthCheckInterval) {
-        return this.isAvailable
-          ? { status: 'healthy', pipeline_ready: true, cache_size: 0 }
-          : null
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-      const result = await apiCall<HealthCheckResponse>('/health', 'GET')
+      const result = await response.json() as HealthCheckResponse
       this.isAvailable = result.status === 'healthy' && result.pipeline_ready
       this.lastHealthCheck = now
-
+      console.log('[DSPy Client] Health check success:', result)
       return result
-    } catch {
+    } catch (error) {
+      clearTimeout(timeoutId)
+      console.log('[DSPy Client] Health check failed (expected if no backend):', error)
       this.isAvailable = false
       this.lastHealthCheck = Date.now()
       return null
@@ -126,13 +142,18 @@ class DSPyClient {
    * Check if DSPy is enabled and available
    */
   async isEnabled(): Promise<boolean> {
+    console.log('[DSPy Client] isEnabled() called')
     // Quick check without full health request
     if (this.isAvailable !== null && Date.now() - this.lastHealthCheck < this.healthCheckInterval) {
+      console.log('[DSPy Client] Using cached availability:', this.isAvailable)
       return this.isAvailable
     }
 
+    console.log('[DSPy Client] Checking health...')
     const health = await this.checkHealth()
-    return health !== null && health.pipeline_ready
+    const result = health !== null && health.pipeline_ready
+    console.log('[DSPy Client] isEnabled result:', result)
+    return result
   }
 
   /**

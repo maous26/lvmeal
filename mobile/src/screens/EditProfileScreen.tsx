@@ -56,12 +56,12 @@ const genderOptions = [
   { value: 'other' as Gender, label: 'Autre', icon: '🧑' },
 ]
 
+// Objectifs synchronisés avec l'onboarding (StepGoalNew) - seulement 3 options
+// Note: 'maintenance' et 'energy' sont mappés vers 'health' dans l'onboarding
 const goalOptions: { value: Goal; label: string; icon: string }[] = [
   { value: 'weight_loss', label: 'Perdre du poids', icon: '📉' },
   { value: 'muscle_gain', label: 'Prendre du muscle', icon: '💪' },
-  { value: 'maintenance', label: 'Maintenir mon poids', icon: '⚖️' },
   { value: 'health', label: 'Améliorer ma santé', icon: '❤️' },
-  { value: 'energy', label: "Plus d'énergie", icon: '⚡' },
 ]
 
 const activityOptions: { value: ActivityLevel; label: string; description: string }[] = [

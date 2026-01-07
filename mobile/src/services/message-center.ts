@@ -315,8 +315,10 @@ export function generateDailyMessages(
     sleepHours: number | null
     streak: number
     lastMealTime: Date | null
-    plaisirAvailable: number
-    plaisirUsed: number
+    // Repas plaisir: max 600 kcal/repas, max 2 repas/semaine, à partir du jour 3
+    plaisirAvailable: boolean  // true si repas plaisir débloqué (jour >= 3 ET budget >= 200)
+    maxPlaisirPerMeal: number  // max 600 kcal par repas plaisir
+    remainingPlaisirMeals: number  // 0, 1 ou 2 repas restants cette semaine
   },
   preferences?: MessagePreferences
 ): GeneratedMessage[] {
@@ -407,16 +409,17 @@ export function generateDailyMessages(
     })
   }
 
-  // P2: Plaisir available
-  if (userData.plaisirAvailable > 0 && userData.plaisirUsed < 2) {
+  // P2: Plaisir available (max 600 kcal/repas, max 2 repas/semaine)
+  if (userData.plaisirAvailable && userData.remainingPlaisirMeals > 0 && userData.maxPlaisirPerMeal > 0) {
+    const repasText = userData.remainingPlaisirMeals === 2 ? 'tes 2 repas plaisir' : 'ton repas plaisir'
     messages.push({
       priority: 'P2',
       type: 'tip',
       category: 'nutrition',
       title: 'Repas plaisir disponible',
-      message: `+${userData.plaisirAvailable} kcal bonus cette semaine. Fais-toi plaisir !`,
+      message: `+${userData.maxPlaisirPerMeal} kcal bonus pour ${repasText}. Fais-toi plaisir !`,
       emoji: '🎁',
-      reason: `${userData.plaisirAvailable} kcal plaisir non utilisées`,
+      reason: `${userData.remainingPlaisirMeals} repas plaisir restant(s), max ${userData.maxPlaisirPerMeal} kcal/repas`,
       confidence: 0.85,
       dedupKey: 'plaisir-available',
     })

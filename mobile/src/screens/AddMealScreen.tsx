@@ -57,6 +57,7 @@ import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useRecipesStore } from '../stores/recipes-store'
 import { useUserStore } from '../stores/user-store'
+import { useMealPlanStore, type WeekPlan } from '../stores/meal-plan-store'
 import type { MealType, FoodItem, MealItem, NutritionInfo, Recipe, UserProfile } from '../types'
 import { generateId } from '../lib/utils'
 import { searchFoods, preloadCiqual, type SearchSource } from '../services/food-search'
@@ -229,10 +230,11 @@ export default function AddMealScreen() {
   const toast = useToast()
   const { type = 'lunch', openDiscover = false } = (route.params as { type?: MealType; openDiscover?: boolean }) || {}
 
-  const { addMeal, recentFoods = [], favoriteFoods = [], addToFavorites, removeFromFavorites, getDailyNutrition, currentDate } = useMealsStore()
+  const { addMeal, recentFoods = [], favoriteFoods = [], addToFavorites, removeFromFavorites, getDailyNutrition, getMealsForDate, currentDate } = useMealsStore()
   const { addXP } = useGamificationStore()
   const { favoriteRecipes, removeFromFavorites: removeRecipeFromFavorites, addToFavorites: addRecipeToFavorites, addAIRecipe, rateAIRecipe, aiRecipes } = useRecipesStore()
   const { profile, nutritionGoals } = useUserStore()
+  const { setPlan: setMealPlan } = useMealPlanStore()
 
   const [activeMethod, setActiveMethod] = useState<'method' | 'search' | 'favorites'>('method')
   const [searchQuery, setSearchQuery] = useState('')
@@ -261,6 +263,8 @@ export default function AddMealScreen() {
   const [planDuration, setPlanDuration] = useState<1 | 3 | 7>(1)
   const [calorieReduction, setCalorieReduction] = useState(false)
   const [lastMealSource, setLastMealSource] = useState<{ source: MealSource; label: string; confidence: number } | null>(null)
+  const [excludedRecipeIds, setExcludedRecipeIds] = useState<string[]>([]) // For "Autre suggestion" feature
+  const [lastSuggestedRecipeId, setLastSuggestedRecipeId] = useState<string | null>(null) // Track last suggestion
 
   // Discover Modal state
   const [showDiscoverModal, setShowDiscoverModal] = useState(false)
@@ -361,6 +365,18 @@ export default function AddMealScreen() {
   // Calculate total nutrition
   const totalNutrition: NutritionInfo = selectedFoods.reduce(
     (acc, { food, quantity, unit }) => {
+      // Special handling for custom recipes (source === 'recipe')
+      // Their nutrition values are already per portion, not per 100g
+      if (food.source === 'recipe' || food.isRecipe) {
+        return {
+          calories: acc.calories + Math.round(food.nutrition.calories * quantity),
+          proteins: acc.proteins + Math.round(food.nutrition.proteins * quantity * 10) / 10,
+          carbs: acc.carbs + Math.round(food.nutrition.carbs * quantity * 10) / 10,
+          fats: acc.fats + Math.round(food.nutrition.fats * quantity * 10) / 10,
+        }
+      }
+
+      // Standard foods: nutrition is per 100g
       let gramsEquivalent = quantity
       if (unit === 'unit' || unit === 'portion') {
         // Use accurate unit weight from our database
@@ -382,7 +398,8 @@ export default function AddMealScreen() {
   // Open quantity modal
   const openQuantityModal = (food: FoodItem) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    const defaultUnit: ServingUnit = 'g'
+    // For custom recipes, default to 'portion' unit since their nutrition is per portion
+    const defaultUnit: ServingUnit = (food.source === 'recipe' || food.isRecipe) ? 'portion' : 'g'
     setQuantityModal({
       isOpen: true,
       food,
@@ -429,6 +446,21 @@ export default function AddMealScreen() {
     if (!quantityModal.food) return { calories: 0, proteins: 0, carbs: 0, fats: 0, gramsEquivalent: 0 }
 
     const { food, quantity, unit } = quantityModal
+
+    // Special handling for custom recipes (source === 'recipe')
+    // Their nutrition values are already per portion, not per 100g
+    if (food.source === 'recipe' || food.isRecipe) {
+      // For recipes, nutrition is per portion - just multiply by quantity
+      return {
+        calories: Math.round(food.nutrition.calories * quantity),
+        proteins: Math.round(food.nutrition.proteins * quantity * 10) / 10,
+        carbs: Math.round(food.nutrition.carbs * quantity * 10) / 10,
+        fats: Math.round(food.nutrition.fats * quantity * 10) / 10,
+        gramsEquivalent: quantity, // For recipes, gramsEquivalent = number of portions
+      }
+    }
+
+    // Standard foods: nutrition is per 100g
     let gramsEquivalent = quantity
     if (unit === 'unit' || unit === 'portion') {
       // Use accurate unit weight from our database
@@ -459,6 +491,13 @@ export default function AddMealScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
     const { food, quantity, unit } = quantityModal
+    console.log('[AddMealScreen] confirmAddFood:', {
+      name: food.name,
+      quantity,
+      unit,
+      caloriesPer100g: food.nutrition.calories,
+      expectedCalories: Math.round(food.nutrition.calories * quantity / 100)
+    })
 
     setSelectedFoods(prev => {
       const existing = prev.find(sf => sf.food.id === food.id)
@@ -512,12 +551,27 @@ export default function AddMealScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
     // Convert to MealItems
+    // IMPORTANT: For standard foods, nutrition values are per 100g, so multiplier must be grams/100
+    // For custom recipes (source === 'recipe'), nutrition is per portion, so multiplier = quantity directly
     const mealItems: MealItem[] = selectedFoods.map(({ food, quantity, unit }) => {
+      // Special handling for custom recipes - their nutrition is already per portion
+      if (food.source === 'recipe' || food.isRecipe) {
+        return {
+          id: generateId(),
+          food,
+          quantity: quantity, // For recipes, quantity = number of portions
+        }
+      }
+
+      // Standard foods: nutrition is per 100g
       let gramsEquivalent = quantity
       if (unit === 'unit' || unit === 'portion') {
-        gramsEquivalent = quantity * (food.servingSize || 100)
+        // For units/portions, multiply by servingSize to get grams
+        const servingSize = food.servingSize || 100
+        gramsEquivalent = quantity * servingSize
       }
-      const multiplier = gramsEquivalent / food.servingSize
+      // Divide by 100 because nutrition is per 100g
+      const multiplier = gramsEquivalent / 100
 
       return {
         id: generateId(),
@@ -525,6 +579,12 @@ export default function AddMealScreen() {
         quantity: multiplier,
       }
     })
+
+    console.log('[AddMealScreen] Saving meal with items:', mealItems.map(m => ({
+      name: m.food.name,
+      quantity: m.quantity,
+      calories: m.food.nutrition.calories * m.quantity
+    })))
 
     addMeal(selectedMealType, mealItems)
     addXP(15, 'Repas enregistre')
@@ -561,12 +621,19 @@ export default function AddMealScreen() {
         break
       case 'ai-meal':
         setShowAIRecipeModal(true)
+        // Reset excluded recipes when opening the modal (fresh start)
+        setExcludedRecipeIds([])
+        setLastSuggestedRecipeId(null)
         break
       case 'discover-recipes':
         setShowDiscoverModal(true)
         break
       case 'favorites':
         setActiveMethod('favorites')
+        break
+      case 'custom-recipe':
+        // Navigate to CustomRecipes screen (list view with option to create)
+        navigation.navigate('CustomRecipes' as never)
         break
     }
   }
@@ -599,12 +666,24 @@ export default function AddMealScreen() {
   const getDifficulty = (level: string | undefined) => difficultyLabels[level || 'medium'] || difficultyLabels.medium
 
   // AI Recipe suggestion handler - Now uses RAG for intelligent source selection
-  const handleAISuggest = async () => {
+  const handleAISuggest = async (excludeIds?: string[]) => {
+    console.log('='.repeat(60))
+    console.log('[AddMeal] handleAISuggest CALLED')
+    console.log('[AddMeal] profile exists:', !!profile)
+    console.log('[AddMeal] nutritionGoals exists:', !!nutritionGoals)
+    console.log('[AddMeal] profile data:', JSON.stringify(profile, null, 2))
+    console.log('[AddMeal] nutritionGoals data:', JSON.stringify(nutritionGoals, null, 2))
+    console.log('[AddMeal] generationMode:', generationMode, 'selectedMealType:', selectedMealType)
+    console.log('[AddMeal] excludeIds:', excludeIds)
+    console.log('='.repeat(60))
+
     if (!profile || !nutritionGoals) {
+      console.log('[AddMeal] ERROR: Missing profile or nutritionGoals!')
       toast.error('Configure ton profil pour utiliser LymIA')
       return
     }
 
+    console.log('[AddMeal] Validation passed, starting generation...')
     setIsSuggesting(true)
     setLastMealSource(null)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -618,15 +697,51 @@ export default function AddMealScreen() {
         fats: consumed.fats,
       }
 
+      // Calculate remaining calories for the day
+      const dailyTarget = nutritionGoals.calories
+      const remainingCalories = Math.max(0, dailyTarget - consumed.calories)
+
+      // Get meals already logged today to calculate smart calorie distribution
+      const todayMeals = getMealsForDate(currentDate)
+      const mealsLogged: MealType[] = todayMeals.map((meal) => meal.type)
+      const uniqueMealsLogged = [...new Set(mealsLogged)] as MealType[]
+
+      console.log('[AddMeal] Daily target:', dailyTarget, '| Consumed:', consumed.calories, '| Remaining:', remainingCalories)
+      console.log('[AddMeal] Meals already logged today:', uniqueMealsLogged.join(', ') || 'none')
+
       // Mode suggestion = single meal, Mode plan = full day(s) plan
       if (generationMode === 'suggestion') {
-        // Single meal suggestion
+        console.log('[AddMeal] Calling generateSingleMealWithRAG...')
+        console.log('[AddMeal] params:', JSON.stringify({
+          mealType: selectedMealType,
+          consumed: consumedNutrition,
+          remainingCalories,
+          calorieReduction,
+          mealsLogged: uniqueMealsLogged,
+          composeFullMeal: true, // Compose multi-component meals
+          excludeRecipeIds: excludeIds || excludedRecipeIds,
+          profileGoal: (profile as UserProfile).goal,
+          nutritionalNeeds: (profile as UserProfile).nutritionalNeeds,
+        }))
+
+        // Single meal suggestion - uses smart calorie calculation based on meals logged
         const result = await generateSingleMealWithRAG({
           mealType: selectedMealType,
           userProfile: profile as UserProfile,
           consumed: consumedNutrition,
           calorieReduction,
+          remainingCalories,
+          mealsLogged: uniqueMealsLogged, // Pass logged meals for smart distribution
+          composeFullMeal: true, // Compose multi-component meals for realistic suggestions
+          excludeRecipeIds: excludeIds || excludedRecipeIds,
         })
+
+        console.log('[AddMeal] generateSingleMealWithRAG returned:', JSON.stringify({
+          success: result.success,
+          source: result.source,
+          hasRecipe: !!result.recipe,
+          error: result.error,
+        }))
 
         if (result.success && result.recipe) {
           // Store source info for display
@@ -680,6 +795,12 @@ export default function AddMealScreen() {
           })
           // Also set selectedRecipe for adding to meal log
           setSelectedRecipe(aiRecipe)
+
+          // Track this recipe ID for "Autre suggestion" exclusion
+          const recipeId = result.recipe.id
+          setLastSuggestedRecipeId(recipeId)
+          // Add to excluded list for subsequent "Autre suggestion" calls
+          setExcludedRecipeIds(prev => [...prev, recipeId])
         } else {
           toast.error(result.error || 'Aucun repas trouve')
         }
@@ -695,6 +816,15 @@ export default function AddMealScreen() {
         if (result.meals.length > 0) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
+          // Save the plan to the store
+          const weekPlan: WeekPlan = {
+            id: generateId(),
+            meals: result.meals,
+            generatedAt: result.generatedAt,
+            weekStart: new Date().toISOString().split('T')[0],
+          }
+          setMealPlan(weekPlan)
+
           // Show summary of generated plan
           const totalMeals = result.meals.length
           const sourceInfo = Object.entries(result.sourceBreakdown)
@@ -703,7 +833,7 @@ export default function AddMealScreen() {
             .join('\n')
 
           Alert.alert(
-            `Plan ${planDuration} jours genere`,
+            `Plan ${planDuration} jour${planDuration > 1 ? 's' : ''} genere`,
             `${totalMeals} repas crees\n\nSources utilisees:\n${sourceInfo}\n\nCalories totales: ${result.totalNutrition.calories} kcal`,
             [
               { text: 'Voir le plan', onPress: () => {
@@ -719,7 +849,8 @@ export default function AddMealScreen() {
         }
       }
     } catch (error) {
-      console.error('RAG meal generation error:', error)
+      console.error('[AddMeal] RAG meal generation error:', error)
+      console.error('[AddMeal] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
       toast.error(`Erreur: ${errorMessage}`)
     } finally {
@@ -912,6 +1043,9 @@ export default function AddMealScreen() {
     if (source === 'ciqual') {
       return <Database size={12} color={colors.success} />
     }
+    if (source === 'custom' || source === 'recipe') {
+      return <ChefHat size={12} color={colors.accent.primary} />
+    }
     return <ShoppingCart size={12} color={colors.warning} />
   }
 
@@ -979,6 +1113,9 @@ export default function AddMealScreen() {
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
                     setSelectedMealType(option.id)
+                    // Reset excluded recipes when changing meal type
+                    setExcludedRecipeIds([])
+                    setLastSuggestedRecipeId(null)
                   }}
                 >
                   <Text style={styles.mealTypeSelectorEmoji}>{option.icon}</Text>
@@ -1157,7 +1294,7 @@ export default function AddMealScreen() {
                 <Text style={[
                   styles.sourceButtonText,
                   searchSource === 'generic' && styles.sourceButtonTextActive,
-                ]}>CIQUAL</Text>
+                ]}>Le Marche</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -1170,7 +1307,20 @@ export default function AddMealScreen() {
                 <Text style={[
                   styles.sourceButtonText,
                   searchSource === 'branded' && styles.sourceButtonTextActive,
-                ]}>Marques</Text>
+                ]}>Les Rayons</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.sourceButton,
+                  searchSource === 'custom' && styles.sourceButtonActive,
+                ]}
+                onPress={() => setSearchSource('custom')}
+              >
+                <ChefHat size={14} color={searchSource === 'custom' ? '#FFFFFF' : colors.accent.primary} />
+                <Text style={[
+                  styles.sourceButtonText,
+                  searchSource === 'custom' && styles.sourceButtonTextActive,
+                ]}>Vos Recettes</Text>
               </TouchableOpacity>
             </View>
 
@@ -1193,7 +1343,7 @@ export default function AddMealScreen() {
                       <View key={source} style={styles.sourceTag}>
                         {getSourceIcon(source)}
                         <Text style={styles.sourceTagText}>
-                          {source === 'ciqual' ? 'CIQUAL' : 'OFF'}
+                          {source === 'ciqual' ? 'Marche' : source === 'openfoodfacts' ? 'Rayons' : source === 'custom' ? 'Recettes' : source}
                         </Text>
                       </View>
                     ))}
@@ -1591,7 +1741,9 @@ export default function AddMealScreen() {
                         {quantityModal.food.name}
                       </Text>
                       <Text style={styles.modalFoodMeta}>
-                        Valeurs nutritionnelles pour 100g
+                        {quantityModal.food.source === 'recipe' || quantityModal.food.isRecipe
+                          ? 'Valeurs nutritionnelles par portion'
+                          : 'Valeurs nutritionnelles pour 100g'}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -1857,7 +2009,12 @@ export default function AddMealScreen() {
                         <TouchableOpacity
                           key={option.id}
                           style={[styles.mealTypeChip, selectedMealType === option.id && styles.mealTypeChipActive]}
-                          onPress={() => setSelectedMealType(option.id)}
+                          onPress={() => {
+                            setSelectedMealType(option.id)
+                            // Reset excluded recipes when changing meal type
+                            setExcludedRecipeIds([])
+                            setLastSuggestedRecipeId(null)
+                          }}
                         >
                           <Text style={styles.mealTypeEmoji}>{option.icon}</Text>
                           <Text style={[styles.mealTypeText, selectedMealType === option.id && styles.mealTypeTextActive]}>
@@ -1904,12 +2061,12 @@ export default function AddMealScreen() {
               {/* Generate Button - Prominent CTA outside the gradient card */}
               <TouchableOpacity
                 style={[styles.generateButton, isSuggesting && styles.generateButtonDisabled]}
-                onPress={handleAISuggest}
+                onPress={() => handleAISuggest()}
                 disabled={isSuggesting}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={isSuggesting ? ['#9CA3AF', '#6B7280'] : ['#F59E0B', '#D97706']}
+                  colors={isSuggesting ? ['#9CA3AF', '#6B7280'] : ['#4A6741', '#5C7A52']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.generateButtonGradient}
@@ -2194,8 +2351,8 @@ export default function AddMealScreen() {
                         >
                           <Star
                             size={32}
-                            color="#F59E0B"
-                            fill={star <= userRating ? '#F59E0B' : 'transparent'}
+                            color="#D4A574"
+                            fill={star <= userRating ? '#D4A574' : 'transparent'}
                           />
                         </TouchableOpacity>
                       ))}
@@ -3167,11 +3324,11 @@ const styles = StyleSheet.create({
   },
   generateButton: {
     marginHorizontal: spacing.default,
-    marginTop: spacing.xl,
-    borderRadius: radius.xl,
+    marginTop: spacing.lg,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    ...shadows.lg,
-    elevation: 8,
+    ...shadows.sm,
+    elevation: 4,
   },
   generateButtonDisabled: {
     opacity: 0.7,
@@ -3180,14 +3337,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     gap: spacing.sm,
   },
   generateButtonText: {
-    ...typography.h3,
+    fontSize: 15,
+    fontFamily: fonts.sans.semibold,
     color: '#FFFFFF',
-    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   // Mode Selector styles
   modeSelector: {

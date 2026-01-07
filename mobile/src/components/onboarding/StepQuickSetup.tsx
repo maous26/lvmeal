@@ -460,13 +460,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
     gap: spacing.sm,
   },
   ctaText: {
     ...typography.button,
+    fontSize: 15,
+    letterSpacing: 0.3,
   },
 })
 

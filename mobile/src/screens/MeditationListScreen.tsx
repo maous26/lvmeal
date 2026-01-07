@@ -33,7 +33,7 @@ import { MEDITATION_SESSIONS, type MeditationSession } from '../services/meditat
 const PHASE_COLORS: Record<string, readonly [string, string]> = {
   foundations: ['#10B981', '#059669'],
   awareness: ['#8B5CF6', '#7C3AED'],
-  balance: ['#F59E0B', '#D97706'],
+  balance: ['#D4A574', '#B8856C'],
   harmony: ['#EC4899', '#DB2777'],
 }
 

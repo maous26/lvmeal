@@ -104,6 +104,7 @@ const isExpoGo = Constants.appOwnership === 'expo'
 const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
+// IMPORTANT: Cette formule DOIT être synchronisée avec user-store.ts calculateNutritionalNeeds
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
   const {
     weight = 70,
@@ -153,7 +154,8 @@ function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
     // Standard approach
     switch (goal) {
       case 'weight_loss':
-        calories = tdee - 400
+        // Déficit de 400-500 kcal pour perte de poids progressive (~0.5kg/semaine)
+        calories = tdee - 450
         break
       case 'muscle_gain':
         calories = tdee + 300
@@ -164,23 +166,56 @@ function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
   }
   calories = Math.round(calories)
 
-  // Macro distribution - ADAPTIVE GETS HIGHER PROTEIN & FAT
-  let proteinPerKg: number
-  let fatPercentage: number
+  // ==========================================================================
+  // MACRO DISTRIBUTION - Approche nutritionnelle personnalisée selon objectif
+  // Priorité : Protéines > Lipides > Glucides (complément)
+  // ==========================================================================
+
+  let proteins: number
+  let fats: number
+  let carbs: number
 
   if (metabolismProfile === 'adaptive') {
-    // Higher protein for metabolic health
-    proteinPerKg = 2.0
-    // Higher fat for hormonal balance (30%)
-    fatPercentage = 0.30
+    // Métabolisme adaptatif: approche douce avec plus de protéines et lipides
+    proteins = Math.round(weight * 2.0)
+    fats = Math.round(calories * 0.30 / 9)
+    const remainingCals = calories - (proteins * 4) - (fats * 9)
+    carbs = Math.max(80, Math.round(remainingCals / 4))
   } else {
-    proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
-    fatPercentage = 0.25
-  }
+    switch (goal) {
+      case 'weight_loss':
+        // PERTE DE POIDS - Priorité à la préservation musculaire
+        // Protéines élevées (2g/kg) pour effet thermique et satiété
+        // Lipides suffisants (0.9g/kg) pour hormones et absorption vitamines
+        // Glucides modérés (plafonnés à 150g) pour favoriser l'utilisation des graisses
+        proteins = Math.round(weight * 2.0)
+        fats = Math.round(weight * 0.9)
+        const remainingCalsLoss = calories - (proteins * 4) - (fats * 9)
+        const rawCarbsLoss = Math.round(remainingCalsLoss / 4)
+        carbs = Math.max(80, Math.min(150, rawCarbsLoss)) // Plancher 80g, plafond 150g
+        break
 
-  const proteins = Math.round(weight * proteinPerKg)
-  const fats = Math.round((calories * fatPercentage) / 9)
-  const carbs = Math.round((calories - (proteins * 4) - (fats * 9)) / 4)
+      case 'muscle_gain':
+        // PRISE DE MASSE - Glucides importants pour l'anabolisme
+        // Protéines élevées (2g/kg) pour synthèse protéique
+        // Lipides modérés (0.8g/kg)
+        // Glucides élevés pour énergie et récupération
+        proteins = Math.round(weight * 2.0)
+        fats = Math.round(weight * 0.8)
+        const remainingCalsGain = calories - (proteins * 4) - (fats * 9)
+        carbs = Math.max(150, Math.round(remainingCalsGain / 4)) // Minimum 150g
+        break
+
+      default:
+        // MAINTIEN - Répartition équilibrée
+        // Protéines modérées (1.6g/kg)
+        // Lipides standards (1g/kg)
+        proteins = Math.round(weight * 1.6)
+        fats = Math.round(weight * 1.0)
+        const remainingCalsMaint = calories - (proteins * 4) - (fats * 9)
+        carbs = Math.round(remainingCalsMaint / 4)
+    }
+  }
 
   return {
     calories,

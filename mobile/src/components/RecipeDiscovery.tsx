@@ -482,7 +482,7 @@ export function RecipeDiscovery({ onRecipePress, onClose }: RecipeDiscoveryProps
               </View>
             )}
             <View style={styles.aiStarBadge}>
-              <Star size={10} color="#F59E0B" fill="#F59E0B" />
+              <Star size={10} color="#D4A574" fill="#D4A574" />
               <Text style={styles.aiStarText}>{aiRecipe.rating}</Text>
             </View>
           </View>

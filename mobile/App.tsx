@@ -21,6 +21,9 @@ import {
   requestNotificationPermissions,
   addNotificationResponseListener,
 } from './src/services/notification-service'
+import {
+  markOnboardingDayNotified,
+} from './src/services/onboarding-notifications-service'
 import { initializeDailyInsightService } from './src/services/daily-insight-service'
 import { loadStaticRecipes } from './src/services/static-recipes'
 import { analytics } from './src/services/analytics-service'
@@ -121,8 +124,43 @@ export default Sentry.wrap(function App() {
         deepLink: data?.deepLink as string,
       })
 
+      // Handle onboarding notifications
+      if (data?.type === 'onboarding' && data?.day) {
+        const day = data.day as number
+        markOnboardingDayNotified(day).catch(console.error)
+        console.log('[App] Onboarding day', day, 'notification acknowledged')
+
+        // Navigate to appropriate screen based on feature
+        if (navigationRef.current?.isReady() && data?.deepLink) {
+          const deepLink = data.deepLink as string
+          // Handle LYM deep links
+          if (deepLink.startsWith('lym://')) {
+            const route = deepLink.replace('lym://', '')
+            switch (route) {
+              case 'home':
+                navigationRef.current.navigate('Main', { screen: 'Home' })
+                break
+              case 'suggestions':
+              case 'planning':
+                navigationRef.current.navigate('WeeklyPlan')
+                break
+              case 'coach':
+                // Coach is available via home screen actions
+                navigationRef.current.navigate('Main', { screen: 'Home' })
+                break
+              case 'wellness':
+                navigationRef.current.navigate('WellnessProgram')
+                break
+              case 'premium':
+                navigationRef.current.navigate('Paywall')
+                break
+            }
+          }
+        }
+      }
+
       // Handle deep links from notifications
-      if (data?.deepLink) {
+      if (data?.deepLink && data?.type !== 'onboarding') {
         // Navigation will be handled by the NavigationContainer
         console.log('[App] Deep link:', data.deepLink)
       }

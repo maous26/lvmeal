@@ -22,6 +22,8 @@ import MealInputSettingsScreen from '../screens/MealInputSettingsScreen'
 import ScaleSettingsScreen from '../screens/ScaleSettingsScreen'
 import BackupSettingsScreen from '../screens/BackupSettingsScreen'
 import ChangePasswordScreen from '../screens/ChangePasswordScreen'
+import AddCustomRecipeScreen from '../screens/AddCustomRecipeScreen'
+import CustomRecipesScreen from '../screens/CustomRecipesScreen'
 import { useUserStore } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { isGoogleSignedIn, getCachedGoogleUser } from '../services/google-auth-service'
@@ -74,6 +76,8 @@ export type RootStackParamList = {
   ScaleSettings: undefined
   BackupSettings: undefined
   ChangePassword: { fromDeepLink?: boolean } | undefined
+  AddCustomRecipe: undefined
+  CustomRecipes: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -98,9 +102,28 @@ export default function RootNavigator() {
         const hasAuth = cachedGoogleUser || googleSignedIn || cachedEmailUser || emailSignedIn
         const hasCompletedOnboarding = profile?.onboardingCompleted || isOnboarded
 
-        console.log('[RootNavigator] Auth check:', { hasAuth, hasCompletedOnboarding, isOnboarded })
+        // CRITICAL: Check for inconsistent state - onboarded but no profile data
+        // This can happen if AsyncStorage was partially cleared or corrupted
+        const hasProfileData = profile && profile.weight && profile.goal
+        const isInconsistentState = hasCompletedOnboarding && !hasProfileData
 
-        if (hasCompletedOnboarding) {
+        console.log('[RootNavigator] Auth check:', {
+          hasAuth,
+          hasCompletedOnboarding,
+          isOnboarded,
+          hasProfileData,
+          isInconsistentState,
+          profileWeight: profile?.weight,
+          profileGoal: profile?.goal,
+        })
+
+        if (isInconsistentState) {
+          // Inconsistent state: user is marked as onboarded but profile data is missing
+          // Force re-onboarding to restore profile data
+          console.warn('[RootNavigator] Inconsistent state detected! Profile data missing. Forcing re-onboarding.')
+          clearProfile() // This will set isOnboarded to false
+          setShowAuth(false)
+        } else if (hasCompletedOnboarding) {
           // User has completed onboarding previously
           if (hasAuth) {
             // Returning user with auth - go straight to app
@@ -317,6 +340,21 @@ export default function RootNavigator() {
           <Stack.Screen
             name="ChangePassword"
             component={ChangePasswordScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="AddCustomRecipe"
+            component={AddCustomRecipeScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
+            name="CustomRecipes"
+            component={CustomRecipesScreen}
             options={{
               animation: 'slide_from_right',
             }}

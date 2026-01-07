@@ -4,6 +4,7 @@
  * Features:
  * - CIQUAL database (2000+ French reference foods)
  * - Open Food Facts API (millions of branded products)
+ * - Custom recipes (user-created recipes)
  * - In-memory cache with TTL
  * - Optimized search with scoring
  */
@@ -11,6 +12,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { FoodItem, NutritionInfo, NutriScoreGrade } from '../types'
 import { analyzeForConversion, detectDryFood, type ConversionResult } from './cooking-conversion'
+import { useCustomRecipesStore } from '../stores/custom-recipes-store'
 
 // ============= TYPES =============
 
@@ -402,6 +404,109 @@ async function searchCiqual(query: string, limit: number): Promise<FoodItem[]> {
   return results
 }
 
+// ============= CUSTOM RECIPES SEARCH =============
+
+/**
+ * Search user's custom recipes
+ * Returns recipes that match the query, converted to FoodItem format
+ */
+function searchCustomRecipes(query: string, limit: number): FoodItem[] {
+  try {
+    // Get recipes from the store (direct state access, not hook)
+    const { recipes } = useCustomRecipesStore.getState()
+
+    if (!recipes || recipes.length === 0) return []
+
+    const normalizedQuery = query.toLowerCase().trim()
+    const queryWords = normalizedQuery.split(/\s+/).filter(w => w.length > 1)
+
+    // Score each recipe
+    const scored: { score: number; recipe: typeof recipes[0] }[] = []
+
+    for (const recipe of recipes) {
+      const normalizedTitle = recipe.title.toLowerCase()
+      const titleWords = normalizedTitle.split(/\s+/)
+
+      let score = 0
+
+      // Exact title match
+      if (normalizedTitle === normalizedQuery) {
+        score = 1000
+      }
+      // Title starts with query
+      else if (normalizedTitle.startsWith(normalizedQuery)) {
+        score = 800
+      }
+      // Title contains query
+      else if (normalizedTitle.includes(normalizedQuery)) {
+        score = 600
+      }
+      // Check word matches
+      else {
+        let wordMatches = 0
+        for (const qw of queryWords) {
+          if (titleWords.some(tw => tw === qw || tw.startsWith(qw))) {
+            wordMatches++
+          }
+        }
+        if (wordMatches > 0) {
+          score = 400 + (wordMatches * 50)
+        }
+      }
+
+      // Check ingredients for matches
+      if (score === 0) {
+        for (const ing of recipe.ingredients) {
+          const ingName = ing.name.toLowerCase()
+          if (ingName.includes(normalizedQuery) || queryWords.some(qw => ingName.includes(qw))) {
+            score = 200
+            break
+          }
+        }
+      }
+
+      // Bonus for favorites
+      if (recipe.isFavorite && score > 0) {
+        score += 100
+      }
+
+      // Bonus for frequently used
+      if (recipe.usageCount > 0 && score > 0) {
+        score += Math.min(recipe.usageCount * 10, 50)
+      }
+
+      if (score > 0) {
+        scored.push({ score, recipe })
+      }
+    }
+
+    // Sort by score
+    scored.sort((a, b) => b.score - a.score)
+
+    // Convert to FoodItem format
+    const results: FoodItem[] = []
+    for (let i = 0; i < Math.min(scored.length, limit); i++) {
+      const recipe = scored[i].recipe
+      results.push({
+        id: recipe.id,
+        name: `🍳 ${recipe.title}`, // Prefix to identify as custom recipe
+        category: recipe.category || 'Recette personnalisee',
+        nutrition: recipe.nutritionPerServing,
+        servingSize: 1,
+        servingUnit: 'portion',
+        source: 'recipe',
+        isRecipe: true,
+        recipeId: recipe.id,
+      })
+    }
+
+    return results
+  } catch (error) {
+    console.error('[searchCustomRecipes] Error:', error)
+    return []
+  }
+}
+
 // ============= OPEN FOOD FACTS =============
 
 function transformOffProduct(p: OpenFoodFactsProduct): FoodItem | null {
@@ -576,7 +681,7 @@ export async function lookupBarcodeSimple(barcode: string): Promise<FoodItem | n
 
 const cache = new FoodSearchCache()
 
-export type SearchSource = 'all' | 'generic' | 'branded'
+export type SearchSource = 'all' | 'generic' | 'branded' | 'custom'
 
 export interface SearchFoodsOptions {
   query: string
@@ -607,14 +712,30 @@ export async function searchFoods(options: SearchFoodsOptions): Promise<SearchFo
     return { products: [], total: 0, sources: [], fromCache: false }
   }
 
-  // Check cache
+  // If source is 'custom', only search custom recipes
+  if (source === 'custom') {
+    const customRecipes = searchCustomRecipes(query, limit)
+    return {
+      products: customRecipes,
+      total: customRecipes.length,
+      sources: ['custom'],
+      fromCache: false,
+    }
+  }
+
+  // Always search custom recipes first (not cached, always fresh) for 'all' source
+  const customRecipes = source === 'all' ? searchCustomRecipes(query, 5) : []
+
+  // Check cache for other sources
   const cacheKey = `${query.toLowerCase()}-${limit}-${source}`
   const cached = await cache.get(cacheKey)
   if (cached) {
+    // Prepend custom recipes to cached results
+    const combinedProducts = [...customRecipes, ...cached].slice(0, limit)
     return {
-      products: cached,
-      total: cached.length,
-      sources: source === 'all' ? ['ciqual', 'openfoodfacts'] : [source === 'generic' ? 'ciqual' : 'openfoodfacts'],
+      products: combinedProducts,
+      total: combinedProducts.length,
+      sources: source === 'all' ? ['custom', 'ciqual', 'openfoodfacts'] : [source === 'generic' ? 'ciqual' : 'openfoodfacts'],
       fromCache: true,
     }
   }
@@ -663,15 +784,18 @@ export async function searchFoods(options: SearchFoodsOptions): Promise<SearchFo
     return food
   })
 
-  const finalProducts = productsWithConversion
+  // Cache results (without custom recipes, they're always fetched fresh)
+  await cache.set(cacheKey, productsWithConversion)
 
-  // Cache results
-  await cache.set(cacheKey, finalProducts)
+  // Prepend custom recipes to final results
+  const finalProducts = [...customRecipes, ...productsWithConversion].slice(0, limit)
 
   return {
     products: finalProducts,
-    total: products.length,
-    sources: source === 'all' ? ['ciqual', 'openfoodfacts'] : [source === 'generic' ? 'ciqual' : 'openfoodfacts'],
+    total: finalProducts.length,
+    sources: customRecipes.length > 0
+      ? ['custom', ...(source === 'all' ? ['ciqual', 'openfoodfacts'] : [source === 'generic' ? 'ciqual' : 'openfoodfacts'])]
+      : (source === 'all' ? ['ciqual', 'openfoodfacts'] : [source === 'generic' ? 'ciqual' : 'openfoodfacts']),
     fromCache: false,
   }
 }

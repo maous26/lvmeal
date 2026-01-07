@@ -91,8 +91,10 @@ export default function UnifiedCoachBubble({
       sleepHours: null,
       streak: currentStreak,
       lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
-      plaisirAvailable: plaisirInfo.budget,
-      plaisirUsed: 2 - plaisirInfo.remainingPlaisirMeals,
+      // Repas plaisir: max 600 kcal/repas, max 2/semaine, à partir du jour 3
+      plaisirAvailable: plaisirInfo.available,
+      maxPlaisirPerMeal: plaisirInfo.maxPerMeal,
+      remainingPlaisirMeals: plaisirInfo.remainingPlaisirMeals,
     }, preferences)
 
     // Add messages (cooldown system prevents duplicates)

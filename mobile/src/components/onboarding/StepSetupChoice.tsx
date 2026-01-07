@@ -39,8 +39,8 @@ const dark = {
   textMuted: '#606060',
   accent: '#3B82F6',
   accentLight: '#3B82F620',
-  warning: '#F59E0B',
-  warningLight: '#F59E0B20',
+  warning: '#D4A574',
+  warningLight: '#D4A57420',
 }
 
 export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoiceProps) {

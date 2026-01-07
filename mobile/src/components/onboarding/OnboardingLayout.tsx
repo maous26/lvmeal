@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Sparkles } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows } from '../../constants/theme'
+import { spacing, radius, typography, shadows, fonts } from '../../constants/theme'
 
 interface OnboardingLayoutProps {
   children: React.ReactNode
@@ -145,8 +145,8 @@ export function OnboardingLayout({
             activeOpacity={0.8}
             style={[
               styles.nextButton,
-              { backgroundColor: nextDisabled ? '#CCCCCC' : '#FF6B5B' },
-              !nextDisabled && shadows.glowCoral,
+              { backgroundColor: nextDisabled ? '#CCCCCC' : colors.accent.primary },
+              !nextDisabled && shadows.glowPrimary,
             ]}
           >
             {loading ? (
@@ -256,17 +256,19 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     width: '100%',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 56,
+    minHeight: 48,
   },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
+    letterSpacing: 0.3,
   },
 })
 

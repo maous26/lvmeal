@@ -300,7 +300,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
               )}
               {suggestion.rating && suggestion.rating > 0 && (
                 <View style={styles.ratingBadge}>
-                  <Star size={8} color="#F59E0B" fill="#F59E0B" />
+                  <Star size={8} color="#D4A574" fill="#D4A574" />
                   <Text style={styles.ratingText}>{suggestion.rating}</Text>
                 </View>
               )}

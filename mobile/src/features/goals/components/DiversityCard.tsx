@@ -40,7 +40,7 @@ export function DiversityCard({ diversity, onPress }: DiversityCardProps) {
     diversity.level === 'good'
       ? '#10B981'
       : diversity.level === 'medium'
-      ? '#F59E0B'
+      ? '#D4A574'
       : colors.text.tertiary
 
   return (

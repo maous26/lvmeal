@@ -432,10 +432,11 @@ Réponds en JSON:
       ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
       : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
 
+    // Conservative multipliers to avoid overestimating calorie needs
     const multipliers: Record<string, number> = {
-      sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, athlete: 1.9
+      sedentary: 1.2, light: 1.3, moderate: 1.45, active: 1.6, athlete: 1.75
     }
-    const tdee = bmr * (multipliers[profile.activityLevel] || 1.55)
+    const tdee = bmr * (multipliers[profile.activityLevel] || 1.45)
 
     let calories = tdee
     // ANSES: déficit modéré de 300-500 kcal pour perte de poids durable

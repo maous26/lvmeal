@@ -46,11 +46,11 @@ export function EnergySignalsCard({ signals }: EnergySignalsCardProps) {
     <View
       style={[
         styles.container,
-        { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' },
+        { backgroundColor: 'rgba(212, 165, 116, 0.1)', borderColor: 'rgba(212, 165, 116, 0.2)' },
       ]}
     >
       <View style={styles.header}>
-        <Ionicons name="flash-outline" size={20} color="#F59E0B" />
+        <Ionicons name="flash-outline" size={20} color="#D4A574" />
         <Text style={[styles.title, { color: colors.text.primary }]}>Ton energie</Text>
       </View>
 
@@ -106,7 +106,7 @@ function SignalItem({
 }) {
   return (
     <View style={styles.signalItem}>
-      <Ionicons name={icon} size={16} color="#F59E0B" />
+      <Ionicons name={icon} size={16} color="#D4A574" />
       <Text style={[styles.signalLabel, { color: colors.text.primary }]}>{label}</Text>
       <Text style={[styles.signalDetail, { color: colors.text.tertiary }]}>{detail}</Text>
     </View>

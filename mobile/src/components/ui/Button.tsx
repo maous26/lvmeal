@@ -116,25 +116,25 @@ export function Button({
             paddingHorizontal: spacing.md,
             borderRadius: radius.md,
           },
-          text: { ...typography.buttonSm },
+          text: { ...typography.buttonSm, fontSize: 13 },
         }
       case 'lg':
         return {
           container: {
-            paddingVertical: spacing.lg,
-            paddingHorizontal: spacing.xl,
-            borderRadius: radius.xl,
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.lg,
           },
-          text: { ...typography.button, fontSize: 17 },
+          text: { ...typography.button, fontSize: 15 },
         }
       default:
         return {
           container: {
-            paddingVertical: spacing.default,
-            paddingHorizontal: spacing.lg,
-            borderRadius: radius.lg,
+            paddingVertical: spacing.sm + 2,
+            paddingHorizontal: spacing.md,
+            borderRadius: radius.md,
           },
-          text: { ...typography.button },
+          text: { ...typography.button, fontSize: 14 },
         }
     }
   }

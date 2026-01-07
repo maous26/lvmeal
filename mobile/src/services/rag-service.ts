@@ -75,6 +75,7 @@ export interface RAGContext {
   consumed: NutritionInfo
   day: number // 0-6
   existingMeals: string[]
+  excludeRecipeIds?: string[] // Recipe IDs to exclude (for "Autre suggestion" button)
   preferences?: {
     preferHomemade?: boolean
     preferQuick?: boolean
@@ -491,7 +492,9 @@ export async function searchCIQUAL(query: string): Promise<CIQUALFood[]> {
  * Decide which source to use for a meal based on context
  */
 export function decideMealSource(context: RAGContext): MealSourceDecision {
+  console.log('[RAG:decide] decideMealSource called')
   const { userProfile, mealType, targetCalories, preferences } = context
+  console.log('[RAG:decide] mealType:', mealType, 'targetCalories:', targetCalories)
 
   // Check for complex dietary restrictions
   const hasComplexRestrictions = (userProfile.allergies?.length || 0) > 2 ||
@@ -559,6 +562,7 @@ export function decideMealSource(context: RAGContext): MealSourceDecision {
     fallbackSources.unshift('ai')
   }
 
+  console.log('[RAG:decide] Decision:', { source, confidence, reason, fallbackSources })
   return { source, confidence, reason, fallbackSources }
 }
 
@@ -568,25 +572,39 @@ export function decideMealSource(context: RAGContext): MealSourceDecision {
  * Get meal from Gustar (pre-enriched recipes)
  */
 async function getMealFromGustar(context: RAGContext): Promise<SourcedMeal | null> {
+  console.log('[RAG:Gustar] ======= getMealFromGustar START =======')
   console.log('[RAG:Gustar] Loading static recipes...')
-  await loadStaticRecipes()
+  const allRecipes = await loadStaticRecipes()
+  console.log('[RAG:Gustar] Total recipes loaded:', allRecipes.length)
 
-  const { mealType, targetCalories, userProfile } = context
+  const { mealType, targetCalories, userProfile, excludeRecipeIds = [] } = context
   console.log(`[RAG:Gustar] Filtering for ${mealType}, target ${targetCalories} kcal`)
+  if (excludeRecipeIds.length > 0) {
+    console.log(`[RAG:Gustar] Excluding ${excludeRecipeIds.length} recipe(s):`, excludeRecipeIds)
+  }
 
   // Filter recipes by meal type and calories
-  const recipes = filterStaticRecipes({
+  let recipes = filterStaticRecipes({
     mealType,
     maxCalories: targetCalories + 100,
-    limit: 10,
+    limit: 20, // Fetch more to account for exclusions
   })
+
+  // Exclude specific recipe IDs (for "Autre suggestion" feature)
+  if (excludeRecipeIds.length > 0) {
+    recipes = recipes.filter(r => !excludeRecipeIds.includes(r.id))
+    console.log(`[RAG:Gustar] After exclusion: ${recipes.length} recipes`)
+  }
 
   console.log(`[RAG:Gustar] Filtered recipes: ${recipes.length}`)
 
   if (recipes.length === 0) {
-    // Fallback: get any recipe for this meal type
+    // Fallback: get any recipe for this meal type (excluding excluded ones)
     console.log(`[RAG:Gustar] No filtered recipes, trying fallback by meal type`)
-    const fallback = getStaticRecipesByMealType(mealType)
+    let fallback = getStaticRecipesByMealType(mealType)
+    if (excludeRecipeIds.length > 0) {
+      fallback = fallback.filter(r => !excludeRecipeIds.includes(r.id))
+    }
     console.log(`[RAG:Gustar] Fallback recipes: ${fallback.length}`)
     if (fallback.length === 0) return null
 
@@ -614,8 +632,11 @@ async function getMealFromGustar(context: RAGContext): Promise<SourcedMeal | nul
     return !userProfile.allergies.some(allergy => content.includes(allergy.toLowerCase()))
   })
 
-  const best = allergyFree[0] || sorted[0]
-  console.log(`[RAG:Gustar] Selected: ${best.titleFr} (${best.nutrition.calories} kcal)`)
+  // Pick from top 3 for variety (instead of always the best match)
+  const candidates = allergyFree.length > 0 ? allergyFree : sorted
+  const topCandidates = candidates.slice(0, Math.min(3, candidates.length))
+  const best = topCandidates[Math.floor(Math.random() * topCandidates.length)]
+  console.log(`[RAG:Gustar] Selected: ${best.titleFr} (${best.nutrition.calories} kcal) from ${topCandidates.length} candidates`)
 
   return {
     source: 'gustar',
@@ -695,8 +716,11 @@ async function getMealFromAI(context: RAGContext): Promise<SourcedMeal | null> {
  * Get a meal using RAG source selection
  */
 export async function getRAGMeal(context: RAGContext): Promise<SourcedMeal | null> {
+  console.log('='.repeat(50))
   console.log('[RAG] === getRAGMeal START ===')
   console.log(`[RAG] Context: mealType=${context.mealType}, targetCalories=${context.targetCalories}`)
+  console.log(`[RAG] Full context:`, JSON.stringify(context, null, 2))
+  console.log('='.repeat(50))
 
   const decision = decideMealSource(context)
 
@@ -869,8 +893,9 @@ export function buildRAGContext(params: {
   consumed: NutritionInfo
   existingMeals: string[]
   overrideTargetCalories?: number // Optional override to bypass remaining-based calculation
+  excludeRecipeIds?: string[] // Recipe IDs to exclude (for "Autre suggestion")
 }): RAGContext {
-  const { userProfile, mealType, day, dailyTarget, consumed, existingMeals, overrideTargetCalories } = params
+  const { userProfile, mealType, day, dailyTarget, consumed, existingMeals, overrideTargetCalories, excludeRecipeIds } = params
 
   // Calculate target calories for this meal
   const mealRatios: Record<string, number> = {
@@ -899,6 +924,7 @@ export function buildRAGContext(params: {
     consumed,
     day,
     existingMeals,
+    excludeRecipeIds,
     preferences: {
       preferHomemade: true,
       preferHealthy: userProfile.goal === 'health' || userProfile.goal === 'weight_loss',

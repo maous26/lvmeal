@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
-  "generatedAt": "2026-01-06T14:38:36.809Z",
-  "totalRecipes": 322,
+  "generatedAt": "2026-01-07T09:57:18.102Z",
+  "totalRecipes": 358,
   "recipes": [
     {
       "id": "https://www.lecker.de/fruehstueck-muesli-34908.html",
@@ -28408,6 +28408,3442 @@
       "sourceUrl": "https://elavegan.com/de/teriyaki-tofu-suess-sauer/",
       "originalTitle": "Teriyaki Tofu süß sauer",
       "enrichedAt": "2026-01-06T14:38:03.830Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/office-toast",
+      "titleFr": "Toast Office au Poulet et Fromage",
+      "descriptionFr": "Commencez votre journée avec ce toast savoureux et nutritif, alliant le croquant des galettes de riz et la douceur du fromage. Agrémenté de légumes frais, il est parfait pour un petit-déjeuner équilibré qui vous apportera énergie et vitalité.",
+      "ingredientsFr": [
+        {
+          "name": "Galettes de riz",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Jambon de dinde",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Fromage à pâte dure",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Salade verte",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Tomate",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Concombre",
+          "amount": 0.25,
+          "unit": "pièce"
+        },
+        {
+          "name": "Yaourt nature",
+          "amount": 125,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cresson",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, mélanger le yaourt nature avec une pincée de sel et de poivre pour créer une sauce légère.",
+        "Étape 2: Laver et couper la tomate et le concombre en tranches fines.",
+        "Étape 3: Sur une galette de riz, étaler une fine couche de la sauce au yaourt.",
+        "Étape 4: Ajouter des tranches de jambon de dinde sur la galette.",
+        "Étape 5: Ajouter des tranches de fromage et garnir avec des feuilles de salade verte.",
+        "Étape 6: Déposer quelques tranches de tomate et de concombre.",
+        "Étape 7: Saupoudrer de cresson pour une touche de fraîcheur.",
+        "Étape 8: Recouvrir avec la seconde galette de riz et servir avec le reste de la sauce au yaourt."
+      ],
+      "nutrition": {
+        "calories": 360,
+        "proteins": 30,
+        "carbs": 30,
+        "fats": 12,
+        "sugar": 5,
+        "fiber": 4,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines et en légumes, tout en étant faible en sucres et en graisses saturées. Elle respecte les recommandations nutritionnelles pour un petit-déjeuner sain et équilibré.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Office-Toast-4bb13d20e856a.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/office-toast",
+      "originalTitle": "Office-Toast",
+      "enrichedAt": "2026-01-07T09:46:47.341Z"
+    },
+    {
+      "id": "https://elavegan.com/de/linsen-dal-rezept-gesund-vegan-glutenfrei/",
+      "titleFr": "Dal de Lentilles Crémeux",
+      "descriptionFr": "Savourez un dal de lentilles réconfortant et crémeux, parfumé aux épices et agrémenté de légumes croquants. Ce plat vegan est à la fois nourrissant et réconfortant, idéal pour un dîner équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Lentilles (vertes ou brunes)",
+          "amount": 190,
+          "unit": "g"
+        },
+        {
+          "name": "Carotte",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "Gingembre frais",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Piment rouge ou vert",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 720,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait de coco en conserve",
+          "amount": 240,
+          "unit": "ml"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "name": "Curcuma moulu",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Coriandre moulu",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Sel de mer",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre noir",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Mélange Super Blend Golden Milk",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons de piment rouge",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer les lentilles sous l'eau froide jusqu'à ce que l'eau soit claire, puis les égoutter.",
+        "Étape 2: Dans une grande casserole, chauffer l'huile végétale à feu moyen. Ajouter l'oignon haché et le faire revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Ajouter l'ail haché, le gingembre, le piment et la carotte en dés, puis cuire pendant environ 5 minutes jusqu'à ce que les légumes soient tendres.",
+        "Étape 4: Incorporer les lentilles, le cumin, le curcuma, le coriandre, et assaisonner avec le sel et le poivre. Bien mélanger.",
+        "Étape 5: Verser le bouillon de légumes et la sauce soja. Porter à ébullition, puis réduire le feu et laisser mijoter pendant 20-25 minutes, jusqu'à ce que les lentilles soient tendres.",
+        "Étape 6: Ajouter le lait de coco et le mélange Super Blend Golden Milk. Remuer et laisser mijoter encore 5 minutes.",
+        "Étape 7: Goûter et ajuster l'assaisonnement si nécessaire. Si désiré, ajouter des flocons de piment rouge.",
+        "Étape 8: Servir chaud, accompagné de riz basmati ou de pain naan."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 19,
+        "carbs": 62,
+        "fats": 19,
+        "sugar": 5,
+        "fiber": 15,
+        "saturatedFat": 5,
+        "sodium": 460
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines végétales et en fibres grâce aux lentilles, tout en étant faible en graisses saturées. Les épices et les légumes apportent des antioxydants, ce qui en fait un plat nutritif et équilibré.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2018/09/Veganes-Linsen-Dal-Dhal-Dahl-Daal-mit-Reis-in-einem-Teller.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/linsen-dal-rezept-gesund-vegan-glutenfrei/",
+      "originalTitle": "Cremiges Linsen Dal",
+      "enrichedAt": "2026-01-07T09:46:52.459Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/frikadellen-toast",
+      "titleFr": "Toast de Frikadellen",
+      "descriptionFr": "Savourez un petit-déjeuner copieux avec ces toasts garnis de frikadellen savoureuses. Parfaits pour bien commencer la journée, ils allient le goût du boeuf haché à la douceur du fromage et au croustillant des légumes.",
+      "ingredientsFr": [
+        {
+          "name": "Viande hachée (mélangée)",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Oeuf",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Chapelure",
+          "amount": 45,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Lait",
+          "amount": 50,
+          "unit": "ml"
+        },
+        {
+          "name": "Pain de mie",
+          "amount": 8,
+          "unit": "tranches"
+        },
+        {
+          "name": "Fromage (en tranches)",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Mayonnaise",
+          "amount": 8,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Ketchup",
+          "amount": 8,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Feuille de salade",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "Huile (pour la cuisson)",
+          "amount": 20,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, mélangez la viande hachée, l'œuf, la chapelure, l'oignon finement haché et le lait. Assaisonnez avec du sel et du poivre.",
+        "Étape 2: Formez des galettes de la taille d'une paume avec le mélange de viande.",
+        "Étape 3: Faites chauffer l'huile dans une poêle à feu moyen et faites cuire les galettes pendant environ 5 minutes de chaque côté, jusqu'à ce qu'elles soient bien dorées.",
+        "Étape 4: Pendant que les galettes cuisent, faites griller les tranches de pain de mie jusqu'à ce qu'elles soient dorées.",
+        "Étape 5: Sur chaque tranche de pain, étalez une cuillère à café de mayonnaise et de ketchup.",
+        "Étape 6: Placez une galette chaude sur chaque tranche de pain, puis ajoutez une tranche de fromage et une feuille de salade.",
+        "Étape 7: Refermez les toasts avec une autre tranche de pain et servez immédiatement."
+      ],
+      "nutrition": {
+        "calories": 420,
+        "proteins": 26,
+        "carbs": 41,
+        "fats": 18,
+        "sugar": 2,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 65,
+      "healthNotes": "Cette recette est équilibrée avec une bonne quantité de protéines, mais la présence de mayonnaise et de fromage augmente la teneur en graisses saturées. Pour une option plus saine, envisagez de remplacer la mayonnaise par de l'avocat écrasé et de choisir un fromage allégé.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/Frikadellen-Toast-hacki-toastneu.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/frikadellen-toast",
+      "originalTitle": "Frikadellen-Toast",
+      "enrichedAt": "2026-01-07T09:47:11.226Z"
+    },
+    {
+      "id": "https://utopia.de/ratgeber/herzhafter-porridge-rezept-fuer-ein-salziges-fruehstueck/",
+      "titleFr": "Porridge Savoureux aux Légumes",
+      "descriptionFr": "Ce porridge salé aux légumes est une manière délicieuse et saine de commencer la journée. Avec des flocons d'avoine crémeux, des champignons savoureux et des épinards frais, ce plat riche en nutriments va vous donner l'énergie nécessaire pour affronter la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Ail",
+          "amount": 1,
+          "unit": "gousse"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Tomates",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Champignons",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 800,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Épinards",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez l'ail et l'oignon.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile d'olive à feu moyen et ajoutez l'ail et l'oignon. Faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 3: Coupez les champignons en tranches et ajoutez-les dans la casserole. Faites cuire jusqu'à ce qu'ils soient dorés.",
+        "Étape 4: Ajoutez les tomates coupées en dés et faites cuire pendant 5 minutes jusqu'à ce qu'elles commencent à ramollir.",
+        "Étape 5: Versez le bouillon de légumes dans la casserole et portez à ébullition.",
+        "Étape 6: Ajoutez les flocons d'avoine et mélangez bien. Réduisez le feu et laissez mijoter pendant environ 10 minutes, en remuant régulièrement.",
+        "Étape 7: Ajoutez les épinards et mélangez jusqu'à ce qu'ils soient flétris. Assaisonnez avec du sel et du poivre selon votre goût.",
+        "Étape 8: Servez chaud dans des bols et dégustez ce porridge nutritif."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 15,
+        "carbs": 55,
+        "fats": 9,
+        "sugar": 5,
+        "fiber": 10,
+        "saturatedFat": 1,
+        "sodium": 350
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce porridge est riche en fibres et en protéines, ce qui en fait un excellent choix pour un petit-déjeuner sain. Les légumes ajoutent des vitamines et des minéraux essentiels, tout en maintenant une faible teneur en sodium et en graisses saturées.",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://utopia.de/ratgeber/herzhafter-porridge-rezept-fuer-ein-salziges-fruehstueck/",
+      "originalTitle": "Herzhafter Porridge",
+      "enrichedAt": "2026-01-07T09:47:07.146Z"
+    },
+    {
+      "id": "https://www.lecker.de/gruenes-fisch-curry-66487.html",
+      "titleFr": "Curry de Poisson Vert",
+      "descriptionFr": "Découvrez le délice d'un curry de poisson parfumé, avec des aubergines tendres et des tomates cerises juteuses, le tout enrobé d'une sauce de coco crémeuse. Ce plat coloré et réconfortant ravira vos papilles tout en étant sain et nutritif.",
+      "ingredientsFr": [
+        {
+          "name": "aubergine",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "tomates cerises",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "pâte de curry vert",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "feuille de kaffir",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "filet de poisson (Leng)",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "coriandre fraîche",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron vert",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une poêle, chauffez l'huile d'olive à feu moyen. Ajoutez l'aubergine coupée en dés et faites-la revenir pendant environ 5 minutes jusqu'à ce qu'elle soit légèrement dorée.",
+        "Étape 2: Ajoutez les tomates cerises coupées en deux et continuez à cuire pendant 3 minutes jusqu'à ce qu'elles commencent à ramollir.",
+        "Étape 3: Incorporez la pâte de curry vert et mélangez bien pour enrober les légumes.",
+        "Étape 4: Ajoutez le lait de coco et la feuille de kaffir. Portez à ébullition, puis réduisez le feu et laissez mijoter pendant 10 minutes.",
+        "Étape 5: Pendant ce temps, coupez le filet de poisson en morceaux de taille égale. Ajoutez-les au mélange de curry et laissez cuire pendant 5-7 minutes jusqu'à ce que le poisson soit bien cuit.",
+        "Étape 6: Retirez la feuille de kaffir et assaisonnez avec le sel et le jus de citron vert au goût.",
+        "Étape 7: Servez chaud, garni de coriandre fraîche hachée.",
+        "Étape 8: Accompagnez ce plat de riz basmati ou de quinoa pour un repas complet."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 32,
+        "carbs": 40,
+        "fats": 24,
+        "sugar": 6,
+        "fiber": 8,
+        "saturatedFat": 12,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en protéines grâce au poisson et aux légumes, tout en fournissant des graisses saines grâce au lait de coco. Les tomates et l'aubergine apportent des fibres et des antioxydants, mais attention au sodium qui peut être élevé selon la pâte de curry utilisée.",
+      "imageUrl": "https://images.lecker.de/,id=a5848d86,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/gruenes-fisch-curry-66487.html",
+      "originalTitle": "Grünes Fisch-Curry",
+      "enrichedAt": "2026-01-07T09:48:04.803Z"
+    },
+    {
+      "id": "https://www.lecker.de/eier-im-glas-nach-skandinavischer-art-64730.html",
+      "titleFr": "Oeufs en verre à la scandinave",
+      "descriptionFr": "Savourez un petit-déjeuner léger et raffiné avec ces oeufs en verre à la scandinave. L'alliance délicate du saumon fumé, de la crème fraîche et de la moutarde au miel offre une expérience culinaire unique qui éveille les papilles dès le matin.",
+      "ingredientsFr": [
+        {
+          "name": "Œufs",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "Saumon fumé",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Aneth",
+          "amount": 5,
+          "unit": "branches"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Moutarde mi-forte",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Miel",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Beurre",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Pain de mie",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "Caviar de truite",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Cresson",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez une casserole d'eau à feu moyen pour pocher les œufs.",
+        "Étape 2: Dans un bol, mélangez la crème fraîche, la moutarde mi-forte et le miel. Assaisonnez avec du sel et du poivre.",
+        "Étape 3: Cassez les œufs dans un petit récipient et faites-les pocher dans l'eau chaude pendant environ 4 minutes, jusqu'à ce que le blanc soit ferme mais le jaune encore coulant.",
+        "Étape 4: Pendant ce temps, faites légèrement toaster les tranches de pain de mie dans une poêle avec un peu de beurre jusqu'à ce qu'elles soient dorées.",
+        "Étape 5: Disposez une tranche de pain de mie sur chaque assiette, puis ajoutez une cuillère de la préparation à la crème fraîche.",
+        "Étape 6: Déposez délicatement un œuf poché sur chaque préparation, puis ajoutez des tranches de saumon fumé sur le dessus.",
+        "Étape 7: Terminez en ajoutant une cuillère de caviar de truite et quelques feuilles de cresson pour la décoration.",
+        "Étape 8: Servez immédiatement et savourez ce petit-déjeuner scandinave."
+      ],
+      "nutrition": {
+        "calories": 360,
+        "proteins": 22,
+        "carbs": 30,
+        "fats": 18,
+        "sugar": 1,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette offre un bon équilibre entre protéines, graisses saines et glucides, tout en étant faible en sucre. Le saumon fumé apporte des acides gras oméga-3, bénéfiques pour la santé cardiovasculaire.",
+      "imageUrl": "https://images.lecker.de/,id=d1538c8f,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/eier-im-glas-nach-skandinavischer-art-64730.html",
+      "originalTitle": "Eier im Glas nach skandinavischer Art",
+      "enrichedAt": "2026-01-07T09:48:47.046Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/toast-wellington",
+      "titleFr": "Toast Wellington aux Champignons et Rucola",
+      "descriptionFr": "Ce Toast Wellington est une délicieuse interprétation du classique, parfait pour un petit-déjeuner riche en saveurs. Les champignons savoureux et le rucola apportent une touche fraîche et saine, le tout sur une base croustillante de pain grillé. Idéal pour bien commencer la journée !",
+      "ingredientsFr": [
+        {
+          "name": "Rucola",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Champignons",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Persil",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Filet de boeuf",
+          "amount": 600,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Romarin",
+          "amount": 4,
+          "unit": "brins"
+        },
+        {
+          "name": "Beurre clarifié",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Vin de Porto",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "Fond de boeuf",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Crème liquide",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Pain blanc",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "Beurre",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une poêle, faites chauffer le beurre clarifié à feu moyen. Ajoutez les oignons émincés et faites-les revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajoutez les champignons coupés en dés et continuez à faire sauter jusqu'à ce qu'ils soient dorés. Incorporez le romarin, le sel et le poivre, puis laissez mijoter quelques minutes.",
+        "Étape 3: Ajoutez le vin de Porto et laissez réduire jusqu'à ce qu'il soit presque évaporé. Ajoutez le fond de boeuf et laissez mijoter encore 5 minutes, puis incorporez la crème liquide et mélangez bien.",
+        "Étape 4: Pendant que la sauce réduit, faites cuire les filets de boeuf dans une autre poêle avec un peu d'huile d'olive jusqu'à la cuisson désirée. Laissez reposer.",
+        "Étape 5: Grillez les tranches de pain blanc des deux côtés jusqu'à ce qu'elles soient dorées et croustillantes.",
+        "Étape 6: Sur chaque tranche de pain, disposez une couche de mélange de champignons, puis le filet de boeuf tranché. Ajoutez quelques feuilles de rucola sur le dessus.",
+        "Étape 7: Terminez en arrosant d'un peu de sauce aux champignons et en garnissant avec du persil haché.",
+        "Étape 8: Servez immédiatement, accompagné d'une salade de rucola pour une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 36,
+        "carbs": 30,
+        "fats": 24,
+        "sugar": 2,
+        "fiber": 3,
+        "saturatedFat": 10,
+        "sodium": 480
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette offre un bon équilibre entre protéines et glucides, mais la teneur en graisses saturées est légèrement élevée en raison de la crème et du beurre. Il serait possible de réduire les graisses saturées en substituant la crème par une crème allégée ou en utilisant moins de beurre.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/2018-11/unbenannt-3_0.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/toast-wellington",
+      "originalTitle": "Toast Wellington",
+      "enrichedAt": "2026-01-07T09:48:47.844Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/artischocken-toasts",
+      "titleFr": "Toasts aux Artichauts et Champignons",
+      "descriptionFr": "Ces toasts aux artichauts et champignons sont un véritable délice pour bien commencer la journée. Garnis de mozzarella fondante et de parmesan savoureux, ils allient saveurs méditerranéennes et bienfaits nutritionnels.",
+      "ingredientsFr": [
+        {
+          "name": "Cœurs d'artichaut marinés",
+          "amount": 4,
+          "unit": "pièces"
+        },
+        {
+          "name": "Ail",
+          "amount": 2,
+          "unit": "gousses"
+        },
+        {
+          "name": "Tomates séchées",
+          "amount": 8,
+          "unit": "pièces"
+        },
+        {
+          "name": "Thym frais",
+          "amount": 4,
+          "unit": "brins"
+        },
+        {
+          "name": "Jambon cuit",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Champignons",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Pain de mie",
+          "amount": 8,
+          "unit": "tranches"
+        },
+        {
+          "name": "Beurre",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Mozzarella",
+          "amount": 125,
+          "unit": "g"
+        },
+        {
+          "name": "Parmesan",
+          "amount": 4,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (350°F).",
+        "Étape 2: Égouttez les cœurs d'artichaut et les tomates séchées, puis coupez-les en petits morceaux.",
+        "Étape 3: Dans une poêle, faites fondre le beurre à feu moyen, ajoutez l'ail émincé et faites-le revenir jusqu'à ce qu'il soit doré.",
+        "Étape 4: Ajoutez les champignons tranchés et faites-les sauter jusqu'à ce qu'ils soient tendres, environ 5 minutes.",
+        "Étape 5: Incorporez les cœurs d'artichaut, les tomates séchées, le thym, le jus de citron, le sel et le poivre. Mélangez bien et laissez cuire encore 2 minutes.",
+        "Étape 6: Sur chaque tranche de pain de mie, déposez une portion du mélange de légumes, puis ajoutez des morceaux de mozzarella.",
+        "Étape 7: Saupoudrez le dessus de parmesan et placez les toasts sur une plaque de cuisson.",
+        "Étape 8: Enfournez pendant 10-12 minutes ou jusqu'à ce que le fromage soit fondu et doré."
+      ],
+      "nutrition": {
+        "calories": 300,
+        "proteins": 18,
+        "carbs": 30,
+        "fats": 14,
+        "sugar": 5,
+        "fiber": 4,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée, riche en protéines et en fibres, tout en étant modérée en graisses et en sodium. Les légumes apportent des vitamines et des minéraux essentiels.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Artischocken-Toasts-4bb0b1c270221.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/artischocken-toasts",
+      "originalTitle": "Artischocken-Toasts",
+      "enrichedAt": "2026-01-07T09:49:07.746Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/kuerbis-porridge",
+      "titleFr": "Porridge à la Courge",
+      "descriptionFr": "Commencez votre journée avec un porridge réconfortant à la courge, riche en saveurs et en nutriments. Ce petit-déjeuner crémeux, agrémenté de zestes d'orange et de croquant grâce aux graines de grenade, est parfait pour un matin plein d'énergie.",
+      "ingredientsFr": [
+        {
+          "name": "Flocons d'avoine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Lait",
+          "amount": 600,
+          "unit": "ml"
+        },
+        {
+          "name": "Purée de courge",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Orange bio (zeste)",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Sirop d'agave",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Pâte d'amande",
+          "amount": 4,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Grains de grenade",
+          "amount": 4,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Chocolat noir (haché)",
+          "amount": 4,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, combinez les flocons d'avoine et le lait. Portez à ébullition à feu moyen.",
+        "Étape 2: Une fois que le mélange bout, réduisez le feu et laissez mijoter pendant environ 5 minutes, en remuant régulièrement.",
+        "Étape 3: Ajoutez la purée de courge et le zeste d'orange. Mélangez bien jusqu'à ce que la préparation soit homogène.",
+        "Étape 4: Ajustez la douceur en ajoutant le sirop d'agave selon votre goût.",
+        "Étape 5: Retirez la casserole du feu et laissez reposer pendant quelques minutes pour épaissir.",
+        "Étape 6: Servez le porridge dans des bols et garnissez chaque portion avec la pâte d'amande, les grains de grenade et le chocolat noir haché.",
+        "Étape 7: Dégustez chaud pour un petit-déjeuner nourrissant et savoureux."
+      ],
+      "nutrition": {
+        "calories": 364,
+        "proteins": 12,
+        "carbs": 56,
+        "fats": 12,
+        "sugar": 9,
+        "fiber": 8,
+        "saturatedFat": 2,
+        "sodium": 85
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres grâce à l'avoine et à la courge, offrant une bonne source de glucides complexes. Les graisses saines proviennent de la pâte d'amande, et le chocolat noir ajoute des antioxydants, tout en restant dans des limites saines de sucre et de graisses saturées.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-12320489.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/kuerbis-porridge",
+      "originalTitle": "Kürbis-Porridge",
+      "enrichedAt": "2026-01-07T09:49:02.214Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/chocolate-martini-balls",
+      "titleFr": "Boules de Martini au Chocolat",
+      "descriptionFr": "Ces délicieuses boules de Martini au chocolat allient la richesse du chocolat noir à la douceur du café et une touche d'alcool pour un en-cas décadent. Parfaites pour une soirée entre amis, elles séduiront les amateurs de chocolat et de cocktails.",
+      "ingredientsFr": [
+        {
+          "name": "chocolat noir",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "liqueur de café",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "name": "espresso froid",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "name": "vodka",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "name": "glace",
+          "amount": 1,
+          "unit": "cube"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites fondre le chocolat noir au bain-marie ou au micro-ondes jusqu'à ce qu'il soit lisse.",
+        "Étape 2: Dans un bol, mélangez le chocolat fondu avec la liqueur de café, l'espresso froid et la vodka jusqu'à obtenir une consistance homogène.",
+        "Étape 3: Laissez refroidir le mélange à température ambiante pendant environ 10 minutes.",
+        "Étape 4: Une fois le mélange refroidi, utilisez vos mains pour former des boules de la taille d'une noix.",
+        "Étape 5: Disposez les boules sur une plaque recouverte de papier sulfurisé et placez-les au réfrigérateur pendant au moins 30 minutes pour qu'elles durcissent.",
+        "Étape 6: Servez les boules de Martini au chocolat bien froides, accompagnées d'un cube de glace si désiré."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 3,
+        "carbs": 26,
+        "fats": 10,
+        "sugar": 8,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 50
+      },
+      "healthScore": 65,
+      "healthNotes": "Bien que ces boules soient délicieuses, elles contiennent une quantité élevée de graisses et de sucre, ce qui les rend à consommer avec modération. L'ajout de chocolat noir et d'espresso peut offrir certains antioxydants, mais l'alcool et le sucre doivent être pris en compte dans une alimentation équilibrée.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/2017-11/schokoladenmartiniballs.jpeg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/chocolate-martini-balls",
+      "originalTitle": "Chocolate-Martini-Balls",
+      "enrichedAt": "2026-01-07T09:51:20.969Z"
+    },
+    {
+      "id": "https://www.essen-und-trinken.de/rezepte/59653-rzpt-hummus",
+      "titleFr": "Hummus Crémeux au Citron et aux Épices",
+      "descriptionFr": "Découvrez notre délicieuse recette de hummus, crémeux et plein de saveurs. Parfait pour une collation saine, ce mélange de pois chiches, tahini et citron ravira vos papilles et apportera un bon apport en protéines et fibres.",
+      "ingredientsFr": [
+        {
+          "name": "Pois chiches en conserve",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Zeste de citron bio",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Tahini",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 90,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Flocons de chili",
+          "amount": 0.25,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Persil frais",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Pain pita",
+          "amount": 1,
+          "unit": "unités"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un mixeur, ajoutez les pois chiches égouttés et rincés.",
+        "Étape 2: Ajoutez les gousses d'ail, le zeste et le jus de citron, ainsi que le tahini.",
+        "Étape 3: Mixez jusqu'à obtenir une texture lisse et crémeuse, en ajoutant progressivement l'huile d'olive.",
+        "Étape 4: Assaisonnez avec le sel, le poivre, le cumin et les flocons de chili. Mixez à nouveau pour bien incorporer.",
+        "Étape 5: Goûtez et ajustez les assaisonnements selon vos préférences.",
+        "Étape 6: Servez le hummus dans un bol, arrosez d'un peu d'huile d'olive et saupoudrez de persil frais haché.",
+        "Étape 7: Accompagnez de morceaux de pain pita pour une collation savoureuse."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 8,
+        "carbs": 25,
+        "fats": 10,
+        "sugar": 2,
+        "fiber": 6,
+        "saturatedFat": 1,
+        "sodium": 300
+      },
+      "healthScore": 82,
+      "healthNotes": "Cette recette de hummus est riche en protéines et en fibres grâce aux pois chiches et au tahini. Elle est faible en sucres et contient des graisses saines provenant de l'huile d'olive, ce qui en fait un choix nutritif pour une collation équilibrée.",
+      "imageUrl": "https://image.essen-und-trinken.de/11831476/t/vv/v9/w1440/r1/-/hummus-bd0e744d39479918dd1c28c3a7644bae-fjt2014090511-jpg--8334-.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.essen-und-trinken.de/rezepte/59653-rzpt-hummus",
+      "originalTitle": "Hummus Rezept",
+      "enrichedAt": "2026-01-07T09:51:41.126Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/tofu-mit-gemuese",
+      "titleFr": "Tofu aux Légumes Sautés",
+      "descriptionFr": "Découvrez ce plat savoureux et coloré où le tofu fumé se marie parfaitement avec une variété de légumes croquants. Parfait pour un dîner sain, ce plat regorge de saveurs et de nutriments essentiels pour votre bien-être.",
+      "ingredientsFr": [
+        {
+          "name": "échalotes",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "champignons huître",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "pois gourmands",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "germes de mungo",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "maïs en épis (en conserve)",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "tofu fumé ferme",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile de sésame",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "jus de lime",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sauce soja claire",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 5,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez finement les échalotes, les gousses d'ail et le gingembre. Coupez les champignons huître en morceaux et les pois gourmands en biais.",
+        "Étape 2: Dans une grande poêle, faites chauffer l'huile de sésame à feu moyen. Ajoutez les échalotes, l'ail et le gingembre, et faites revenir pendant 2-3 minutes jusqu'à ce qu'ils soient parfumés.",
+        "Étape 3: Ajoutez les champignons huître dans la poêle et faites sauter pendant 5 minutes jusqu'à ce qu'ils soient dorés et tendres.",
+        "Étape 4: Incorporez les pois gourmands et le maïs en épis, puis faites sauter le tout pendant 3 minutes supplémentaires.",
+        "Étape 5: Coupez le tofu en cubes et ajoutez-le à la poêle. Versez la sauce soja, le jus de lime et le bouillon de légumes, puis mélangez délicatement.",
+        "Étape 6: Laissez mijoter pendant 5 minutes pour que les saveurs se mélangent. Ajoutez les germes de mungo juste avant de servir.",
+        "Étape 7: Rectifiez l'assaisonnement si nécessaire et servez chaud, garni de coriandre fraîche si désiré."
+      ],
+      "nutrition": {
+        "calories": 470,
+        "proteins": 22,
+        "carbs": 48,
+        "fats": 23,
+        "sugar": 4,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 490
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines végétales grâce au tofu et en fibres grâce aux légumes. Elle est faible en sucres ajoutés et en graisses saturées, ce qui en fait un choix sain et équilibré pour un dîner.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/tofu-mit-gemuese-37359.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/tofu-mit-gemuese",
+      "originalTitle": "Tofu mit Gemüse",
+      "enrichedAt": "2026-01-07T09:52:19.676Z"
+    },
+    {
+      "id": "https://elavegan.com/de/veganes-kartoffel-curry/",
+      "titleFr": "Curry de Pommes de Terre Végan",
+      "descriptionFr": "Savourez un délicieux curry de pommes de terre aux haricots verts, réconfortant et plein de saveurs. Ce plat végan est idéal pour un dîner sain et équilibré, combinant des ingrédients frais et épicés pour éveiller vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "oignon",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "gingembre frais",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "pommes de terre",
+          "amount": 900,
+          "unit": "g"
+        },
+        {
+          "name": "haricots verts",
+          "amount": 270,
+          "unit": "g"
+        },
+        {
+          "name": "curry en poudre",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "sel de mer",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "cumin moulu",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "poivre noir",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "curcuma en poudre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "flocons de piment rouge",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "muscade",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "paprika fumé",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 720,
+          "unit": "ml"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 160,
+          "unit": "ml"
+        },
+        {
+          "name": "fécule de maïs",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, chauffer l'huile d'olive à feu moyen. Ajouter l'oignon et faire revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 2: Ajouter le gingembre et l'ail, cuire pendant 1 à 2 minutes jusqu'à ce qu'ils dégagent leur arôme.",
+        "Étape 3: Incorporer les pommes de terre coupées et les haricots verts. Mélanger pour bien enrober les légumes.",
+        "Étape 4: Ajouter le curry en poudre, le sel, le cumin, le poivre noir, le curcuma, les flocons de piment, la muscade et le paprika fumé. Remuer pour bien mélanger les épices.",
+        "Étape 5: Verser le bouillon de légumes et le lait de coco dans la casserole. Porter à ébullition, puis réduire le feu et laisser mijoter pendant environ 20 minutes jusqu'à ce que les pommes de terre soient tendres.",
+        "Étape 6: Dans un petit bol, mélanger la fécule de maïs avec un peu d'eau pour faire une pâte. Ajouter à la casserole pour épaissir le curry. Remuer bien.",
+        "Étape 7: Laisser mijoter encore 5 minutes, puis ajuster l'assaisonnement au besoin.",
+        "Étape 8: Servir chaud, accompagné de riz ou de pain naan végan."
+      ],
+      "nutrition": {
+        "calories": 430,
+        "proteins": 12,
+        "carbs": 72,
+        "fats": 10,
+        "sugar": 4,
+        "fiber": 10,
+        "saturatedFat": 7,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce curry végan est riche en fibres grâce aux légumes et aux légumineuses, tout en étant faible en graisses saturées. Les épices ajoutent des antioxydants et des saveurs, en faisant un plat équilibré et nutritif.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/03/veganes-Kartoffel-Curry-mit-grünen-Bohnen.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/veganes-kartoffel-curry/",
+      "originalTitle": "Veganes Kartoffel Curry",
+      "enrichedAt": "2026-01-07T09:52:21.063Z"
+    },
+    {
+      "id": "https://elavegan.com/de/rotes-linsen-dal/",
+      "titleFr": "Dal de Lentilles Rouges Épicé",
+      "descriptionFr": "Ce dal de lentilles rouges est un plat réconfortant et riche en saveurs, parfait pour un dîner équilibré. Avec ses épices aromatiques et sa texture crémeuse grâce à la noix de coco, il promet de séduire vos papilles tout en étant nutritif.",
+      "ingredientsFr": [
+        {
+          "name": "Lentilles rouges",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Carotte",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Petite poivron",
+          "amount": 1,
+          "unit": ""
+        },
+        {
+          "name": "Oignon",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 4,
+          "unit": ""
+        },
+        {
+          "name": "Gingembre frais",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 720,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait de coco",
+          "amount": 240,
+          "unit": "ml"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Curry en poudre",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Édulcorant (au choix)",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Curcuma moulu",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Paprika",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Sel de mer",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre noir",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons de piment rouge (optionnel)",
+          "amount": 1,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer les lentilles rouges sous l'eau froide jusqu'à ce que l'eau soit claire. Réserver.",
+        "Étape 2: Dans une grande casserole, chauffer l'huile végétale à feu moyen. Ajouter l'oignon et faire revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Ajouter l'ail, le gingembre, et les épices (cumin, curry, curcuma, paprika) et faire sauter pendant 1-2 minutes jusqu'à ce qu'ils dégagent leurs arômes.",
+        "Étape 4: Incorporer les carottes et le poivron, et cuire encore quelques minutes.",
+        "Étape 5: Ajouter les lentilles rouges et le bouillon de légumes, porter à ébullition, puis réduire le feu et laisser mijoter pendant 20-25 minutes, jusqu'à ce que les lentilles soient tendres.",
+        "Étape 6: Incorporer le lait de coco et bien mélanger. Laisser mijoter encore 5 minutes.",
+        "Étape 7: Assaisonner avec du sel, du poivre et de l'édulcorant selon vos goûts. Ajouter des flocons de piment rouge si désiré.",
+        "Étape 8: Servir chaud, accompagné de riz ou de pain naan pour un repas complet et équilibré."
+      ],
+      "nutrition": {
+        "calories": 390,
+        "proteins": 18,
+        "carbs": 60,
+        "fats": 10,
+        "sugar": 5,
+        "fiber": 15,
+        "saturatedFat": 5,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en protéines végétales et en fibres grâce aux lentilles, tout en offrant une bonne dose de vitamines et minéraux grâce aux légumes. Le lait de coco apporte des graisses saines, tout en maintenant un faible niveau de sodium.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2021/01/Rotes-Linsen-Dal-mit-Reis-in-Schuessel-mit-Schoepfkelle.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/rotes-linsen-dal/",
+      "originalTitle": "Rote Linsen Dal Rezept",
+      "enrichedAt": "2026-01-07T09:52:22.734Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/gruene-smoothie-bowl-mit-ei",
+      "titleFr": "Bol de Smoothie Vert à l'Œuf",
+      "descriptionFr": "Ce bol de smoothie vert est une collation délicieuse et nourrissante, alliant la douceur de l'avocat à la fraîcheur des légumes. Parfait pour un regain d'énergie, il est riche en protéines et fibres, tout en étant léger et facile à préparer.",
+      "ingredientsFr": [
+        {
+          "name": "Œufs",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Courgette",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Petits pois",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Avocat",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Jeune épinard",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Bouillon de légumes froid",
+          "amount": 750,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Paprika doux",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites cuire les œufs dans de l'eau bouillante pendant environ 10 minutes pour obtenir des œufs durs. Refroidissez-les sous l'eau froide et écalez-les.",
+        "Étape 2: Lavez et coupez la courgette en morceaux. Si vous utilisez des petits pois frais, écossés-les.",
+        "Étape 3: Dans un mixeur, ajoutez la courgette, les petits pois, l'avocat, le jeune épinard, le jus de citron et le bouillon de légumes.",
+        "Étape 4: Mixez le tout jusqu'à obtenir une texture lisse et crémeuse. Ajustez la consistance avec un peu plus de bouillon si nécessaire.",
+        "Étape 5: Assaisonnez avec le sel, le poivre et le paprika doux. Mixez à nouveau pour bien incorporer les épices.",
+        "Étape 6: Répartissez la préparation dans des bols individuels.",
+        "Étape 7: Coupez les œufs durs en quartiers et disposez-les sur le dessus du smoothie.",
+        "Étape 8: Servez immédiatement et dégustez froid."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 14,
+        "carbs": 22,
+        "fats": 10,
+        "sugar": 3,
+        "fiber": 7,
+        "saturatedFat": 2,
+        "sodium": 300
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines grâce aux œufs et aux légumes, tout en étant faible en sucres. Les fibres apportées par les légumes favorisent une bonne digestion. Elle constitue une collation équilibrée et nutritive.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/gruene-smoothie-bowl-mit-ei-664781.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/gruene-smoothie-bowl-mit-ei",
+      "originalTitle": "Grüne Smoothie-Bowl mit Ei",
+      "enrichedAt": "2026-01-07T09:52:38.011Z"
+    },
+    {
+      "id": "https://elavegan.com/de/gemuesecurry-rezept-kokosmilch-ananas/",
+      "titleFr": "Curry de Légumes à l'Ananas",
+      "descriptionFr": "Ce curry de légumes coloré et parfumé à l'ananas ravira vos papilles avec ses saveurs exotiques. Préparé avec des légumes frais et des épices délicates, c'est un plat réconfortant et nutritif, parfait pour un dîner vegan. Servez-le avec du riz pour un repas complet et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Ananas",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Pois chiches",
+          "amount": 1,
+          "unit": "boîte"
+        },
+        {
+          "name": "Carotte",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Aubergine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Zucchini",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Poivron",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Lait de coco non sucré",
+          "amount": 300,
+          "unit": "ml"
+        },
+        {
+          "name": "Curry en poudre",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poudre d'oignon",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Curcuma en poudre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Paprika fumé",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poudre de chili",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Fécule de maïs",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Riz cuit",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, faites chauffer un peu d'huile d'olive à feu moyen et ajoutez l'oignon et l'ail hachés. Faites revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 2: Ajoutez la carotte, l'aubergine, la courgette et le poivron coupés en dés. Faites cuire pendant environ 5-7 minutes jusqu'à ce qu'ils commencent à ramollir.",
+        "Étape 3: Incorporez les pois chiches, l'ananas coupé en morceaux, et les épices (curry, cumin, curcuma, paprika, piment). Mélangez bien pour enrober les légumes.",
+        "Étape 4: Versez le lait de coco dans la poêle et mélangez. Laissez mijoter pendant 10 minutes à feu doux pour que les saveurs se mélangent.",
+        "Étape 5: Si vous souhaitez une sauce plus épaisse, mélangez la fécule de maïs avec un peu d'eau puis incorporez-la au curry. Remuez jusqu'à épaississement.",
+        "Étape 6: Assaisonnez avec du sel et du poivre selon votre goût.",
+        "Étape 7: Servez le curry chaud sur un lit de riz cuit et garnissez de coriandre fraîche.",
+        "Étape 8: Dégustez ce plat réconfortant et savoureux, idéal pour un dîner léger."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 15,
+        "carbs": 70,
+        "fats": 15,
+        "sugar": 6,
+        "fiber": 10,
+        "saturatedFat": 6,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en légumes, en protéines grâce aux pois chiches et en bonnes graisses avec le lait de coco. Sa teneur en fibres est élevée, ce qui favorise la satiété. C'est un excellent choix pour un dîner équilibré et nutritif.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/10/Gemuesecurry-mit-Reis-in-Schale.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/gemuesecurry-rezept-kokosmilch-ananas/",
+      "originalTitle": "Gemüsecurry",
+      "enrichedAt": "2026-01-07T09:53:03.971Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/curry-linsensuppe-10552792.html",
+      "titleFr": "Soupe de lentilles au curry",
+      "descriptionFr": "Cette soupe réconfortante de lentilles rouges au curry est un mélange riche en saveurs et en épices. Parfaite pour un dîner léger et nutritif, elle vous réchauffera avec ses arômes de gingembre et de cumin. Garnie de pistaches croquantes et de yaourt, elle est à la fois savoureuse et réconfortante.",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Carotte",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Lentilles rouges",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Concentré de tomates",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Curry en poudre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Bouillon de volaille",
+          "amount": 1000,
+          "unit": "ml"
+        },
+        {
+          "name": "Persil",
+          "amount": 3,
+          "unit": "brins"
+        },
+        {
+          "name": "Yaourt à la crème",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Harissa",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Pistaches",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Citron vert",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincer finement l'oignon et la gousse d'ail. Éplucher et couper le gingembre en petits morceaux.",
+        "Étape 2: Éplucher les carottes et les couper en dés.",
+        "Étape 3: Dans une grande casserole, faire fondre le beurre à feu moyen et y ajouter l'oignon, l'ail et le gingembre. Faire revenir jusqu'à ce que l'oignon soit translucide.",
+        "Étape 4: Ajouter les carottes et cuire pendant 5 minutes en remuant régulièrement.",
+        "Étape 5: Incorporer les lentilles rouges, le concentré de tomates, le curry en poudre et le cumin. Bien mélanger.",
+        "Étape 6: Ajouter le bouillon de volaille et porter à ébullition. Réduire le feu et laisser mijoter pendant 20 minutes jusqu'à ce que les lentilles soient tendres.",
+        "Étape 7: Pendant ce temps, hacher finement le persil et préparer la garniture avec le yaourt, la harissa et les pistaches concassées.",
+        "Étape 8: Servir la soupe chaude, garnie de yaourt, de harissa, de pistaches et de persil. Ajouter un filet de jus de citron vert avant de déguster."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 20,
+        "carbs": 60,
+        "fats": 15,
+        "sugar": 5,
+        "fiber": 15,
+        "saturatedFat": 5,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines végétales grâce aux lentilles et est également faible en graisses saturées. Elle est équilibrée en glucides complexes, ce qui en fait un plat nutritif et rassasiant. Les épices ajoutent non seulement de la saveur mais aussi des bienfaits pour la santé.",
+      "imageUrl": "https://image.brigitte.de/10552790/t/Y-/v5/w1440/r1/-/curry-linsensuppe-21dfe02e416f2d95a776e0e764a818d6-curry-linsensuppe-.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/curry-linsensuppe-10552792.html",
+      "originalTitle": "Curry-Linsensuppe",
+      "enrichedAt": "2026-01-07T09:53:22.911Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/kohl-curry-10858840.html",
+      "titleFr": "Curry de Chou Fleur et Brocoli",
+      "descriptionFr": "Ce curry coloré et parfumé combine les bienfaits des légumes crucifères avec des épices exotiques pour un dîner savoureux et nutritif. La douceur de la noix de coco et le croquant des noix ajoutent une texture irrésistible à chaque bouchée.",
+      "ingredientsFr": [
+        {
+          "name": "Orange bio",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Poudre de curry",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Noix de cajou",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Amandes",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Flocons de piment",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "amount": 1,
+          "unit": "botte"
+        },
+        {
+          "name": "Pommes de terre",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Chou-fleur",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Brocoli",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Choux de Bruxelles",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Chili rouge",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Ghee",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Poudre de coriandre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Garam masala",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Cumin",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Curcuma",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Lait d'amande",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "Pâte de cajou",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 1,
+          "unit": "l"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez et coupez les pommes de terre en cubes. Faites-les cuire dans une casserole d'eau bouillante salée pendant environ 10 minutes.",
+        "Étape 2: Pendant ce temps, coupez le chou-fleur, le brocoli et les choux de Bruxelles en morceaux de taille uniforme.",
+        "Étape 3: Dans une grande poêle, faites chauffer le ghee à feu moyen. Ajoutez l'ail émincé, le gingembre râpé et le chili rouge haché. Faites revenir pendant 2 minutes jusqu'à ce que les arômes se dégagent.",
+        "Étape 4: Ajoutez les légumes crucifères (chou-fleur, brocoli, choux de Bruxelles) et les pommes de terre cuites. Faites sauter pendant environ 5 minutes.",
+        "Étape 5: Incorporez les épices (curry, coriandre, garam masala, cumin, curcuma) et mélangez bien pour enrober les légumes.",
+        "Étape 6: Versez le lait d'amande et le bouillon de légumes dans la poêle. Laissez mijoter pendant 15 minutes à feu doux, jusqu'à ce que les légumes soient tendres.",
+        "Étape 7: Ajoutez la pâte de cajou, les noix de cajou et les amandes. Mélangez bien pour incorporer tous les ingrédients.",
+        "Étape 8: Servez chaud, garni de coriandre fraîche et d'un filet de jus d'orange pour une touche de fraîcheur."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 15,
+        "carbs": 55,
+        "fats": 20,
+        "sugar": 6,
+        "fiber": 10,
+        "saturatedFat": 6,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en légumes variés, apportant des fibres et des vitamines essentielles. Les graisses proviennent de sources saines comme les noix et le ghee, tout en respectant les limites de sodium et de graisses saturées.",
+      "imageUrl": "https://image.brigitte.de/10858838/t/GM/v3/w1440/r1/-/kohl-curry.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/kohl-curry-10858840.html",
+      "originalTitle": "Kohl-Curry",
+      "enrichedAt": "2026-01-07T09:53:26.946Z"
+    },
+    {
+      "id": "https://www.mrsflury.com/porridge-vegan/",
+      "titleFr": "Porridge Vegan aux Trois Variantes Saines",
+      "descriptionFr": "Commencez votre journée avec ce délicieux porridge vegan, décliné en trois saveurs irrésistibles ! Que vous soyez fan de chocolat, de saveurs automnales avec la courge ou de fruits frais, ce petit-déjeuner nourrissant saura vous séduire. Facile à préparer, il est parfait pour toute la famille.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "eau",
+          "amount": 600,
+          "unit": "ml"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "lait d'amande",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "chocolat noir",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "banane",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "purée de courge",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "édulcorant",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "cannelle",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "fruits rouges mélangés",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, porter l'eau à ébullition avec une pincée de sel.",
+        "Étape 2: Ajouter les flocons d'avoine et réduire le feu. Cuire pendant environ 5-7 minutes en remuant régulièrement jusqu'à ce que le mélange épaississe.",
+        "Étape 3: Diviser le porridge en trois portions égales dans des bols.",
+        "Étape 4: Pour la première portion, ajouter le chocolat noir coupé en morceaux et mélanger jusqu'à ce qu'il soit fondu.",
+        "Étape 5: Pour la deuxième portion, incorporer la purée de courge, l'édulcorant et la cannelle. Bien mélanger.",
+        "Étape 6: Pour la troisième portion, ajouter les fruits rouges et l'édulcorant, puis mélanger délicatement.",
+        "Étape 7: Verser le lait d'amande sur chaque portion selon votre goût.",
+        "Étape 8: Servir chaud et déguster!"
+      ],
+      "nutrition": {
+        "calories": 340,
+        "proteins": 10,
+        "carbs": 56,
+        "fats": 10,
+        "sugar": 8,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 125
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres grâce aux flocons d'avoine et aux fruits, et elle offre une bonne source de glucides complexes. Les graisses sont principalement insaturées et le sucre est modéré, ce qui en fait un choix nutritif et équilibré pour le petit-déjeuner.",
+      "imageUrl": "https://www.mrsflury.com/wp-content/uploads/2018/10/porridge-blog1.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.mrsflury.com/porridge-vegan/",
+      "originalTitle": "Porridge Rezept vegan / 3 Gesunde Varianten",
+      "enrichedAt": "2026-01-07T09:53:41.243Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/fruehstueck-mit-haferflocken--kuehlschrank-porridge-10547348.html",
+      "titleFr": "Porridge de Frigo",
+      "descriptionFr": "Découvrez ce délicieux porridge froid, parfait pour un petit-déjeuner nutritif et rafraîchissant. Avec des flocons d'avoine, du yaourt nature et des framboises, ce plat saura vous apporter énergie et bien-être dès le matin.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "yaourt nature",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "lait",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "framboises",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "sirop d'érable",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, mélangez les flocons d'avoine avec le lait et laissez reposer au réfrigérateur pendant au moins 30 minutes, ou toute la nuit si possible.",
+        "Étape 2: Une fois le mélange bien réhydraté, ajoutez le yaourt nature et mélangez jusqu'à obtenir une consistance homogène.",
+        "Étape 3: Ajoutez les framboises fraîches au mélange de yaourt et d'avoine, en réservant quelques framboises pour la décoration.",
+        "Étape 4: Incorporez le sirop d'érable pour sucrer le porridge selon votre goût.",
+        "Étape 5: Répartissez le porridge dans deux bols et décorez avec les framboises réservées.",
+        "Étape 6: Pour une touche de croquant, vous pouvez ajouter des noix ou des graines de votre choix.",
+        "Étape 7: Servez immédiatement et savourez ce petit-déjeuner nutritif et délicieux."
+      ],
+      "nutrition": {
+        "calories": 345,
+        "proteins": 14,
+        "carbs": 55,
+        "fats": 8,
+        "sugar": 9,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 70
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est équilibrée, riche en fibres grâce aux flocons d'avoine et aux framboises, tout en apportant une quantité modérée de sucre naturel du sirop d'érable. Elle convient parfaitement pour un petit-déjeuner sain.",
+      "imageUrl": "https://image.brigitte.de/10547350/t/Pw/v5/w1440/r1/-/2e995958d92c6-e78afcf8cc9dcfadd0435ef33bab752e-11f2f6652cc31b1b728dcf809ab2e995958d92c6-.png",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/fruehstueck-mit-haferflocken--kuehlschrank-porridge-10547348.html",
+      "originalTitle": "Kühlschrank-Porridge",
+      "enrichedAt": "2026-01-07T09:53:55.847Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/diaet-rezepte/porridge-mit-ananas-11505630.html",
+      "titleFr": "Porridge à l'Ananas et aux Épices",
+      "descriptionFr": "Commencez votre journée avec ce porridge onctueux à l'ananas, agrémenté de curcuma et de coriandre pour une touche exotique. Ce petit-déjeuner nutritif vous apportera l'énergie nécessaire pour affronter la journée tout en étant un véritable régal pour les papilles.",
+      "ingredientsFr": [
+        {
+          "name": "lait d'avoine",
+          "amount": 70,
+          "unit": "ml"
+        },
+        {
+          "name": "curcuma",
+          "amount": 0.5,
+          "unit": "g"
+        },
+        {
+          "name": "coriandre",
+          "amount": 0.5,
+          "unit": "g"
+        },
+        {
+          "name": "millet",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "ananas",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "huile de colza",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "myrtilles surgelées",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "sirop de gingembre",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "noix de Grenoble",
+          "amount": 15,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le millet et ajoutez 200 ml d'eau. Portez à ébullition, puis réduisez le feu et laissez mijoter pendant 15 minutes jusqu'à ce que le millet soit tendre.",
+        "Étape 2: Pendant ce temps, coupez l'ananas en petits cubes et réservez.",
+        "Étape 3: Une fois le millet cuit, incorporez le lait d'avoine, le curcuma et la coriandre. Remuez bien et laissez mijoter encore 2-3 minutes.",
+        "Étape 4: Ajoutez le sirop de gingembre et les myrtilles surgelées dans le porridge, mélangez délicatement.",
+        "Étape 5: Retirez la casserole du feu et ajoutez l'huile de colza pour une texture crémeuse.",
+        "Étape 6: Servez le porridge dans un bol et garnissez-le avec les cubes d'ananas et les noix de Grenoble hachées.",
+        "Étape 7: Dégustez chaud, idéal pour un petit-déjeuner nourrissant et plein de saveurs."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 12,
+        "carbs": 60,
+        "fats": 15,
+        "sugar": 12,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 250
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en nutriments avec un bon équilibre de glucides, de protéines et de graisses saines. Les épices ajoutent des bienfaits anti-inflammatoires, tandis que les fruits apportent des vitamines essentielles.",
+      "imageUrl": "https://image.brigitte.de/11505632/t/xn/v3/w1440/r1/-/porridge-mit-ananas.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/diaet-rezepte/porridge-mit-ananas-11505630.html",
+      "originalTitle": "Porridge mit Ananas",
+      "enrichedAt": "2026-01-07T09:53:57.277Z"
+    },
+    {
+      "id": "https://utopia.de/ratgeber/veganer-porridge-auch-ohne-milch-lecker-und-gesund/",
+      "titleFr": "Porridge Végétalien aux Pommes",
+      "descriptionFr": "Commencez votre journée avec ce porridge crémeux et réconfortant, rempli de pommes juteuses et de saveurs épicées. Parfait pour un petit-déjeuner nutritif et énergisant, ce plat vegan est à la fois délicieux et sain.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Huile de colza",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait d'amande",
+          "amount": 600,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de chia",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Cannelle",
+          "amount": 4,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cardamome",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Pâte d'amande",
+          "amount": 45,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez les pommes, retirez le cœur et coupez-les en dés.",
+        "Étape 2: Dans une casserole, faites chauffer l'huile de colza à feu moyen, puis ajoutez les dés de pommes et faites-les revenir jusqu'à ce qu'ils soient tendres.",
+        "Étape 3: Ajoutez le sirop d'érable et mélangez bien pour enrober les pommes.",
+        "Étape 4: Dans un autre récipient, mélangez le lait d'amande, les flocons d'avoine, les graines de chia, la cannelle et la cardamome.",
+        "Étape 5: Versez ce mélange dans la casserole avec les pommes et portez à ébullition, puis réduisez le feu et laissez mijoter pendant environ 10 minutes, en remuant de temps en temps.",
+        "Étape 6: Une fois que le porridge a atteint la consistance désirée, retirez du feu et incorporez la pâte d'amande.",
+        "Étape 7: Servez chaud dans des bols et ajoutez des garnitures supplémentaires si vous le souhaitez, comme des fruits frais ou des noix.",
+        "Étape 8: Savourez votre porridge nutritif et réconfortant!"
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 12,
+        "carbs": 64,
+        "fats": 12,
+        "sugar": 15,
+        "fiber": 10,
+        "saturatedFat": 1,
+        "sodium": 50
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce porridge est riche en fibres grâce aux flocons d'avoine et aux graines de chia, ce qui favorise la satiété. La cannelle et la cardamome ajoutent des saveurs sans calories supplémentaires. Le sirop d'érable apporte une douceur naturelle tout en restant sous la limite de sucre recommandée.",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://utopia.de/ratgeber/veganer-porridge-auch-ohne-milch-lecker-und-gesund/",
+      "originalTitle": "Veganer Porridge",
+      "enrichedAt": "2026-01-07T09:53:58.574Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/zimt-porridge",
+      "titleFr": "Porridge à la cannelle",
+      "descriptionFr": "Ce porridge crémeux à la cannelle est un petit-déjeuner réconfortant et nourrissant. Parfait pour bien commencer la journée, il allie douceur et bienfaits nutritionnels grâce aux flocons d'avoine, source de fibres et de protéines.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "lait",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "sucre",
+          "amount": 3,
+          "unit": "c. à café"
+        },
+        {
+          "name": "cannelle",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le lait et faites-le chauffer à feu moyen.",
+        "Étape 2: Une fois le lait chaud, ajoutez les flocons d'avoine et remuez bien.",
+        "Étape 3: Ajoutez le sucre, la cannelle et le sel dans la casserole.",
+        "Étape 4: Laissez mijoter le mélange à feu doux pendant environ 5 à 10 minutes, en remuant régulièrement, jusqu'à obtenir une consistance crémeuse.",
+        "Étape 5: Retirez la casserole du feu et laissez reposer quelques minutes.",
+        "Étape 6: Servez le porridge chaud dans des bols.",
+        "Étape 7: Vous pouvez garnir avec des fruits frais, des noix ou un peu de miel si désiré."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 12,
+        "carbs": 58,
+        "fats": 10,
+        "sugar": 6,
+        "fiber": 8,
+        "saturatedFat": 4,
+        "sodium": 200
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée, riche en fibres grâce aux flocons d'avoine et modérée en sucre. Elle fournit une bonne quantité de protéines et reste dans les limites recommandées pour un petit-déjeuner sain.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2008/7/Zimt-Porridge-4884cc4893bb0.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/zimt-porridge",
+      "originalTitle": "Zimt-Porridge",
+      "enrichedAt": "2026-01-07T09:54:09.404Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/englisches-porridge",
+      "titleFr": "Porridge Anglais Crémeux",
+      "descriptionFr": "Commencez votre journée de manière saine avec ce porridge anglais crémeux, réconfortant et nutritif. Facile à préparer, il est parfait pour un petit-déjeuner rapide tout en étant riche en fibres et en protéines.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "lait écrémé",
+          "amount": 250,
+          "unit": "ml"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "sucre",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, ajoutez les flocons d'avoine, le lait écrémé et une pincée de sel.",
+        "Étape 2: Chauffez à feu moyen tout en remuant régulièrement pour éviter que le mélange n'accroche au fond.",
+        "Étape 3: Une fois que le mélange commence à mijoter, réduisez le feu et laissez cuire pendant environ 5 à 7 minutes ou jusqu'à ce que le porridge atteigne la consistance désirée.",
+        "Étape 4: Ajoutez le sucre et mélangez bien jusqu'à ce qu'il soit dissous.",
+        "Étape 5: Retirez du feu et laissez reposer pendant une minute pour épaissir davantage.",
+        "Étape 6: Servez chaud, en ajoutant éventuellement des fruits frais ou des noix pour plus de saveurs et de textures.",
+        "Étape 7: Dégustez ce porridge adapté à vos goûts, en ajoutant des épices comme la cannelle ou la vanille si désiré."
+      ],
+      "nutrition": {
+        "calories": 290,
+        "proteins": 12,
+        "carbs": 45,
+        "fats": 6,
+        "sugar": 10,
+        "fiber": 5,
+        "saturatedFat": 2,
+        "sodium": 100
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce porridge est riche en fibres et en protéines, ce qui en fait un bon choix pour un petit-déjeuner énergétique. Cependant, le sucre peut être réduit ou remplacé par des alternatives plus saines comme le miel ou le sirop d'érable.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/rezepte/Englisches-Porridge-koellnfriesen-porridgeneu.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/englisches-porridge",
+      "originalTitle": "Englisches Porridge",
+      "enrichedAt": "2026-01-07T09:54:09.902Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/porridge-mit-obst",
+      "titleFr": "Porridge aux Fruits",
+      "descriptionFr": "Commencez votre journée avec ce porridge crémeux et réconfortant, garni de fruits frais et de noix de coco croquante. Ce petit-déjeuner nutritif vous apportera l'énergie nécessaire pour bien démarrer votre matinée !",
+      "ingredientsFr": [
+        {
+          "name": "Lait",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre de vanille",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Miel",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Fruits secs (abricots, raisins)",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Banane",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Copeaux de noix de coco",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le lait et ajoutez les flocons d'avoine.",
+        "Étape 2: Ajoutez la poudre de vanille et le miel, puis portez à ébullition à feu moyen.",
+        "Étape 3: Réduisez le feu et laissez mijoter pendant environ 5 à 10 minutes, en remuant régulièrement, jusqu'à ce que le mélange épaississe.",
+        "Étape 4: Pendant ce temps, coupez la banane en rondelles et préparez les fruits secs.",
+        "Étape 5: Une fois le porridge prêt, retirez-le du feu et laissez-le reposer pendant 2 minutes.",
+        "Étape 6: Servez le porridge dans des bols, puis ajoutez les rondelles de banane, les fruits secs et les copeaux de noix de coco sur le dessus.",
+        "Étape 7: Vous pouvez ajouter un peu plus de miel si vous le souhaitez.",
+        "Étape 8: Dégustez chaud pour un petit-déjeuner réconfortant et nutritif."
+      ],
+      "nutrition": {
+        "calories": 420,
+        "proteins": 14,
+        "carbs": 70,
+        "fats": 12,
+        "sugar": 15,
+        "fiber": 8,
+        "saturatedFat": 8,
+        "sodium": 150
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce porridge est riche en fibres grâce aux flocons d'avoine et aux fruits, tout en apportant des protéines et des graisses saines. L'ajout de fruits secs et de banane ajoute des vitamines et des minéraux essentiels, tout en restant dans des limites de sucre raisonnables.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/porridge-mit-obst-48867.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/porridge-mit-obst",
+      "originalTitle": "Porridge mit Obst",
+      "enrichedAt": "2026-01-07T09:54:12.267Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/himbeer-bowle-10538938.html",
+      "titleFr": "Bol de Framboises Rafraîchissant",
+      "descriptionFr": "Savourez un mélange gourmand et rafraîchissant de framboises et de jus de fruits, parfait pour un déjeuner léger. Cette Himbeer-Bowle est non seulement délicieuse mais aussi riche en antioxydants, idéale pour une pause santé.",
+      "ingredientsFr": [
+        {
+          "name": "framboises",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "jus de pomme",
+          "amount": 350,
+          "unit": "ml"
+        },
+        {
+          "name": "sirop de framboise",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "nectar de cranberry",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "glaçons",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Bionade",
+          "amount": 250,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez soigneusement les framboises sous l'eau froide et égouttez-les.",
+        "Étape 2: Dans un grand bol, mélangez le jus de pomme, le sirop de framboise et le nectar de cranberry.",
+        "Étape 3: Ajoutez les framboises au mélange de jus et remuez délicatement pour ne pas les écraser.",
+        "Étape 4: Ajoutez des glaçons pour refroidir le mélange.",
+        "Étape 5: Juste avant de servir, incorporez la Bionade pour une touche pétillante.",
+        "Étape 6: Servez dans des verres individuels avec quelques framboises entières pour la décoration."
+      ],
+      "nutrition": {
+        "calories": 150,
+        "proteins": 1,
+        "carbs": 36,
+        "fats": 0,
+        "sugar": 20,
+        "fiber": 4,
+        "saturatedFat": 0,
+        "sodium": 5
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en vitamines et en antioxydants grâce aux framboises et au jus de fruits. Bien que le sucre ajouté soit présent, il reste dans des limites raisonnables pour un dessert léger.",
+      "imageUrl": "https://image.brigitte.de/10538936/t/Kv/v8/w1440/r1/-/himbeerbowle-243135bacfba8906a56702025af447f8-himbeerbowle-.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 6,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/himbeer-bowle-10538938.html",
+      "originalTitle": "Himbeer-Bowle",
+      "enrichedAt": "2026-01-07T09:54:21.808Z"
+    },
+    {
+      "id": "https://www.essen-und-trinken.de/rezepte/60056-rzpt-hummus",
+      "titleFr": "Hummus Savoureux",
+      "descriptionFr": "Découvrez un hummus onctueux et plein de saveurs, parfait pour vos collations saines. Riche en protéines et en fibres, il saura satisfaire vos petites faims tout en étant délicieux et nourrissant.",
+      "ingredientsFr": [
+        {
+          "name": "Pois chiches",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de cumin",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Bicarbonate de soude",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Tahin",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poudre de piment",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "name": "Persil plat",
+          "amount": 4,
+          "unit": "brins"
+        },
+        {
+          "name": "Sumac",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez les pois chiches sous l'eau froide et faites-les tremper dans de l'eau pendant au moins 8 heures, ou toute une nuit.",
+        "Étape 2: Égouttez les pois chiches et placez-les dans une casserole avec du bicarbonate de soude et beaucoup d'eau. Faites cuire à feu moyen pendant environ 1 heure, jusqu'à ce qu'ils soient tendres.",
+        "Étape 3: Dans un mixeur, ajoutez les pois chiches cuits, le jus de citron, le tahin, l'ail émincé, les graines de cumin, le sel, le poivre et la poudre de piment.",
+        "Étape 4: Mixez le tout jusqu'à obtenir une consistance lisse. Ajoutez un peu d'eau si nécessaire pour ajuster la texture.",
+        "Étape 5: Goûtez et ajustez l'assaisonnement selon vos préférences. Si vous souhaitez un goût plus acidulé, ajoutez un peu plus de jus de citron.",
+        "Étape 6: Transférez le hummus dans un bol et faites un léger puits au centre. Versez l'huile d'olive et saupoudrez de sumac et de persil haché.",
+        "Étape 7: Servez avec des légumes frais, des crackers ou du pain pita."
+      ],
+      "nutrition": {
+        "calories": 180,
+        "proteins": 7,
+        "carbs": 20,
+        "fats": 9,
+        "sugar": 1,
+        "fiber": 5,
+        "saturatedFat": 1,
+        "sodium": 200
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines végétales et en fibres, ce qui en fait un excellent choix pour une collation saine. Elle est faible en sucre et contient des graisses saines provenant de l'huile d'olive et du tahin.",
+      "imageUrl": "https://image.essen-und-trinken.de/11832030/t/Op/v9/w1440/r1/-/hummus-6c949d1470838537c76f0dfc9ad3d517-et2014120653-jpg--8611-.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.essen-und-trinken.de/rezepte/60056-rzpt-hummus",
+      "originalTitle": "Hummus Rezept",
+      "enrichedAt": "2026-01-07T09:55:14.248Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/hummus-dip",
+      "titleFr": "Hummus aux herbes fraîches",
+      "descriptionFr": "Savourez ce hummus onctueux, agrémenté d'une touche de coriandre et de citron qui éveille les papilles. Parfait comme dip pour des légumes croquants ou avec du pain pita, il se déguste sans culpabilité à toute heure de la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Pois chiches",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Oignons nouveaux",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Tahin",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Curcuma en poudre",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Paprika en poudre",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez les pois chiches sous l'eau froide et égouttez-les.",
+        "Étape 2: Dans un mixeur, ajoutez les pois chiches, la coriandre fraîche, les oignons nouveaux, l'ail, le jus de citron, le tahin, le curcuma, le cumin, le sel et le poivre.",
+        "Étape 3: Mixez jusqu'à obtenir une texture lisse et crémeuse. Ajoutez un peu d'eau si le mélange est trop épais.",
+        "Étape 4: Goûtez et ajustez l'assaisonnement en ajoutant plus de sel, de poivre ou de jus de citron selon vos préférences.",
+        "Étape 5: Transférez le hummus dans un bol et saupoudrez de paprika en poudre pour la garniture.",
+        "Étape 6: Servez avec des légumes frais ou du pain pita."
+      ],
+      "nutrition": {
+        "calories": 180,
+        "proteins": 8,
+        "carbs": 20,
+        "fats": 8,
+        "sugar": 2,
+        "fiber": 5,
+        "saturatedFat": 1,
+        "sodium": 200
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et en protéines grâce aux pois chiches, tout en étant faible en graisses saturées. Le tahin apporte des graisses saines, et les herbes fraîches ajoutent des antioxydants.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/stockfood/stockfood-60200734.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/hummus-dip",
+      "originalTitle": "Hummus-Dip",
+      "enrichedAt": "2026-01-07T09:55:34.981Z"
+    },
+    {
+      "id": "https://elavegan.com/de/kochbananen-rezept/",
+      "titleFr": "Chips de bananes plantains",
+      "descriptionFr": "Découvrez ces délicieuses chips de bananes plantains, croustillantes et dorées, idéales pour une collation saine. Faciles à préparer, elles apportent une touche exotique à vos pauses gourmandes tout en restant nutritives.",
+      "ingredientsFr": [
+        {
+          "name": "banane plantain",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "sel de mer",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poudre d'oignon",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "paprika fumé",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C (390°F).",
+        "Étape 2: Épluchez les bananes plantains et coupez-les en fines rondelles d'environ 3 mm d'épaisseur.",
+        "Étape 3: Dans un grand bol, mélangez les rondelles de bananes avec l'huile d'olive, le sel, la poudre d'oignon et le paprika fumé jusqu'à ce qu'elles soient bien enrobées.",
+        "Étape 4: Étalez les rondelles sur une plaque de cuisson recouverte de papier sulfurisé, en veillant à ne pas les chevaucher.",
+        "Étape 5: Enfournez pendant environ 15-20 minutes, ou jusqu'à ce qu'elles soient dorées et croustillantes, en les retournant à mi-cuisson.",
+        "Étape 6: Laissez refroidir quelques minutes avant de déguster, elles deviendront encore plus croustillantes.",
+        "Étape 7: Servez-les avec une salsa ou une sauce au yaourt pour un accompagnement savoureux."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 2,
+        "carbs": 33,
+        "fats": 9,
+        "sugar": 2,
+        "fiber": 3,
+        "saturatedFat": 1,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Ces chips de bananes plantains sont une alternative plus saine aux chips de pommes de terre, riches en glucides complexes et en fibres. L'utilisation d'huile d'olive apporte des graisses saines, bien que la quantité de sodium puisse être ajustée à votre goût.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/07/gebackene-Kochbananen-Chips-mit-Guacamole-Dip-in-schwarzer-Schale.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/kochbananen-rezept/",
+      "originalTitle": "Kochbananen Rezept",
+      "enrichedAt": "2026-01-07T09:55:46.587Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/chips",
+      "titleFr": "Chips croustillantes au paprika",
+      "descriptionFr": "Découvrez ces délicieuses chips de pommes de terre, croustillantes et parfumées au paprika et aux herbes de Provence. Parfaites pour une collation saine et savoureuse, elles raviront vos papilles sans culpabilité.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes de terre à chair ferme",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Paprika",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Herbes de Provence",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Huile de friture (soja ou colza)",
+          "amount": 2000,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Lavez soigneusement les pommes de terre et épluchez-les si désiré.",
+        "Étape 2: Coupez les pommes de terre en fines tranches à l'aide d'une mandoline ou d'un couteau.",
+        "Étape 3: Faites tremper les tranches de pommes de terre dans de l'eau froide pendant au moins 30 minutes pour enlever l'excès d'amidon.",
+        "Étape 4: Égouttez et séchez les tranches avec un torchon propre.",
+        "Étape 5: Chauffez l'huile dans une friteuse ou une grande casserole à environ 180°C.",
+        "Étape 6: Faites frémir les tranches de pommes de terre en petites quantités pour éviter qu'elles ne collent.",
+        "Étape 7: Faites frémir jusqu'à ce qu'elles soient dorées et croustillantes, environ 3 à 5 minutes.",
+        "Étape 8: Égouttez les chips sur du papier absorbant et saupoudrez immédiatement de sel, de paprika et d'herbes de Provence."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 3,
+        "carbs": 30,
+        "fats": 10,
+        "sugar": 0,
+        "fiber": 3,
+        "saturatedFat": 1,
+        "sodium": 400
+      },
+      "healthScore": 65,
+      "healthNotes": "Ces chips sont faites avec des pommes de terre et des épices, offrant un goût savoureux. Cependant, la friture augmente la teneur en graisses et en calories, ce qui les rend modérément saines. Une consommation occasionnelle est recommandée.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/chips-45785.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/chips",
+      "originalTitle": "Chips",
+      "enrichedAt": "2026-01-07T09:56:02.887Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/mais-chips-corn-chips",
+      "titleFr": "Chips de Maïs Croquants",
+      "descriptionFr": "Ces chips de maïs faits maison sont croustillants et savoureux, parfaits pour une collation saine. Faciles à préparer, ils sont idéaux pour accompagner vos dips préférés ou à déguster seuls.",
+      "ingredientsFr": [
+        {
+          "name": "Farine de maïs",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Farine de blé",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre à lever",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Beurre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Crème aigre",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Paprika",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C.",
+        "Étape 2: Dans un grand bol, mélangez la farine de maïs, la farine de blé, la poudre à lever, le sel et le paprika.",
+        "Étape 3: Faites fondre le beurre et incorporez-le au mélange sec jusqu'à obtenir une texture granuleuse.",
+        "Étape 4: Ajoutez la crème aigre et mélangez jusqu'à former une pâte homogène.",
+        "Étape 5: Étalez la pâte sur un plan de travail fariné sur une épaisseur d'environ 3 mm.",
+        "Étape 6: Découpez des formes de chips à l'aide d'un emporte-pièce ou d'un couteau.",
+        "Étape 7: Disposez les chips sur une plaque de cuisson recouverte de papier sulfurisé.",
+        "Étape 8: Enfournez pendant 15-20 minutes ou jusqu'à ce qu'elles soient dorées et croustillantes."
+      ],
+      "nutrition": {
+        "calories": 186,
+        "proteins": 4,
+        "carbs": 24,
+        "fats": 8,
+        "sugar": 1,
+        "fiber": 2,
+        "saturatedFat": 5,
+        "sodium": 200
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est correcte en termes de nutrition, avec un bon équilibre entre les macronutriments. Les chips sont riches en glucides complexes grâce à la farine de maïs, mais le beurre ajoute des graisses saturées. Pour une version encore plus saine, envisagez de remplacer le beurre par de l'huile d'olive.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/Mais-Chips---Corn-Chips-maischips.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/mais-chips-corn-chips",
+      "originalTitle": "Mais-Chips - Corn Chips",
+      "enrichedAt": "2026-01-07T09:56:00.670Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/tofu-nudelpfanne",
+      "titleFr": "Poêlée de Tofu aux Nouilles",
+      "descriptionFr": "Cette poêlée de tofu aux nouilles est un plat savoureux et réconfortant, riche en protéines et en saveurs. Les champignons et les oignons de printemps ajoutent une touche de fraîcheur, tandis que les épices apportent du caractère. Idéal pour un dîner léger et nourrissant !",
+      "ingredientsFr": [
+        {
+          "name": "Champignons",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "Oignons de printemps",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Tofu",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Poudre de chili",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poudre de curry",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Huile de sésame",
+          "amount": 4,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Graines de sésame",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Spaghetti",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Bouillon",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 5,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites cuire les spaghetti selon les instructions du paquet, puis égouttez-les et réservez.",
+        "Étape 2: Dans une grande poêle, chauffez l'huile de sésame à feu moyen. Ajoutez les champignons tranchés et faites-les sauter jusqu'à ce qu'ils soient dorés.",
+        "Étape 3: Ajoutez les oignons de printemps coupés en rondelles et continuez à faire sauter pendant 2-3 minutes.",
+        "Étape 4: Coupez le tofu en dés et ajoutez-le à la poêle. Faites cuire jusqu'à ce qu'il soit légèrement doré.",
+        "Étape 5: Ajoutez la poudre de chili, la poudre de curry, le sel et le poivre. Mélangez bien pour enrober tous les ingrédients.",
+        "Étape 6: Incorporez les spaghetti cuits et le bouillon, puis mélangez délicatement pour combiner tous les ingrédients.",
+        "Étape 7: Ajoutez la sauce soja et les graines de sésame, puis remuez une dernière fois avant de servir.",
+        "Étape 8: Servez chaud, garni de quelques graines de sésame supplémentaires si désiré."
+      ],
+      "nutrition": {
+        "calories": 480,
+        "proteins": 22,
+        "carbs": 65,
+        "fats": 18,
+        "sugar": 3,
+        "fiber": 4,
+        "saturatedFat": 2,
+        "sodium": 700
+      },
+      "healthScore": 70,
+      "healthNotes": "Ce plat offre un bon équilibre entre protéines et glucides, avec des graisses saines provenant de l'huile de sésame. Toutefois, la teneur en sodium est un peu élevée en raison de la sauce soja et du bouillon, ce qui peut être ajusté pour un meilleur équilibre nutritionnel.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2010/3/Tofu-Nudelpfanne-4bb0b6ee01a86.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/tofu-nudelpfanne",
+      "originalTitle": "Tofu-Nudelpfanne",
+      "enrichedAt": "2026-01-07T09:56:20.654Z"
+    },
+    {
+      "id": "https://elavegan.com/de/suesskartoffel-curry/",
+      "titleFr": "Curry de Patates Douces",
+      "descriptionFr": "Ce curry crémeux de patates douces et d'épinards est une explosion de saveurs réconfortantes. Parfait pour un dîner vegan, il allie des épices aromatiques à une texture veloutée. Une recette à partager, pleine de bienfaits pour la santé !",
+      "ingredientsFr": [
+        {
+          "name": "patates douces",
+          "amount": 450,
+          "unit": "g"
+        },
+        {
+          "name": "épinards frais",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "moyenne"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "gingembre frais",
+          "amount": 5,
+          "unit": "cm"
+        },
+        {
+          "name": "poudre de curry",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "poudre de curcuma",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "piment doux fumé",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "flocons de piment rouge",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre noir",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "gingembre moulu",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 320,
+          "unit": "ml"
+        },
+        {
+          "name": "passata (sauce tomate)",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "pois chiches en conserve",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "herbes fraîches",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, chauffez l'huile d'olive à feu moyen. Ajoutez l'oignon et faites revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 2: Ajoutez l'ail, le gingembre frais, le curry, le curcuma, le cumin, le sel, le piment doux fumé, les flocons de piment rouge et le poivre noir. Faites cuire pendant 1 à 2 minutes jusqu'à ce que les épices libèrent leur arôme.",
+        "Étape 3: Incorporez les patates douces coupées en morceaux et mélangez bien pour les enrober d'épices.",
+        "Étape 4: Ajoutez le lait de coco et la passata. Portez à ébullition, puis réduisez le feu et laissez mijoter pendant 20 minutes, jusqu'à ce que les patates douces soient tendres.",
+        "Étape 5: Incorporez les épinards frais et les pois chiches. Laissez mijoter encore 5 minutes jusqu'à ce que les épinards soient fanés.",
+        "Étape 6: Goûtez et ajustez l'assaisonnement si nécessaire. Servez chaud, garni d'herbes fraîches.",
+        "Étape 7: Accompagnez de riz basmati ou de quinoa pour un repas complet."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 15,
+        "carbs": 65,
+        "fats": 18,
+        "sugar": 6,
+        "fiber": 10,
+        "saturatedFat": 7,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et faible en graisses saturées, ce qui la rend très saine. Les patates douces fournissent des glucides complexes et des vitamines, tandis que les épinards ajoutent des minéraux essentiels.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/10/Suesskartoffel-Curry-mit-Reis-in-Schale.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/suesskartoffel-curry/",
+      "originalTitle": "Süßkartoffel-Curry",
+      "enrichedAt": "2026-01-07T09:56:43.173Z"
+    },
+    {
+      "id": "https://elavegan.com/de/kichererbsen-curry-veganes-rezept/",
+      "titleFr": "Curry de Pois Chiches aux Aubergines",
+      "descriptionFr": "Découvrez ce curry réconfortant à base de pois chiches et d'aubergines, mijoté dans une sauce onctueuse à la noix de coco. Parfait pour un dîner léger et nutritif, ce plat vegan est riche en saveurs et en bienfaits pour la santé.",
+      "ingredientsFr": [
+        {
+          "name": "Pois chiches",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Aubergines",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Oignon",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Ail",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Lait de coco",
+          "amount": 240,
+          "unit": "ml"
+        },
+        {
+          "name": "Curry en poudre",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poudre d'oignon",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Curcuma",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Paprika fumé",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Piment en poudre",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Riz cuit (au choix)",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "Épinards ou coriandre frais",
+          "amount": 30,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez les aubergines en dés et l'oignon en petits morceaux.",
+        "Étape 2: Dans une grande poêle, faites chauffer un peu d'huile d'olive à feu moyen et ajoutez l'oignon. Faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Ajoutez l'ail émincé et les épices (curry, cumin, curcuma, paprika, piment) et faites cuire pendant 1-2 minutes pour libérer les arômes.",
+        "Étape 4: Incorporez les dés d'aubergines et faites-les sauter pendant environ 5 minutes jusqu'à ce qu'elles commencent à ramollir.",
+        "Étape 5: Ajoutez les pois chiches égouttés et le lait de coco. Mélangez bien le tout.",
+        "Étape 6: Laissez mijoter à feu doux pendant 15 minutes, en remuant de temps en temps, jusqu'à ce que les aubergines soient tendres.",
+        "Étape 7: Assaisonnez avec du sel et du poivre selon votre goût.",
+        "Étape 8: Servez le curry chaud accompagné de riz et garni d'épinards ou de coriandre fraîche."
+      ],
+      "nutrition": {
+        "calories": 487,
+        "proteins": 15,
+        "carbs": 72,
+        "fats": 18,
+        "sugar": 5,
+        "fiber": 12,
+        "saturatedFat": 8,
+        "sodium": 450
+      },
+      "healthScore": 82,
+      "healthNotes": "Ce plat est très nutritif, riche en protéines végétales et en fibres grâce aux pois chiches et aux aubergines. Le lait de coco apporte des graisses saines, mais veillez à ne pas en abuser. Les épices ajoutent des antioxydants et des propriétés anti-inflammatoires.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2021/03/Kichererbsen-Curry-mit-Auberginen-Reis-und-Spinat-in-Schale.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/kichererbsen-curry-veganes-rezept/",
+      "originalTitle": "Kichererbsen Curry mit Auberginen",
+      "enrichedAt": "2026-01-07T09:56:39.477Z"
+    },
+    {
+      "id": "https://elavegan.com/de/indisches-veganes-haehnchen-curry/",
+      "titleFr": "Curry de Poulet Végétalien Indien",
+      "descriptionFr": "Ce curry de poulet végétalien est une explosion de saveurs indiennes, alliant la douceur de la noix de coco à l'intensité des épices. Facile à préparer, il ravira vos papilles tout en respectant votre régime alimentaire sain et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "huile de coco",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "gingembre frais",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "gousses d'ail",
+          "amount": 3,
+          "unit": "unités"
+        },
+        {
+          "name": "poivron vert",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "curry en poudre",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "sucre brun",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "passata",
+          "amount": 720,
+          "unit": "ml"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 320,
+          "unit": "ml"
+        },
+        {
+          "name": "granules de soja",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "sauce soja",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "vinaigre balsamique",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 240,
+          "unit": "ml"
+        },
+        {
+          "name": "herbes fraîches",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "riz cuit ou naan",
+          "amount": 200,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande poêle, faites chauffer l'huile de coco à feu moyen.",
+        "Étape 2: Ajoutez le gingembre frais et l'ail émincé, faites revenir pendant 1 à 2 minutes jusqu'à ce qu'ils soient parfumés.",
+        "Étape 3: Incorporez le poivron vert haché et faites cuire encore 3 minutes.",
+        "Étape 4: Ajoutez le curry en poudre et le sucre brun, mélangez bien pour enrober les légumes.",
+        "Étape 5: Versez la passata et le bouillon de légumes dans la poêle, mélangez et laissez mijoter pendant 10 minutes.",
+        "Étape 6: Ajoutez les granules de soja, la sauce soja et le vinaigre balsamique. Mélangez et laissez mijoter pendant 5 à 10 minutes supplémentaires.",
+        "Étape 7: Incorporez le lait de coco et mélangez jusqu'à obtenir une consistance crémeuse.",
+        "Étape 8: Servez chaud, garni d'herbes fraîches, accompagné de riz ou de naan."
+      ],
+      "nutrition": {
+        "calories": 490,
+        "proteins": 22,
+        "carbs": 60,
+        "fats": 18,
+        "sugar": 6,
+        "fiber": 8,
+        "saturatedFat": 9,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, riche en fibres et en protéines végétales, tout en étant faible en sucres ajoutés et en sodium. Les graisses sont principalement fournies par la noix de coco, mais la recette peut être légèrement améliorée pour réduire les graisses saturées.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2020/10/Veganes-Indisches-Haehnchen-Curry-mit-Reis-in-Schale-mit-Schoepfkelle.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/indisches-veganes-haehnchen-curry/",
+      "originalTitle": "Veganes Indisches Hähnchen Curry",
+      "enrichedAt": "2026-01-07T09:56:38.715Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/granola-riegel",
+      "titleFr": "Barres Granola Maison",
+      "descriptionFr": "Ces barres granola maison sont parfaites pour une collation saine et nourrissante. Riches en graines et fruits secs, elles vous apporteront l'énergie nécessaire pour votre journée tout en satisfaisant vos envies sucrées de manière équilibrée.",
+      "ingredientsFr": [
+        {
+          "name": "Graines mélangées (lin, tournesol, chanvre, courge)",
+          "amount": 160,
+          "unit": "g"
+        },
+        {
+          "name": "Amandes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Pistaches",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Raisins secs (sans sucre et sans soufre)",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Cranberries séchées (sans sucre et sans soufre)",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "Sirop d'érable",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "Pâte d'amande",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "name": "Huile de coco",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Cacao en morceaux",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (350°F) et tapissez un moule rectangulaire de papier sulfurisé.",
+        "Étape 2: Dans un grand bol, mélangez les graines, les amandes, les pistaches, les flocons d'avoine, les raisins secs et les cranberries.",
+        "Étape 3: Dans une petite casserole à feu doux, faites fondre l'huile de coco, la pâte d'amande et le sirop d'érable jusqu'à obtenir un mélange homogène.",
+        "Étape 4: Versez le mélange chaud sur les ingrédients secs et mélangez bien pour enrober uniformément.",
+        "Étape 5: Ajoutez les morceaux de cacao et une pincée de sel, puis mélangez à nouveau.",
+        "Étape 6: Étalez le mélange dans le moule préparé et pressez-le fermement pour obtenir une couche uniforme.",
+        "Étape 7: Enfournez pendant environ 20-25 minutes, jusqu'à ce que le dessus soit doré.",
+        "Étape 8: Laissez refroidir complètement avant de couper en barres. Conservez-les dans un contenant hermétique."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 6,
+        "carbs": 25,
+        "fats": 11,
+        "sugar": 9,
+        "fiber": 4,
+        "saturatedFat": 5,
+        "sodium": 1
+      },
+      "healthScore": 82,
+      "healthNotes": "Ces barres granola sont riches en fibres et en acides gras sains, offrant une bonne source d'énergie. Elles contiennent des sucres naturels provenant des fruits secs, tout en respectant les recommandations nutritionnelles.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/granola-riegel-655986.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/granola-riegel",
+      "originalTitle": "Granola-Riegel",
+      "enrichedAt": "2026-01-07T09:56:57.665Z"
     }
   ]
 }

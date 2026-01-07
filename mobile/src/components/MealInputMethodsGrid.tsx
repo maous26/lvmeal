@@ -25,6 +25,7 @@ import {
   Sparkles,
   Globe,
   Heart,
+  ChefHat,
   MoreHorizontal,
   Pin,
   PinOff,
@@ -54,6 +55,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
   Sparkles,
   Globe,
   Heart,
+  ChefHat,
 }
 
 interface MealInputMethodsGridProps {

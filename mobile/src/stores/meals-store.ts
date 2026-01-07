@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { Meal, MealType, MealItem, DailyData, NutritionInfo, FoodItem } from '../types'
 import { getDateKey, generateId } from '../lib/utils'
+import { useCaloricBankStore } from './caloric-bank-store'
+import { useUserStore } from './user-store'
 
 interface MealsState {
   dailyData: Record<string, DailyData>
@@ -62,6 +64,14 @@ const calculateDailyTotals = (meals: Meal[]): NutritionInfo => {
   )
 }
 
+// Sync calories with CaloricBankStore
+const syncCaloricBank = (date: string, consumedCalories: number) => {
+  const nutritionGoals = useUserStore.getState().nutritionGoals
+  const targetCalories = nutritionGoals?.calories || 2000
+  useCaloricBankStore.getState().updateDailyBalance(date, targetCalories, consumedCalories)
+  console.log('[MealsStore] Synced CaloricBank:', { date, targetCalories, consumedCalories })
+}
+
 export const useMealsStore = create<MealsState>()(
   persist(
     (set, get) => ({
@@ -92,16 +102,29 @@ export const useMealsStore = create<MealsState>()(
 
         const updatedMeals = [...dayData.meals, newMeal]
 
+        const newTotals = calculateDailyTotals(updatedMeals)
+
+        console.log('[MealsStore] Adding meal:', {
+          type,
+          date: currentDate,
+          itemsCount: items.length,
+          totalCalories: newMeal.totalNutrition.calories,
+          totalMealsAfter: updatedMeals.length,
+        })
+
         set({
           dailyData: {
             ...dailyData,
             [currentDate]: {
               ...dayData,
               meals: updatedMeals,
-              totalNutrition: calculateDailyTotals(updatedMeals),
+              totalNutrition: newTotals,
             },
           },
         })
+
+        // Sync with CaloricBankStore
+        syncCaloricBank(currentDate, newTotals.calories)
       },
 
       updateMeal: (mealId, items) => {
@@ -115,16 +138,21 @@ export const useMealsStore = create<MealsState>()(
             : meal
         )
 
+        const newTotals = calculateDailyTotals(updatedMeals)
+
         set({
           dailyData: {
             ...dailyData,
             [currentDate]: {
               ...dayData,
               meals: updatedMeals,
-              totalNutrition: calculateDailyTotals(updatedMeals),
+              totalNutrition: newTotals,
             },
           },
         })
+
+        // Sync with CaloricBankStore
+        syncCaloricBank(currentDate, newTotals.calories)
       },
 
       deleteMeal: (mealId, date) => {
@@ -134,6 +162,7 @@ export const useMealsStore = create<MealsState>()(
         if (!dayData) return
 
         const updatedMeals = dayData.meals.filter((meal: Meal) => meal.id !== mealId)
+        const newTotals = calculateDailyTotals(updatedMeals)
 
         set({
           dailyData: {
@@ -141,10 +170,13 @@ export const useMealsStore = create<MealsState>()(
             [targetDate]: {
               ...dayData,
               meals: updatedMeals,
-              totalNutrition: calculateDailyTotals(updatedMeals),
+              totalNutrition: newTotals,
             },
           },
         })
+
+        // Sync with CaloricBankStore
+        syncCaloricBank(targetDate, newTotals.calories)
       },
 
       addItemToMeal: (mealId, item) => {
@@ -165,16 +197,21 @@ export const useMealsStore = create<MealsState>()(
           return meal
         })
 
+        const newTotals = calculateDailyTotals(updatedMeals)
+
         set({
           dailyData: {
             ...dailyData,
             [currentDate]: {
               ...dayData,
               meals: updatedMeals,
-              totalNutrition: calculateDailyTotals(updatedMeals),
+              totalNutrition: newTotals,
             },
           },
         })
+
+        // Sync with CaloricBankStore
+        syncCaloricBank(currentDate, newTotals.calories)
       },
 
       removeItemFromMeal: (mealId, itemId) => {
@@ -198,16 +235,21 @@ export const useMealsStore = create<MealsState>()(
           })
           .filter(Boolean) as Meal[]
 
+        const newTotals = calculateDailyTotals(updatedMeals)
+
         set({
           dailyData: {
             ...dailyData,
             [currentDate]: {
               ...dayData,
               meals: updatedMeals,
-              totalNutrition: calculateDailyTotals(updatedMeals),
+              totalNutrition: newTotals,
             },
           },
         })
+
+        // Sync with CaloricBankStore
+        syncCaloricBank(currentDate, newTotals.calories)
       },
 
       updateWaterIntake: (amount) => {
@@ -290,6 +332,9 @@ export const useMealsStore = create<MealsState>()(
     {
       name: 'presence-meals-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        console.log('[MealsStore] Hydrated, dailyData dates:', state?.dailyData ? Object.keys(state.dailyData) : 'none')
+      },
     }
   )
 )

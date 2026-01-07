@@ -193,9 +193,12 @@ export default function ScaleSettingsScreen() {
 
               {!isConnected ? (
                 <TouchableOpacity
-                  style={[styles.connectButton, { backgroundColor: colors.accent.primary }]}
+                  style={[
+                    styles.connectButton,
+                    { backgroundColor: isAvailable === false ? colors.text.muted : colors.accent.primary }
+                  ]}
                   onPress={handleConnect}
-                  disabled={isLoading || isAvailable === false}
+                  disabled={isLoading}
                 >
                   {isLoading ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />

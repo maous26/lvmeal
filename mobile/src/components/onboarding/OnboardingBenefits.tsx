@@ -216,10 +216,10 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
             handleNext()
           }}
           style={{
-            backgroundColor: organicPalette.clay,
-            paddingVertical: spacing.lg,
-            paddingHorizontal: spacing.xl,
-            borderRadius: radius.xl,
+            backgroundColor: organicPalette.moss,
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.lg,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
@@ -227,10 +227,10 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm, letterSpacing: 0.3 }}>
             {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
           </Text>
-          <ChevronRight size={20} color="#FFFFFF" />
+          <ChevronRight size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>

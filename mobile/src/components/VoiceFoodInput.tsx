@@ -305,8 +305,8 @@ export default function VoiceFoodInput({
           contentContainerStyle={styles.contentContainer}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Voice Input Section */}
-          {!isEditing && analyzedFoods.length === 0 && (
+          {/* Voice Input Section - Only show if speech is available */}
+          {!isEditing && analyzedFoods.length === 0 && speechAvailable !== false && (
             <View style={styles.voiceSection}>
               {/* Dev mode banner - only show if speech not available */}
               {isDevMode && speechAvailable === false && (
@@ -407,8 +407,8 @@ export default function VoiceFoodInput({
             </View>
           )}
 
-          {/* Transcript Editor */}
-          {(isEditing || transcript) && analyzedFoods.length === 0 && (
+          {/* Transcript Editor - Show when editing, has transcript, OR when speech is not available */}
+          {(isEditing || transcript || speechAvailable === false) && analyzedFoods.length === 0 && (
             <View style={styles.transcriptSection}>
               <Text style={styles.sectionTitle}>Description du repas</Text>
               <TextInput

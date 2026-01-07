@@ -14,6 +14,10 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import {
+  scheduleOnboardingNotifications,
+  cancelOnboardingNotifications,
+} from '../services/onboarding-notifications-service'
 
 // Features déverrouillées progressivement
 export type FeatureKey =
@@ -137,6 +141,8 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSignupDate: () => {
         if (!get().signupDate) {
           set({ signupDate: new Date().toISOString() })
+          // Schedule onboarding notifications for 7 days
+          scheduleOnboardingNotifications().catch(console.error)
         }
       },
 
@@ -267,6 +273,9 @@ export const useOnboardingStore = create<OnboardingState>()(
           subscriptionDate: now.toISOString(),
           subscriptionEndDate: endDate.toISOString(),
         })
+
+        // Cancel remaining onboarding notifications (user is now premium)
+        cancelOnboardingNotifications().catch(console.error)
       },
 
       cancelSubscription: () => {

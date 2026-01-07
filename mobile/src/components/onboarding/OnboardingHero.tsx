@@ -127,10 +127,10 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         <TouchableOpacity
           onPress={onGetStarted}
           style={{
-            backgroundColor: organicPalette.clay,
-            paddingVertical: spacing.lg,
-            paddingHorizontal: spacing.xl,
-            borderRadius: radius.xl,
+            backgroundColor: organicPalette.moss,
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.lg,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
@@ -138,10 +138,10 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
           }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm, letterSpacing: 0.3 }}>
             Commencer mon parcours
           </Text>
-          <ChevronRight size={20} color="#FFFFFF" />
+          <ChevronRight size={18} color="#FFFFFF" />
         </TouchableOpacity>
 
         {onHaveAccount && (
