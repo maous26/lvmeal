@@ -46,6 +46,7 @@ import {
   useMealInputPreferencesStore,
   ALL_INPUT_METHODS,
 } from '../stores/meal-input-preferences-store'
+import { useAuthStore } from '../stores/auth-store'
 import type { MealSourcePreference } from '../types'
 
 // Labels for meal source preferences
@@ -72,16 +73,19 @@ const mealSourceLabels: Record<MealSourcePreference, { label: string; descriptio
   },
 }
 
+// Labels synchronisés avec l'onboarding - 3 objectifs principaux
+// Les anciennes valeurs (maintain, maintenance, energy) sont mappées vers health
 const goalLabels: Record<string, string> = {
   weight_loss: 'Perdre du poids',
   lose: 'Perdre du poids',
-  maintain: 'Maintenir',
-  maintenance: 'Maintenir',
-  gain: 'Prendre du poids',
-  muscle_gain: 'Prise de muscle',
-  muscle: 'Prise de muscle',
+  muscle_gain: 'Prendre du muscle',
+  muscle: 'Prendre du muscle',
+  gain: 'Prendre du muscle',
   health: 'Améliorer ma santé',
-  energy: 'Plus d\'énergie',
+  // Legacy mappings -> health
+  maintain: 'Améliorer ma santé',
+  maintenance: 'Améliorer ma santé',
+  energy: 'Améliorer ma santé',
 }
 
 const activityLabels: Record<string, string> = {
@@ -110,7 +114,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>()
   const { colors, isDark, toggleTheme } = useTheme()
-  const { profile, nutritionGoals, resetStore, setProfile, updateProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
+  const { profile, nutritionGoals, resetStore, updateProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
   const {
     isEnrolled: isMetabolicEnrolled,
     enroll: enrollMetabolic,
@@ -131,6 +135,9 @@ export default function ProfileScreen() {
     pinnedMethods,
     resetToDefaults: resetMealInputPreferences,
   } = useMealInputPreferencesStore()
+
+  // Get email from auth store (Google login stores email there, not in profile)
+  const { email: authEmail } = useAuthStore()
 
   // Program exclusion rules
   // - Metabolic: disabled if Wellness is active (exclusive program)
@@ -241,9 +248,8 @@ export default function ProfileScreen() {
             style: 'destructive',
             onPress: () => {
               unenrollMetabolic()
-              if (profile) {
-                setProfile({ ...profile, metabolicProgramActive: false })
-              }
+              // Use updateProfile to avoid resetting isOnboarded
+              updateProfile({ metabolicProgramActive: false })
             },
           },
         ]
@@ -258,9 +264,8 @@ export default function ProfileScreen() {
             text: 'Commencer',
             onPress: () => {
               enrollMetabolic()
-              if (profile) {
-                setProfile({ ...profile, metabolicProgramActive: true })
-              }
+              // Use updateProfile to avoid resetting isOnboarded
+              updateProfile({ metabolicProgramActive: true })
             },
           },
         ]
@@ -281,9 +286,8 @@ export default function ProfileScreen() {
             style: 'destructive',
             onPress: () => {
               unenrollWellness()
-              if (profile) {
-                setProfile({ ...profile, wellnessProgramActive: false })
-              }
+              // Use updateProfile to avoid resetting isOnboarded
+              updateProfile({ wellnessProgramActive: false })
             },
           },
         ]
@@ -298,9 +302,8 @@ export default function ProfileScreen() {
             text: 'Commencer',
             onPress: () => {
               enrollWellness()
-              if (profile) {
-                setProfile({ ...profile, wellnessProgramActive: true })
-              }
+              // Use updateProfile to avoid resetting isOnboarded
+              updateProfile({ wellnessProgramActive: true })
             },
           },
         ]
@@ -328,7 +331,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.profileInfo}>
               <Text style={[styles.profileName, { color: colors.text.primary }]}>{userName}</Text>
-              <Text style={[styles.profileEmail, { color: colors.text.tertiary }]}>{profile?.email || 'Aucun email'}</Text>
+              <Text style={[styles.profileEmail, { color: colors.text.tertiary }]}>{profile?.email || authEmail || 'Aucun email'}</Text>
             </View>
             <TouchableOpacity onPress={handleEditProfile} style={[styles.editButton, { backgroundColor: colors.accent.light }]}>
               <Edit3 size={18} color={colors.accent.primary} />
