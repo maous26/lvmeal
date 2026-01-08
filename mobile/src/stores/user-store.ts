@@ -6,6 +6,8 @@ import { LymIABrain, type UserContext } from '../services/lymia-brain'
 
 // Keys of all persisted stores to clear on full reset
 // IMPORTANT: These names MUST match the 'name' property in each store's persist config
+// NOTE: 'lym-onboarding-store' is INTENTIONALLY NOT included here to prevent trial abuse
+//       The signupDate must persist even when user resets data or changes account
 const ALL_STORE_KEYS = [
   'presence-user',          // user-store.ts
   'presence-gamification',
@@ -79,38 +81,37 @@ interface UserState {
   updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void
 }
 
-// Harris-Benedict BMR calculation
+// Mifflin-St Jeor BMR calculation (more accurate than Harris-Benedict)
+// This MUST match the calculation in lymia-brain.ts for consistency
 function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNeeds | null {
   const { weight, height, age, gender, activityLevel, goal } = profile
 
   if (!weight || !height || !age) return null
 
-  // Calculate BMR
+  // Mifflin-St Jeor BMR formula (validated, more accurate than Harris-Benedict)
   let bmr: number
   if (gender === 'female') {
-    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161
   } else {
-    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5
   }
 
-  // Activity multiplier (conservative values to avoid overestimating calorie needs)
-  // Users tend to overestimate their activity level, so we use lower multipliers
-  // to ensure better weight loss results and avoid frustration
+  // Activity multiplier (standard Mifflin-St Jeor / WHO values)
   const activityMultipliers: Record<string, number> = {
     sedentary: 1.2,    // Little or no exercise
-    light: 1.3,        // Light exercise 1-3 days/week (was 1.375)
-    moderate: 1.45,    // Moderate exercise 3-5 days/week (was 1.55)
-    active: 1.6,       // Active 6-7 days/week (was 1.725)
-    athlete: 1.75,     // Athlete/very active (was 1.9)
+    light: 1.375,      // Light exercise 1-3 days/week
+    moderate: 1.55,    // Moderate exercise 3-5 days/week
+    active: 1.725,     // Active 6-7 days/week
+    athlete: 1.9,      // Athlete/very active
   }
-  const tdee = bmr * (activityMultipliers[activityLevel || 'moderate'] || 1.45)
+  const tdee = bmr * (activityMultipliers[activityLevel || 'moderate'] || 1.55)
 
-  // Goal adjustment - Déficit/surplus calorique
+  // Goal adjustment - Déficit/surplus calorique (ANSES recommendations)
   let calories: number
   switch (goal) {
     case 'weight_loss':
-      // Déficit de 400-500 kcal pour perte de poids progressive (~0.5kg/semaine)
-      calories = tdee - 450
+      // Déficit de 400 kcal pour perte de poids progressive (~0.5kg/semaine)
+      calories = tdee - 400
       break
     case 'muscle_gain':
       // Surplus modéré pour prise de masse propre
@@ -119,65 +120,80 @@ function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNe
     default:
       calories = tdee
   }
-  calories = Math.round(calories)
+  // Round to nearest 50 for cleaner display (matches lymia-brain.ts)
+  calories = Math.round(calories / 50) * 50
 
   // ==========================================================================
-  // MACRO DISTRIBUTION - Approche nutritionnelle personnalisée selon objectif
-  // Priorité : Protéines > Lipides > Glucides (complément)
+  // MACRO DISTRIBUTION - Based on g/kg body weight (ISSN + ANSES guidelines)
+  // Using RANGES that adapt to the individual profile
+  // This MUST match the calculation in lymia-brain.ts for consistency
   // ==========================================================================
 
-  let proteins: number
-  let fats: number
-  let carbs: number
-
+  // Protein: g/kg based on goal and activity (ISSN Position Stand)
+  // - Sedentary adult: 0.83 g/kg (ANSES)
+  // - Weight loss (preserve muscle): 1.6-2.4 g/kg (ISSN)
+  // - Muscle gain: 1.6-2.2 g/kg (ISSN)
+  // - Maintenance active: 1.2-1.6 g/kg
+  let proteinPerKg: number
   switch (goal) {
     case 'weight_loss':
-      // PERTE DE POIDS - Priorité à la préservation musculaire
-      // Protéines élevées (2g/kg) pour effet thermique et satiété
-      // Lipides suffisants (0.9g/kg) pour hormones et absorption vitamines
-      // Glucides modérés (plafonnés à 150g) pour favoriser l'utilisation des graisses
-      proteins = Math.round(weight * 2.0)
-      fats = Math.round(weight * 0.9)
-      // Glucides = calories restantes, mais plafonné entre 80g et 150g
-      const remainingCalsLoss = calories - (proteins * 4) - (fats * 9)
-      const rawCarbsLoss = Math.round(remainingCalsLoss / 4)
-      carbs = Math.max(80, Math.min(150, rawCarbsLoss)) // Plancher 80g, plafond 150g
+      // ISSN: 1.6-2.4 g/kg for weight loss
+      if (activityLevel === 'athlete' || activityLevel === 'active') {
+        proteinPerKg = 2.2
+      } else if (activityLevel === 'moderate') {
+        proteinPerKg = 2.0
+      } else {
+        proteinPerKg = 1.8
+      }
       break
-
     case 'muscle_gain':
-      // PRISE DE MASSE - Glucides importants pour l'anabolisme
-      // Protéines élevées (2g/kg) pour synthèse protéique
-      // Lipides modérés (0.8g/kg)
-      // Glucides élevés pour énergie et récupération
-      proteins = Math.round(weight * 2.0)
-      fats = Math.round(weight * 0.8)
-      // Glucides = calories restantes (pas de plafond en prise de masse)
-      const remainingCalsGain = calories - (proteins * 4) - (fats * 9)
-      carbs = Math.max(150, Math.round(remainingCalsGain / 4)) // Minimum 150g
+      // ISSN: 1.6-2.2 g/kg for muscle building
+      if (activityLevel === 'athlete' || activityLevel === 'active') {
+        proteinPerKg = 2.2
+      } else {
+        proteinPerKg = 1.8
+      }
       break
-
     default:
-      // MAINTIEN - Répartition équilibrée
-      // Protéines modérées (1.6g/kg)
-      // Lipides standards (1g/kg)
-      // Glucides = complément
-      proteins = Math.round(weight * 1.6)
-      fats = Math.round(weight * 1.0)
-      const remainingCalsMaintain = calories - (proteins * 4) - (fats * 9)
-      carbs = Math.round(remainingCalsMaintain / 4)
+      // Maintenance: 1.0-1.6 g/kg
+      if (activityLevel === 'athlete' || activityLevel === 'active') {
+        proteinPerKg = 1.6
+      } else if (activityLevel === 'moderate') {
+        proteinPerKg = 1.4
+      } else {
+        proteinPerKg = 1.0
+      }
+  }
+
+  // Fat: g/kg based on goal (ANSES: 35-40% AET, minimum ~0.8g/kg for hormones)
+  let fatPerKg: number
+  switch (goal) {
+    case 'weight_loss':
+      fatPerKg = 0.9
       break
+    case 'muscle_gain':
+      fatPerKg = 0.8
+      break
+    default:
+      fatPerKg = 1.0
   }
 
-  // Sécurité : s'assurer que les macros ne dépassent pas les calories totales
-  const totalMacroCalories = (proteins * 4) + (carbs * 4) + (fats * 9)
-  if (totalMacroCalories > calories * 1.05) {
-    // Ajuster les glucides si dépassement (les glucides sont la variable d'ajustement)
-    const excessCalories = totalMacroCalories - calories
-    carbs = Math.max(50, carbs - Math.round(excessCalories / 4))
-  }
+  // Calculate macros
+  const proteins = Math.round(weight * proteinPerKg)
+  const fats = Math.round(weight * fatPerKg)
 
-  console.log('[NutritionalNeeds] Calculated for goal:', goal, {
+  // Carbs: remaining calories (variable d'ajustement)
+  const proteinCalories = proteins * 4
+  const fatCalories = fats * 9
+  const remainingForCarbs = calories - proteinCalories - fatCalories
+  const carbs = Math.max(80, Math.round(remainingForCarbs / 4)) // Minimum 80g for brain
+
+  console.log('[NutritionalNeeds] Calculated (ISSN/ANSES g/kg):', {
+    goal,
+    activityLevel,
     calories,
+    proteinPerKg,
+    fatPerKg,
     proteins: `${proteins}g (${Math.round(proteins * 4 / calories * 100)}%)`,
     fats: `${fats}g (${Math.round(fats * 9 / calories * 100)}%)`,
     carbs: `${carbs}g (${Math.round(carbs * 4 / calories * 100)}%)`,
@@ -339,7 +355,9 @@ export const useUserStore = create<UserState>()(
         }
 
         try {
+          console.log('[UserStore] Calling LymIABrain.calculatePersonalizedNeeds...')
           const result = await LymIABrain.calculatePersonalizedNeeds(context)
+          console.log('[UserStore] LymIABrain result:', JSON.stringify(result))
 
           const goals: NutritionGoals = {
             calories: result.calories,
@@ -354,17 +372,20 @@ export const useUserStore = create<UserState>()(
             lastRAGUpdate: new Date().toISOString(),
           })
 
+          console.log('[UserStore] ✅ Goals updated from RAG:', goals)
           return goals
         } catch (error) {
-          console.error('RAG calculation failed, using fallback:', error)
+          console.error('[UserStore] RAG calculation failed, using fallback:', error)
           // Fallback to Harris-Benedict
           const needs = calculateNutritionalNeeds(profile)
-          return needs ? {
+          const fallbackGoals = needs ? {
             calories: needs.calories,
             proteins: needs.proteins,
             carbs: needs.carbs,
             fats: needs.fats,
           } : null
+          console.log('[UserStore] Fallback goals:', fallbackGoals)
+          return fallbackGoals
         }
       },
 
@@ -446,15 +467,38 @@ export const useUserStore = create<UserState>()(
         console.log('[UserStore] Hydrated, profile:', JSON.stringify(state?.profile)?.substring(0, 200))
         console.log('[UserStore] Hydrated, nutritionGoals:', JSON.stringify(state?.nutritionGoals))
 
-        // Auto-recalculate nutrition goals on hydration to apply formula updates
-        // Use multiple timeouts to catch late profile loading
+        // ONE-TIME FIX: Goals were calculated with wrong formula or AI returned incorrect values.
+        // Force recalculation using the deterministic Mifflin-St Jeor formula.
+        // For a male, 95kg, 185cm, 50yo, moderate activity, weight_loss goal:
+        // Expected: BMR ~1861, TDEE ~2885, -400 = ~2450-2500 kcal
+        // If we see < 2300 kcal, the calculation was wrong and needs fixing.
+        // TODO: Remove this block after 2025-01-15
+        if (state?.nutritionGoals && state?.profile && state.nutritionGoals.calories < 2300) {
+          console.log('[UserStore] 🔄 ONE-TIME FIX: Goals seem incorrect, recalculating with Mifflin-St Jeor...')
+          console.log('[UserStore] Current goals:', state.nutritionGoals)
+          setTimeout(() => {
+            const store = useUserStore.getState()
+            if (store.profile) {
+              store.recalculateNutritionGoals()
+              console.log('[UserStore] ✅ Recalculation complete, new goals:', store.nutritionGoals)
+            }
+          }, 500)
+          return
+        }
+
+        if (state?.nutritionGoals) {
+          console.log('[UserStore] ✅ nutritionGoals already exist, preserving them')
+          return
+        }
+
+        // Only recalculate if no goals exist
         const tryRecalculate = (attempt: number) => {
           const store = useUserStore.getState()
           console.log(`[UserStore] Recalc attempt ${attempt}, profile exists:`, !!store.profile)
-          if (store.profile) {
-            console.log('[UserStore] 🔄 Recalculating nutrition goals...')
+          if (store.profile && !store.nutritionGoals) {
+            console.log('[UserStore] 🔄 No nutritionGoals found, calculating initial goals...')
             store.recalculateNutritionGoals()
-          } else if (attempt < 3) {
+          } else if (attempt < 3 && !store.nutritionGoals) {
             setTimeout(() => tryRecalculate(attempt + 1), 1000)
           }
         }

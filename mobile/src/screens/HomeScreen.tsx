@@ -213,6 +213,14 @@ export default function HomeScreen() {
     day: number
   } | null>(null)
 
+  // Ensure currentDate is today when HomeScreen mounts
+  useEffect(() => {
+    const today = getDateKey()
+    if (currentDate !== today) {
+      setCurrentDate(today)
+    }
+  }, [])
+
   useEffect(() => {
     checkAndUpdateStreak()
     initializeWeek()
@@ -260,21 +268,17 @@ export default function HomeScreen() {
   const totals = todayData.totalNutrition
 
   // Use nutritionGoals if available, otherwise calculate from profile, or use sensible defaults
+  // IMPORTANT: Never call recalculateNutritionGoals() here - it would overwrite custom goals
   const getBaseGoals = () => {
     if (nutritionGoals) return nutritionGoals
 
-    // Try to calculate from profile if available
+    // Fallback: calculate temporary defaults from profile (without persisting)
     if (profile?.weight && profile?.height && profile?.age) {
-      const { recalculateNutritionGoals } = useUserStore.getState()
-      recalculateNutritionGoals()
-      // Return temporary defaults while recalculating (cohérent avec la nouvelle formule)
       const weight = profile.weight
       const isWeightLoss = profile.goal === 'weight_loss'
       const isMuscleGain = profile.goal === 'muscle_gain'
-      // Formule cohérente avec user-store.ts
       const proteins = Math.round(weight * (isWeightLoss || isMuscleGain ? 2 : 1.6))
       const fats = Math.round(weight * (isWeightLoss ? 0.9 : isMuscleGain ? 0.8 : 1))
-      // Glucides plafonnés à 150g pour weight_loss
       const carbs = isWeightLoss ? 150 : isMuscleGain ? 200 : 180
       return {
         calories: isWeightLoss ? 1800 : isMuscleGain ? 2500 : 2000,

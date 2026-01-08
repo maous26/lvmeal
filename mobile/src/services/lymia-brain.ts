@@ -266,7 +266,10 @@ async function executeAICall(
 
 /**
  * Calculate personalized calorie and macro needs
- * Uses RAG + DSPy to adapt to user's metabolism, history, and goals
+ *
+ * IMPORTANT: Uses DETERMINISTIC formulas (Mifflin-St Jeor + ANSES macro ratios) as the base.
+ * The AI is only used for contextual adjustments and reasoning, NOT for deciding base calories.
+ * This ensures consistent, reproducible results.
  *
  * Sources prioritaires: ANSES, EFSA, OMS pour les recommandations macros
  */
@@ -275,209 +278,172 @@ export async function calculatePersonalizedNeeds(
 ): Promise<CalorieRecommendation> {
   const { profile, weeklyAverage, wellnessData, programProgress } = context
 
-  // Query RAG for ANSES macro distribution recommendations
-  const macroQuery = `répartition macronutriments ${profile.goal} proteines glucides lipides ANSES recommandations adulte`
-  const calorieQuery = `besoins énergétiques ${profile.activityLevel} ${profile.gender} ANSES EFSA`
+  // ==========================================================================
+  // STEP 1: DETERMINISTIC BASE CALCULATION (Mifflin-St Jeor + ANSES)
+  // This is the scientific foundation - AI cannot change these base values
+  // ==========================================================================
 
-  // Use DSPy to rewrite queries if available
-  let searchQueries = [macroQuery, calorieQuery]
-  const dspyEnabled = await isDSPyEnabled()
+  // Mifflin-St Jeor BMR calculation (more accurate than Harris-Benedict)
+  const bmr = profile.gender === 'female'
+    ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
+    : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
 
-  if (dspyEnabled) {
-    const rewritten = await hookRewriteQuery(
-      `Quels sont les besoins caloriques et la répartition des macronutriments pour une personne ${profile.gender} de ${profile.age} ans, ${profile.weight}kg, activité ${profile.activityLevel}, objectif ${profile.goal}?`,
-      profile
-    )
-    if (rewritten?.queries && rewritten.queries.length > 0) {
-      searchQueries = rewritten.queries
-    }
+  // Standard activity multipliers (Mifflin-St Jeor / WHO)
+  const activityMultipliers: Record<string, number> = {
+    sedentary: 1.2,    // Little or no exercise
+    light: 1.375,      // Light exercise 1-3 days/week
+    moderate: 1.55,    // Moderate exercise 3-5 days/week
+    active: 1.725,     // Active 6-7 days/week
+    athlete: 1.9,      // Athlete/very active
+  }
+  const tdee = bmr * (activityMultipliers[profile.activityLevel] || 1.55)
+
+  // Goal adjustment - ANSES recommends 300-500 kcal deficit for sustainable weight loss
+  let baseCalories = tdee
+  if (profile.goal === 'weight_loss') baseCalories -= 400
+  if (profile.goal === 'muscle_gain') baseCalories += 300
+
+  // Round to nearest 50 for cleaner display
+  baseCalories = Math.round(baseCalories / 50) * 50
+
+  // ==========================================================================
+  // MACRO CALCULATION - Based on g/kg body weight (ISSN + ANSES guidelines)
+  // Using RANGES that adapt to the individual profile
+  // ==========================================================================
+
+  const weight = profile.weight
+
+  // Protein: g/kg based on goal and activity (ISSN Position Stand)
+  // - Sedentary adult: 0.83 g/kg (ANSES)
+  // - Weight loss (preserve muscle): 1.6-2.4 g/kg (ISSN)
+  // - Muscle gain: 1.6-2.2 g/kg (ISSN)
+  // - Maintenance active: 1.2-1.6 g/kg
+  let proteinPerKg: number
+  switch (profile.goal) {
+    case 'weight_loss':
+      // ISSN: 1.6-2.4 g/kg for weight loss
+      // Higher end for more active individuals
+      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
+        proteinPerKg = 2.2 // Upper range for very active
+      } else if (profile.activityLevel === 'moderate') {
+        proteinPerKg = 2.0 // Mid-high range
+      } else {
+        proteinPerKg = 1.8 // Lower end for sedentary
+      }
+      break
+    case 'muscle_gain':
+      // ISSN: 1.6-2.2 g/kg for muscle building
+      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
+        proteinPerKg = 2.2
+      } else {
+        proteinPerKg = 1.8
+      }
+      break
+    default: // maintain
+      // Active maintenance: 1.2-1.6 g/kg
+      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
+        proteinPerKg = 1.6
+      } else if (profile.activityLevel === 'moderate') {
+        proteinPerKg = 1.4
+      } else {
+        proteinPerKg = 1.0 // ANSES minimum for sedentary
+      }
   }
 
-  // Query knowledge base with optimized queries
-  const kbResults = await Promise.all(
-    searchQueries.map(q => queryKB(q, ['nutrition', 'metabolism', 'guidelines']))
-  )
-  const kbEntries = kbResults.flat()
-
-  const kbContext = buildKBContext(kbEntries)
-
-  // Build prompt with all context
-  const prompt = `Tu es LymIA, expert en nutrition basé sur les recommandations ANSES/EFSA. Calcule les besoins nutritionnels optimaux.
-
-PROFIL UTILISATEUR:
-- Age: ${profile.age} ans
-- Sexe: ${profile.gender}
-- Poids: ${profile.weight} kg
-- Taille: ${profile.height} cm
-- Niveau d'activité: ${profile.activityLevel}
-- Objectif: ${profile.goal}
-- Régime: ${profile.dietType || 'omnivore'}
-${profile.metabolismProfile === 'adaptive' ? '- ATTENTION: Métabolisme adaptatif détecté (historique de régimes)' : ''}
-${profile.metabolismFactors?.restrictiveDietsHistory ? '- Historique de régimes restrictifs' : ''}
-
-DONNÉES RÉCENTES:
-- Moyenne hebdomadaire: ${weeklyAverage.calories} kcal/jour
-- Sommeil: ${wellnessData.sleepHours || 'non renseigné'} h
-- Stress: ${wellnessData.stressLevel || 'non renseigné'}/10
-- Énergie: ${wellnessData.energyLevel || 'non renseigné'}/5
-${programProgress ? `- Programme en cours: ${programProgress.type} Phase ${programProgress.phase} (${Math.round(programProgress.completionRate * 100)}% complété)` : ''}
-
-RECOMMANDATIONS ANSES (références):
-- Protéines: 0.83g/kg minimum, 1.2-2.0g/kg si sportif ou perte de poids
-- Glucides: 40-55% des AET (Apports Énergétiques Totaux)
-- Lipides: 35-40% des AET (dont <12% acides gras saturés)
-- Fibres: 30g/jour minimum
-
-CONNAISSANCES RAG:
-${kbContext || 'Utiliser les recommandations ANSES ci-dessus'}
-
-INSTRUCTIONS:
-1. Calcule le MB (métabolisme de base) avec Mifflin-St Jeor
-2. Applique le multiplicateur d'activité (NAP)
-3. ADAPTE la répartition des macros selon:
-   - Objectif perte de poids: protéines 25-30% (1.6-2.0g/kg), glucides 40%, lipides 30-35%
-   - Objectif muscle: protéines 25-30% (1.8-2.2g/kg), glucides 45-50%, lipides 25-30%
-   - Maintien: protéines 15-20% (1.0-1.2g/kg), glucides 50-55%, lipides 30-35%
-4. Si métabolisme adaptatif: déficit MAX 200 kcal, protéines élevées
-5. Si stress/sommeil insuffisant: augmenter protéines de 10%
-
-Réponds en JSON:
-{
-  "calories": number,
-  "proteins": number,
-  "carbs": number,
-  "fats": number,
-  "proteinRatio": number (% des AET),
-  "carbsRatio": number (% des AET),
-  "fatsRatio": number (% des AET),
-  "reasoning": "explication basée sur ANSES en 2-3 phrases",
-  "adjustmentReason": "si ajustement, expliquer pourquoi avec source scientifique"
-}`
-
-  try {
-    // Try DSPy enhanced RAG if available for grounded response
-    if (dspyEnabled && kbEntries.length > 0) {
-      const dspyResult = await runEnhancedRAG(
-        prompt,
-        kbEntries,
-        profile
-      )
-
-      if (dspyResult && dspyResult.confidence > 0.7) {
-        // Parse JSON from DSPy answer
-        const jsonMatch = dspyResult.answer.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const result = JSON.parse(jsonMatch[0])
-          // Get sources from kb entries that were selected
-          const selectedSources = kbEntries
-            .filter(e => dspyResult.selected_passage_ids.includes(e.id))
-            .map(e => ({
-              content: e.content.slice(0, 100),
-              source: e.source,
-              relevance: 0.9,
-            }))
-
-          return {
-            calories: result.calories || 2000,
-            proteins: result.proteins || 100,
-            carbs: result.carbs || 250,
-            fats: result.fats || 67,
-            decision: `${result.calories} kcal/jour (DSPy verified)`,
-            reasoning: result.reasoning || dspyResult.answer,
-            adjustmentReason: result.adjustmentReason,
-            confidence: dspyResult.is_grounded ? 0.95 : 0.85,
-            sources: selectedSources,
-          }
-        }
-      }
-    }
-
-    // Fallback to standard AI call
-    const aiResponse = await executeAICall(
-      'coach_insight',
-      [{ role: 'user', content: prompt }],
-      {
-        temperature: 0.3,
-        responseFormat: { type: 'json_object' },
-        context: { goal: profile.goal, weight: profile.weight, activityLevel: profile.activityLevel },
-      }
-    )
-
-    if (!aiResponse) {
-      throw new Error('Rate limit atteint')
-    }
-
-    const result = JSON.parse(aiResponse.content || '{}')
-
-    return {
-      calories: result.calories || 2000,
-      proteins: result.proteins || 100,
-      carbs: result.carbs || 250,
-      fats: result.fats || 67,
-      decision: `${result.calories} kcal/jour`,
-      reasoning: result.reasoning || 'Calcul basé sur les recommandations ANSES',
-      adjustmentReason: result.adjustmentReason,
-      confidence: kbEntries.length > 0 ? 0.9 : 0.75,
-      sources: kbEntries.map(e => ({
-        content: e.content.slice(0, 100),
-        source: e.source,
-        relevance: 0.8,
-      })),
-    }
-  } catch (error) {
-    console.error('LymIA Brain calorie calculation error:', error)
-
-    // Fallback to ANSES-based Mifflin-St Jeor calculation
-    const bmr = profile.gender === 'female'
-      ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
-      : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
-
-    // Conservative multipliers to avoid overestimating calorie needs
-    const multipliers: Record<string, number> = {
-      sedentary: 1.2, light: 1.3, moderate: 1.45, active: 1.6, athlete: 1.75
-    }
-    const tdee = bmr * (multipliers[profile.activityLevel] || 1.45)
-
-    let calories = tdee
-    // ANSES: déficit modéré de 300-500 kcal pour perte de poids durable
-    if (profile.goal === 'weight_loss') calories -= 400
-    if (profile.goal === 'muscle_gain') calories += 300
-
-    // ANSES macro ratios based on goal
-    let proteinRatio: number, carbsRatio: number, fatsRatio: number
-    switch (profile.goal) {
-      case 'weight_loss':
-        // ANSES: protéines élevées pour préserver masse musculaire
-        proteinRatio = 0.27 // 27% des AET
-        fatsRatio = 0.33   // 33% des AET
-        carbsRatio = 0.40  // 40% des AET
-        break
-      case 'muscle_gain':
-        proteinRatio = 0.28 // 28% des AET
-        carbsRatio = 0.47  // 47% des AET
-        fatsRatio = 0.25   // 25% des AET
-        break
-      default: // maintain
-        proteinRatio = 0.18 // 18% des AET
-        carbsRatio = 0.52  // 52% des AET
-        fatsRatio = 0.30   // 30% des AET
-    }
-
-    const proteins = Math.round((calories * proteinRatio) / 4)
-    const carbs = Math.round((calories * carbsRatio) / 4)
-    const fats = Math.round((calories * fatsRatio) / 9)
-
-    return {
-      calories: Math.round(calories),
-      proteins,
-      carbs,
-      fats,
-      decision: `${Math.round(calories)} kcal/jour (ANSES fallback)`,
-      reasoning: `Calcul Mifflin-St Jeor avec répartition ANSES: ${Math.round(proteinRatio * 100)}% protéines, ${Math.round(carbsRatio * 100)}% glucides, ${Math.round(fatsRatio * 100)}% lipides`,
-      confidence: 0.7,
-      sources: [{ content: 'Recommandations ANSES 2021', source: 'anses', relevance: 1.0 }],
-    }
+  // Fat: g/kg based on goal (ANSES: 35-40% AET, minimum ~0.8g/kg for hormones)
+  let fatPerKg: number
+  switch (profile.goal) {
+    case 'weight_loss':
+      fatPerKg = 0.9 // Sufficient for hormones, not excessive
+      break
+    case 'muscle_gain':
+      fatPerKg = 0.8 // Lower to leave room for carbs
+      break
+    default:
+      fatPerKg = 1.0 // Standard maintenance
   }
+
+  // Calculate macros in grams
+  const baseProteins = Math.round(weight * proteinPerKg)
+  const baseFats = Math.round(weight * fatPerKg)
+
+  // Carbs: remaining calories after protein and fat (variable d'ajustement)
+  // Protein = 4 kcal/g, Fat = 9 kcal/g, Carbs = 4 kcal/g
+  const proteinCalories = baseProteins * 4
+  const fatCalories = baseFats * 9
+  const remainingForCarbs = baseCalories - proteinCalories - fatCalories
+  const baseCarbs = Math.max(80, Math.round(remainingForCarbs / 4)) // Minimum 80g for brain function
+
+  console.log('[LymIABrain] Base calculation (Mifflin-St Jeor + ISSN/ANSES g/kg):', {
+    bmr: Math.round(bmr),
+    tdee: Math.round(tdee),
+    baseCalories,
+    goal: profile.goal,
+    activityLevel: profile.activityLevel,
+    weight,
+    proteinPerKg,
+    fatPerKg,
+    proteins: baseProteins,
+    carbs: baseCarbs,
+    fats: baseFats,
+  })
+
+  // ==========================================================================
+  // STEP 2: CONTEXTUAL ADJUSTMENTS (optional, based on wellness data)
+  // These are small adjustments based on specific conditions
+  // ==========================================================================
+
+  let adjustedCalories = baseCalories
+  let adjustedProteins = baseProteins
+  let adjustmentReasons: string[] = []
+
+  // Adaptive metabolism: reduce deficit to prevent metabolic adaptation
+  if (profile.metabolismProfile === 'adaptive' || profile.metabolismFactors?.restrictiveDietsHistory) {
+    if (profile.goal === 'weight_loss') {
+      // Only 200 kcal deficit instead of 400 for adaptive metabolism
+      adjustedCalories = Math.round(tdee - 200)
+      adjustedCalories = Math.round(adjustedCalories / 50) * 50
+      adjustmentReasons.push('Déficit réduit (200 kcal) pour métabolisme adaptatif')
+    }
+    // Increase protein for adaptive metabolism
+    adjustedProteins = Math.round(adjustedProteins * 1.1)
+    adjustmentReasons.push('Protéines +10% pour préservation musculaire')
+  }
+
+  // Stress/sleep adjustment: increase protein when stressed or sleep-deprived
+  if (wellnessData.stressLevel && wellnessData.stressLevel >= 7) {
+    adjustedProteins = Math.round(adjustedProteins * 1.05)
+    adjustmentReasons.push('Stress élevé: protéines +5%')
+  }
+  if (wellnessData.sleepHours && wellnessData.sleepHours < 6) {
+    adjustedProteins = Math.round(adjustedProteins * 1.05)
+    adjustmentReasons.push('Sommeil insuffisant: protéines +5%')
+  }
+
+  // Recalculate carbs to maintain calorie balance after protein adjustment
+  const adjustedProteinCalories = adjustedProteins * 4
+  const adjustedFatCalories = baseFats * 9
+  const remainingCalories = adjustedCalories - adjustedProteinCalories - adjustedFatCalories
+  const adjustedCarbs = Math.max(80, Math.round(remainingCalories / 4)) // Minimum 80g carbs
+
+  const finalResult: CalorieRecommendation = {
+    calories: adjustedCalories,
+    proteins: adjustedProteins,
+    carbs: adjustedCarbs,
+    fats: baseFats,
+    decision: `${adjustedCalories} kcal/jour`,
+    reasoning: `Calcul Mifflin-St Jeor (BMR: ${Math.round(bmr)} kcal) × NAP ${activityMultipliers[profile.activityLevel] || 1.55} = TDEE ${Math.round(tdee)} kcal. ` +
+      (profile.goal === 'weight_loss' ? 'Déficit -400 kcal pour perte progressive. ' : '') +
+      (profile.goal === 'muscle_gain' ? 'Surplus +300 kcal pour prise de masse. ' : '') +
+      `Protéines: ${proteinPerKg}g/kg (ISSN). Lipides: ${fatPerKg}g/kg. Glucides: ajustés.`,
+    adjustmentReason: adjustmentReasons.length > 0 ? adjustmentReasons.join('. ') : undefined,
+    confidence: 0.95, // High confidence because we use validated formulas
+    sources: [{ content: 'ISSN Position Stand 2017 + ANSES 2021 + Mifflin-St Jeor', source: 'issn', relevance: 1.0 }],
+  }
+
+  console.log('[LymIABrain] Final result:', finalResult)
+
+  return finalResult
 }
 
 /**
