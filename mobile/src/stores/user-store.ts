@@ -9,18 +9,24 @@ import { LymIABrain, type UserContext } from '../services/lymia-brain'
 // NOTE: 'lym-onboarding-store' is INTENTIONALLY NOT included here to prevent trial abuse
 //       The signupDate must persist even when user resets data or changes account
 const ALL_STORE_KEYS = [
-  'presence-user',          // user-store.ts
-  'presence-gamification',
-  'presence-caloric-bank',
-  'presence-meals-storage', // meals-store.ts
-  'lym-message-center',
-  'presence-wellness',
-  'presence-coach-store',
-  'presence-meditation',
-  'presence-metabolic-boost',
-  'presence-wellness-program',
-  'presence-sport-program',
-  'presence-meal-plan',     // meal-plan-store.ts
+  'presence-user',              // user-store.ts
+  'presence-gamification-v4',   // gamification-store.ts (CORRECTED - was missing -v4)
+  'presence-caloric-bank',      // caloric-bank-store.ts
+  'presence-meals-storage',     // meals-store.ts
+  'lym-message-center',         // (legacy)
+  'presence-wellness',          // wellness-store.ts
+  'coach-storage',              // coach-store.ts (CORRECTED - was presence-coach-store)
+  'meditation-storage',         // meditation-store.ts (CORRECTED - was presence-meditation)
+  'metabolic-boost-storage',    // metabolic-boost-store.ts (CORRECTED - was presence-metabolic-boost)
+  'wellness-program-storage',   // wellness-program-store.ts (CORRECTED - was presence-wellness-program)
+  'presence-sport-program',     // sport-program-store.ts
+  'presence-meal-plan',         // meal-plan-store.ts
+  'presence-recipes',           // recipes-store.ts (ADDED)
+  'presence-custom-recipes',    // custom-recipes-store.ts (ADDED)
+  'gustar-recipes-storage',     // gustar-store.ts (ADDED)
+  'lymia-chat-storage',         // chat-store.ts (ADDED)
+  'meal-input-preferences',     // meal-input-preferences-store.ts (ADDED)
+  'presence-devices',           // devices-store.ts (ADDED)
 ]
 
 interface NutritionGoals {

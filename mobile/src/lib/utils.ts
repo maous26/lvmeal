@@ -1,7 +1,7 @@
 // Utility functions for Presence Mobile App
 
 export function formatNumber(num: number): string {
-  return num.toLocaleString('fr-FR')
+  return Math.round(num).toLocaleString('fr-FR')
 }
 
 export function formatDate(date: Date | string): string {

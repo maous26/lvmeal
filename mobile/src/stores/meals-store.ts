@@ -43,10 +43,10 @@ const createEmptyDailyData = (date: string): DailyData => ({
 const calculateMealNutrition = (items: MealItem[]): NutritionInfo => {
   return items.reduce(
     (acc, item) => ({
-      calories: acc.calories + Math.round(item.food.nutrition.calories * item.quantity),
-      proteins: acc.proteins + Math.round(item.food.nutrition.proteins * item.quantity),
-      carbs: acc.carbs + Math.round(item.food.nutrition.carbs * item.quantity),
-      fats: acc.fats + Math.round(item.food.nutrition.fats * item.quantity),
+      calories: acc.calories + item.food.nutrition.calories * item.quantity,
+      proteins: acc.proteins + item.food.nutrition.proteins * item.quantity,
+      carbs: acc.carbs + item.food.nutrition.carbs * item.quantity,
+      fats: acc.fats + item.food.nutrition.fats * item.quantity,
     }),
     { calories: 0, proteins: 0, carbs: 0, fats: 0 }
   )

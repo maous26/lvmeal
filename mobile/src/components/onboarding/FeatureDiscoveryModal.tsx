@@ -17,7 +17,6 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { X } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -76,14 +75,9 @@ export default function FeatureDiscoveryModal({
 
           {/* Icon */}
           <View style={styles.iconContainer}>
-            <LinearGradient
-              colors={[colors.accent.primary, colors.secondary.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconGradient}
-            >
+            <View style={[styles.iconBackground, { backgroundColor: colors.accent.light }]}>
               <Text style={styles.icon}>{icon}</Text>
-            </LinearGradient>
+            </View>
           </View>
 
           {/* Title */}
@@ -98,18 +92,11 @@ export default function FeatureDiscoveryModal({
 
           {/* CTA Button */}
           <TouchableOpacity
-            style={styles.ctaButton}
+            style={[styles.ctaButton, { backgroundColor: colors.accent.primary }]}
             onPress={handleClose}
             activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={[colors.accent.primary, colors.secondary.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.ctaGradient}
-            >
-              <Text style={styles.ctaText}>C'est parti !</Text>
-            </LinearGradient>
+            <Text style={styles.ctaText}>C'est parti !</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -158,7 +145,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 24,
   },
-  iconGradient: {
+  iconBackground: {
     width: 80,
     height: 80,
     borderRadius: 24,
@@ -182,8 +169,6 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
-  },
-  ctaGradient: {
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',

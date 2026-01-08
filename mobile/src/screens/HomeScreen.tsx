@@ -588,7 +588,7 @@ export default function HomeScreen() {
                                 {item.food.name}
                               </Text>
                               <Text style={[styles.foodCalories, { color: colors.text.tertiary }]}>
-                                {Math.round(item.food.nutrition.calories * item.quantity)} kcal
+                                {formatNumber(item.food.nutrition.calories * item.quantity)} kcal
                               </Text>
                             </View>
                             <TouchableOpacity
