@@ -178,29 +178,71 @@ function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNe
       fatPerKg = 1.0
   }
 
-  // Calculate macros
-  const proteins = Math.round(weight * proteinPerKg)
+  // Calculate base macros
+  let proteins = Math.round(weight * proteinPerKg)
   const fats = Math.round(weight * fatPerKg)
+
+  // ==========================================================================
+  // LIFESTYLE HABITS ADJUSTMENTS (from onboarding data)
+  // These baseline adjustments reflect the user's typical lifestyle
+  // This MUST match the calculation in lymia-brain.ts for consistency
+  // ==========================================================================
+
+  let adjustedCalories = calories
+  const adjustmentReasons: string[] = []
+
+  // Adaptive metabolism: reduce deficit
+  if (profile.metabolismProfile === 'adaptive' || profile.metabolismFactors?.restrictiveDietsHistory) {
+    if (goal === 'weight_loss') {
+      adjustedCalories = Math.round((tdee - 200) / 50) * 50
+      adjustmentReasons.push('Métabolisme adaptatif: déficit réduit')
+    }
+    proteins = Math.round(proteins * 1.1)
+    adjustmentReasons.push('Protéines +10%')
+  }
+
+  // Baseline stress from onboarding (stressLevelDaily)
+  const baselineStress = profile.lifestyleHabits?.stressLevelDaily
+  if (baselineStress === 'high' || baselineStress === 'very_high') {
+    proteins = Math.round(proteins * 1.05)
+    adjustmentReasons.push('Stress quotidien élevé: protéines +5%')
+  }
+
+  // Baseline sleep quality from onboarding (sleepQualityPerception)
+  const baselineSleepQuality = profile.lifestyleHabits?.sleepQualityPerception
+  if (baselineSleepQuality === 'poor' && goal === 'weight_loss') {
+    adjustedCalories += 100
+    adjustmentReasons.push('Sommeil difficile: déficit réduit')
+  }
+
+  // Baseline sleep hours from onboarding (averageSleepHours)
+  const baselineSleepHours = profile.lifestyleHabits?.averageSleepHours
+  if (baselineSleepHours && baselineSleepHours < 6) {
+    proteins = Math.round(proteins * 1.05)
+    adjustmentReasons.push('Sommeil court: protéines +5%')
+  }
 
   // Carbs: remaining calories (variable d'ajustement)
   const proteinCalories = proteins * 4
   const fatCalories = fats * 9
-  const remainingForCarbs = calories - proteinCalories - fatCalories
+  const remainingForCarbs = adjustedCalories - proteinCalories - fatCalories
   const carbs = Math.max(80, Math.round(remainingForCarbs / 4)) // Minimum 80g for brain
 
   console.log('[NutritionalNeeds] Calculated (ISSN/ANSES g/kg):', {
     goal,
     activityLevel,
-    calories,
+    baseCalories: calories,
+    adjustedCalories,
     proteinPerKg,
     fatPerKg,
-    proteins: `${proteins}g (${Math.round(proteins * 4 / calories * 100)}%)`,
-    fats: `${fats}g (${Math.round(fats * 9 / calories * 100)}%)`,
-    carbs: `${carbs}g (${Math.round(carbs * 4 / calories * 100)}%)`,
+    proteins: `${proteins}g (${Math.round(proteins * 4 / adjustedCalories * 100)}%)`,
+    fats: `${fats}g (${Math.round(fats * 9 / adjustedCalories * 100)}%)`,
+    carbs: `${carbs}g (${Math.round(carbs * 4 / adjustedCalories * 100)}%)`,
+    adjustments: adjustmentReasons,
   })
 
   return {
-    calories,
+    calories: adjustedCalories,
     proteins,
     carbs,
     fats,

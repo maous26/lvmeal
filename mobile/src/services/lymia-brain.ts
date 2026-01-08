@@ -410,14 +410,54 @@ export async function calculatePersonalizedNeeds(
     adjustmentReasons.push('Protéines +10% pour préservation musculaire')
   }
 
-  // Stress/sleep adjustment: increase protein when stressed or sleep-deprived
-  if (wellnessData.stressLevel && wellnessData.stressLevel >= 7) {
+  // ==========================================================================
+  // LIFESTYLE HABITS ADJUSTMENTS (from onboarding data)
+  // These baseline adjustments reflect the user's typical lifestyle
+  // ==========================================================================
+
+  // Baseline stress from onboarding (stressLevelDaily)
+  const baselineStress = profile.lifestyleHabits?.stressLevelDaily
+  if (baselineStress === 'high' || baselineStress === 'very_high') {
     adjustedProteins = Math.round(adjustedProteins * 1.05)
-    adjustmentReasons.push('Stress élevé: protéines +5%')
+    adjustmentReasons.push('Stress quotidien élevé: protéines +5%')
   }
-  if (wellnessData.sleepHours && wellnessData.sleepHours < 6) {
+
+  // Baseline sleep quality from onboarding (sleepQualityPerception)
+  const baselineSleepQuality = profile.lifestyleHabits?.sleepQualityPerception
+  if (baselineSleepQuality === 'poor' && profile.goal === 'weight_loss') {
+    // Reduce deficit when sleep is chronically poor (cortisol impacts fat loss)
+    adjustedCalories += 100
+    adjustmentReasons.push('Sommeil difficile: déficit réduit de 100 kcal')
+  }
+
+  // Baseline sleep hours from onboarding (averageSleepHours)
+  const baselineSleepHours = profile.lifestyleHabits?.averageSleepHours
+  if (baselineSleepHours && baselineSleepHours < 6) {
     adjustedProteins = Math.round(adjustedProteins * 1.05)
-    adjustmentReasons.push('Sommeil insuffisant: protéines +5%')
+    adjustmentReasons.push('Sommeil court (<6h): protéines +5%')
+  }
+
+  // ==========================================================================
+  // DAILY WELLNESS ADJUSTMENTS (from today's check-in, if available)
+  // These are real-time adjustments based on current state
+  // ==========================================================================
+
+  // Today's stress level (from wellness check-in, scale 1-10)
+  if (wellnessData.stressLevel && wellnessData.stressLevel >= 7) {
+    // Only add if not already adjusted for baseline stress
+    if (baselineStress !== 'high' && baselineStress !== 'very_high') {
+      adjustedProteins = Math.round(adjustedProteins * 1.05)
+      adjustmentReasons.push('Stress élevé aujourd\'hui: protéines +5%')
+    }
+  }
+
+  // Today's sleep (from wellness check-in)
+  if (wellnessData.sleepHours && wellnessData.sleepHours < 6) {
+    // Only add if not already adjusted for baseline sleep
+    if (!baselineSleepHours || baselineSleepHours >= 6) {
+      adjustedProteins = Math.round(adjustedProteins * 1.05)
+      adjustmentReasons.push('Nuit courte: protéines +5%')
+    }
   }
 
   // Recalculate carbs to maintain calorie balance after protein adjustment
