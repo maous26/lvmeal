@@ -103,8 +103,8 @@ export const LiquidProgress = ({ value, max, size = 260, strokeWidth = 18 }: Liq
                 <Defs>
                     <LinearGradient id="organicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                         <Stop offset="0%" stopColor={colors.accent.primary} />
-                        <Stop offset="50%" stopColor={colors.accent.muted} />
-                        <Stop offset="100%" stopColor={colors.secondary.primary} />
+                        <Stop offset="50%" stopColor={colors.accent.secondary} />
+                        <Stop offset="100%" stopColor={colors.accent.muted} />
                     </LinearGradient>
 
                     <Filter id="glow" x="-20%" y="-20%" width="140%" height="140%">

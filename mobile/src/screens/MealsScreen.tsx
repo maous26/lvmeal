@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -168,6 +168,14 @@ export default function MealsScreen() {
   // Templates modal state
   const [showTemplates, setShowTemplates] = useState(false)
   const [selectedTemplateType, setSelectedTemplateType] = useState<MealType | null>(null)
+
+  // Reset to today's date when screen mounts
+  useEffect(() => {
+    const today = getDateKey()
+    if (currentDate !== today) {
+      setCurrentDate(today)
+    }
+  }, [])
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition

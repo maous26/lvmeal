@@ -382,7 +382,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <LinearGradient
-              colors={[colors.accent.primary, colors.secondary.primary]}
+              colors={[colors.accent.primary, colors.accent.secondary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.avatarGradient}

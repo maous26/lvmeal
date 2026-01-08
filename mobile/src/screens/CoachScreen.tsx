@@ -438,7 +438,7 @@ export default function CoachScreen() {
             <Sparkles size={48} color={colors.text.tertiary} />
             <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Tout va bien !</Text>
             <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
-              Continue à tracker tes repas pour recevoir des conseils personnalisés de LymIA.
+              Continue à tracker tes repas pour recevoir des conseils personnalisés de LYM.
             </Text>
           </View>
         ) : (

@@ -56,10 +56,10 @@ export const PRIORITY_CONFIG: Record<MessagePriority, {
   maxAge: number // hours
   cooldown: number // heures avant de pouvoir renvoyer un message similaire
 }> = {
-  P0: { color: '#EF4444', vibrate: true, persistent: true, maxAge: 24, cooldown: 24 },   // Red - urgent (rare!)
-  P1: { color: '#F97316', vibrate: false, persistent: true, maxAge: 12, cooldown: 8 },   // Orange - action needed
-  P2: { color: '#22C55E', vibrate: false, persistent: false, maxAge: 8, cooldown: 24 },  // Green - celebration
-  P3: { color: '#3B82F6', vibrate: false, persistent: false, maxAge: 4, cooldown: 4 },   // Blue - tip
+  P0: { color: '#C75D5D', vibrate: true, persistent: true, maxAge: 24, cooldown: 24 },   // Rouge terre - urgent (rare!)
+  P1: { color: '#8B5A5A', vibrate: false, persistent: true, maxAge: 12, cooldown: 8 },   // Grenat - action needed
+  P2: { color: '#5C8A5E', vibrate: false, persistent: false, maxAge: 8, cooldown: 24 },  // Vert naturel - celebration
+  P3: { color: '#2D7A9C', vibrate: false, persistent: false, maxAge: 4, cooldown: 4 },   // Océan - tip
 }
 
 // Cooldown tracking pour éviter spam

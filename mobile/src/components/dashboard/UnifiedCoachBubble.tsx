@@ -176,7 +176,7 @@ export default function UnifiedCoachBubble({
           </View>
           <View style={styles.emptyContent}>
             <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-              LymIA
+              LYM
             </Text>
             <Text style={[styles.emptyText, { color: colors.text.tertiary }]}>
               Tout va bien ! Continue comme ca.
@@ -233,7 +233,7 @@ export default function UnifiedCoachBubble({
             </View>
             <View>
               <Text style={[styles.coachName, { color: colors.text.secondary }]}>
-                LymIA
+                LYM
               </Text>
               {unreadCount > 1 && (
                 <TouchableOpacity onPress={handleSeeAll}>
