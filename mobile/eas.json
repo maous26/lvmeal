@@ -50,6 +50,13 @@
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
         "track": "internal"
+      },
+      "ios": {
+        "ascAppId": "6740653690",
+        "appleTeamId": "CQA9TSDJAZ",
+        "ascApiKeyPath": "./AuthKey_78CB4XTANT.p8",
+        "ascApiKeyIssuerId": "89896731-8a55-48f6-b4b5-0409af0d75a3",
+        "ascApiKeyId": "78CB4XTANT"
       }
     }
   }

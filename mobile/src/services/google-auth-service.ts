@@ -10,9 +10,10 @@ import Constants from 'expo-constants'
 import { supabase, isSupabaseConfigured } from './supabase-client'
 
 // Google OAuth Client IDs from environment
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || ''
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || ''
-const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || ''
+// Fallback to hardcoded values if env vars not available (EAS build issue)
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '798753543413-lapf769u63d6tb7t3n0prfab2ir43t7h.apps.googleusercontent.com'
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '798753543413-fr199m16nt69199iba06trtj47mp9llu.apps.googleusercontent.com'
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '798753543413-nmvodqsqgg7til0ggas1aplt249ovm6f.apps.googleusercontent.com'
 
 // Debug: Log client IDs at module load
 console.log('[GoogleAuth] ===== MODULE INIT =====')
