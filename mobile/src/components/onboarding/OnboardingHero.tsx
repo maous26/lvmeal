@@ -13,10 +13,16 @@ import {
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ChevronRight } from 'lucide-react-native'
+import {
+  ChevronRight,
+  Camera,
+  Sparkles,
+  Heart,
+  Brain,
+  Leaf,
+} from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows, fonts, organicPalette } from '../../constants/theme'
-import { Button } from '../ui/Button'
+import { spacing, radius, typography, fonts, organicPalette } from '../../constants/theme'
 
 const { width, height } = Dimensions.get('window')
 
@@ -28,31 +34,61 @@ interface OnboardingHeroProps {
 export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
   const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
-  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(250,249,247,0.3)'
   const offWhite = '#FAF9F7'
-  const footerHeight = 52 + spacing.lg + spacing.md + insets.bottom // button + paddings
+  const cream = '#F8F6F1'
+  const footerHeight = 52 + spacing.lg + spacing.md + insets.bottom
 
-  // Smooth fade-in animation from splash screen
+  // Smooth fade-in animation
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
+  const slideAnim = useRef(new Animated.Value(30)).current
 
   useEffect(() => {
-    // Gentle fade in with subtle slide up
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 900,
         easing: Easing.bezier(0.4, 0, 0.2, 1),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 900,
         easing: Easing.bezier(0.4, 0, 0.2, 1),
         useNativeDriver: true,
       }),
     ]).start()
   }, [])
+
+  const benefits = [
+    {
+      id: 'easy',
+      icon: <Camera size={18} color={organicPalette.moss} strokeWidth={1.8} />,
+      title: 'Simple',
+      description: 'Photo, voix ou scan',
+      color: organicPalette.moss,
+    },
+    {
+      id: 'personalized',
+      icon: <Sparkles size={18} color={organicPalette.lavender} strokeWidth={1.8} />,
+      title: 'Sur-mesure',
+      description: 'Adapté à toi',
+      color: organicPalette.lavender,
+    },
+    {
+      id: 'kind',
+      icon: <Heart size={18} color={organicPalette.clay} strokeWidth={1.8} />,
+      title: 'Bienveillant',
+      description: 'Sans culpabilité',
+      color: organicPalette.clay,
+    },
+    {
+      id: 'smart',
+      icon: <Brain size={18} color={organicPalette.ocean} strokeWidth={1.8} />,
+      title: 'Intelligent',
+      description: 'Coach IA',
+      color: organicPalette.ocean,
+    },
+  ]
 
   return (
     <Animated.View
@@ -64,84 +100,106 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: footerHeight + spacing.lg }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: footerHeight + spacing.xl }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Image */}
+        {/* Hero Image with premium overlay */}
         <View style={styles.imageContainer}>
           <Image
             source={require('../../../assets/Photo1.jpg')}
             style={styles.heroImage}
             resizeMode="cover"
           />
-
-          {/* Gradient overlay for text readability */}
+          {/* Multi-layer gradient for depth */}
           <LinearGradient
-            colors={['transparent', overlayMid, offWhite]}
-            locations={[0, 0.5, 1]}
+            colors={['transparent', 'rgba(250,249,247,0.2)', 'rgba(250,249,247,0.8)', offWhite]}
+            locations={[0, 0.4, 0.7, 1]}
             style={styles.imageOverlay}
+          />
+          {/* Subtle vignette effect */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.1)', 'transparent', 'transparent']}
+            style={styles.vignetteTop}
           />
         </View>
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Brand */}
+          {/* Brand with leaf accent */}
           <View style={styles.brandContainer}>
-            <Text style={[styles.brandName, { color: colors.accent.primary }]}>
+            <Leaf size={14} color={organicPalette.sage} strokeWidth={1.5} />
+            <Text style={[styles.brandName, { color: organicPalette.moss }]}>
               LYM
             </Text>
           </View>
 
-          {/* Main headline */}
+          {/* Main headline - serif luxury */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
             Retrouve le plaisir{'\n'}de bien manger
           </Text>
 
-          {/* Subheadline */}
-          <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
-            Pas un énième tracker. Un vrai compagnon{'\n'}
-            qui s'adapte à toi, sans pression.
-          </Text>
-
-          {/* Trust badges */}
-          <View style={styles.trustBadges}>
-            <View style={[styles.badge, { backgroundColor: colors.success + '15' }]}>
-              <Text style={styles.badgeEmoji}>✓</Text>
-              <Text style={[styles.badgeText, { color: colors.success }]}>Sur-mesure</Text>
-            </View>
-            <View style={[styles.badge, { backgroundColor: colors.accent.light }]}>
-              <Text style={styles.badgeEmoji}>♡</Text>
-              <Text style={[styles.badgeText, { color: colors.accent.primary }]}>Zéro culpabilité</Text>
-            </View>
+          {/* Elegant divider */}
+          <View style={styles.dividerContainer}>
+            <View style={[styles.dividerLine, { backgroundColor: organicPalette.sage + '40' }]} />
+            <View style={[styles.dividerDot, { backgroundColor: organicPalette.sage }]} />
+            <View style={[styles.dividerLine, { backgroundColor: organicPalette.sage + '40' }]} />
           </View>
 
-          {/* Micro-copy */}
-          <Text style={[styles.microCopy, { color: colors.text.muted }]}>
-            Configuration en quelques étapes
+          {/* Subheadline */}
+          <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
+            Un compagnon qui s'adapte à toi,{'\n'}sans pression, sans jugement.
           </Text>
+
+          {/* Benefits Grid 2x2 - Premium cards */}
+          <View style={styles.benefitsGrid}>
+            {benefits.map((benefit) => (
+              <View
+                key={benefit.id}
+                style={[styles.benefitCard, { backgroundColor: cream }]}
+              >
+                <View style={[styles.benefitIcon, { backgroundColor: benefit.color + '12' }]}>
+                  {benefit.icon}
+                </View>
+                <Text style={[styles.benefitTitle, { color: colors.text.primary }]}>
+                  {benefit.title}
+                </Text>
+                <Text style={[styles.benefitDescription, { color: colors.text.tertiary }]}>
+                  {benefit.description}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
-      {/* Fixed CTA footer (always visible) */}
+      {/* Premium CTA footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md, backgroundColor: offWhite }]}>
+        {/* Subtle top shadow */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.03)']}
+          style={styles.footerShadow}
+        />
+
         <TouchableOpacity
-          onPress={onGetStarted}
-          style={{
-            backgroundColor: organicPalette.moss,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.lg,
-            borderRadius: radius.lg,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+            onGetStarted()
           }}
-          activeOpacity={0.8}
+          activeOpacity={0.9}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm, letterSpacing: 0.3 }}>
-            Commencer mon parcours
-          </Text>
-          <ChevronRight size={18} color="#FFFFFF" />
+          <LinearGradient
+            colors={[organicPalette.moss, '#3A5A32']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.ctaButton}
+          >
+            <Text style={styles.ctaText}>
+              Commencer mon parcours
+            </Text>
+            <View style={styles.ctaIconContainer}>
+              <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
 
         {onHaveAccount && (
@@ -153,7 +211,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             style={styles.haveAccountButton}
             activeOpacity={0.7}
           >
-            <Text style={[styles.haveAccountText, { color: colors.accent.primary }]}>
+            <Text style={[styles.haveAccountText, { color: colors.text.tertiary }]}>
               J'ai déjà un compte
             </Text>
           </TouchableOpacity>
@@ -174,7 +232,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   imageContainer: {
-    height: Math.min(height * 0.42, 340),
+    height: Math.min(height * 0.38, 320),
     position: 'relative',
   },
   heroImage: {
@@ -186,57 +244,96 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100,
+    height: 150,
+  },
+  vignetteTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
   },
   content: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.sm,
   },
   brandContainer: {
-    marginBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   brandName: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts.serif.semibold,
-    letterSpacing: 2,
+    letterSpacing: 3,
     textTransform: 'uppercase',
   },
   headline: {
-    fontSize: 36,
+    fontSize: 34,
     lineHeight: 42,
     fontFamily: fonts.serif.bold,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
     marginBottom: spacing.md,
   },
-  subheadline: {
-    ...typography.lg,
-    fontFamily: fonts.sans.regular,
-    lineHeight: 28,
-    marginBottom: spacing.lg,
-  },
-  trustBadges: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  badge: {
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
-    gap: spacing.xs,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  badgeEmoji: {
-    fontSize: 14,
+  dividerLine: {
+    height: 1,
+    width: 32,
   },
-  badgeText: {
-    ...typography.captionMedium,
+  dividerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
-  microCopy: {
-    ...typography.caption,
+  subheadline: {
+    fontSize: 16,
+    fontFamily: fonts.sans.regular,
+    lineHeight: 24,
     textAlign: 'center',
-    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  benefitsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  benefitCard: {
+    width: (width - spacing.xl * 2 - spacing.sm) / 2,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    // Premium subtle shadow via border
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  benefitIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  benefitTitle: {
+    fontSize: 13,
+    fontFamily: fonts.sans.semibold,
+    letterSpacing: 0.2,
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  benefitDescription: {
+    fontSize: 11,
+    fontFamily: fonts.sans.regular,
+    textAlign: 'center',
+    letterSpacing: 0.1,
   },
   footer: {
     position: 'absolute',
@@ -244,16 +341,47 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
+    paddingTop: spacing.lg,
+  },
+  footerShadow: {
+    position: 'absolute',
+    top: -20,
+    left: 0,
+    right: 0,
+    height: 20,
+  },
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md + 2,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.lg,
+    gap: spacing.sm,
+    // Premium shadow
+    shadowColor: organicPalette.moss,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  ctaText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontFamily: fonts.sans.semibold,
+    letterSpacing: 0.3,
+  },
+  ctaIconContainer: {
+    marginLeft: spacing.xs,
   },
   haveAccountButton: {
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
   haveAccountText: {
-    ...typography.bodyMedium,
+    fontSize: 14,
+    fontFamily: fonts.sans.medium,
+    letterSpacing: 0.2,
   },
 })
 

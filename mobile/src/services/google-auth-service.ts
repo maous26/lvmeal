@@ -17,6 +17,7 @@ const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_I
 // Debug: Log client IDs at module load
 console.log('[GoogleAuth] ===== MODULE INIT =====')
 console.log('[GoogleAuth] WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID ? 'SET' : 'NOT SET')
+console.log('[GoogleAuth] IOS_CLIENT_ID:', GOOGLE_IOS_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('[GoogleAuth] ANDROID_CLIENT_ID:', GOOGLE_ANDROID_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('[GoogleAuth] executionEnvironment:', Constants.executionEnvironment)
 console.log('[GoogleAuth] appOwnership:', Constants.appOwnership)
@@ -102,11 +103,19 @@ export function configureGoogleSignIn(): void {
   }
 
   try {
-    GoogleSignin.configure({
+    const config: any = {
       webClientId: GOOGLE_WEB_CLIENT_ID,
       offlineAccess: true,
       scopes: ['profile', 'email'],
-    })
+    }
+
+    // Add iOS Client ID for iOS builds
+    if (Platform.OS === 'ios' && GOOGLE_IOS_CLIENT_ID) {
+      config.iosClientId = GOOGLE_IOS_CLIENT_ID
+      console.log('[GoogleAuth] iOS Client ID configured')
+    }
+
+    GoogleSignin.configure(config)
     isConfigured = true
     console.log('[GoogleAuth] ✓ Google Sign-In configured successfully')
   } catch (error) {

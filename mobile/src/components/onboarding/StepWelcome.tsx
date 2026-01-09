@@ -1,43 +1,22 @@
-import React, { useState } from 'react'
-import { View, StyleSheet } from 'react-native'
+import React from 'react'
 import { OnboardingHero } from './OnboardingHero'
-import { OnboardingBenefits } from './OnboardingBenefits'
 
 interface StepWelcomeProps {
   onStart: () => void
   onHaveAccount?: () => void
 }
 
-type WelcomePhase = 'hero' | 'benefits'
-
 /**
- * Welcome step = Marketing screens (Hero + Benefits carousel)
+ * Welcome step = Single marketing screen with hero image + benefits grid
  * After this, the user goes to setup-choice to pick quick or full onboarding
  */
 export function StepWelcome({ onStart, onHaveAccount }: StepWelcomeProps) {
-  const [phase, setPhase] = useState<WelcomePhase>('hero')
-
-  if (phase === 'hero') {
-    return (
-      <OnboardingHero
-        onGetStarted={() => setPhase('benefits')}
-        onHaveAccount={onHaveAccount}
-      />
-    )
-  }
-
   return (
-    <OnboardingBenefits
-      onComplete={onStart}
-      onBack={() => setPhase('hero')}
+    <OnboardingHero
+      onGetStarted={onStart}
+      onHaveAccount={onHaveAccount}
     />
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-})
 
 export default StepWelcome
