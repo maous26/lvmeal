@@ -39,7 +39,6 @@ import {
   Trash2,
   Settings,
 } from 'lucide-react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 
@@ -72,12 +71,9 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
     <View style={[welcomeStyles.card, { backgroundColor: colors.bg.elevated }]}>
       {/* Header with dismiss */}
       <View style={welcomeStyles.header}>
-        <LinearGradient
-          colors={[staticColors.accent.primary, staticColors.secondary.primary]}
-          style={welcomeStyles.avatar}
-        >
+        <View style={[welcomeStyles.avatar, { backgroundColor: staticColors.accent.primary }]}>
           <Sparkles size={24} color="#FFFFFF" />
-        </LinearGradient>
+        </View>
         <TouchableOpacity
           onPress={onDismiss}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -424,12 +420,9 @@ export default function CoachScreen() {
                 {unreadCount > 0 ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}` : 'Tes conseils personnalisés'}
               </Text>
             </View>
-            <LinearGradient
-              colors={[staticColors.accent.primary, staticColors.secondary.primary]}
-              style={styles.avatarGradient}
-            >
+            <View style={[styles.avatarGradient, { backgroundColor: staticColors.accent.primary }]}>
               <Bot size={24} color="#FFFFFF" />
-            </LinearGradient>
+            </View>
           </View>
         </View>
 

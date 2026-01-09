@@ -1,7 +1,7 @@
 {
   "version": "1.1.0",
-  "generatedAt": "2026-01-07T09:57:18.102Z",
-  "totalRecipes": 358,
+  "generatedAt": "2026-01-08T16:12:14.496Z",
+  "totalRecipes": 386,
   "recipes": [
     {
       "id": "https://www.lecker.de/fruehstueck-muesli-34908.html",
@@ -31844,6 +31844,2556 @@
       "sourceUrl": "https://eatsmarter.de/rezepte/granola-riegel",
       "originalTitle": "Granola-Riegel",
       "enrichedAt": "2026-01-07T09:56:57.665Z"
+    },
+    {
+      "id": "https://www.lecker.de/asia-suppe-44917.html",
+      "titleFr": "Soupe Asiatique Épicée",
+      "descriptionFr": "Découvrez cette délicieuse soupe asiatique, réconfortante et pleine de saveurs. Avec des légumes croquants et de la dinde fumée, elle est parfaite pour un déjeuner sain et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "bouillon de légumes",
+          "amount": 300,
+          "unit": "ml"
+        },
+        {
+          "name": "légumes asiatiques surgelés",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "dinde fumée",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "poivrons marinés",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "name": "piment rouge",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "name": "coriandre",
+          "amount": 1,
+          "unit": "brin"
+        },
+        {
+          "name": "sauce soja",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "jus de citron vert",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le bouillon de légumes et portez-le à ébullition.",
+        "Étape 2: Ajoutez les légumes asiatiques surgelés et laissez cuire à feu moyen pendant environ 5 minutes.",
+        "Étape 3: Pendant ce temps, coupez la dinde fumée en petits morceaux et ajoutez-les à la casserole.",
+        "Étape 4: Émincez les poivrons marinés et le piment rouge, puis incorporez-les au mélange.",
+        "Étape 5: Ajoutez la sauce soja et le poivre, puis mélangez bien.",
+        "Étape 6: Laissez mijoter encore 2-3 minutes pour que toutes les saveurs se mélangent.",
+        "Étape 7: Servez la soupe chaude, garnie de coriandre fraîche et d'un filet de jus de citron vert.",
+        "Étape 8: Dégustez votre soupe asiatique épicée et savourez chaque cuillère!"
+      ],
+      "nutrition": {
+        "calories": 370,
+        "proteins": 30,
+        "carbs": 35,
+        "fats": 10,
+        "sugar": 3,
+        "fiber": 5,
+        "saturatedFat": 2,
+        "sodium": 480
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette soupe est riche en protéines grâce à la dinde et contient une bonne quantité de légumes, ce qui en fait un plat nutritif et faible en calories. La sauce soja apporte du goût sans trop de calories, tout en restant dans les limites de sodium recommandées.",
+      "imageUrl": "https://images.lecker.de/,id=14cdb209,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/asia-suppe-44917.html",
+      "originalTitle": "Asia-Suppe",
+      "enrichedAt": "2026-01-08T15:58:55.934Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/chili-mit-chips",
+      "titleFr": "Chili épicé avec chips croquantes",
+      "descriptionFr": "Ce chili épicé est une collation parfaite, riche en protéines et en fibres. Accompagné de chips croustillantes, c'est un régal savoureux qui réchauffera vos papilles tout en restant léger et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Oignons",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Carottes",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Céleri",
+          "amount": 2,
+          "unit": "tiges"
+        },
+        {
+          "name": "Haricots rouges",
+          "amount": 800,
+          "unit": "g"
+        },
+        {
+          "name": "Poivrons rouges",
+          "amount": 2,
+          "unit": "pièces"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre noir",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cayenne",
+          "amount": 0.5,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Concentré de tomates",
+          "amount": 5,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 600,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Émincez les oignons et les gousses d'ail. Coupez les carottes, le céleri et les poivrons en petits dés.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile d'olive à feu moyen. Ajoutez les oignons et l'ail, puis faites revenir pendant 3 à 4 minutes jusqu'à ce qu'ils deviennent translucides.",
+        "Étape 3: Ajoutez les carottes, le céleri et les poivrons dans la casserole. Faites cuire pendant environ 5 minutes en remuant de temps en temps.",
+        "Étape 4: Incorporez le concentré de tomates, le sel, le poivre, le cayenne et remuez bien pour enrober les légumes.",
+        "Étape 5: Ajoutez les haricots rouges égouttés et rincés, puis versez le bouillon de légumes. Mélangez le tout.",
+        "Étape 6: Portez à ébullition, puis réduisez le feu et laissez mijoter à couvert pendant 20 minutes pour que les saveurs se mélangent.",
+        "Étape 7: Goûtez et ajustez l'assaisonnement si nécessaire. Servez chaud avec des chips croquantes.",
+        "Étape 8: Profitez de votre chili épicé, riche en saveurs et en nutriments!"
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 12,
+        "carbs": 34,
+        "fats": 7,
+        "sugar": 4,
+        "fiber": 10,
+        "saturatedFat": 1,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est riche en fibres et en protéines grâce aux haricots rouges et aux légumes, ce qui en fait un choix nutritif pour une collation. Elle respecte les recommandations nutritionnelles, bien qu'il faille surveiller la quantité de sel.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/chili-mit-chips-140713.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/chili-mit-chips",
+      "originalTitle": "Chili mit Chips",
+      "enrichedAt": "2026-01-08T15:58:44.919Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/apfel-zimt-porridge-10547172.html",
+      "titleFr": "Porridge aux Pommes et à la Cannelle",
+      "descriptionFr": "Commencez votre journée avec ce porridge réconfortant, alliant la douceur des pommes et la chaleur de la cannelle. Ce petit-déjeuner nutritif est non seulement délicieux, mais aussi riche en fibres et en protéines, parfait pour vous donner de l'énergie toute la matinée.",
+      "ingredientsFr": [
+        {
+          "name": "Pomme",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Miel",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Lait",
+          "amount": 450,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 90,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons de quinoa",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Cannelle",
+          "amount": 9,
+          "unit": "g"
+        },
+        {
+          "name": "Muscat",
+          "amount": 1,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, portez le lait à ébullition à feu moyen.",
+        "Étape 2: Ajoutez les flocons d'avoine et les flocons de quinoa dans le lait bouillant, puis réduisez le feu à doux.",
+        "Étape 3: Laissez cuire pendant environ 5 minutes, en remuant régulièrement, jusqu'à ce que le mélange épaississe.",
+        "Étape 4: Pendant ce temps, épluchez et coupez les pommes en petits morceaux.",
+        "Étape 5: Incorporez les morceaux de pomme, le miel, la cannelle et le muscat dans le porridge. Mélangez bien.",
+        "Étape 6: Poursuivez la cuisson pendant encore 2-3 minutes jusqu'à ce que les pommes soient tendres.",
+        "Étape 7: Servez chaud, et si désiré, ajoutez un peu de cannelle supplémentaire sur le dessus.",
+        "Étape 8: Profitez de votre porridge aux pommes et à la cannelle, rempli de saveurs et de bienfaits nutritionnels."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 12,
+        "carbs": 60,
+        "fats": 6,
+        "sugar": 15,
+        "fiber": 8,
+        "saturatedFat": 2,
+        "sodium": 150
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres grâce aux flocons d'avoine et au quinoa, tout en offrant une source de douceur naturelle avec les pommes et le miel, ce qui en fait un choix nutritif et équilibré pour le petit-déjeuner.",
+      "imageUrl": "https://image.brigitte.de/11729870/t/6-/v3/w1440/r1/-/apfel-zimt-porridge.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/apfel-zimt-porridge-10547172.html",
+      "originalTitle": "Apfel-Zimt-Porridge",
+      "enrichedAt": "2026-01-08T15:59:10.670Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/omelett-pita-10538098.html",
+      "titleFr": "Omelette-Pita Savoureuse",
+      "descriptionFr": "Commencez votre journée avec cette délicieuse omelette-pita, alliant la légèreté des œufs et la fraîcheur des légumes. Parfaite pour un petit-déjeuner rapide et équilibré, elle saura nourrir votre corps tout en éveillant vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "Œuf",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Lait",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Herbes (persil, ciboulette, etc.)",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Fromage à pâte dure",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "Pita",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Ketchup de tomate",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Salade",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Concombre",
+          "amount": 40,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, cassez l'œuf et ajoutez le lait. Battez le mélange jusqu'à obtenir une consistance homogène.",
+        "Étape 2: Incorporez les herbes hachées, le sel, et le poivre, puis mélangez à nouveau.",
+        "Étape 3: Faites chauffer l'huile d'olive dans une poêle à feu moyen.",
+        "Étape 4: Versez le mélange d'œufs dans la poêle et laissez cuire pendant 2-3 minutes jusqu'à ce que les bords commencent à se raffermir.",
+        "Étape 5: Ajoutez le fromage râpé sur une moitié de l'omelette, puis pliez l'autre moitié par-dessus.",
+        "Étape 6: Laissez cuire encore 1-2 minutes jusqu'à ce que le fromage soit fondu et l'omelette bien cuite.",
+        "Étape 7: Pendant ce temps, préparez la pita en la coupant en deux et en la remplissant de salade et de concombre.",
+        "Étape 8: Servez l'omelette chaude dans la pita avec un peu de ketchup de tomate pour une touche savoureuse."
+      ],
+      "nutrition": {
+        "calories": 360,
+        "proteins": 22,
+        "carbs": 30,
+        "fats": 18,
+        "sugar": 4,
+        "fiber": 2,
+        "saturatedFat": 6,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est relativement saine, fournissant une bonne source de protéines et de légumes. Elle est équilibrée en macronutriments, bien qu'elle contienne un peu plus de graisses. L'utilisation de fromage peut être ajustée pour réduire les graisses saturées.",
+      "imageUrl": "https://image.brigitte.de/10538100/t/h6/v5/w1440/r1/-/omelett-pita-f25bf148bcc5d7a7843b588e6698e91e-omelett-pita-.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/omelett-pita-10538098.html",
+      "originalTitle": "Omelett-Pita",
+      "enrichedAt": "2026-01-08T15:59:43.643Z"
+    },
+    {
+      "id": "https://www.lecker.de/frischkaese-wrap-36645.html",
+      "titleFr": "Wraps de fromage frais au saumon",
+      "descriptionFr": "Savourez ces wraps de fromage frais au saumon, une recette fraîche et légère idéale pour un déjeuner. Riches en protéines et en saveurs, ces wraps allient le crémeux du fromage frais à la délicatesse du saumon, le tout rehaussé par des légumes croquants.",
+      "ingredientsFr": [
+        {
+          "name": "Oeufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Lait",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Farine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Concombre",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Tomates",
+          "amount": 4,
+          "unit": "unités"
+        },
+        {
+          "name": "Dill",
+          "amount": 2,
+          "unit": "brins"
+        },
+        {
+          "name": "Filet de saumon",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre ou margarine",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Huile",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Fromage frais",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Dill et citron pour garnir",
+          "amount": 1,
+          "unit": "unité"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un bol, battez les œufs avec le lait, le sel et la farine jusqu'à obtenir une pâte lisse.",
+        "Étape 2: Faites chauffer une poêle avec un peu de beurre ou de margarine à feu moyen et versez une portion de la pâte pour former une crêpe fine. Cuisez pendant 2-3 minutes de chaque côté jusqu'à ce qu'elle soit dorée. Répétez avec le reste de la pâte.",
+        "Étape 3: Pendant que les crêpes cuisent, coupez le concombre et les tomates en fines tranches.",
+        "Étape 4: Assaisonnez le saumon avec du sel, du poivre et des quelques gouttes de jus de citron.",
+        "Étape 5: Étalez une couche généreuse de fromage frais sur chaque crêpe, puis disposez les tranches de concombre, de tomate et le saumon sur le dessus.",
+        "Étape 6: Ajoutez un peu de dill frais et un filet de jus de citron sur le tout.",
+        "Étape 7: Roulez délicatement chaque crêpe pour former un wrap et coupez-les en deux.",
+        "Étape 8: Servez les wraps garnis de dill et de tranches de citron."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 35,
+        "carbs": 40,
+        "fats": 25,
+        "sugar": 5,
+        "fiber": 3,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 80,
+      "healthNotes": "Cette recette est riche en protéines grâce au saumon et aux œufs, tout en intégrant des légumes frais, ce qui la rend équilibrée et nutritive. Les graisses sont principalement insaturées, et le plat reste dans les limites de sodium recommandées.",
+      "imageUrl": "https://images.lecker.de/,id=7b43839c,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "lunch",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/frischkaese-wrap-36645.html",
+      "originalTitle": "Frischkäse-Wrap",
+      "enrichedAt": "2026-01-08T15:59:52.780Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/porridge-mit-aepfeln",
+      "titleFr": "Porridge aux pommes et noisettes",
+      "descriptionFr": "Commencez votre journée avec ce porridge réconfortant aux pommes, agrémenté de noisettes croquantes et d'une touche de cannelle. Ce petit-déjeuner nourrissant est parfait pour faire le plein d'énergie et de douceur dès le matin.",
+      "ingredientsFr": [
+        {
+          "name": "lait entier",
+          "amount": 300,
+          "unit": "ml"
+        },
+        {
+          "name": "miel",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "sel iodé",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "flocons d'avoine",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "pommes",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "noisettes",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "cannelle",
+          "amount": 2.5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le lait et ajoutez les flocons d'avoine. Faites chauffer à feu moyen tout en remuant régulièrement.",
+        "Étape 2: Pendant que le lait chauffe, lavez et coupez les pommes en petits dés, en laissant la peau pour plus de fibres.",
+        "Étape 3: Quand le lait commence à frémir, ajoutez les dés de pommes, le miel, le sel iodé et la cannelle. Continuez de remuer.",
+        "Étape 4: Laissez mijoter le mélange à feu doux pendant environ 5 à 7 minutes, jusqu'à ce que les flocons d'avoine aient absorbé le lait et que le mélange soit crémeux.",
+        "Étape 5: Pendant ce temps, faites légèrement toaster les noisettes dans une poêle à sec pour en rehausser le goût.",
+        "Étape 6: Une fois le porridge prêt, retirez-le du feu et laissez-le reposer pendant une minute.",
+        "Étape 7: Servez le porridge chaud dans des bols et parsemez de noisettes torréfiées sur le dessus.",
+        "Étape 8: Vous pouvez ajouter un peu plus de miel si vous aimez votre porridge plus sucré."
+      ],
+      "nutrition": {
+        "calories": 360,
+        "proteins": 12,
+        "carbs": 57,
+        "fats": 12,
+        "sugar": 18,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 100
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce porridge est riche en fibres grâce aux flocons d'avoine et aux pommes, et fournit des graisses saines via les noisettes. Le miel ajoute une douceur naturelle tout en restant dans les limites de sucre recommandées. Une excellente option pour un petit-déjeuner équilibré.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/porridge-mit-aepfeln-455454-1.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/porridge-mit-aepfeln",
+      "originalTitle": "Porridge mit Äpfeln",
+      "enrichedAt": "2026-01-08T16:02:03.681Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/birnen-porridge",
+      "titleFr": "Porridge de Poire",
+      "descriptionFr": "Ce porridge de poire est un petit-déjeuner réconfortant et nutritif, parfait pour bien commencer la journée. La douceur de la poire se marie à la texture crémeuse des flocons d'avoine, tandis que la cannelle et les noisettes ajoutent une touche de croquant et de saveur. Simple à préparer, il ravira les papilles des petits et des grands !",
+      "ingredientsFr": [
+        {
+          "name": "Poire",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Jus de pomme",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "name": "Lait",
+          "amount": 300,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel iodé (avec fluor)",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Cannelle",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Noisettes grillées",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Feuille de mélisse",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Graines de lin",
+          "amount": 2,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, porter le lait et le jus de pomme à ébullition à feu moyen.",
+        "Étape 2: Ajouter les flocons d'avoine et le sel iodé, puis réduire le feu à doux. Mélanger régulièrement.",
+        "Étape 3: Lorsque le mélange commence à épaissir (environ 5 minutes), ajouter la poire coupée en petits dés et la cannelle.",
+        "Étape 4: Poursuivre la cuisson pendant 2-3 minutes jusqu'à ce que la poire soit tendre et le porridge crémeux.",
+        "Étape 5: Retirer du feu et incorporer les graines de lin.",
+        "Étape 6: Servir chaud dans un bol, puis garnir de noisettes grillées et d'une feuille de mélisse pour la décoration.",
+        "Étape 7: Déguster immédiatement pour savourer toutes les saveurs."
+      ],
+      "nutrition": {
+        "calories": 430,
+        "proteins": 15,
+        "carbs": 65,
+        "fats": 10,
+        "sugar": 12,
+        "fiber": 8,
+        "saturatedFat": 3,
+        "sodium": 150
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce porridge est riche en fibres grâce aux flocons d'avoine et aux graines de lin, et fournit une bonne quantité de protéines. La présence de fruits frais et de noix apporte des vitamines et des minéraux essentiels, tout en maintenant un bon équilibre en macronutriments.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/birnen-porridge-198577.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/birnen-porridge",
+      "originalTitle": "Birnen-Porridge",
+      "enrichedAt": "2026-01-08T16:02:00.993Z"
+    },
+    {
+      "id": "https://www.lecker.de/klassisches-porridge-76450.html",
+      "titleFr": "Porridge Classique",
+      "descriptionFr": "Commencez votre journée avec un bol de porridge crémeux et réconfortant. Ce petit-déjeuner nutritif, préparé avec des flocons d'avoine et des amandes, est parfait pour vous donner l'énergie nécessaire pour bien démarrer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 125,
+          "unit": "g"
+        },
+        {
+          "name": "lait",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "amandes avec peau",
+          "amount": 125,
+          "unit": "g"
+        },
+        {
+          "name": "cannelle",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez les flocons d'avoine et le lait. Ajoutez une pincée de sel.",
+        "Étape 2: Portez le mélange à ébullition à feu moyen tout en remuant régulièrement.",
+        "Étape 3: Une fois à ébullition, réduisez le feu et laissez mijoter pendant environ 5 à 10 minutes, jusqu'à ce que le porridge atteigne la consistance désirée.",
+        "Étape 4: Pendant ce temps, faites légèrement griller les amandes dans une poêle à feu doux jusqu'à ce qu'elles soient dorées et parfumées.",
+        "Étape 5: Une fois le porridge prêt, retirez-le du feu et incorporez les amandes grillées. Mélangez bien.",
+        "Étape 6: Servez le porridge dans des bols et saupoudrez de cannelle selon votre goût.",
+        "Étape 7: Pour plus de saveur, vous pouvez ajouter un filet de miel ou un fruit frais en garniture."
+      ],
+      "nutrition": {
+        "calories": 380,
+        "proteins": 14,
+        "carbs": 50,
+        "fats": 16,
+        "sugar": 2,
+        "fiber": 7,
+        "saturatedFat": 2,
+        "sodium": 150
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres grâce aux flocons d'avoine et aux amandes, et fournit une bonne quantité de protéines. Elle est faible en sucre et en sodium, tout en étant riche en bons acides gras, ce qui en fait un choix très sain pour le petit-déjeuner.",
+      "imageUrl": "https://images.lecker.de/,id=c0dc5f06,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/klassisches-porridge-76450.html",
+      "originalTitle": "Klassisches Porridge",
+      "enrichedAt": "2026-01-08T16:01:56.663Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/diaet-rezepte/bratapfel-haferflocken-porridge-12235814.html",
+      "titleFr": "Porridge aux Pommes Rôties et Flocons d'Avoine",
+      "descriptionFr": "Ce porridge réconfortant aux pommes rôties et aux épices est parfait pour un petit-déjeuner nutritif et savoureux. La douceur naturelle des pommes combinée à la richesse des flocons d'avoine et du fromage blanc offre un équilibre parfait pour bien commencer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes",
+          "amount": 400,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Miel",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Piment",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Lait",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "name": "Sultanines",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Fromage blanc maigre",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Vanille",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C. Lavez et coupez les pommes en morceaux, puis mélangez-les avec le jus de citron, le miel, le piment et le gingembre râpé.",
+        "Étape 2: Disposez les morceaux de pommes sur une plaque de cuisson recouverte de papier sulfurisé et enfournez pendant 20 minutes jusqu'à ce qu'ils soient tendres et légèrement caramélisés.",
+        "Étape 3: Pendant que les pommes cuisent, faites chauffer le lait dans une casserole à feu moyen.",
+        "Étape 4: Ajoutez les flocons d'avoine et une pincée de sel au lait chaud. Remuez fréquemment et laissez cuire pendant environ 5 minutes jusqu'à ce que le mélange épaississe.",
+        "Étape 5: Une fois les flocons d'avoine cuits, incorporez le fromage blanc, la vanille et les sultanines. Mélangez bien.",
+        "Étape 6: Répartissez le porridge dans des bols et garnissez-le avec les pommes rôties.",
+        "Étape 7: Ajoutez un filet supplémentaire de miel si vous le souhaitez et servez chaud."
+      ],
+      "nutrition": {
+        "calories": 365,
+        "proteins": 18,
+        "carbs": 63,
+        "fats": 6,
+        "sugar": 16,
+        "fiber": 8,
+        "saturatedFat": 2,
+        "sodium": 80
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres grâce aux flocons d'avoine et aux pommes, favorisant une bonne digestion. Elle contient également des protéines grâce au fromage blanc, tout en étant faible en graisses saturées et en sodium.",
+      "imageUrl": "https://image.brigitte.de/12235794/t/b6/v3/w1440/r1/-/bratapfel-haferflocken-porridge.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/diaet-rezepte/bratapfel-haferflocken-porridge-12235814.html",
+      "originalTitle": "Bratapfel-Haferflocken-Porridge",
+      "enrichedAt": "2026-01-08T16:02:24.735Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/chips-aus-suesskartoffeln",
+      "titleFr": "Chips de Patates Douces Croustillantes",
+      "descriptionFr": "Ces chips de patates douces sont un snack sain et délicieux, croustillant à l'extérieur et tendre à l'intérieur. Parfaites pour satisfaire vos envies de grignotage tout en apportant des nutriments bénéfiques, elles deviendront rapidement votre collation préférée.",
+      "ingredientsFr": [
+        {
+          "name": "patate douce",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C (350°F).",
+        "Étape 2: Lavez soigneusement les patates douces et épluchez-les si vous le souhaitez.",
+        "Étape 3: Coupez les patates douces en fines tranches à l'aide d'une mandoline ou d'un couteau.",
+        "Étape 4: Dans un grand bol, mélangez les tranches de patates douces avec l'huile d'olive et le sel jusqu'à ce qu'elles soient bien enrobées.",
+        "Étape 5: Disposez les tranches en une seule couche sur une plaque de cuisson recouverte de papier sulfurisé.",
+        "Étape 6: Enfournez pendant environ 20-25 minutes, en retournant les chips à mi-cuisson, jusqu'à ce qu'elles soient dorées et croustillantes.",
+        "Étape 7: Laissez refroidir quelques minutes avant de les déguster. Conservez les chips dans un contenant hermétique."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 2,
+        "carbs": 36,
+        "fats": 7,
+        "sugar": 5,
+        "fiber": 5,
+        "saturatedFat": 1,
+        "sodium": 300
+      },
+      "healthScore": 75,
+      "healthNotes": "Ces chips sont riches en glucides complexes et en fibres, grâce aux patates douces, qui contribuent à une bonne digestion. L'utilisation d'huile d'olive apporte des graisses saines, bien que la quantité d'huile puisse être ajustée pour réduire les calories si nécessaire.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2009/11/Chips-aus-Suesskartoffeln-4b0015c17f02d.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 1,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/chips-aus-suesskartoffeln",
+      "originalTitle": "Chips aus Süßkartoffeln",
+      "enrichedAt": "2026-01-08T16:05:53.284Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/fish-chips-0",
+      "titleFr": "Poisson et Frites",
+      "descriptionFr": "Savourez ce classique britannique revisité avec des ingrédients de qualité. Ce plat croustillant de cabillaud accompagné de frites dorées saura ravir vos papilles tout en restant léger et équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Farine",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Bière",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait",
+          "amount": 6,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Filet de cabillaud",
+          "amount": 1000,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Huile végétale",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "Pommes de terre",
+          "amount": 1000,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez et coupez les pommes de terre en forme de frites. Faites-les tremper dans de l'eau froide pendant 30 minutes pour éliminer l'excès d'amidon.",
+        "Étape 2: Dans un grand bol, mélangez la farine, la bière, le lait et le sel pour obtenir une pâte lisse. Laissez reposer pendant 15 minutes.",
+        "Étape 3: Pendant ce temps, préparez le poisson. Coupez le filet de cabillaud en morceaux de taille égale et assaisonnez avec du jus de citron, du sel et du poivre.",
+        "Étape 4: Chauffez l'huile dans une grande poêle à frire à 180°C. Une fois chaude, plongez les morceaux de cabillaud dans la pâte et faites-les frire jusqu'à ce qu'ils soient dorés et croustillants, environ 4-5 minutes.",
+        "Étape 5: Retirez le poisson et égouttez-le sur du papier absorbant. Répétez l'opération jusqu'à ce que tout le poisson soit cuit.",
+        "Étape 6: Dans la même huile, faites frire les frites jusqu'à ce qu'elles soient dorées et croustillantes, environ 5-7 minutes. Égouttez sur du papier absorbant.",
+        "Étape 7: Servez les frites chaudes avec le poisson frit, accompagné d'une tranche de citron pour un zeste supplémentaire.",
+        "Étape 8: Dégustez chaud avec une sauce tartare ou un peu de vinaigre pour une touche authentique."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 18,
+        "carbs": 30,
+        "fats": 6,
+        "sugar": 1,
+        "fiber": 3,
+        "saturatedFat": 1,
+        "sodium": 450
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est relativement équilibrée, offrant une bonne source de protéines grâce au poisson, mais elle contient des graisses ajoutées à cause de la friture. Pour un choix encore plus sain, envisagez de cuire le poisson au four et de préparer des frites au four.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2012/7/Fish--Chips-501247007a813.jpg",
+      "prepTime": 60,
+      "cookTime": 30,
+      "totalTime": 90,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/fish-chips-0",
+      "originalTitle": "Fish & Chips",
+      "enrichedAt": "2026-01-08T16:05:58.231Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/fish-chips",
+      "titleFr": "Fish & Chips Légers et Savoureux",
+      "descriptionFr": "Savourez cette version allégée des célèbres Fish & Chips, où le cabillaud croustillant se marie parfaitement avec des frites dorées, le tout accompagné d'un zeste de citron. Une collation gourmande qui allie plaisir et équilibre nutritionnel.",
+      "ingredientsFr": [
+        {
+          "name": "Œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "Farine",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Bière (ou eau gazeuse)",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Lait",
+          "amount": 6,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Filet de cabillaud",
+          "amount": 1,
+          "unit": "kg"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Pommes de terre",
+          "amount": 1,
+          "unit": "kg"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 200°C.",
+        "Étape 2: Épluchez les pommes de terre et découpez-les en frites. Faites-les cuire à la vapeur pendant 5-7 minutes pour les précuire.",
+        "Étape 3: Dans un grand bol, mélangez la farine, le sel et la bière (ou l'eau gazeuse) pour obtenir une pâte à frémir. Ajoutez les œufs et le lait, puis mélangez jusqu'à obtenir une consistance homogène.",
+        "Étape 4: Trempez les filets de cabillaud dans la pâte, puis déposez-les sur une plaque de cuisson recouverte de papier sulfurisé.",
+        "Étape 5: Placez les frites précuites sur la même plaque, arrosez-les légèrement d'huile d'olive, et assaisonnez avec un peu de sel.",
+        "Étape 6: Enfournez le tout pendant 20-25 minutes, jusqu'à ce que le cabillaud soit doré et croustillant, et que les frites soient bien dorées.",
+        "Étape 7: Servez chaud, arrosé de jus de citron.",
+        "Étape 8: Profitez de votre Fish & Chips légers avec une salade verte pour un repas équilibré."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 20,
+        "carbs": 30,
+        "fats": 6,
+        "sugar": 1,
+        "fiber": 3,
+        "saturatedFat": 2,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette offre un bon équilibre entre protéines maigres et glucides complexes, tout en restant raisonnable en matière de graisses saturées et de sodium. Les frites sont préparées au four, ce qui les rend plus saines que la version frite traditionnelle.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2013/9/Fish--Chips-523cc589df3fd.jpg",
+      "prepTime": 40,
+      "cookTime": 20,
+      "totalTime": 60,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/fish-chips",
+      "originalTitle": "Fish & Chips",
+      "enrichedAt": "2026-01-08T16:06:16.538Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/frittierter-tofu-10531068.html",
+      "titleFr": "Tofu Frit croustillant",
+      "descriptionFr": "Découvrez cette délicieuse recette de tofu frit croustillant, marinée dans une sauce savoureuse qui ravira vos papilles. Parfait pour un dîner léger, ce plat est riche en protéines et idéal pour les amateurs de cuisine végétale.",
+      "ingredientsFr": [
+        {
+          "name": "Tofu",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Mirin",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Sauce soja",
+          "amount": 120,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons de bonite",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Huile",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Ciboulette",
+          "amount": 6,
+          "unit": "brins"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Coupez le tofu en cubes de 2 cm et placez-le dans un plat.",
+        "Étape 2: Dans un bol, mélangez le mirin, la sauce soja et le bouillon de légumes. Versez ce mélange sur le tofu et laissez mariner pendant 30 minutes.",
+        "Étape 3: Après la marinade, égouttez le tofu et roulez-le dans les flocons de bonite pour bien les enrober.",
+        "Étape 4: Faites chauffer l'huile dans une poêle à feu moyen. Une fois chaude, ajoutez les morceaux de tofu en une seule couche.",
+        "Étape 5: Faites frémir le tofu pendant environ 5-7 minutes de chaque côté jusqu'à ce qu'il soit doré et croustillant.",
+        "Étape 6: Pendant ce temps, ciselez la ciboulette finement.",
+        "Étape 7: Une fois le tofu cuit, épongez l'excès d'huile sur du papier absorbant et saupoudrez de ciboulette.",
+        "Étape 8: Servez chaud avec une salade ou des légumes sautés."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 30,
+        "carbs": 30,
+        "fats": 20,
+        "sugar": 1,
+        "fiber": 2,
+        "saturatedFat": 3,
+        "sodium": 800
+      },
+      "healthScore": 70,
+      "healthNotes": "Ce plat est riche en protéines grâce au tofu et offre une bonne dose de saveurs. Toutefois, la teneur en sodium est un peu élevée en raison de la sauce soja, ce qui peut être ajusté en utilisant une version à faible teneur en sodium.",
+      "imageUrl": "https://image.brigitte.de/11620756/t/BT/v3/w1440/r1/-/frittierter-tofu-bild.jpg",
+      "prepTime": 45,
+      "cookTime": 23,
+      "totalTime": 68,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/frittierter-tofu-10531068.html",
+      "originalTitle": "Frittierter Tofu",
+      "enrichedAt": "2026-01-08T16:06:38.711Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/poularden-curry-10528406.html",
+      "titleFr": "Poularde au Curry Savoureuse",
+      "descriptionFr": "Découvrez ce plat réconfortant de poularde au curry, riche en saveurs et en bienfaits. Accompagnée de légumes croquants et d'une sauce crémeuse, cette recette est idéale pour un dîner convivial et léger.",
+      "ingredientsFr": [
+        {
+          "name": "Poularde",
+          "amount": 1500,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Bouquet garni (carottes, céleri, poireau)",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Farine",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Curry en poudre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Champignons bruns",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Céleri branche",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "Poireau",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Poivre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Tomates",
+          "amount": 200,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une grande casserole, faites fondre le beurre à feu moyen. Ajoutez la farine et remuez pour former un roux. Laissez cuire pendant 2-3 minutes sans coloration.",
+        "Étape 2: Ajoutez le curry en poudre au roux et mélangez bien pendant environ 1 minute pour libérer les arômes.",
+        "Étape 3: Incorporez progressivement de l'eau (environ 500 ml) tout en fouettant, jusqu'à obtenir une sauce lisse.",
+        "Étape 4: Ajoutez la poularde coupée en morceaux dans la sauce, ainsi que le bouquet garni. Assaisonnez avec du sel et du poivre. Laissez mijoter pendant environ 30 minutes.",
+        "Étape 5: Pendant ce temps, préparez les légumes. Coupez les champignons, le céleri et le poireau en morceaux et ajoutez-les à la casserole après 15 minutes de cuisson de la poularde.",
+        "Étape 6: Ajoutez les tomates pelées et concassées dans la casserole et laissez mijoter encore 15 minutes, jusqu'à ce que la poularde soit bien cuite et les légumes tendres.",
+        "Étape 7: Rectifiez l'assaisonnement si nécessaire et servez chaud, accompagné de riz basmati ou de quinoa."
+      ],
+      "nutrition": {
+        "calories": 425,
+        "proteins": 35,
+        "carbs": 40,
+        "fats": 15,
+        "sugar": 6,
+        "fiber": 5,
+        "saturatedFat": 7,
+        "sodium": 480
+      },
+      "healthScore": 78,
+      "healthNotes": "Cette recette est équilibrée, riche en protéines grâce à la poularde et en fibres grâce aux légumes. Elle reste dans les limites recommandées en termes de calories et de sodium, tout en offrant une belle palette de saveurs.",
+      "imageUrl": "https://image.brigitte.de/10528408/t/Om/v5/w1440/r1/-/cc816745b36e789caea1d1a4dd9e419a-silvester-curry.jpg",
+      "prepTime": 60,
+      "cookTime": 30,
+      "totalTime": 90,
+      "servings": 10,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/poularden-curry-10528406.html",
+      "originalTitle": "Poularden-Curry",
+      "enrichedAt": "2026-01-08T16:06:37.255Z"
+    },
+    {
+      "id": "https://www.lecker.de/nacho-pasta-71634.html",
+      "titleFr": "Nacho-Pâtes",
+      "descriptionFr": "Savourez cette délicieuse recette de Nacho-Pâtes, alliant la texture des pâtes avec le croquant des nachos et les saveurs ensoleillées des tomates et de l'avocat. Parfaite pour un dîner rapide et sain, elle ravira vos papilles tout en étant simple à préparer.",
+      "ingredientsFr": [
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cayenne",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Brins d'origan",
+          "amount": 4,
+          "unit": "brins"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Tomates cerises",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 3,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Tomates concassées en conserve",
+          "amount": 425,
+          "unit": "ml"
+        },
+        {
+          "name": "Plaques de lasagne",
+          "amount": 250,
+          "unit": "g"
+        },
+        {
+          "name": "Avocat mûr",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Crème fraîche",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Chips de tortilla",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre",
+          "amount": 2,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 180°C.",
+        "Étape 2: Dans une grande casserole, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'oignon haché et faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 3: Ajoutez les tomates cerises coupées en deux, les tomates concassées, le cumin, le cayenne, le sel et le poivre. Laissez mijoter pendant environ 10 minutes.",
+        "Étape 4: Pendant ce temps, faites cuire les plaques de lasagne dans une grande casserole d'eau bouillante salée selon les instructions du paquet, puis égouttez-les.",
+        "Étape 5: Incorporez les plaques de lasagne à la sauce tomate et mélangez bien pour enrober les pâtes.",
+        "Étape 6: Dans un bol, écrasez l'avocat avec le jus de citron, puis ajoutez la crème fraîche et mélangez jusqu'à obtenir une consistance lisse.",
+        "Étape 7: Dans un plat allant au four, étalez une couche de la mixture de pâtes, puis émiettez les chips de tortilla sur le dessus. Répétez l'opération jusqu'à épuisement des ingrédients.",
+        "Étape 8: Terminez par une couche de chips et parsemez d'origan. Ajoutez quelques noisettes de beurre sur le dessus et enfournez pendant 15-20 minutes, jusqu'à ce que le dessus soit doré."
+      ],
+      "nutrition": {
+        "calories": 487,
+        "proteins": 18,
+        "carbs": 65,
+        "fats": 20,
+        "sugar": 6,
+        "fiber": 6,
+        "saturatedFat": 7,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Cette recette est équilibrée avec des glucides complexes grâce aux lasagnes et des graisses saines provenant de l'avocat. Elle est relativement faible en sodium et en sucres, mais veillez à la consommation de beurre et de crème pour limiter les graisses saturées.",
+      "imageUrl": "https://images.lecker.de/,id=d669ce85,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/nacho-pasta-71634.html",
+      "originalTitle": "Nacho-Pasta",
+      "enrichedAt": "2026-01-08T16:06:43.752Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/kaese-toast",
+      "titleFr": "Toast au Fromage et Salade de Poires",
+      "descriptionFr": "Découvrez une recette savoureuse de Käse-Toast, alliant le croquant du pain grillé et la douceur des poires. Accompagné d'une salade de mâche et d'un filet de vinaigre balsamique, ce petit-déjeuner est à la fois nutritif et délicieux.",
+      "ingredientsFr": [
+        {
+          "name": "Pain de mie",
+          "amount": 4,
+          "unit": "tranches"
+        },
+        {
+          "name": "Fromage à pâte molle",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "Mâche",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "Poires",
+          "amount": 2,
+          "unit": "petites"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "name": "Oignon",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Vinaigre balsamique blanc",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Sucre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Jambon de Parme",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "Cranberries sauvages confites",
+          "amount": 4,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre grille-pain ou votre poêle à feu moyen.",
+        "Étape 2: Dans un bol, mélangez la mâche avec le jus de citron, l'huile d'olive, le vinaigre balsamique, le sel et le poivre.",
+        "Étape 3: Épluchez les poires, coupez-les en fines tranches et incorporez-les à la salade.",
+        "Étape 4: Faites griller les tranches de pain de mie jusqu'à ce qu'elles soient dorées et croustillantes.",
+        "Étape 5: Disposez le fromage sur le pain grillé et laissez-le fondre légèrement sous le grill ou dans la poêle.",
+        "Étape 6: Pendant ce temps, émincez l'oignon et faites-le revenir dans un peu d'huile d'olive jusqu'à ce qu'il soit translucide.",
+        "Étape 7: Sur chaque toast, ajoutez des tranches de jambon de Parme et une cuillère de cranberries sauvages.",
+        "Étape 8: Servez les toasts chauds avec la salade de mâche et poires à côté."
+      ],
+      "nutrition": {
+        "calories": 400,
+        "proteins": 18,
+        "carbs": 45,
+        "fats": 18,
+        "sugar": 6,
+        "fiber": 5,
+        "saturatedFat": 6,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce repas est équilibré avec une bonne source de protéines, de fibres et de graisses saines. Les poires ajoutent une touche de douceur naturelle tout en restant dans les limites de sucre recommandées.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/facebook/public/rezepte/2011/3/Kaese-Toast-4d6cca77f2b6a.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/kaese-toast",
+      "originalTitle": "Käse-Toast",
+      "enrichedAt": "2026-01-08T16:07:02.138Z"
+    },
+    {
+      "id": "https://elavegan.com/de/veganes-omelette/",
+      "titleFr": "Omelette Végane aux Champignons",
+      "descriptionFr": "Cette omelette végane aux champignons est un véritable délice, riche en saveurs et en nutriments. Préparée avec des ingrédients sains, elle constitue un petit-déjeuner parfait pour bien commencer la journée.",
+      "ingredientsFr": [
+        {
+          "name": "farine de lentilles rouges",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "name": "farine de tapioca",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poudre d'ail",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre noir",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "paprika fumé",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Kala Namak",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "curcuma",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "eau",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "name": "oignon moyen",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "poivron",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "champignons",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "herbes fraîches (persil)",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "huile (pour la cuisson)",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, combinez la farine de lentilles rouges, la farine de tapioca, le sel, la poudre d'ail, le poivre noir, le cumin, le paprika fumé, le Kala Namak et le curcuma.",
+        "Étape 2: Ajoutez progressivement l'eau et mélangez pour obtenir une pâte lisse et homogène.",
+        "Étape 3: Dans une poêle, faites chauffer l'huile à feu moyen et ajoutez l'oignon coupé en dés. Faites-le revenir jusqu'à ce qu'il soit translucide.",
+        "Étape 4: Ajoutez le poivron et les champignons tranchés, et faites cuire pendant environ 5 minutes, jusqu'à ce qu'ils soient tendres.",
+        "Étape 5: Versez la préparation de lentilles dans la poêle en répartissant bien les légumes. Cuisez à feu moyen pendant environ 5-7 minutes, jusqu'à ce que le dessous soit doré.",
+        "Étape 6: Avec une spatule, retournez délicatement l'omelette pour cuire l'autre côté pendant encore 3-5 minutes.",
+        "Étape 7: Une fois cuite, retirez l'omelette de la poêle et garnissez-la d'herbes fraîches avant de servir.",
+        "Étape 8: Servez chaud, accompagné d'une salade verte ou de tranches de tomate."
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 20,
+        "carbs": 45,
+        "fats": 10,
+        "sugar": 3,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette omelette est riche en protéines grâce aux lentilles, et elle contient des légumes riches en fibres. Elle est faible en calories et en graisses saturées, ce qui en fait un choix de petit-déjeuner très sain.",
+      "imageUrl": "https://elavegan.com/de/wp-content/uploads/sites/5/2021/04/Veganes-Omelette-mit-Pilzen-auf-weissem-Teller.jpg",
+      "prepTime": 20,
+      "cookTime": 10,
+      "totalTime": 30,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://elavegan.com/de/veganes-omelette/",
+      "originalTitle": "Veganes Omelette mit Pilzen",
+      "enrichedAt": "2026-01-08T16:07:03.825Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/blumenkohl-curry-10540344.html",
+      "titleFr": "Curry de Chou-Fleur Savoureux",
+      "descriptionFr": "Ce curry de chou-fleur est un plat réconfortant, riche en saveurs et en épices. La douceur de la noix de coco se marie parfaitement avec le piquant du gingembre et du chili, offrant une expérience gustative unique et équilibrée. Parfait pour un dîner sain et nourrissant.",
+      "ingredientsFr": [
+        {
+          "name": "Pommes de terre",
+          "amount": 500,
+          "unit": "g"
+        },
+        {
+          "name": "Chou-fleur",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "Piment",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gousses d'ail",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Ghee",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Coriandre en poudre",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Garam Masala",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Curcuma",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Crème de coco",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 250,
+          "unit": "ml"
+        },
+        {
+          "name": "Amandes",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Citron vert",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Pois sucrés",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "amount": 1,
+          "unit": "botte"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Epluchez et coupez les pommes de terre en dés. Détaillez le chou-fleur en fleurettes.",
+        "Étape 2: Dans une grande casserole, faites chauffer le ghee à feu moyen. Ajoutez le gingembre râpé, l'ail émincé et le piment haché, puis faites revenir pendant 2-3 minutes.",
+        "Étape 3: Incorporez les épices (coriandre, garam masala, cumin, curcuma) et laissez cuire 1 minute pour libérer les arômes.",
+        "Étape 4: Ajoutez les pommes de terre et les fleurettes de chou-fleur dans la casserole, mélangez bien pour les enrober d'épices.",
+        "Étape 5: Versez la crème de coco et le bouillon de légumes, portez à ébullition puis réduisez le feu. Laissez mijoter pendant 20-25 minutes jusqu'à ce que les légumes soient tendres.",
+        "Étape 6: Pendant ce temps, faites griller les amandes dans une poêle à sec jusqu'à ce qu'elles soient dorées, puis hachez-les grossièrement.",
+        "Étape 7: Ajoutez les pois sucrés dans la casserole 5 minutes avant la fin de la cuisson. Assaisonnez avec du sel et le jus de citron vert.",
+        "Étape 8: Servez chaud, garni de coriandre fraîche et des amandes grillées."
+      ],
+      "nutrition": {
+        "calories": 450,
+        "proteins": 12,
+        "carbs": 60,
+        "fats": 20,
+        "sugar": 5,
+        "fiber": 10,
+        "saturatedFat": 7,
+        "sodium": 400
+      },
+      "healthScore": 85,
+      "healthNotes": "Ce plat est riche en légumes et en fibres, tout en étant modéré en graisses saturées et en sodium. Il fournit un bon équilibre de nutriments et une variété d'épices bénéfiques pour la santé.",
+      "imageUrl": "https://image.brigitte.de/10918274/t/jv/v4/w1440/r1/-/blumenkohl-curry.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/blumenkohl-curry-10540344.html",
+      "originalTitle": "Blumenkohl-Curry",
+      "enrichedAt": "2026-01-08T16:08:01.104Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/thai-curry-10537888.html",
+      "titleFr": "Curry Thaï aux Légumes",
+      "descriptionFr": "Savourez un curry thaï vibrant et parfumé, rempli de légumes croquants et de lait de coco crémeux. C'est un plat à la fois réconfortant et léger, parfait pour un dîner équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "Oignon",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Gingembre",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Lait de coco",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Huile",
+          "amount": 5,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Pâte de curry",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Bouillon de légumes",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Jus de citron vert",
+          "amount": 75,
+          "unit": "ml"
+        },
+        {
+          "name": "Coriandre",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Ciboule",
+          "amount": 2,
+          "unit": "pièce"
+        },
+        {
+          "name": "Poivron",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Courgette",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Carotte",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Pois sucrés",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Mini épis de maïs",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Riz basmati",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Commencez par rincer le riz basmati sous l'eau froide jusqu'à ce que l'eau soit claire. Ensuite, faites cuire le riz selon les instructions du paquet.",
+        "Étape 2: Pendant que le riz cuit, émincez finement les oignons et le gingembre. Coupez les poivrons, la courgette, la carotte et les ciboules en morceaux.",
+        "Étape 3: Dans une grande poêle, faites chauffer 2 c. à soupe d'huile à feu moyen. Ajoutez les oignons et le gingembre, et faites-les revenir jusqu'à ce qu'ils soient translucides.",
+        "Étape 4: Incorporez la pâte de curry et mélangez bien pendant environ 1 minute pour libérer les arômes.",
+        "Étape 5: Ajoutez le bouillon de légumes et le lait de coco dans la poêle. Mélangez bien et portez à ébullition.",
+        "Étape 6: Ajoutez tous les légumes (poivron, courgette, carotte, pois sucrés, mini épis de maïs) et laissez mijoter pendant 5 à 7 minutes, jusqu'à ce qu'ils soient tendres mais encore croquants.",
+        "Étape 7: Incorporez le jus de citron vert et le coriandre frais haché. Remuez bien pour combiner.",
+        "Étape 8: Servez le curry chaud sur un lit de riz basmati."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 15,
+        "carbs": 80,
+        "fats": 20,
+        "sugar": 6,
+        "fiber": 10,
+        "saturatedFat": 10,
+        "sodium": 450
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce curry est riche en légumes et en saveurs, offrant une bonne source de fibres et de nutriments. Cependant, la teneur en graisses saturées est à surveiller en raison du lait de coco. Globalement, c'est un plat équilibré pour un dîner.",
+      "imageUrl": "https://image.brigitte.de/10537886/t/GT/v5/w1440/r1/-/1b4fc7cbf3508659013255ab8098bee1-leichte-rezepte-hauptgerichte-thai-curry-.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 1,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/thai-curry-10537888.html",
+      "originalTitle": "Thai Curry",
+      "enrichedAt": "2026-01-08T16:08:01.557Z"
+    },
+    {
+      "id": "https://eatsmarter.de/rezepte/regenbogen-porridge",
+      "titleFr": "Porridge Arc-en-Ciel",
+      "descriptionFr": "Découvrez un petit-déjeuner coloré et nourrissant avec ce porridge arc-en-ciel, rempli de fruits frais et de saveurs. Ce mélange de flocons d'avoine crémeux et de fruits juteux offre un bon équilibre entre douceur et nutrition pour commencer la journée avec énergie.",
+      "ingredientsFr": [
+        {
+          "name": "lait (1,5 % de matière grasse)",
+          "amount": 800,
+          "unit": "ml"
+        },
+        {
+          "name": "flocons d'avoine",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "name": "cannelle en poudre",
+          "amount": 2.5,
+          "unit": "g"
+        },
+        {
+          "name": "framboises",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "myrtilles",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "prune",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "abricots",
+          "amount": 3,
+          "unit": "pièce"
+        },
+        {
+          "name": "chair d'ananas",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "kiwi",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "miel",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "pâte d'amande",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "name": "fromage blanc maigre",
+          "amount": 100,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez le lait et ajoutez les flocons d'avoine. Faites chauffer à feu moyen, en remuant régulièrement jusqu'à ce que le mélange soit crémeux.",
+        "Étape 2: Ajoutez la cannelle en poudre et mélangez bien. Laissez cuire encore 5 minutes.",
+        "Étape 3: Pendant ce temps, préparez les fruits. Lavez les framboises, les myrtilles et coupez la prune, les abricots et le kiwi en petits morceaux.",
+        "Étape 4: Lorsque le porridge est prêt, retirez-le du feu et incorporez le miel et la pâte d'amande, en remuant jusqu'à obtenir une consistance homogène.",
+        "Étape 5: Répartissez le porridge dans 4 bols et disposez les fruits sur le dessus de manière esthétique.",
+        "Étape 6: Ajoutez une cuillère de fromage blanc sur chaque bol pour une touche crémeuse.",
+        "Étape 7: Servez chaud et savourez ce petit-déjeuner nutritif et coloré !"
+      ],
+      "nutrition": {
+        "calories": 350,
+        "proteins": 15,
+        "carbs": 60,
+        "fats": 10,
+        "sugar": 18,
+        "fiber": 8,
+        "saturatedFat": 1,
+        "sodium": 150
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en fibres et en protéines, ce qui contribue à une bonne satiété. Les fruits apportent des vitamines et des antioxydants. Le miel et la pâte d'amande ajoutent des graisses saines, bien que le sucre total soit légèrement au-dessus de la limite recommandée, mais reste acceptable dans le cadre d'une alimentation équilibrée.",
+      "imageUrl": "https://images.eatsmarter.de/sites/default/files/styles/max_size/public/regenbogen-porridge-670453.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://eatsmarter.de/rezepte/regenbogen-porridge",
+      "originalTitle": "Regenbogen-Porridge",
+      "enrichedAt": "2026-01-08T16:08:52.508Z"
+    },
+    {
+      "id": "https://www.lecker.de/energie-porridge-3427.html",
+      "titleFr": "Porridge Énergétique",
+      "descriptionFr": "Commencez votre journée avec ce porridge énergique et nourrissant, alliant les bienfaits des flocons d'avoine et des fruits. Simple à préparer, il vous apportera vitalité et plaisir dès le matin.",
+      "ingredientsFr": [
+        {
+          "name": "flocons d'avoine",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "lait d'amande",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "prunes d'été",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "citron bio",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "sirop d'érable",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "pomme",
+          "amount": 1,
+          "unit": "unités"
+        },
+        {
+          "name": "pistaches hachées",
+          "amount": 1,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, versez les flocons d'avoine et le lait d'amande. Portez à ébullition à feu moyen.",
+        "Étape 2: Réduisez le feu et laissez mijoter pendant environ 5 minutes, en remuant régulièrement jusqu'à ce que le mélange épaississe.",
+        "Étape 3: Pendant ce temps, coupez les prunes et la pomme en morceaux. Réservez.",
+        "Étape 4: Une fois le porridge prêt, retirez-le du feu et ajoutez le sirop d'érable et le jus de citron.",
+        "Étape 5: Incorporez délicatement les morceaux de prunes et de pomme dans le porridge.",
+        "Étape 6: Servez chaud dans des bols et garnissez de pistaches hachées sur le dessus.",
+        "Étape 7: Vous pouvez ajouter un peu de zeste de citron pour une touche de fraîcheur supplémentaire.",
+        "Étape 8: Dégustez immédiatement pour profiter de toutes les saveurs!"
+      ],
+      "nutrition": {
+        "calories": 380,
+        "proteins": 10,
+        "carbs": 65,
+        "fats": 8,
+        "sugar": 16,
+        "fiber": 8,
+        "saturatedFat": 0.5,
+        "sodium": 150
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce porridge est riche en glucides complexes grâce aux flocons d'avoine, tout en étant modéré en sucre, ce qui en fait un choix de petit-déjeuner équilibré. Les fruits ajoutent des vitamines et des fibres, tandis que les pistaches apportent des graisses saines.",
+      "imageUrl": "https://images.lecker.de/,id=bf837761,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/energie-porridge-3427.html",
+      "originalTitle": "Energie-Porridge",
+      "enrichedAt": "2026-01-08T16:08:48.755Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/fruehstueck-mit-haferflocken--mohn-vanille-porridge-10547378.html",
+      "titleFr": "Porridge Mohn-Vanille",
+      "descriptionFr": "Commencez votre journée avec un porridge crémeux et réconfortant au goût délicat de vanille et de pavot. Garnissez-le de fruits frais pour une explosion de saveurs et de bienfaits nutritifs.",
+      "ingredientsFr": [
+        {
+          "name": "Lait",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "Flocons d'avoine",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "name": "Graines de pavot",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse de vanille",
+          "amount": 1,
+          "unit": "unité"
+        },
+        {
+          "name": "Miel",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Pomme",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Myrtilles",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "Cannelle",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Chocolat noir",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Beurre",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "name": "Sucre vanillé",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans une casserole, faites chauffer le lait à feu moyen.",
+        "Étape 2: Ajoutez les flocons d'avoine et les graines de pavot, puis remuez pour bien les mélanger.",
+        "Étape 3: Fendez la gousse de vanille en deux, grattez les graines et ajoutez-les au mélange. Jetez également la gousse dans la casserole.",
+        "Étape 4: Laissez mijoter pendant environ 5 minutes, en remuant régulièrement, jusqu'à ce que le porridge atteigne la consistance désirée.",
+        "Étape 5: Pendant ce temps, coupez la pomme en petits dés et faites-la revenir dans une poêle avec le beurre et le sucre vanillé jusqu'à ce qu'elle soit tendre.",
+        "Étape 6: Retirez la gousse de vanille du porridge, incorporez le miel et la cannelle au mélange.",
+        "Étape 7: Servez le porridge dans des bols, garnissez des dés de pomme, des myrtilles et des copeaux de chocolat noir.",
+        "Étape 8: Dégustez chaud, en ajoutant un filet de miel si désiré."
+      ],
+      "nutrition": {
+        "calories": 360,
+        "proteins": 12,
+        "carbs": 55,
+        "fats": 10,
+        "sugar": 15,
+        "fiber": 7,
+        "saturatedFat": 3,
+        "sodium": 100
+      },
+      "healthScore": 80,
+      "healthNotes": "Cette recette est riche en fibres grâce aux flocons d'avoine et aux fruits, tout en offrant des graisses saines et un bon équilibre de macronutriments. Le miel et le chocolat noir ajoutent une touche sucrée sans excéder les limites de sucre.",
+      "imageUrl": "https://image.brigitte.de/10547376/t/Dl/v5/w1440/r1/-/b7c9727609a03-d2bc659876a8d36143bb292ceeec2f8b-35676c406bee297d892d226d363b7c9727609a03-.png",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "breakfast",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/fruehstueck-mit-haferflocken--mohn-vanille-porridge-10547378.html",
+      "originalTitle": "Mohn-Vanille-Porridge",
+      "enrichedAt": "2026-01-08T16:08:49.489Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/einfacher-hummus",
+      "titleFr": "Hummus Classique",
+      "descriptionFr": "Découvrez cette recette de hummus facile à réaliser, parfaite pour une collation saine et savoureuse. Avec sa texture crémeuse et son goût réconfortant, il est idéal pour accompagner des légumes croquants ou des crackers. Faites le plein de protéines et de fibres avec ce délice méditerranéen !",
+      "ingredientsFr": [
+        {
+          "name": "Pois chiches en conserve",
+          "amount": 240,
+          "unit": "g"
+        },
+        {
+          "name": "Gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Jus de citron",
+          "amount": 45,
+          "unit": "ml"
+        },
+        {
+          "name": "Huile d'olive",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "name": "Tahin",
+          "amount": 45,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Paprika",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Cumin moulu",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Persil frais haché",
+          "amount": 15,
+          "unit": "g"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincez et égouttez les pois chiches en conserve.",
+        "Étape 2: Dans un mixeur, ajoutez les pois chiches, la gousse d'ail épluchée, le jus de citron, l'huile d'olive et le tahin.",
+        "Étape 3: Mixez le tout jusqu'à obtenir une texture lisse. Si le mélange est trop épais, ajoutez un peu d'eau pour ajuster la consistance.",
+        "Étape 4: Ajoutez le sel, le paprika et le cumin, puis mixez à nouveau pour bien incorporer les épices.",
+        "Étape 5: Transférez le hummus dans un bol et saupoudrez de persil frais haché sur le dessus.",
+        "Étape 6: Servez avec des légumes frais, des pita ou des crackers pour une collation saine.",
+        "Étape 7: Conservez le hummus au réfrigérateur dans un contenant hermétique pour une consommation ultérieure."
+      ],
+      "nutrition": {
+        "calories": 210,
+        "proteins": 9,
+        "carbs": 25,
+        "fats": 9,
+        "sugar": 2,
+        "fiber": 6,
+        "saturatedFat": 1,
+        "sodium": 200
+      },
+      "healthScore": 85,
+      "healthNotes": "Cette recette est riche en protéines et en fibres grâce aux pois chiches et au tahin, ce qui en fait une collation nourrissante et rassasiante. L'huile d'olive ajoute des graisses saines, tandis que les épices apportent des antioxydants.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-12359383.jpg",
+      "prepTime": 15,
+      "cookTime": 8,
+      "totalTime": 23,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/einfacher-hummus",
+      "originalTitle": "Einfacher Hummus",
+      "enrichedAt": "2026-01-08T16:10:10.795Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/apfel-chips-10528902.html",
+      "titleFr": "Chips de Pomme",
+      "descriptionFr": "Savourez ces délicieuses chips de pomme, croustillantes et naturellement sucrées. Parfaites pour une collation saine, elles vous apporteront une douceur sans culpabilité tout en étant riches en fibres.",
+      "ingredientsFr": [
+        {
+          "name": "Sucre",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "name": "Pomme",
+          "amount": 1,
+          "unit": "unité"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Préchauffez votre four à 100°C (212°F).",
+        "Étape 2: Lavez la pomme et coupez-la en fines tranches à l'aide d'une mandoline ou d'un couteau.",
+        "Étape 3: Disposez les tranches de pomme sur une plaque de cuisson recouverte de papier sulfurisé.",
+        "Étape 4: Saupoudrez uniformément le sucre sur les tranches de pomme.",
+        "Étape 5: Enfournez pendant environ 1 heure, en retournant les tranches à mi-cuisson pour une cuisson uniforme.",
+        "Étape 6: Surveillez les chips pour éviter qu'elles ne brûlent. Elles doivent être dorées et croustillantes.",
+        "Étape 7: Laissez refroidir avant de déguster, elles deviendront encore plus croustillantes en refroidissant."
+      ],
+      "nutrition": {
+        "calories": 110,
+        "proteins": 0.3,
+        "carbs": 30,
+        "fats": 0.1,
+        "sugar": 15,
+        "fiber": 2,
+        "saturatedFat": 0,
+        "sodium": 1
+      },
+      "healthScore": 75,
+      "healthNotes": "Ces chips de pomme sont une option de collation saine qui fournit des fibres et peu de graisses. Toutefois, la quantité de sucre peut être élevée, il est préférable de réduire le sucre ou de remplacer par un édulcorant naturel pour une version encore plus saine.",
+      "imageUrl": "https://image.brigitte.de/11519236/t/hE/v3/w1440/r1/-/apfel-chips-bild.jpg",
+      "prepTime": 10,
+      "cookTime": 5,
+      "totalTime": 15,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/apfel-chips-10528902.html",
+      "originalTitle": "Apfel-Chips",
+      "enrichedAt": "2026-01-08T16:10:24.380Z"
+    },
+    {
+      "id": "https://www.daskochrezept.de/rezepte/baerlauch-chips",
+      "titleFr": "Chips de Bärlauch",
+      "descriptionFr": "Ces chips de Bärlauch, croustillantes et savoureuses, sont parfaites pour une collation saine. Elles allient le goût délicat de l'ail des ours à une texture légère qui ravira vos papilles.",
+      "ingredientsFr": [
+        {
+          "name": "farine",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "œufs",
+          "amount": 2,
+          "unit": "unités"
+        },
+        {
+          "name": "vin blanc",
+          "amount": 175,
+          "unit": "ml"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "muscade",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "feuilles de Bärlauch",
+          "amount": 20,
+          "unit": "unités"
+        },
+        {
+          "name": "huile végétale",
+          "amount": 500,
+          "unit": "ml"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Dans un grand bol, mélangez la farine, le sel, le poivre et la muscade.",
+        "Étape 2: Ajoutez les œufs et le vin blanc au mélange de farine, puis battez jusqu'à obtenir une pâte lisse.",
+        "Étape 3: Hachez finement les feuilles de Bärlauch et incorporez-les à la pâte.",
+        "Étape 4: Dans une casserole, chauffez l'huile végétale à 180°C pour la friture.",
+        "Étape 5: À l'aide d'une cuillère, déposez des petites portions de pâte dans l'huile chaude et faites frémir jusqu'à ce qu'elles soient dorées.",
+        "Étape 6: Retirez les chips de l'huile et égouttez-les sur du papier absorbant.",
+        "Étape 7: Assaisonnez les chips encore chaudes avec un peu de sel et servez-les immédiatement.",
+        "Étape 8: Conservez les chips dans un récipient hermétique si vous ne les consommez pas immédiatement."
+      ],
+      "nutrition": {
+        "calories": 220,
+        "proteins": 7,
+        "carbs": 28,
+        "fats": 10,
+        "sugar": 1,
+        "fiber": 1,
+        "saturatedFat": 1,
+        "sodium": 200
+      },
+      "healthScore": 70,
+      "healthNotes": "Cette recette est relativement saine grâce à l'utilisation d'ingrédients naturels, mais la friture augmente la teneur en graisses. Pour une version plus légère, envisagez de les cuire au four.",
+      "imageUrl": "https://www.daskochrezept.de/sites/daskochrezept.de/files/styles/original/public/stockfood/stockfood-00246363.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "snack",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.daskochrezept.de/rezepte/baerlauch-chips",
+      "originalTitle": "Bärlauch-Chips",
+      "enrichedAt": "2026-01-08T16:10:27.729Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/steckrueben-curry-11531870.html",
+      "titleFr": "Curry de Rutabaga",
+      "descriptionFr": "Ce curry de rutabaga est un plat réconfortant et épicé, parfait pour les soirées d'hiver. Le mélange de saveurs exotiques provenant du gingembre, du curry et du lait de coco se marie délicieusement avec la douceur de la rutabaga et des lentilles rouges. Un repas nutritif et équilibré qui ravira vos papilles !",
+      "ingredientsFr": [
+        {
+          "name": "gingembre",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "échalote",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "rutabaga",
+          "amount": 350,
+          "unit": "g"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "sucre",
+          "amount": 1,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "curry en poudre",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "bâton de cannelle",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "bouillon de légumes",
+          "amount": 400,
+          "unit": "ml"
+        },
+        {
+          "name": "lentilles rouges",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "name": "lait de coco",
+          "amount": 200,
+          "unit": "ml"
+        },
+        {
+          "name": "oignons verts",
+          "amount": 3,
+          "unit": "pièce"
+        },
+        {
+          "name": "coriandre",
+          "amount": 3,
+          "unit": "brins"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "jus de lime",
+          "amount": 2,
+          "unit": "c. à café"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Épluchez et hachez finement le gingembre, l'ail et les échalotes.",
+        "Étape 2: Épluchez la rutabaga et coupez-la en cubes d'environ 1 cm.",
+        "Étape 3: Dans une grande poêle, chauffez l'huile d'olive à feu moyen et ajoutez le gingembre, l'ail et les échalotes. Faites revenir pendant 3-4 minutes jusqu'à ce qu'ils soient tendres.",
+        "Étape 4: Ajoutez les cubes de rutabaga, le sucre, le curry en poudre et le bâton de cannelle. Mélangez bien et faites cuire pendant 5 minutes.",
+        "Étape 5: Versez le bouillon de légumes et ajoutez les lentilles rouges. Laissez mijoter pendant 15 minutes jusqu'à ce que les lentilles et la rutabaga soient tendres.",
+        "Étape 6: Incorporez le lait de coco et laissez mijoter encore 5 minutes. Rectifiez l'assaisonnement avec du sel et du jus de lime.",
+        "Étape 7: Servez chaud, garni d'oignons verts hachés et de coriandre fraîche."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 18,
+        "carbs": 75,
+        "fats": 24,
+        "sugar": 8,
+        "fiber": 15,
+        "saturatedFat": 8,
+        "sodium": 400
+      },
+      "healthScore": 80,
+      "healthNotes": "Cette recette est riche en fibres grâce aux lentilles et à la rutabaga, et elle fournit des graisses saines provenant du lait de coco. Le curry et le gingembre apportent des antioxydants, faisant de ce plat un choix nutritif et équilibré.",
+      "imageUrl": "https://image.brigitte.de/11531878/t/9z/v3/w1440/r1/-/steckrueben-curry.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "medium",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/steckrueben-curry-11531870.html",
+      "originalTitle": "Steckrüben-Curry",
+      "enrichedAt": "2026-01-08T16:11:24.493Z"
+    },
+    {
+      "id": "https://www.brigitte.de/rezepte/mango-curry-10541484.html",
+      "titleFr": "Curry de Mangue",
+      "descriptionFr": "Savourez ce curry de mangue, un plat coloré et parfumé qui allie la douceur des fruits à la richesse des épices. Ce repas léger et équilibré, à base de légumes croquants et de lait de coco, vous transportera vers des horizons exotiques tout en prenant soin de votre santé.",
+      "ingredientsFr": [
+        {
+          "name": "Riz basmati",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Poivron jaune",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "Oignons nouveaux",
+          "amount": 4,
+          "unit": "pièce"
+        },
+        {
+          "name": "Ananas",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Mangue",
+          "amount": 75,
+          "unit": "g"
+        },
+        {
+          "name": "Pois sucrés",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Brocoli",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "Huile de colza",
+          "amount": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "name": "Curcuma",
+          "amount": 2,
+          "unit": "c. à café"
+        },
+        {
+          "name": "Coriandre",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Cumin",
+          "amount": 1,
+          "unit": "pincée"
+        },
+        {
+          "name": "Lait de coco",
+          "amount": 125,
+          "unit": "ml"
+        },
+        {
+          "name": "Piment de Cayenne",
+          "amount": 1,
+          "unit": "pincée"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Rincer le riz basmati sous l'eau froide jusqu'à ce que l'eau soit claire, puis le cuire selon les instructions sur l'emballage.",
+        "Étape 2: Pendant ce temps, couper le poivron jaune, les oignons nouveaux et le brocoli en petits morceaux.",
+        "Étape 3: Dans une grande poêle, chauffer l'huile de colza à feu moyen. Ajouter les oignons nouveaux et faire revenir jusqu'à ce qu'ils soient tendres.",
+        "Étape 4: Ajouter le poivron, le brocoli, et les pois sucrés dans la poêle. Faire sauter pendant environ 5 minutes jusqu'à ce que les légumes soient légèrement croquants.",
+        "Étape 5: Incorporer le curcuma, le cumin, la coriandre et le piment de Cayenne, puis mélanger pour enrober les légumes.",
+        "Étape 6: Ajouter l'ananas et la mangue coupés en dés, puis verser le lait de coco. Laisser mijoter pendant environ 10 minutes à feu doux.",
+        "Étape 7: Assaisonner avec du sel selon votre goût et mélanger délicatement.",
+        "Étape 8: Servir le curry de mangue sur un lit de riz basmati chaud."
+      ],
+      "nutrition": {
+        "calories": 550,
+        "proteins": 12,
+        "carbs": 82,
+        "fats": 22,
+        "sugar": 9,
+        "fiber": 7,
+        "saturatedFat": 6,
+        "sodium": 400
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est riche en glucides complexes et en fibres grâce au riz et aux légumes, tout en offrant des vitamines et des minéraux essentiels. Le lait de coco apporte des graisses saines mais doit être consommé avec modération pour rester dans les limites de graisses saturées.",
+      "imageUrl": "https://image.brigitte.de/11809510/t/dG/v3/w1440/r1/-/mango-curry.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 2,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.brigitte.de/rezepte/mango-curry-10541484.html",
+      "originalTitle": "Mango-Curry",
+      "enrichedAt": "2026-01-08T16:11:25.282Z"
+    },
+    {
+      "id": "https://www.lecker.de/pasta-primavera-74106.html",
+      "titleFr": "Pâtes Primavera",
+      "descriptionFr": "Savourez un plat coloré et riche en légumes avec nos Pâtes Primavera. Ce mélange délicieux de pâtes et de légumes croquants vous ravira tout en étant léger et sain, idéal pour un dîner équilibré.",
+      "ingredientsFr": [
+        {
+          "name": "sucrine",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "saucisses de Nuremberg",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "pâtes (par exemple, Mafaldine)",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "jus de citron",
+          "amount": 5,
+          "unit": "ml"
+        },
+        {
+          "name": "petits pois surgelés",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "fromage frais aux herbes allégé",
+          "amount": 200,
+          "unit": "g"
+        },
+        {
+          "name": "sel",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "poivre",
+          "amount": 1,
+          "unit": "c. à café"
+        },
+        {
+          "name": "oignon",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "gousse d'ail",
+          "amount": 1,
+          "unit": "pièce"
+        },
+        {
+          "name": "huile d'olive",
+          "amount": 2,
+          "unit": "c. à soupe"
+        }
+      ],
+      "instructionsFr": [
+        "Étape 1: Faites cuire les pâtes dans une grande casserole d'eau bouillante salée selon les instructions du paquet. Égouttez et réservez.",
+        "Étape 2: Dans une poêle, faites chauffer l'huile d'olive à feu moyen. Ajoutez l'oignon émincé et la gousse d'ail hachée, puis faites revenir pendant environ 3 minutes jusqu'à ce qu'ils soient translucides.",
+        "Étape 3: Ajoutez les saucisses de Nuremberg coupées en morceaux dans la poêle et faites-les dorer pendant environ 5 minutes.",
+        "Étape 4: Incorporez les sucrines et les petits pois surgelés dans la poêle. Faites sauter le tout pendant 5 à 7 minutes jusqu'à ce que les légumes soient tendres.",
+        "Étape 5: Ajoutez les pâtes cuites dans la poêle avec le mélange de légumes et de saucisses. Mélangez bien.",
+        "Étape 6: Ajoutez le fromage frais aux herbes et le jus de citron. Mélangez jusqu'à ce que le fromage soit bien incorporé et crémeux.",
+        "Étape 7: Assaisonnez avec du sel et du poivre selon votre goût et servez chaud."
+      ],
+      "nutrition": {
+        "calories": 470,
+        "proteins": 25,
+        "carbs": 60,
+        "fats": 15,
+        "sugar": 4,
+        "fiber": 8,
+        "saturatedFat": 4,
+        "sodium": 480
+      },
+      "healthScore": 75,
+      "healthNotes": "Ce plat est équilibré avec une bonne source de protéines et de fibres grâce aux légumes et aux saucisses. Il contient quelques graisses saturées, mais reste dans les limites recommandées. Un choix sain pour un dîner.",
+      "imageUrl": "https://images.lecker.de/,id=def1ee6e,b=lecker,w=610,cg=c.jpg",
+      "prepTime": 30,
+      "cookTime": 15,
+      "totalTime": 45,
+      "servings": 4,
+      "difficulty": "easy",
+      "mealType": "dinner",
+      "source": "Gustar.io",
+      "sourceUrl": "https://www.lecker.de/pasta-primavera-74106.html",
+      "originalTitle": "Pasta Primavera",
+      "enrichedAt": "2026-01-08T16:11:19.709Z"
     }
   ]
 }
