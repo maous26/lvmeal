@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { FoodItem, NutritionInfo, NutriScoreGrade } from '../types'
 import { analyzeForConversion, detectDryFood, type ConversionResult } from './cooking-conversion'
 import { useCustomRecipesStore } from '../stores/custom-recipes-store'
+import { useLocalOffStore, localOffProductToFoodItem } from '../stores/local-off-store'
 
 // ============= TYPES =============
 
@@ -556,6 +557,15 @@ function transformOffProduct(p: OpenFoodFactsProduct): FoodItem | null {
 }
 
 async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: number = 5000): Promise<FoodItem[]> {
+  const results: FoodItem[] = []
+
+  // 1. First, search local OFF database (user-added products)
+  const localProducts = useLocalOffStore.getState().searchProducts(query, Math.min(limit, 5))
+  for (const localProduct of localProducts) {
+    results.push(localOffProductToFoodItem(localProduct))
+  }
+
+  // 2. Then, search official Open Food Facts API
   try {
     const searchUrl = new URL('https://world.openfoodfacts.org/cgi/search.pl')
     searchUrl.searchParams.set('search_terms', query)
@@ -584,14 +594,17 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
 
     if (!response.ok) {
       console.warn('Open Food Facts API error:', response.status)
-      return []
+      return results // Return local results even if API fails
     }
 
     const data = await response.json()
     const products = data.products || []
 
-    const results: FoodItem[] = []
+    // Add API results, avoiding duplicates (by barcode)
+    const existingBarcodes = new Set(results.map(r => r.barcode))
     for (const p of products) {
+      if (existingBarcodes.has(p.code)) continue // Skip if already in local results
+
       const product = transformOffProduct(p)
       if (product) {
         results.push(product)
@@ -599,7 +612,7 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
       }
     }
 
-    return results
+    return results.slice(0, limit)
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       // Timeout is not a critical error, just skip OFF results
@@ -607,7 +620,8 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
     } else {
       console.warn('Error searching Open Food Facts:', error)
     }
-    return []
+    // Return local results even if API fails
+    return results
   }
 }
 
@@ -624,6 +638,22 @@ export interface BarcodeResult {
 }
 
 export async function lookupBarcode(barcode: string): Promise<BarcodeResult | null> {
+  // 1. First, check local OFF database (user-added products)
+  const localProduct = useLocalOffStore.getState().getProductByBarcode(barcode)
+  if (localProduct) {
+    console.log(`[lookupBarcode] Found in local OFF database: ${localProduct.product_name}`)
+    const food = localOffProductToFoodItem(localProduct)
+    const conversion = analyzeForConversion(food)
+
+    return {
+      food,
+      conversionAvailable: conversion.needsConversion,
+      convertedFood: conversion.convertedFood,
+      conversionRule: conversion.rule?.id,
+    }
+  }
+
+  // 2. Then, check official Open Food Facts API
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)

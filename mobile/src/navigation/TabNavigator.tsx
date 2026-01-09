@@ -84,22 +84,22 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Recipes"
-        component={RecipesScreen}
-        options={{
-          tabBarLabel: 'Recettes',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={BookOpen} focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
         name="Coach"
         component={CoachScreen}
         options={{
           tabBarLabel: 'Coach',
           tabBarIcon: ({ focused, color }) => (
             <TabIcon Icon={Bot} focused={focused} color={color} badge={coachBadgeCount} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Recipes"
+        component={RecipesScreen}
+        options={{
+          tabBarLabel: 'Recettes',
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon Icon={BookOpen} focused={focused} color={color} />
           ),
         }}
       />

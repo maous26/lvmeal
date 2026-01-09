@@ -17,6 +17,7 @@ import { colors, spacing, typography, radius } from '../constants/theme'
 import { lookupBarcode, type BarcodeResult } from '../services/food-search'
 import { analytics } from '../services/analytics-service'
 import { errorReporting } from '../services/error-reporting-service'
+import AddProductModal from './AddProductModal'
 import type { FoodItem } from '../types'
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
@@ -38,6 +39,8 @@ export default function BarcodeScanner({
   const [isLookingUp, setIsLookingUp] = useState(false)
   const [torchEnabled, setTorchEnabled] = useState(false)
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [pendingBarcode, setPendingBarcode] = useState<string | null>(null)
 
   // Request permission when modal opens
   useEffect(() => {
@@ -117,8 +120,15 @@ export default function BarcodeScanner({
         })
         Alert.alert(
           'Produit non trouve',
-          `Le code-barres ${barcode} n'a pas ete trouve dans la base Open Food Facts.`,
+          `Le code-barres ${barcode} n'a pas ete trouve dans la base Open Food Facts.\n\nTu peux l'ajouter manuellement pour l'utiliser a l'avenir.`,
           [
+            {
+              text: 'Ajouter',
+              onPress: () => {
+                setPendingBarcode(barcode)
+                setShowAddModal(true)
+              },
+            },
             {
               text: 'Reessayer',
               onPress: () => {
@@ -280,6 +290,26 @@ export default function BarcodeScanner({
           </View>
         </View>
       </View>
+
+      {/* Modal d'ajout de produit */}
+      <AddProductModal
+        visible={showAddModal}
+        barcode={pendingBarcode || ''}
+        onClose={() => {
+          setShowAddModal(false)
+          setPendingBarcode(null)
+          setIsScanning(true)
+          setIsLookingUp(false)
+          setLastScannedCode(null)
+        }}
+        onProductAdded={(food) => {
+          setShowAddModal(false)
+          setPendingBarcode(null)
+          analytics.track('feature_used', { feature: 'local_product_added', barcode: pendingBarcode || undefined })
+          onFoodFound(food)
+          onClose()
+        }}
+      />
     </Modal>
   )
 }
