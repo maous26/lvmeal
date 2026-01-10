@@ -544,18 +544,20 @@ export const useUserStore = create<UserState>()(
           return
         }
 
-        // Only recalculate if no goals exist
-        const tryRecalculate = (attempt: number) => {
-          const store = useUserStore.getState()
-          console.log(`[UserStore] Recalc attempt ${attempt}, profile exists:`, !!store.profile)
-          if (store.profile && !store.nutritionGoals) {
-            console.log('[UserStore] 🔄 No nutritionGoals found, calculating initial goals...')
-            store.recalculateNutritionGoals()
-          } else if (attempt < 3 && !store.nutritionGoals) {
-            setTimeout(() => tryRecalculate(attempt + 1), 1000)
-          }
+        // If profile exists but no goals, calculate them
+        // Use state.profile directly since getState() might not have merged yet
+        if (state?.profile && !state?.nutritionGoals) {
+          console.log('[UserStore] 🔄 Profile found but no nutritionGoals, calculating...')
+          // Small delay to ensure store is ready, then recalculate
+          setTimeout(() => {
+            const store = useUserStore.getState()
+            if (store.profile && !store.nutritionGoals) {
+              console.log('[UserStore] 🔄 Recalculating nutrition goals...')
+              store.recalculateNutritionGoals()
+              console.log('[UserStore] ✅ Goals calculated:', store.nutritionGoals)
+            }
+          }, 100)
         }
-        setTimeout(() => tryRecalculate(1), 500)
       },
     }
   )
