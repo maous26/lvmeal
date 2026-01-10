@@ -24,7 +24,7 @@ import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
-import { useCoachStore, type CoachItem, type CoachItemCategory } from '../stores/coach-store'
+import { useMessageCenter, type MessageCategory, type MessageType } from './message-center'
 import type { UserProfile, NutritionInfo } from '../types'
 
 // ============= CONSTANTS =============
@@ -206,67 +206,70 @@ function getFallbackInsight(): DailyInsight {
   return FALLBACK_INSIGHTS[dayOfYear % FALLBACK_INSIGHTS.length]
 }
 
-// ============= COACH STORE INTEGRATION =============
+// ============= MESSAGE CENTER INTEGRATION =============
 
 /**
- * Convert DailyInsight to CoachItem and add to store
- * This ensures insights appear in the coach widget
+ * Convert DailyInsight to LymiaMessage and add to MessageCenter
+ * This ensures insights appear in the unified coach feed
  */
-function addInsightToCoachStore(insight: DailyInsight): void {
+function addInsightToMessageCenter(insight: DailyInsight): void {
   try {
-    const coachStore = useCoachStore.getState()
-    const currentItems = coachStore.items
+    const messageCenter = useMessageCenter.getState()
 
-    // Check if this insight is already in the store (by title + today's date)
-    const today = new Date().toDateString()
-    const alreadyExists = currentItems.some(item => {
-      const itemDate = new Date(item.createdAt).toDateString()
-      return item.title === insight.title && itemDate === today
-    })
-
-    if (alreadyExists) {
-      console.log('[DailyInsight] Insight already in coach store, skipping:', insight.title)
-      return
-    }
-
-    // Map DailyInsight category to CoachItemCategory
-    const categoryMap: Record<string, CoachItemCategory> = {
+    // Map DailyInsight category to MessageCategory
+    const categoryMap: Record<string, MessageCategory> = {
       nutrition: 'nutrition',
       wellness: 'wellness',
       sport: 'sport',
       progress: 'progress',
     }
 
-    const coachItem: CoachItem = {
-      id: `daily_insight_${Date.now()}`,
-      type: insight.severity === 'celebration' ? 'celebration' :
-            insight.severity === 'warning' ? 'alert' : 'tip',
-      category: categoryMap[insight.category] || 'nutrition',
-      title: insight.title,
-      message: insight.body,
-      priority: insight.severity === 'warning' ? 'high' :
-               insight.severity === 'celebration' ? 'medium' : 'low',
-      source: insight.sources?.[0]?.source || 'LymIA',
-      isRead: false,
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
-      confidence: insight.confidence,
-      reasoning: insight.reasoning,
+    // Map severity to MessageType and Priority
+    const typeMap: Record<string, MessageType> = {
+      celebration: 'celebration',
+      warning: 'alert',
+      info: 'insight',
     }
 
-    // Add new item at the beginning
-    const newItems = [coachItem, ...currentItems]
-      .slice(0, 10) // Keep max 10 items
+    // Determine priority based on severity
+    const priorityMap: Record<string, 'P0' | 'P1' | 'P2' | 'P3'> = {
+      warning: 'P1',
+      celebration: 'P2',
+      info: 'P3',
+    }
 
-    // Update store directly (avoiding full regeneration)
-    useCoachStore.setState({
-      items: newItems,
-      unreadCount: newItems.filter(item => !item.isRead).length,
+    // Emoji selon la catégorie
+    const categoryEmoji: Record<string, string> = {
+      nutrition: '🥗',
+      wellness: '❤️',
+      sport: '💪',
+      progress: '📈',
+    }
+    const emoji = insight.severity === 'celebration' ? '🎉' :
+                  insight.severity === 'warning' ? '⚠️' :
+                  categoryEmoji[insight.category] || '💡'
+
+    // Add message via MessageCenter (handles dedup via dedupKey)
+    const messageId = messageCenter.addMessage({
+      priority: priorityMap[insight.severity] || 'P3',
+      type: typeMap[insight.severity] || 'insight',
+      category: categoryMap[insight.category] || 'wellness',
+      title: insight.title,
+      message: insight.body,
+      emoji,
+      reason: `Daily insight: ${insight.category}`,
+      confidence: insight.confidence,
+      dedupKey: `daily-insight-${new Date().toISOString().split('T')[0]}`, // 1 per day
+      actionRoute: 'Coach',
     })
 
-    console.log('[DailyInsight] Added insight to coach store:', insight.title)
+    if (messageId) {
+      console.log('[DailyInsight] Added insight to MessageCenter:', insight.title)
+    } else {
+      console.log('[DailyInsight] Insight blocked by cooldown/dedup:', insight.title)
+    }
   } catch (error) {
-    console.error('[DailyInsight] Failed to add insight to coach store:', error)
+    console.error('[DailyInsight] Failed to add insight to MessageCenter:', error)
   }
 }
 
@@ -290,7 +293,7 @@ export async function generateDailyInsight(): Promise<InsightGenerationResult> {
         console.log('[DailyInsight] Using cached insight')
         const parsedInsight = JSON.parse(cachedInsight)
         // Ensure it's in the coach store (in case app was killed)
-        addInsightToCoachStore(parsedInsight)
+        addInsightToMessageCenter(parsedInsight)
         return {
           success: true,
           insight: parsedInsight,
@@ -410,7 +413,7 @@ export async function generateAndNotifyInsight(): Promise<boolean> {
     console.log('[DailyInsight] Notification scheduled with ID:', notifId)
 
     // ADD INSIGHT TO COACH STORE so it appears in the app
-    addInsightToCoachStore(insight)
+    addInsightToMessageCenter(insight)
 
     // Marquer comme notifié aujourd'hui
     await AsyncStorage.setItem('@lym_last_insight_notif_date', today)

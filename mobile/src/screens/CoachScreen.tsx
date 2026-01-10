@@ -18,26 +18,14 @@ import {
 } from 'react-native'
 import {
   Sparkles,
-  Apple,
-  Moon,
-  Flame,
-  Dumbbell,
-  Heart,
   AlertTriangle,
-  Droplets,
-  Brain,
   Trophy,
-  ChevronRight,
   X,
   Lightbulb,
-  BarChart3,
   Bell,
-  PartyPopper,
   Bot,
   TrendingUp,
-  History,
-  Trash2,
-  Settings,
+  Heart,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
@@ -52,11 +40,9 @@ import {
   useMessageCenter,
   generateDailyMessages,
   PRIORITY_CONFIG,
-  CATEGORY_EMOJI,
   type LymiaMessage,
-  type MessageCategory,
-  type MessageType,
 } from '../services/message-center'
+import { CoachMessageCard } from '../components/coach'
 
 // ============= WELCOME CARD COMPONENT =============
 
@@ -186,115 +172,6 @@ const welcomeStyles = StyleSheet.create({
     ...typography.small,
   },
 })
-
-// Configuration des types (mapping MessageType → visuel)
-const typeConfig: Record<MessageType, { icon: typeof Lightbulb; label: string; defaultColor: string }> = {
-  tip: { icon: Lightbulb, label: 'Conseil', defaultColor: staticColors.accent.primary },
-  insight: { icon: BarChart3, label: 'Analyse', defaultColor: staticColors.secondary.primary },
-  alert: { icon: Bell, label: 'Alerte', defaultColor: staticColors.warning },
-  celebration: { icon: PartyPopper, label: 'Bravo !', defaultColor: staticColors.success },
-  action: { icon: AlertTriangle, label: 'Action', defaultColor: staticColors.warning },
-}
-
-// Configuration des catégories
-const categoryIcons: Record<MessageCategory, typeof Apple> = {
-  nutrition: Apple,
-  hydration: Droplets,
-  sleep: Moon,
-  sport: Dumbbell,
-  stress: Brain,
-  progress: Trophy,
-  wellness: Heart,
-  system: Settings,
-}
-
-// ============= MESSAGE CARD COMPONENT =============
-
-interface MessageCardProps {
-  message: LymiaMessage
-  onRead: () => void
-  onDismiss: () => void
-  onAction?: (route: string) => void
-  colors: ReturnType<typeof useTheme>['colors']
-}
-
-function MessageCard({ message, onRead, onDismiss, onAction, colors }: MessageCardProps) {
-  const typeConf = typeConfig[message.type]
-  const priorityConf = PRIORITY_CONFIG[message.priority]
-  const CategoryIcon = categoryIcons[message.category]
-  const emoji = message.emoji || CATEGORY_EMOJI[message.category]
-
-  const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    if (!message.read) onRead()
-
-    if (message.actionRoute) {
-      onAction?.(message.actionRoute)
-    }
-  }
-
-  const handleDismiss = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    onDismiss()
-  }
-
-  const canDismiss = !priorityConf.persistent
-
-  return (
-    <TouchableOpacity
-      style={[
-        styles.messageCard,
-        {
-          backgroundColor: colors.bg.elevated,
-          borderWidth: 1,
-          borderColor: `${priorityConf.color}30`,
-        },
-        !message.read && { borderColor: `${priorityConf.color}60` },
-      ]}
-      onPress={handlePress}
-      activeOpacity={0.8}
-    >
-      {/* Header */}
-      <View style={styles.messageHeader}>
-        <View style={[styles.messageIcon, { backgroundColor: `${priorityConf.color}15` }]}>
-          <Text style={{ fontSize: 18 }}>{emoji}</Text>
-        </View>
-        <View style={styles.messageHeaderText}>
-          <Text style={[styles.messageType, { color: priorityConf.color }]}>
-            {typeConf.label}
-          </Text>
-          {!message.read && <View style={[styles.unreadDot, { backgroundColor: priorityConf.color }]} />}
-        </View>
-        {canDismiss && (
-          <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <X size={18} color={colors.text.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Content */}
-      <Text style={[styles.messageTitle, { color: colors.text.primary }]}>{message.title}</Text>
-      <Text style={[styles.messageText, { color: colors.text.secondary }]}>{message.message}</Text>
-
-      {/* Reason (transparence) */}
-      {message.reason && (
-        <Text style={[styles.reasonText, { color: colors.text.muted }]}>
-          💡 {message.reason}
-        </Text>
-      )}
-
-      {/* Action */}
-      {message.actionLabel && (
-        <View style={[styles.actionButton, { backgroundColor: `${priorityConf.color}15` }]}>
-          <Text style={[styles.actionText, { color: priorityConf.color }]}>
-            {message.actionLabel}
-          </Text>
-          <ChevronRight size={16} color={priorityConf.color} />
-        </View>
-      )}
-    </TouchableOpacity>
-  )
-}
 
 // ============= MAIN COMPONENT =============
 
@@ -448,13 +325,12 @@ export default function CoachScreen() {
                   </Text>
                 </View>
                 {alerts.map((msg) => (
-                  <MessageCard
+                  <CoachMessageCard
                     key={msg.id}
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
-                    colors={colors}
                   />
                 ))}
               </View>
@@ -470,13 +346,12 @@ export default function CoachScreen() {
                   </Text>
                 </View>
                 {actions.map((msg) => (
-                  <MessageCard
+                  <CoachMessageCard
                     key={msg.id}
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
-                    colors={colors}
                   />
                 ))}
               </View>
@@ -492,13 +367,12 @@ export default function CoachScreen() {
                   </Text>
                 </View>
                 {celebrations.map((msg) => (
-                  <MessageCard
+                  <CoachMessageCard
                     key={msg.id}
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
-                    colors={colors}
                   />
                 ))}
               </View>
@@ -514,13 +388,12 @@ export default function CoachScreen() {
                   </Text>
                 </View>
                 {tips.map((msg) => (
-                  <MessageCard
+                  <CoachMessageCard
                     key={msg.id}
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
                     onAction={handleAction}
-                    colors={colors}
                   />
                 ))}
               </View>
@@ -595,71 +468,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.bodyMedium,
-    fontWeight: '600',
-  },
-  // Message card styles
-  messageCard: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm,
-  },
-  messageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  messageIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.sm,
-  },
-  messageHeaderText: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  messageType: {
-    ...typography.caption,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  unreadDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  messageTitle: {
-    fontSize: 16,
-    fontFamily: fonts.serif.semibold,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  messageText: {
-    ...typography.body,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  reasonText: {
-    ...typography.caption,
-    fontStyle: 'italic',
-    marginBottom: spacing.sm,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.xs,
-  },
-  actionText: {
-    ...typography.smallMedium,
     fontWeight: '600',
   },
   bottomSpacer: {
