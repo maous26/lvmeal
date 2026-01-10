@@ -59,9 +59,7 @@ COPY --from=builder /app/data ./data
 
 USER nextjs
 
-EXPOSE 8080
-
-ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
+# PORT is set by Railway at runtime
 CMD ["node", "server.js"]
