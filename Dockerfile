@@ -39,7 +39,7 @@ ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 
 # Only run next build, skip sync-recipes (it's a runtime operation)
-RUN npx next build
+RUN ./node_modules/.bin/next build
 
 # Production image
 FROM base AS runner
