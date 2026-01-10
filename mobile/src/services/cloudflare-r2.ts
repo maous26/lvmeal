@@ -6,21 +6,15 @@
  * - Recipe images
  * - User avatars
  *
- * R2 is S3-compatible, so we use standard S3 signing.
+ * SECURITY: Uses backend endpoint to get presigned URLs.
+ * Credentials are stored server-side only.
  */
 
 import * as FileSystem from 'expo-file-system'
-import * as Crypto from 'expo-crypto'
 
-// Environment variables
-const R2_ACCOUNT_ID = process.env.EXPO_PUBLIC_R2_ACCOUNT_ID || ''
-const R2_ACCESS_KEY_ID = process.env.EXPO_PUBLIC_R2_ACCESS_KEY_ID || ''
-const R2_SECRET_ACCESS_KEY = process.env.EXPO_PUBLIC_R2_SECRET_ACCESS_KEY || ''
-const R2_BUCKET_NAME = process.env.EXPO_PUBLIC_R2_BUCKET_NAME || 'lym-photos'
+// Backend API for presigned URLs (credentials stored server-side)
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lvmeal-production.up.railway.app'
 const R2_PUBLIC_URL = process.env.EXPO_PUBLIC_R2_PUBLIC_URL || ''
-
-// R2 endpoint
-const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
 
 export interface UploadResult {
   success: boolean
@@ -35,10 +29,10 @@ export interface ImageCategory {
 }
 
 /**
- * Check if R2 is configured
+ * Check if R2 is configured (backend availability)
  */
 export function isR2Configured(): boolean {
-  return !!(R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET_NAME)
+  return !!API_URL
 }
 
 /**
@@ -57,95 +51,44 @@ function generateImageKey(category: ImageCategory, filename: string): string {
 }
 
 /**
- * Create HMAC-SHA256 signature
+ * Get presigned URL from backend (credentials stay server-side)
  */
-async function hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
-  // For React Native, we need to use a different approach
-  // This is a simplified version - in production use a proper crypto library
-  const encoder = new TextEncoder()
-  const keyData = new Uint8Array(key)
-  const messageData = encoder.encode(message)
-
-  // Use expo-crypto for hashing
-  const hash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    message,
-    { encoding: Crypto.CryptoEncoding.BASE64 }
-  )
-
-  return Uint8Array.from(atob(hash), c => c.charCodeAt(0)).buffer
-}
-
-/**
- * Create AWS Signature V4 for R2
- * Simplified version for presigned URLs
- */
-async function createPresignedUrl(
-  method: 'PUT' | 'GET',
+async function getPresignedUrlFromBackend(
+  method: 'PUT' | 'GET' | 'DELETE',
   key: string,
-  expiresIn: number = 3600
-): Promise<string> {
-  const now = new Date()
-  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '')
-  const amzDate = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  contentType?: string
+): Promise<{ url: string; publicUrl: string } | null> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-  const region = 'auto'
-  const service = 's3'
-  const host = `${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    const response = await fetch(`${API_URL}/api/storage/presign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method, key, contentType }),
+      signal: controller.signal,
+    })
 
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`
-  const credential = `${R2_ACCESS_KEY_ID}/${credentialScope}`
+    clearTimeout(timeoutId)
 
-  const queryParams = new URLSearchParams({
-    'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
-    'X-Amz-Credential': credential,
-    'X-Amz-Date': amzDate,
-    'X-Amz-Expires': expiresIn.toString(),
-    'X-Amz-SignedHeaders': 'host',
-  })
+    if (!response.ok) {
+      console.error('[R2] Failed to get presigned URL:', response.status)
+      return null
+    }
 
-  const canonicalUri = `/${R2_BUCKET_NAME}/${key}`
-  const canonicalQueryString = queryParams.toString()
-  const canonicalHeaders = `host:${host}\n`
-  const signedHeaders = 'host'
-  const payloadHash = 'UNSIGNED-PAYLOAD'
-
-  const canonicalRequest = [
-    method,
-    canonicalUri,
-    canonicalQueryString,
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join('\n')
-
-  const requestHash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    canonicalRequest,
-    { encoding: Crypto.CryptoEncoding.HEX }
-  )
-
-  const stringToSign = [
-    'AWS4-HMAC-SHA256',
-    amzDate,
-    credentialScope,
-    requestHash,
-  ].join('\n')
-
-  // Simplified signing - in production, implement full AWS4 signing
-  const signature = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${R2_SECRET_ACCESS_KEY}${stringToSign}`,
-    { encoding: Crypto.CryptoEncoding.HEX }
-  )
-
-  queryParams.set('X-Amz-Signature', signature)
-
-  return `https://${host}${canonicalUri}?${queryParams.toString()}`
+    return await response.json()
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[R2] Timeout getting presigned URL')
+    } else {
+      console.error('[R2] Error getting presigned URL:', error)
+    }
+    return null
+  }
 }
 
 /**
- * Upload an image to R2
+ * Upload an image to R2 via backend presigned URL
  */
 export async function uploadImage(
   localUri: string,
@@ -153,8 +96,8 @@ export async function uploadImage(
   filename?: string
 ): Promise<UploadResult> {
   if (!isR2Configured()) {
-    console.warn('Cloudflare R2 not configured')
-    return { success: false, error: 'R2 not configured' }
+    console.warn('[R2] Backend not configured')
+    return { success: false, error: 'Storage not configured' }
   }
 
   try {
@@ -168,11 +111,6 @@ export async function uploadImage(
     const name = filename || localUri.split('/').pop() || 'image.jpg'
     const key = generateImageKey(category, name)
 
-    // Read file as base64
-    const base64 = await FileSystem.readAsStringAsync(localUri, {
-      encoding: 'base64',
-    })
-
     // Determine content type
     const ext = name.split('.').pop()?.toLowerCase()
     const contentType = ext === 'png' ? 'image/png'
@@ -180,27 +118,40 @@ export async function uploadImage(
       : ext === 'webp' ? 'image/webp'
       : 'image/jpeg'
 
-    // Upload directly to R2 using presigned URL
-    const presignedUrl = await createPresignedUrl('PUT', key)
+    // Get presigned URL from backend (credentials never leave server)
+    const presignedData = await getPresignedUrlFromBackend('PUT', key, contentType)
+    if (!presignedData) {
+      return { success: false, error: 'Failed to get upload URL' }
+    }
 
-    const response = await fetch(presignedUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': contentType,
-      },
-      body: Uint8Array.from(atob(base64), c => c.charCodeAt(0)),
+    // Read file as base64
+    const base64 = await FileSystem.readAsStringAsync(localUri, {
+      encoding: 'base64',
     })
+
+    // Upload to R2 using presigned URL
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60000) // 60s for upload
+
+    const response = await fetch(presignedData.url, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: Uint8Array.from(atob(base64), c => c.charCodeAt(0)),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('R2 upload error:', error)
+      console.error('[R2] Upload error:', error)
       return { success: false, error: `Upload failed: ${response.status}` }
     }
 
     // Return public URL
     const publicUrl = R2_PUBLIC_URL
       ? `${R2_PUBLIC_URL}/${key}`
-      : `${R2_ENDPOINT}/${R2_BUCKET_NAME}/${key}`
+      : presignedData.publicUrl
 
     return {
       success: true,
@@ -208,7 +159,11 @@ export async function uploadImage(
       key,
     }
   } catch (error) {
-    console.error('R2 upload error:', error)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[R2] Upload timeout')
+      return { success: false, error: 'Upload timeout' }
+    }
+    console.error('[R2] Upload error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Upload failed',
@@ -246,7 +201,7 @@ export async function uploadAvatar(
 }
 
 /**
- * Delete an image from R2
+ * Delete an image from R2 via backend
  */
 export async function deleteImage(key: string): Promise<boolean> {
   if (!isR2Configured()) {
@@ -254,15 +209,21 @@ export async function deleteImage(key: string): Promise<boolean> {
   }
 
   try {
-    const presignedUrl = await createPresignedUrl('GET', key) // Use GET for delete request
-    const deleteUrl = presignedUrl.replace('X-Amz-Expires=3600', 'X-Amz-Expires=60')
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-    // Note: For proper delete, you'd need a backend or Cloudflare Worker
-    // R2 doesn't support presigned DELETE URLs directly from client
-    console.warn('Client-side delete not fully supported - use backend')
-    return false
+    const response = await fetch(`${API_URL}/api/storage/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    return response.ok
   } catch (error) {
-    console.error('R2 delete error:', error)
+    console.error('[R2] Delete error:', error)
     return false
   }
 }
@@ -276,9 +237,10 @@ export async function getSignedUrl(key: string, expiresIn: number = 3600): Promi
   }
 
   try {
-    return await createPresignedUrl('GET', key, expiresIn)
+    const presignedData = await getPresignedUrlFromBackend('GET', key)
+    return presignedData?.url || null
   } catch (error) {
-    console.error('Failed to generate signed URL:', error)
+    console.error('[R2] Failed to generate signed URL:', error)
     return null
   }
 }

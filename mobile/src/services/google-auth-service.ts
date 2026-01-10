@@ -5,24 +5,23 @@
  */
 
 import { Platform } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import Constants from 'expo-constants'
 import { supabase, isSupabaseConfigured } from './supabase-client'
+import { saveSecureJSON, getSecureJSON, deleteSecure, SECURE_KEYS } from './secure-storage'
 
-// Google OAuth Client IDs from environment
-// Fallback to hardcoded values if env vars not available (EAS build issue)
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '798753543413-lapf769u63d6tb7t3n0prfab2ir43t7h.apps.googleusercontent.com'
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '798753543413-fr199m16nt69199iba06trtj47mp9llu.apps.googleusercontent.com'
-const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '798753543413-nmvodqsqgg7til0ggas1aplt249ovm6f.apps.googleusercontent.com'
+// Google OAuth Client IDs from environment (NO hardcoded fallbacks for security)
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || ''
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || ''
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || ''
 
-// Debug: Log client IDs at module load
-console.log('[GoogleAuth] ===== MODULE INIT =====')
-console.log('[GoogleAuth] Platform:', Platform.OS)
-console.log('[GoogleAuth] WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID ? 'SET' : 'NOT SET')
-console.log('[GoogleAuth] IOS_CLIENT_ID:', GOOGLE_IOS_CLIENT_ID ? 'SET' : 'NOT SET')
-console.log('[GoogleAuth] ANDROID_CLIENT_ID:', GOOGLE_ANDROID_CLIENT_ID ? 'SET' : 'NOT SET')
-console.log('[GoogleAuth] executionEnvironment:', Constants.executionEnvironment)
-console.log('[GoogleAuth] appOwnership:', Constants.appOwnership)
+// Debug: Log client IDs at module load (sanitized)
+if (__DEV__) {
+  console.log('[GoogleAuth] ===== MODULE INIT =====')
+  console.log('[GoogleAuth] Platform:', Platform.OS)
+  console.log('[GoogleAuth] WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID ? 'SET' : 'NOT SET')
+  console.log('[GoogleAuth] IOS_CLIENT_ID:', GOOGLE_IOS_CLIENT_ID ? 'SET' : 'NOT SET')
+  console.log('[GoogleAuth] ANDROID_CLIENT_ID:', GOOGLE_ANDROID_CLIENT_ID ? 'SET' : 'NOT SET')
+}
 
 // Determine if we're in Expo Go (development client)
 // In EAS builds: executionEnvironment === 'standalone' or 'storeClient'
@@ -212,14 +211,14 @@ export async function signInWithGoogle(): Promise<GoogleAuthResult> {
     const accessToken = tokens?.accessToken || userInfo?.accessToken
     const idToken = tokens?.idToken || userInfo?.idToken
 
-    // Store user info locally
+    // Store user info securely (encrypted on device)
     const userData = {
       id: user.id,
       email: user.email,
       name: user.name || user.givenName,
       avatar: user.photo,
     }
-    await AsyncStorage.setItem('lym_google_user', JSON.stringify(userData))
+    await saveSecureJSON(SECURE_KEYS.GOOGLE_USER, userData)
 
     console.log('[GoogleAuth] ✓ Sign in successful:', user.email)
 
@@ -342,14 +341,14 @@ export async function signInWithGoogleToken(accessToken: string, idToken?: strin
       throw new Error('Impossible de récupérer les informations utilisateur Google')
     }
 
-    // Store user info
+    // Store user info securely
     const userData = {
       id: userInfo.id,
       email: userInfo.email,
       name: userInfo.name || userInfo.given_name,
       avatar: userInfo.picture,
     }
-    await AsyncStorage.setItem('lym_google_user', JSON.stringify(userData))
+    await saveSecureJSON(SECURE_KEYS.GOOGLE_USER, userData)
 
     return { success: true, user: userData, accessToken, idToken }
   } catch (error) {
@@ -378,7 +377,7 @@ export async function signOutGoogle(): Promise<void> {
       await supabase.auth.signOut()
     }
 
-    await AsyncStorage.removeItem('lym_google_user')
+    await deleteSecure(SECURE_KEYS.GOOGLE_USER)
     console.log('[GoogleAuth] Signed out successfully')
   } catch (error) {
     console.error('[GoogleAuth] Sign out error:', error)
@@ -392,9 +391,7 @@ export async function signOutGoogle(): Promise<void> {
 
 export async function getCachedGoogleUser(): Promise<GoogleAuthResult['user'] | null> {
   try {
-    const cached = await AsyncStorage.getItem('lym_google_user')
-    if (!cached) return null
-    return JSON.parse(cached)
+    return await getSecureJSON<GoogleAuthResult['user']>(SECURE_KEYS.GOOGLE_USER)
   } catch {
     return null
   }

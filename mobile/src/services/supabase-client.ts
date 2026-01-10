@@ -6,6 +6,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { fetchWithTimeout, TIMEOUTS } from '../lib/fetch-utils'
 
 // Environment variables
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || ''
@@ -59,18 +60,47 @@ export interface RAGQueryResult {
 // Singleton client instance
 let supabaseClient: SupabaseClient | null = null
 
-// ============= EMBEDDING CACHE =============
-// Cache embeddings for 24 hours to avoid redundant OpenAI calls
+// ============= LRU EMBEDDING CACHE =============
+// Cache embeddings with LRU eviction and TTL to prevent memory leaks
 interface EmbeddingCacheEntry {
   embedding: number[]
   timestamp: number
+  lastAccess: number
 }
 
 const embeddingCache = new Map<string, EmbeddingCacheEntry>()
 const EMBEDDING_CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+const EMBEDDING_CACHE_MAX_SIZE = 200 // Reduced from 500 to limit memory (~640KB max)
+const CACHE_CLEANUP_INTERVAL = 5 * 60 * 1000 // Cleanup every 5 minutes
+
+// Periodic cache cleanup to remove expired entries
+let cacheCleanupTimer: ReturnType<typeof setInterval> | null = null
+
+function startCacheCleanup(): void {
+  if (cacheCleanupTimer) return
+
+  cacheCleanupTimer = setInterval(() => {
+    const now = Date.now()
+    let cleaned = 0
+
+    for (const [key, entry] of embeddingCache.entries()) {
+      if (now - entry.timestamp > EMBEDDING_CACHE_TTL) {
+        embeddingCache.delete(key)
+        cleaned++
+      }
+    }
+
+    if (__DEV__ && cleaned > 0) {
+      console.log(`[EmbeddingCache] Cleaned ${cleaned} expired entries, size: ${embeddingCache.size}`)
+    }
+  }, CACHE_CLEANUP_INTERVAL)
+}
+
+// Start cleanup on module load
+startCacheCleanup()
 
 /**
- * Get cached embedding or null if expired/not found
+ * Get cached embedding or null if expired/not found (LRU: updates lastAccess)
  */
 function getCachedEmbedding(text: string): number[] | null {
   const cacheKey = text.toLowerCase().trim()
@@ -78,29 +108,48 @@ function getCachedEmbedding(text: string): number[] | null {
 
   if (!cached) return null
 
+  const now = Date.now()
+
   // Check if expired
-  if (Date.now() - cached.timestamp > EMBEDDING_CACHE_TTL) {
+  if (now - cached.timestamp > EMBEDDING_CACHE_TTL) {
     embeddingCache.delete(cacheKey)
     return null
   }
+
+  // LRU: Update last access time
+  cached.lastAccess = now
 
   return cached.embedding
 }
 
 /**
- * Cache an embedding
+ * Cache an embedding with LRU eviction
  */
 function cacheEmbedding(text: string, embedding: number[]): void {
   const cacheKey = text.toLowerCase().trim()
+  const now = Date.now()
+
   embeddingCache.set(cacheKey, {
     embedding,
-    timestamp: Date.now(),
+    timestamp: now,
+    lastAccess: now,
   })
 
-  // Limit cache size to 500 entries
-  if (embeddingCache.size > 500) {
-    const oldestKey = embeddingCache.keys().next().value
-    if (oldestKey) embeddingCache.delete(oldestKey)
+  // LRU eviction: remove least recently accessed entries when over limit
+  if (embeddingCache.size > EMBEDDING_CACHE_MAX_SIZE) {
+    let oldestKey: string | null = null
+    let oldestAccess = Infinity
+
+    for (const [key, entry] of embeddingCache.entries()) {
+      if (entry.lastAccess < oldestAccess) {
+        oldestAccess = entry.lastAccess
+        oldestKey = key
+      }
+    }
+
+    if (oldestKey) {
+      embeddingCache.delete(oldestKey)
+    }
   }
 }
 
@@ -133,7 +182,7 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * Generate embedding using OpenAI API (with caching)
+ * Generate embedding using OpenAI API (with caching and timeout)
  */
 async function generateEmbedding(text: string): Promise<number[] | null> {
   if (!OPENAI_API_KEY) {
@@ -148,7 +197,8 @@ async function generateEmbedding(text: string): Promise<number[] | null> {
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    // Use fetchWithTimeout to prevent app freeze on slow/failed requests
+    const response = await fetchWithTimeout('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -158,10 +208,12 @@ async function generateEmbedding(text: string): Promise<number[] | null> {
         model: 'text-embedding-3-small',
         input: text,
       }),
+      timeout: TIMEOUTS.EMBEDDING, // 20s timeout for embeddings
     })
 
     if (!response.ok) {
-      console.error('OpenAI embedding error:', await response.text())
+      const errorText = await response.text()
+      console.error('OpenAI embedding error:', errorText)
       return null
     }
 
@@ -173,7 +225,12 @@ async function generateEmbedding(text: string): Promise<number[] | null> {
 
     return embedding
   } catch (error) {
-    console.error('Failed to generate embedding:', error)
+    // Categorized error logging
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('OpenAI embedding timeout (20s exceeded)')
+    } else {
+      console.error('Failed to generate embedding:', error)
+    }
     return null
   }
 }
