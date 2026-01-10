@@ -183,7 +183,7 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
-  const { profile, nutritionGoals } = useUserStore()
+  const { profile, nutritionGoals, recalculateNutritionGoals } = useUserStore()
   const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
@@ -226,6 +226,14 @@ export default function HomeScreen() {
     initializeWeek()
   }, [checkAndUpdateStreak, initializeWeek])
 
+  // Ensure nutritionGoals are calculated if profile exists but goals don't
+  useEffect(() => {
+    if (profile && !nutritionGoals) {
+      console.log('[HomeScreen] Profile exists but no nutritionGoals, triggering recalculation...')
+      recalculateNutritionGoals()
+    }
+  }, [profile, nutritionGoals, recalculateNutritionGoals])
+
   // Check for newly unlocked features to show discovery modal
   useEffect(() => {
     const newFeature = getNewlyUnlockedFeature()
@@ -267,29 +275,19 @@ export default function HomeScreen() {
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
 
-  // Use nutritionGoals if available, otherwise calculate from profile, or use sensible defaults
-  // IMPORTANT: Never call recalculateNutritionGoals() here - it would overwrite custom goals
+  // Use nutritionGoals from store - should always be calculated after onboarding
+  // Fallbacks match ProfileScreen for consistency
   const getBaseGoals = () => {
     if (nutritionGoals) return nutritionGoals
 
-    // Fallback: calculate temporary defaults from profile (without persisting)
-    if (profile?.weight && profile?.height && profile?.age) {
-      const weight = profile.weight
-      const isWeightLoss = profile.goal === 'weight_loss'
-      const isMuscleGain = profile.goal === 'muscle_gain'
-      const proteins = Math.round(weight * (isWeightLoss || isMuscleGain ? 2 : 1.6))
-      const fats = Math.round(weight * (isWeightLoss ? 0.9 : isMuscleGain ? 0.8 : 1))
-      const carbs = isWeightLoss ? 150 : isMuscleGain ? 200 : 180
-      return {
-        calories: isWeightLoss ? 1800 : isMuscleGain ? 2500 : 2000,
-        proteins,
-        carbs,
-        fats,
-      }
+    // Fallback: same defaults as ProfileScreen for consistency
+    // These should rarely be used as recalculateNutritionGoals runs on hydration
+    return {
+      calories: 2000,
+      proteins: 100,
+      carbs: 250,
+      fats: 67
     }
-
-    // Default fallback (should rarely happen)
-    return { calories: 1800, proteins: 120, carbs: 150, fats: 60 }
   }
 
   const baseGoals = getBaseGoals()
