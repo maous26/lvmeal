@@ -26,6 +26,7 @@ import { useOnboardingStore } from '../stores/onboarding-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useTheme } from '../contexts/ThemeContext'
 import { lymInsights } from '../services/lym-insights-service'
+import { useAuthStore } from '../stores/auth-store'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
 type OnboardingStep = 'welcome' | 'setup-choice' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'health-priorities' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis' | 'cloud-sync'
@@ -262,9 +263,12 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
   const { colors } = useTheme()
 
   // User store for persistent profile storage
-  const { setProfile: setStoreProfile, setOnboarded } = useUserStore()
+  const { setProfile: setStoreProfile, setOnboarded, nutritionGoals, notificationPreferences } = useUserStore()
   const { setSignupDate } = useOnboardingStore()
   const { startTrial } = useGamificationStore()
+
+  // Auth store for cloud sync
+  const { triggerSync, isAuthenticated } = useAuthStore()
 
   // Program stores for enrollment and reset
   const { enroll: enrollMetabolicBoost, reset: resetMetabolicBoost } = useMetabolicBoostStore()
@@ -417,12 +421,24 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
     lymInsights.trackOnboardingCompleted(durationSeconds)
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Sync to cloud if authenticated (background, don't block)
+    if (isAuthenticated) {
+      console.log('[Onboarding] User authenticated, syncing profile to cloud...')
+      triggerSync().then(result => {
+        if (result.success) {
+          console.log('[Onboarding] ✅ Profile synced to cloud')
+        } else {
+          console.warn('[Onboarding] Cloud sync failed:', result.error)
+        }
+      })
+    }
+
+    // Small delay for UI feedback
+    await new Promise(resolve => setTimeout(resolve, 300))
 
     setLoading(false)
     onComplete()
-  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, resetMetabolicBoost, resetWellnessProgram, onComplete, setSignupDate])
+  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, resetMetabolicBoost, resetWellnessProgram, onComplete, setSignupDate, isAuthenticated, triggerSync])
 
   const handleNext = useCallback(async () => {
     // Analysis step: go to cloud-sync
@@ -462,12 +478,24 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     const durationSeconds = Math.round((Date.now() - onboardingStartTime) / 1000)
     lymInsights.trackOnboardingCompleted(durationSeconds, ['full_profile_skipped'])
 
+    // Sync to cloud if authenticated (background, don't block)
+    if (isAuthenticated) {
+      console.log('[Onboarding] Quick setup - syncing profile to cloud...')
+      triggerSync().then(result => {
+        if (result.success) {
+          console.log('[Onboarding] ✅ Quick profile synced to cloud')
+        } else {
+          console.warn('[Onboarding] Cloud sync failed:', result.error)
+        }
+      })
+    }
+
     await new Promise(resolve => setTimeout(resolve, 300))
 
     setLoading(false)
     setPendingQuickProfile(null)
     onComplete()
-  }, [pendingQuickProfile, onboardingStartTime, setStoreProfile, setOnboarded, setSignupDate, startTrial, resetMetabolicBoost, resetWellnessProgram, onComplete])
+  }, [pendingQuickProfile, onboardingStartTime, setStoreProfile, setOnboarded, setSignupDate, startTrial, resetMetabolicBoost, resetWellnessProgram, onComplete, isAuthenticated, triggerSync])
 
   // Handle cloud sync completion (connected or skipped)
   const handleCloudSyncComplete = useCallback(async (connected: boolean) => {

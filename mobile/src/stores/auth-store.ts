@@ -27,6 +27,7 @@ import {
   isGoogleAuthConfigured,
   type GoogleAuthResult,
 } from '../services/google-auth-service'
+import { useUserStore } from './user-store'
 
 // ============================================================================
 // Types
@@ -401,15 +402,43 @@ export const useAuthStore = create<AuthState>()(
         try {
           const data = await restoreFromCloud()
 
-          if (data) {
+          if (data && data.profile) {
+            console.log('[AuthStore] 📥 Restoring profile from cloud...')
+
+            // Apply profile data to user-store
+            const userStore = useUserStore.getState()
+            const cloudProfile = data.profile.profile
+            const cloudGoals = data.profile.nutrition_goals
+
+            if (cloudProfile && Object.keys(cloudProfile).length > 0) {
+              console.log('[AuthStore] Applying cloud profile:', Object.keys(cloudProfile))
+
+              // Set profile (this will also recalculate nutritionGoals)
+              userStore.setProfile({
+                ...cloudProfile,
+                onboardingCompleted: true,
+              })
+
+              // If cloud has specific goals, apply them too
+              if (cloudGoals) {
+                console.log('[AuthStore] Applying cloud nutrition goals:', cloudGoals)
+                // Goals are set via setProfile's calculateNutritionalNeeds
+              }
+
+              userStore.setOnboarded(true)
+              console.log('[AuthStore] ✅ Profile restored from cloud')
+            }
+
             set({ syncStatus: 'success' })
             return { success: true, data }
           } else {
+            console.log('[AuthStore] No cloud data to restore')
             set({ syncStatus: 'idle' })
             return { success: true, data: undefined }
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Erreur de restauration'
+          console.error('[AuthStore] Restore failed:', message)
           set({ syncStatus: 'error', lastError: message })
           return { success: false, error: message }
         }
