@@ -23,6 +23,18 @@ RUN npx prisma generate
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build args for environment variables needed at build time
+ARG DATABASE_URL
+ARG OPENAI_API_KEY
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+
+ENV DATABASE_URL=${DATABASE_URL}
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+
 RUN npm run build
 
 # Production image

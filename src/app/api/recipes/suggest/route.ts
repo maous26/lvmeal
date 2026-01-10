@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+let openai: OpenAI | null = null
+
+function getOpenAI(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) return null
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  }
+  return openai
+}
 
 interface UserProfile {
   firstName?: string
@@ -55,14 +62,6 @@ const mealTypeLabels: Record<string, string> = {
 export async function POST(request: NextRequest) {
   try {
     const { profile, mealType, consumed, date } = await request.json() as SuggestRequest
-
-    const apiKey = process.env.OPENAI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 503 }
-      )
-    }
 
     // Calculate remaining calories and macros
     const targets = profile.nutritionalNeeds || {
@@ -200,7 +199,15 @@ La recette DOIT:
 4. Être adaptée au niveau ${profile.cookingSkillLevel || 'intermediate'}
 5. Avoir des valeurs nutritionnelles réalistes et précises`
 
-    const completion = await openai.chat.completions.create({
+    const client = getOpenAI()
+    if (!client) {
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 503 }
+      )
+    }
+
+    const completion = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       max_tokens: 2000,
       messages: [
