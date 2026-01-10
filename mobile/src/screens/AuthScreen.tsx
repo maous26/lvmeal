@@ -178,14 +178,13 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
   // Render main auth screen
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      {/* Logo & App Name */}
+      {/* Logo */}
       <View style={styles.header}>
         <Image
-          source={require('../../assets/logo5.png')}
+          source={require('../../assets/icon.png')}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={[styles.appName, { color: colors.text.primary }]}>LYM</Text>
         <Text style={[styles.tagline, { color: colors.text.secondary }]}>
           Ton coach nutrition intelligent
         </Text>
@@ -284,18 +283,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   logo: {
-    width: 80,
-    height: 80,
-    marginBottom: spacing.md,
-  },
-  appName: {
-    ...typography.h1,
-    fontFamily: fonts.serif.bold,
-    letterSpacing: 2,
+    width: 120,
+    height: 120,
+    marginBottom: spacing.lg,
   },
   tagline: {
     ...typography.body,
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
   welcomeSection: {
     alignItems: 'center',

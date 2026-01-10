@@ -23,13 +23,17 @@
       ],
       "entitlements": {
         "com.apple.developer.healthkit": true,
-        "com.apple.developer.healthkit.access": []
+        "com.apple.developer.healthkit.access": [],
+        "com.apple.developer.healthkit.background-delivery": true
       },
       "infoPlist": {
         "NSCameraUsageDescription": "Presence utilise la caméra pour scanner les aliments et codes-barres.",
         "NSPhotoLibraryUsageDescription": "Presence accède à vos photos pour analyser les repas.",
-        "NSHealthShareUsageDescription": "LYM utilise vos données de santé pour synchroniser vos pas et activités.",
+        "NSMicrophoneUsageDescription": "LYM utilise le microphone pour la saisie vocale de vos repas.",
+        "NSSpeechRecognitionUsageDescription": "LYM utilise la reconnaissance vocale pour décrire vos repas.",
+        "NSHealthShareUsageDescription": "LYM accède à vos données de santé (pas, sommeil, poids) pour personnaliser vos recommandations nutritionnelles.",
         "NSHealthUpdateUsageDescription": "LYM peut enregistrer vos données nutritionnelles dans Apple Santé.",
+        "ITSAppUsesNonExemptEncryption": false,
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [

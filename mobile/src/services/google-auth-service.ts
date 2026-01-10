@@ -17,6 +17,7 @@ const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_I
 
 // Debug: Log client IDs at module load
 console.log('[GoogleAuth] ===== MODULE INIT =====')
+console.log('[GoogleAuth] Platform:', Platform.OS)
 console.log('[GoogleAuth] WEB_CLIENT_ID:', GOOGLE_WEB_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('[GoogleAuth] IOS_CLIENT_ID:', GOOGLE_IOS_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('[GoogleAuth] ANDROID_CLIENT_ID:', GOOGLE_ANDROID_CLIENT_ID ? 'SET' : 'NOT SET')
