@@ -44,7 +44,7 @@ import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
-import { useUserStore } from '../stores/user-store'
+import { useUserStore, useUserStoreHydration } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
@@ -302,16 +302,8 @@ export default function CoachScreen() {
   const { colors } = useTheme()
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
-  const [isHydrated, setIsHydrated] = useState(false)
-
-  // Wait for store hydration before showing welcome card
-  useEffect(() => {
-    // Small delay to ensure AsyncStorage has loaded
-    const timer = setTimeout(() => {
-      setIsHydrated(true)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+  // Use the real store hydration state instead of a timer
+  const isStoreHydrated = useUserStoreHydration()
 
   // MessageCenter
   const messages = useMessageCenter((s) => s.messages)
@@ -427,7 +419,7 @@ export default function CoachScreen() {
         </View>
 
         {/* Welcome Card - shown only once after onboarding (wait for store hydration) */}
-        {isHydrated && !hasSeenCoachWelcome && (
+        {isStoreHydrated && !hasSeenCoachWelcome && (
           <WelcomeCard
             firstName={profile?.firstName || 'toi'}
             onDismiss={handleDismissWelcome}

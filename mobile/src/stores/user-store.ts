@@ -61,6 +61,7 @@ interface UserState {
   isLoading: boolean
   isOnboarded: boolean
   hasSeenCoachWelcome: boolean // Track if user has seen coach welcome modal
+  _hasHydrated: boolean // Track if store has hydrated from AsyncStorage
   weightHistory: WeightEntry[]
   nutritionGoals: NutritionGoals | null
   lastRAGUpdate: string | null // Track when RAG last calculated needs
@@ -266,10 +267,11 @@ function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNe
   }
 }
 
-// Track hydration state for persist middleware
+// Track hydration state for persist middleware (legacy - use _hasHydrated in store instead)
 let hasHydrated = false
 
-export const useUserStoreHydration = () => hasHydrated
+// Reactive hydration hook - reads from store state for proper reactivity
+export const useUserStoreHydration = () => useUserStore((s) => s._hasHydrated)
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -278,6 +280,7 @@ export const useUserStore = create<UserState>()(
       isLoading: false,
       isOnboarded: false,
       hasSeenCoachWelcome: false,
+      _hasHydrated: false,
       weightHistory: [],
       nutritionGoals: null,
       lastRAGUpdate: null,
@@ -511,6 +514,8 @@ export const useUserStore = create<UserState>()(
       }),
       onRehydrateStorage: () => (state, error) => {
         hasHydrated = true
+        // Set reactive hydration state in store
+        useUserStore.setState({ _hasHydrated: true })
         console.log('[UserStore] Hydrated, state keys:', state ? Object.keys(state) : 'null')
         console.log('[UserStore] Hydrated, profile:', JSON.stringify(state?.profile)?.substring(0, 200))
         console.log('[UserStore] Hydrated, nutritionGoals:', JSON.stringify(state?.nutritionGoals))
