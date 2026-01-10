@@ -13,7 +13,7 @@
 import * as FileSystem from 'expo-file-system'
 
 // Backend API for presigned URLs (credentials stored server-side)
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lvmeal-production.up.railway.app'
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lym1-production.up.railway.app'
 const R2_PUBLIC_URL = process.env.EXPO_PUBLIC_R2_PUBLIC_URL || ''
 
 export interface UploadResult {

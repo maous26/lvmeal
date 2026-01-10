@@ -9,7 +9,7 @@
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lvmeal-production.up.railway.app'
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://lym1-production.up.railway.app'
 
 // Retry configuration
 const MAX_RETRIES = 3
