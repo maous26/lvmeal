@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   UIManager,
   Platform,
   Dimensions,
+  Animated,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
@@ -134,7 +135,7 @@ function CircularProgress({
   )
 }
 
-// Macro Progress Bar with Gradient
+// Macro Progress Bar with Gradient and Staggered Animation
 function MacroProgressBar({
   label,
   current,
@@ -142,6 +143,7 @@ function MacroProgressBar({
   color,
   gradientColors,
   icon,
+  delay = 0,
 }: {
   label: string
   current: number
@@ -149,12 +151,57 @@ function MacroProgressBar({
   color: string
   gradientColors: readonly [string, string]
   icon: React.ReactNode
+  delay?: number
 }) {
   const { colors } = useTheme()
   const progress = Math.min((current / target) * 100, 100)
 
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(20)).current
+  const progressAnim = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    // Staggered entrance animation
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(progressAnim, {
+          toValue: progress,
+          duration: 600,
+          useNativeDriver: false,
+        }),
+      ]).start()
+    }, delay)
+
+    return () => clearTimeout(timer)
+  }, [delay, progress])
+
+  // Interpolate progress width
+  const animatedWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  })
+
   return (
-    <View style={styles.macroItem}>
+    <Animated.View
+      style={[
+        styles.macroItem,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
       <View style={styles.macroHeader}>
         <View style={[styles.macroIconContainer, { backgroundColor: `${color}20` }]}>
           {icon}
@@ -168,14 +215,16 @@ function MacroProgressBar({
         </View>
       </View>
       <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.macroProgressFill, { width: `${progress}%` }]}
-        />
+        <Animated.View style={{ width: animatedWidth }}>
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.macroProgressFill, { width: '100%' }]}
+          />
+        </Animated.View>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -482,6 +531,7 @@ export default function HomeScreen() {
             color={colors.nutrients.proteins}
             gradientColors={['#5C7A52', '#4A6741']}
             icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
+            delay={100}
           />
 
           <MacroProgressBar
@@ -491,6 +541,7 @@ export default function HomeScreen() {
             color={colors.nutrients.carbs}
             gradientColors={['#E3BE91', '#D4A574']}
             icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
+            delay={200}
           />
 
           <MacroProgressBar
@@ -500,6 +551,7 @@ export default function HomeScreen() {
             color={colors.nutrients.fats}
             gradientColors={['#B8A0CC', '#9B7BB8']}
             icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
+            delay={300}
           />
         </GlassCard>
 

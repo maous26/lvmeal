@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, Animated, Easing } from 'react-native'
+import * as Haptics from 'expo-haptics'
 import { Card } from '../ui/Card'
-import { radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography, fonts } from '../../constants/theme'
 import type { UserProfile, NutritionalNeeds, NutritionInfo } from '../../types'
 import { LymIABrain, type UserContext, type CalorieRecommendation } from '../../services/lymia-brain'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -25,30 +26,59 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
   // Celebration animations
   const scaleAnim = useRef(new Animated.Value(0)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const successScale = useRef(new Animated.Value(0.8)).current
+  const successScale = useRef(new Animated.Value(0.3)).current
   const successFade = useRef(new Animated.Value(0)).current
+  const caloriesPulse = useRef(new Animated.Value(1)).current
+  const wowScale = useRef(new Animated.Value(0)).current
+  const wowRotate = useRef(new Animated.Value(0)).current
 
   // Run celebration animation when results show
   useEffect(() => {
     if (showResults) {
+      // Haptic feedback for celebration
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+      // "Wow" badge animation - dramatic entrance
+      Animated.sequence([
+        Animated.spring(wowScale, {
+          toValue: 1.2,
+          friction: 3,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.spring(wowScale, {
+          toValue: 1,
+          friction: 4,
+          useNativeDriver: true,
+        }),
+      ]).start()
+
+      // Subtle rotation for wow effect
+      Animated.timing(wowRotate, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }).start()
+
       // Success badge animation (bounce in)
       Animated.parallel([
         Animated.spring(successScale, {
           toValue: 1,
           friction: 4,
-          tension: 50,
+          tension: 60,
           useNativeDriver: true,
         }),
         Animated.timing(successFade, {
           toValue: 1,
-          duration: 300,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start()
 
       // Content fade in with scale
       Animated.sequence([
-        Animated.delay(200),
+        Animated.delay(300),
         Animated.parallel([
           Animated.spring(scaleAnim, {
             toValue: 1,
@@ -58,14 +88,38 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
           }),
           Animated.timing(fadeAnim, {
             toValue: 1,
-            duration: 400,
+            duration: 500,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
         ]),
       ]).start()
+
+      // Pulse animation on calories (continuous subtle pulse)
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(caloriesPulse, {
+            toValue: 1.02,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(caloriesPulse, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start()
     }
   }, [showResults])
+
+  // Interpolate rotation for wow effect
+  const wowRotation = wowRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-10deg', '0deg'],
+  })
 
   useEffect(() => {
     async function calculateRAGNeeds() {
@@ -151,6 +205,22 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
 
   return (
     <View style={styles.container}>
+      {/* Wow celebration badge */}
+      <Animated.View
+        style={[
+          styles.wowBadge,
+          {
+            transform: [
+              { scale: wowScale },
+              { rotate: wowRotation },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.wowEmoji}>🎉</Text>
+        <Text style={styles.wowText}>Bravo !</Text>
+      </Animated.View>
+
       {/* Success message with bounce animation */}
       <Animated.View
         style={[
@@ -189,12 +259,12 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
             Objectif calorique quotidien
           </Text>
         </View>
-        <View style={styles.caloriesValue}>
+        <Animated.View style={[styles.caloriesValue, { transform: [{ scale: caloriesPulse }] }]}>
           <Text style={[styles.caloriesNumber, { color: colors.text.primary }]}>
             {formatNumber(finalNeeds.calories)}
           </Text>
           <Text style={[styles.caloriesUnit, { color: colors.text.tertiary }]}>kcal</Text>
-        </View>
+        </Animated.View>
         <Text style={[styles.caloriesHint, { color: colors.text.tertiary }]}>
           Basé sur ton profil et ton objectif : {goalLabels[profile.goal || 'maintenance']}
         </Text>
@@ -275,6 +345,22 @@ export function StepAnalysis({ profile, needs, onNeedsCalculated }: StepAnalysis
 const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
+  },
+  wowBadge: {
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  wowEmoji: {
+    fontSize: 48,
+    marginBottom: spacing.xs,
+  },
+  wowText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFD700',
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   loading: {
     alignItems: 'center',
