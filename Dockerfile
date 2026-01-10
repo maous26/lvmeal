@@ -1,6 +1,9 @@
 # Railway Dockerfile for Next.js
 FROM node:22-alpine AS base
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
@@ -35,7 +38,8 @@ ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 
-RUN npm run build
+# Only run next build, skip sync-recipes (it's a runtime operation)
+RUN npx next build
 
 # Production image
 FROM base AS runner
