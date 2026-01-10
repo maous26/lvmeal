@@ -117,19 +117,39 @@ export default function PaywallScreen() {
           </LinearGradient>
 
           <Text style={[styles.heroTitle, { color: colors.text.primary }]}>
-            LYM commence à{'\n'}bien te connaître
+            Rejoins le{'\n'}LYM Circle
           </Text>
 
           <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>
             {daysSinceSignup} jours ensemble, {userName}.{'\n'}
-            Pour continuer cet accompagnement...
+            Continue ce chemin avec nous.
           </Text>
+        </View>
+
+        {/* Testimonial */}
+        <View style={[styles.testimonialCard, { backgroundColor: colors.bg.elevated }]}>
+          <Text style={[styles.testimonialQuote, { color: colors.text.primary }]}>
+            "LYM m'a aidée à retrouver une relation apaisée avec la nourriture. Plus de culpabilité, juste du plaisir."
+          </Text>
+          <View style={styles.testimonialAuthor}>
+            <View style={[styles.testimonialAvatar, { backgroundColor: colors.accent.light }]}>
+              <Text style={styles.testimonialInitial}>M</Text>
+            </View>
+            <View>
+              <Text style={[styles.testimonialName, { color: colors.text.primary }]}>
+                Marie, 34 ans
+              </Text>
+              <Text style={[styles.testimonialMeta, { color: colors.text.tertiary }]}>
+                Membre depuis 4 mois
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Benefits - Ton LYM */}
         <View style={[styles.benefitsCard, { backgroundColor: colors.bg.elevated }]}>
           <Text style={[styles.benefitsTitle, { color: colors.text.primary }]}>
-            Avec LYM Premium
+            En tant que membre Circle
           </Text>
 
           <View style={styles.benefitsList}>
@@ -316,6 +336,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  // Testimonial
+  testimonialCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+  },
+  testimonialQuote: {
+    fontSize: 15,
+    fontStyle: 'italic',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  testimonialAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  testimonialAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testimonialInitial: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#009FEB',
+  },
+  testimonialName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  testimonialMeta: {
+    fontSize: 12,
   },
   // Benefits
   benefitsCard: {

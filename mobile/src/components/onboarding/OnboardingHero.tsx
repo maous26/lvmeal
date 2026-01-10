@@ -62,28 +62,28 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   const benefits = [
     {
       id: 'easy',
-      icon: <Camera size={18} color={organicPalette.moss} strokeWidth={1.8} />,
+      icon: <Camera size={18} color={organicPalette.moss} strokeWidth={1.5} />,
       title: 'Simple',
       description: 'Photo, voix ou scan',
       color: organicPalette.moss,
     },
     {
       id: 'personalized',
-      icon: <Sparkles size={18} color={organicPalette.lavender} strokeWidth={1.8} />,
+      icon: <Sparkles size={18} color={organicPalette.lavender} strokeWidth={1.5} />,
       title: 'Sur-mesure',
       description: 'Adapté à toi',
       color: organicPalette.lavender,
     },
     {
       id: 'kind',
-      icon: <Heart size={18} color={organicPalette.clay} strokeWidth={1.8} />,
+      icon: <Heart size={18} color={organicPalette.clay} strokeWidth={1.5} />,
       title: 'Bienveillant',
       description: 'Sans culpabilité',
       color: organicPalette.clay,
     },
     {
       id: 'smart',
-      icon: <Brain size={18} color={organicPalette.ocean} strokeWidth={1.8} />,
+      icon: <Brain size={18} color={organicPalette.ocean} strokeWidth={1.5} />,
       title: 'Intelligent',
       description: 'Coach IA',
       color: organicPalette.ocean,

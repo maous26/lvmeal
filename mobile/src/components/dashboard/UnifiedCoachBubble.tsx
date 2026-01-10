@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native'
 import { ChevronRight, X, Sparkles } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
+import { LinearGradient } from 'expo-linear-gradient'
 import { Card } from '../ui'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius, fonts } from '../../constants/theme'
@@ -213,13 +214,20 @@ export default function UnifiedCoachBubble({
     )
   }
 
+  // Gradient colors based on priority
+  const gradientColors: [string, string] = priorityMessage.priority === 'P0'
+    ? [colors.accent.primary + '15', colors.secondary.primary + '10']
+    : [colors.bg.elevated, colors.bg.elevated]
+
   return (
     <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-      <Card
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
-          styles.container,
+          styles.gradientWrapper,
           {
-            backgroundColor: colors.bg.elevated,
             borderWidth: 1,
             borderColor: `${config.color}40`,
           },
@@ -286,7 +294,7 @@ export default function UnifiedCoachBubble({
             </Text>
           </TouchableOpacity>
         )}
-      </Card>
+      </LinearGradient>
     </Animated.View>
   )
 }
@@ -294,6 +302,10 @@ export default function UnifiedCoachBubble({
 const styles = StyleSheet.create({
   container: {
     padding: 0,
+    overflow: 'hidden',
+  },
+  gradientWrapper: {
+    borderRadius: radius.lg,
     overflow: 'hidden',
   },
   header: {
