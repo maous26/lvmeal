@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { SuggestRequestSchema, validateRequest } from '@/lib/schemas'
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limiter'
+import { z } from 'zod'
 
 // Lazy initialization to avoid build-time errors
 let openai: OpenAI | null = null
@@ -12,45 +15,8 @@ function getOpenAI(): OpenAI | null {
   return openai
 }
 
-interface UserProfile {
-  firstName?: string
-  gender?: string
-  age?: number
-  weight?: number
-  height?: number
-  targetWeight?: number
-  activityLevel?: string
-  goal?: string
-  dietType?: string
-  allergies?: string[]
-  intolerances?: string[]
-  dislikedFoods?: string[]
-  likedFoods?: string[]
-  cookingSkillLevel?: string
-  cookingTimeWeekday?: number
-  cookingTimeWeekend?: number
-  preferredCuisines?: string[]
-  nutritionalNeeds?: {
-    calories: number
-    proteins: number
-    carbs: number
-    fats: number
-  }
-}
-
-interface NutritionConsumed {
-  calories: number
-  proteins: number
-  carbs: number
-  fats: number
-}
-
-interface SuggestRequest {
-  profile: UserProfile
-  mealType: 'breakfast' | 'lunch' | 'snack' | 'dinner'
-  consumed: NutritionConsumed
-  date: string
-}
+// Infer types from Zod schemas
+type SuggestRequest = z.infer<typeof SuggestRequestSchema>
 
 const mealTypeLabels: Record<string, string> = {
   breakfast: 'petit-déjeuner',
@@ -60,8 +26,37 @@ const mealTypeLabels: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting (AI endpoint - stricter limits)
+  const clientId = getClientIdentifier(request)
+  const rateLimit = checkRateLimit(`ai:${clientId}`, RATE_LIMITS.ai)
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(rateLimit.resetTime),
+          'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)),
+        },
+      }
+    )
+  }
+
   try {
-    const { profile, mealType, consumed, date } = await request.json() as SuggestRequest
+    const body = await request.json()
+
+    // Validate request body with Zod
+    const validation = validateRequest(SuggestRequestSchema, body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: `Invalid request: ${validation.error}` },
+        { status: 400 }
+      )
+    }
+
+    const { profile, mealType, consumed, date } = validation.data
 
     // Calculate remaining calories and macros
     const targets = profile.nutritionalNeeds || {

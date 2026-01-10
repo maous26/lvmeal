@@ -47,9 +47,17 @@ import type {
 
 // ============= CONFIGURATION =============
 
-const openai = new OpenAI({
-  apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
-})
+// Lazy initialization of OpenAI client to avoid loading at startup
+let _openai: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
+    })
+  }
+  return _openai
+}
 
 // ============= TYPES =============
 
@@ -238,7 +246,7 @@ async function executeAICall(
   }
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: rateCheck.model,
       messages,
       temperature,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { PresignRequestSchema, validateRequest } from '@/lib/schemas'
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limiter'
 
 // R2 Configuration (from environment - server-side only)
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || ''
@@ -36,31 +38,37 @@ function getR2Client(): S3Client | null {
  * Generate a presigned URL for uploading or downloading files
  */
 export async function POST(request: NextRequest) {
+  // Rate limiting (storage endpoint)
+  const clientId = getClientIdentifier(request)
+  const rateLimit = checkRateLimit(`storage:${clientId}`, RATE_LIMITS.storage)
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(rateLimit.resetTime),
+          'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)),
+        },
+      }
+    )
+  }
+
   try {
-    const { method, key, contentType } = await request.json()
+    const body = await request.json()
 
-    // Validate inputs
-    if (!method || !key) {
+    // Validate request body with Zod
+    const validation = validateRequest(PresignRequestSchema, body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'method and key are required' },
+        { error: `Invalid request: ${validation.error}` },
         { status: 400 }
       )
     }
 
-    if (!['PUT', 'GET'].includes(method)) {
-      return NextResponse.json(
-        { error: 'method must be PUT or GET' },
-        { status: 400 }
-      )
-    }
-
-    // Validate key format (prevent path traversal)
-    if (key.includes('..') || key.startsWith('/')) {
-      return NextResponse.json(
-        { error: 'Invalid key format' },
-        { status: 400 }
-      )
-    }
+    const { method, key, contentType } = validation.data
 
     const client = getR2Client()
     if (!client) {

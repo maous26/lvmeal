@@ -14,6 +14,12 @@ import type { FoodItem, NutritionInfo, NutriScoreGrade } from '../types'
 import { analyzeForConversion, detectDryFood, type ConversionResult } from './cooking-conversion'
 import { useCustomRecipesStore } from '../stores/custom-recipes-store'
 import { useLocalOffStore, localOffProductToFoodItem } from '../stores/local-off-store'
+import { logger } from '../lib/logger'
+import {
+  OpenFoodFactsSearchResponseSchema,
+  OpenFoodFactsBarcodeResponseSchema,
+  safeParse,
+} from '../lib/schemas'
 
 // ============= TYPES =============
 
@@ -150,7 +156,7 @@ async function loadCiqual(): Promise<CiqualFood[]> {
     ciqualData = data as CiqualFood[]
     return ciqualData
   } catch (error) {
-    console.error('Error loading CIQUAL data:', error)
+    logger.error('Error loading CIQUAL data:', error)
     return []
   }
 }
@@ -163,7 +169,7 @@ async function loadCiqualSearchIndex(): Promise<CiqualSearchIndex[]> {
     ciqualSearchIndex = data as CiqualSearchIndex[]
     return ciqualSearchIndex
   } catch (error) {
-    console.error('Error loading CIQUAL search index:', error)
+    logger.error('Error loading CIQUAL search index:', error)
     return []
   }
 }
@@ -503,7 +509,7 @@ function searchCustomRecipes(query: string, limit: number): FoodItem[] {
 
     return results
   } catch (error) {
-    console.error('[searchCustomRecipes] Error:', error)
+    logger.error('[searchCustomRecipes] Error:', error)
     return []
   }
 }
@@ -529,7 +535,7 @@ function transformOffProduct(p: OpenFoodFactsProduct): FoodItem | null {
 
   // Debug log
   if (nutriscore) {
-    console.log(`[OFF] ${p.product_name_fr || p.product_name} - Nutri-Score: ${nutriscore.toUpperCase()}`)
+    logger.log(`[OFF] ${p.product_name_fr || p.product_name} - Nutri-Score: ${nutriscore.toUpperCase()}`)
   }
 
   return {
@@ -593,12 +599,20 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      console.warn('Open Food Facts API error:', response.status)
+      logger.warn('Open Food Facts API error:', response.status)
       return results // Return local results even if API fails
     }
 
-    const data = await response.json()
-    const products = data.products || []
+    const rawData = await response.json()
+
+    // Validate response with Zod schema
+    const validatedData = safeParse(OpenFoodFactsSearchResponseSchema, rawData)
+    if (!validatedData) {
+      logger.warn('[OFF] Invalid API response structure')
+      return results
+    }
+
+    const products = validatedData.products
 
     // Add API results, avoiding duplicates (by barcode)
     const existingBarcodes = new Set(results.map(r => r.barcode))
@@ -616,9 +630,9 @@ async function searchOpenFoodFacts(query: string, limit: number, timeoutMs: numb
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       // Timeout is not a critical error, just skip OFF results
-      console.warn('Open Food Facts request timed out - skipping')
+      logger.warn('Open Food Facts request timed out - skipping')
     } else {
-      console.warn('Error searching Open Food Facts:', error)
+      logger.warn('Error searching Open Food Facts:', error)
     }
     // Return local results even if API fails
     return results
@@ -641,7 +655,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
   // 1. First, check local OFF database (user-added products)
   const localProduct = useLocalOffStore.getState().getProductByBarcode(barcode)
   if (localProduct) {
-    console.log(`[lookupBarcode] Found in local OFF database: ${localProduct.product_name}`)
+    logger.log(`[lookupBarcode] Found in local OFF database: ${localProduct.product_name}`)
     const food = localOffProductToFoodItem(localProduct)
     const conversion = analyzeForConversion(food)
 
@@ -674,13 +688,20 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
       return null
     }
 
-    const data = await response.json()
+    const rawData = await response.json()
 
-    if (data.status !== 1 || !data.product) {
+    // Validate response with Zod schema
+    const validatedData = safeParse(OpenFoodFactsBarcodeResponseSchema, rawData)
+    if (!validatedData) {
+      logger.warn('[OFF] Invalid barcode response structure')
       return null
     }
 
-    const food = transformOffProduct(data.product)
+    if (validatedData.status !== 1 || !validatedData.product) {
+      return null
+    }
+
+    const food = transformOffProduct(validatedData.product)
     if (!food) return null
 
     // Check if this is a dry food that needs cooking conversion
@@ -693,7 +714,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeResult | nu
       conversionRule: conversion.rule?.id,
     }
   } catch (error) {
-    console.error('Error looking up barcode:', error)
+    logger.error('Error looking up barcode:', error)
     return null
   }
 }
@@ -850,10 +871,10 @@ export async function clearFoodSearchCache(): Promise<void> {
     const cacheKeys = allKeys.filter(k => k.startsWith(CACHE_KEY_PREFIX))
     if (cacheKeys.length > 0) {
       await AsyncStorage.multiRemove(cacheKeys)
-      console.log(`[FoodSearch] Cleared ${cacheKeys.length} cached entries`)
+      logger.log(`[FoodSearch] Cleared ${cacheKeys.length} cached entries`)
     }
   } catch (e) {
-    console.warn('[FoodSearch] Error clearing cache:', e)
+    logger.warn('[FoodSearch] Error clearing cache:', e)
   }
 }
 
