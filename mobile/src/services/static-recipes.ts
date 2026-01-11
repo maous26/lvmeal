@@ -31,6 +31,9 @@ export interface StaticEnrichedRecipe {
   sourceUrl?: string
   originalTitle: string
   enrichedAt: string
+  // Health quality scoring (0-100, higher = healthier)
+  healthScore?: number
+  healthNotes?: string
 }
 
 interface EnrichedRecipesData {
@@ -57,8 +60,15 @@ export async function loadStaticRecipes(): Promise<StaticEnrichedRecipe[]> {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const data = require('../data/enriched-recipes.json') as EnrichedRecipesData
 
-    cachedRecipes = data.recipes || []
-    console.log(`Loaded ${cachedRecipes.length} static enriched recipes (v${data.version})`)
+    // Sort recipes by healthScore (descending) - healthier recipes first
+    // Recipes without healthScore get a default of 50 (neutral)
+    cachedRecipes = (data.recipes || []).sort((a, b) => {
+      const scoreA = a.healthScore ?? 50
+      const scoreB = b.healthScore ?? 50
+      return scoreB - scoreA
+    })
+
+    console.log(`Loaded ${cachedRecipes.length} static enriched recipes (v${data.version}), sorted by health score`)
 
     // Build index map
     cachedRecipesMap = new Map()
@@ -195,7 +205,9 @@ export function staticToRecipe(enriched: StaticEnrichedRecipe): Recipe {
     source: enriched.source,
     sourceUrl: enriched.sourceUrl,
     createdAt: enriched.enrichedAt,
-    // No nutriscore for recipes - only official scores from OFF/CIQUAL products
+    // Health quality score (propagated from enrichment)
+    healthScore: enriched.healthScore,
+    healthNotes: enriched.healthNotes,
   }
 }
 

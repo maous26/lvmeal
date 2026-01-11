@@ -283,6 +283,9 @@ export interface Recipe {
   isFavorite?: boolean
   createdAt?: string
   nutriscore?: NutriScoreGrade
+  // Health quality score (0-100, higher = healthier)
+  healthScore?: number
+  healthNotes?: string
 }
 
 // =============================================================================

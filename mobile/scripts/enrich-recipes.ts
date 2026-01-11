@@ -100,48 +100,68 @@ const EXCLUDED_CATEGORIES = [
 
 /**
  * Pre-filter recipe before enrichment (based on title and ingredients)
- * Returns false if recipe should be skipped
+ * NOW: Always returns pass=true, but provides healthPenalty for scoring
+ * No recipes are rejected - they are all classified by health quality
  */
-function shouldEnrichRecipe(recipe: GustarRecipe): { pass: boolean; reason?: string } {
+function shouldEnrichRecipe(recipe: GustarRecipe): { pass: boolean; healthPenalty: number; flags: string[] } {
   const title = recipe.title.toLowerCase()
   const ingredients = recipe.ingredients.map(i => i.name.toLowerCase()).join(' ')
   const combined = `${title} ${ingredients}`
 
-  // 1. Check excluded categories
+  let healthPenalty = 0
+  const flags: string[] = []
+
+  // 1. Check excluded categories (heavy penalty but don't reject)
   for (const category of EXCLUDED_CATEGORIES) {
     if (title.includes(category)) {
-      return { pass: false, reason: `excluded category: ${category}` }
+      healthPenalty += 20
+      flags.push(`category:${category}`)
     }
   }
 
-  // 2. Check unhealthy indicators (max 2 allowed)
+  // 2. Check unhealthy indicators (penalty per indicator)
   const unhealthyCount = UNHEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
-  if (unhealthyCount > 2) {
-    return { pass: false, reason: `too many unhealthy indicators: ${unhealthyCount}` }
+  if (unhealthyCount > 0) {
+    healthPenalty += unhealthyCount * 8
+    flags.push(`unhealthy_indicators:${unhealthyCount}`)
   }
 
-  // 3. Check if nutrition exists and validate basic criteria
+  // 3. Check nutrition if available
   if (recipe.nutrition) {
     const { calories, fats } = recipe.nutrition
 
-    // Reject extremely high calorie recipes
+    // High calorie penalty
     if (calories > 800) {
-      return { pass: false, reason: `too many calories: ${calories}` }
+      healthPenalty += 15
+      flags.push(`high_calories:${calories}`)
+    } else if (calories > 600) {
+      healthPenalty += 5
     }
 
-    // Reject extremely fatty recipes (>50% calories from fat)
+    // High fat percentage penalty
     if (calories > 0 && fats) {
       const fatPercentage = (fats * 9 / calories) * 100
       if (fatPercentage > 50) {
-        return { pass: false, reason: `too much fat: ${Math.round(fatPercentage)}%` }
+        healthPenalty += 15
+        flags.push(`high_fat:${Math.round(fatPercentage)}%`)
+      } else if (fatPercentage > 40) {
+        healthPenalty += 5
       }
     }
   }
 
-  // 4. Bonus check: has healthy indicators
+  // 4. Healthy indicators bonus (reduces penalty)
   const healthyCount = HEALTHY_INDICATORS.filter(ind => combined.includes(ind)).length
+  if (healthyCount > 0) {
+    healthPenalty -= healthyCount * 5
+    flags.push(`healthy_indicators:${healthyCount}`)
+  }
 
-  return { pass: true }
+  // Ensure penalty doesn't go negative
+  healthPenalty = Math.max(0, healthPenalty)
+
+  // Always pass - we classify, don't reject
+  return { pass: true, healthPenalty, flags }
 }
 
 /**
@@ -205,10 +225,11 @@ function loadExistingRecipes(): EnrichedRecipe[] {
   return []
 }
 
-// Meal type categories with German search terms
+// Meal type categories with German search terms (expanded for 200k+ recipes)
 const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
   // Petit-dejeuner / Breakfast
   breakfast: [
+    // Classiques
     'frühstück',      // breakfast
     'müsli',          // muesli
     'haferflocken',   // oatmeal
@@ -219,9 +240,36 @@ const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
     'toast',          // toast
     'porridge',       // porridge
     'omelett',        // omelet
+    // Nouveaux termes
+    'waffeln',        // waffles
+    'crêpes',         // crepes
+    'granola',        // granola
+    'bircher',        // bircher muesli
+    'rührei',         // scrambled eggs
+    'spiegelei',      // fried eggs
+    'pochierte eier', // poached eggs
+    'eggs benedict',  // eggs benedict
+    'french toast',   // french toast
+    'açai bowl',      // acai bowl
+    'chia pudding',   // chia pudding
+    'overnight oats', // overnight oats
+    'bagel',          // bagel
+    'croissant',      // croissant
+    'brötchen',       // bread rolls
+    'avocado toast',  // avocado toast
+    'shakshuka',      // shakshuka
+    'quark',          // quark
+    'hüttenkäse',     // cottage cheese
+    'obstsalat',      // fruit salad
+    'bananenbrot',    // banana bread
+    'muffins gesund', // healthy muffins
+    'protein frühstück', // protein breakfast
+    'low carb frühstück', // low carb breakfast
+    'veganes frühstück',  // vegan breakfast
   ],
   // Dejeuner / Lunch
   lunch: [
+    // Classiques
     'salat',          // salad
     'sandwich',       // sandwich
     'wrap',           // wrap
@@ -232,9 +280,57 @@ const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
     'baguette',       // baguette
     'falafel',        // falafel
     'buddha bowl',    // buddha bowl
+    // Nouveaux termes
+    'couscous salat', // couscous salad
+    'quinoa salat',   // quinoa salad
+    'linsen salat',   // lentil salad
+    'kichererbsen',   // chickpeas
+    'taboulé',        // tabbouleh
+    'poke bowl',      // poke bowl
+    'burrito bowl',   // burrito bowl
+    'grain bowl',     // grain bowl
+    'mediterran',     // mediterranean
+    'griechisch salat', // greek salad
+    'caesar salat',   // caesar salad
+    'nizza salat',    // nicoise salad
+    'thunfisch salat', // tuna salad
+    'hähnchen salat', // chicken salad
+    'gazpacho',       // gazpacho
+    'minestrone',     // minestrone
+    'tomatensuppe',   // tomato soup
+    'gemüsesuppe',    // vegetable soup
+    'linsensuppe',    // lentil soup
+    'erbsensuppe',    // pea soup
+    'brokkoli suppe', // broccoli soup
+    'karotten suppe', // carrot soup
+    'kürbissuppe',    // pumpkin soup
+    'flammkuchen',    // tarte flambée
+    'bruschetta',     // bruschetta
+    'focaccia',       // focaccia
+    'panini',         // panini
+    'ciabatta',       // ciabatta
+    'pita',           // pita
+    'tortilla',       // tortilla
+    'taco',           // taco
+    'quesadilla',     // quesadilla
+    'empanada',       // empanada
+    'spring rolls',   // spring rolls
+    'sommerrollen',   // summer rolls
+    'sushi',          // sushi
+    'onigiri',        // onigiri
+    'bento',          // bento
+    'mezze',          // mezze
+    'antipasti',      // antipasti
+    'tapas',          // tapas
+    'vegetarisch mittag', // vegetarian lunch
+    'vegan mittag',   // vegan lunch
+    'schnell mittag', // quick lunch
+    'meal prep',      // meal prep
+    'to go',          // to go
   ],
   // Collation / Snack
   snack: [
+    // Classiques
     'snack',          // snack
     'nüsse',          // nuts
     'energy balls',   // energy balls
@@ -245,9 +341,49 @@ const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
     'müsliriegel',    // granola bar
     'obst snack',     // fruit snack
     'nachtisch',      // dessert/snack
+    // Nouveaux termes
+    'protein riegel', // protein bars
+    'energy bites',   // energy bites
+    'bliss balls',    // bliss balls
+    'dattel kugeln',  // date balls
+    'haferkekse',     // oat cookies
+    'protein kugeln', // protein balls
+    'mandeln',        // almonds
+    'cashew',         // cashews
+    'walnüsse',       // walnuts
+    'studentenfutter', // trail mix
+    'trockenfrüchte', // dried fruits
+    'edamame',        // edamame
+    'gemüse sticks',  // veggie sticks
+    'guacamole',      // guacamole
+    'tzatziki',       // tzatziki
+    'baba ganoush',   // baba ganoush
+    'cracker',        // crackers
+    'reiswaffeln',    // rice cakes
+    'popcorn',        // popcorn
+    'apfelchips',     // apple chips
+    'gemüsechips',    // veggie chips
+    'kale chips',     // kale chips
+    'grünkohl chips', // kale chips german
+    'rohkost',        // raw food
+    'nicecream',      // nice cream
+    'frozen joghurt', // frozen yogurt
+    'eis gesund',     // healthy ice cream
+    'sorbet',         // sorbet
+    'obstspiesse',    // fruit skewers
+    'beeren',         // berries
+    'smoothie',       // smoothie
+    'lassi',          // lassi
+    'matcha',         // matcha
+    'golden milk',    // golden milk
+    'protein shake',  // protein shake
+    'leichte snacks', // light snacks
+    'gesunde snacks', // healthy snacks
+    'kalorienarm',    // low calorie
   ],
   // Diner / Dinner
   dinner: [
+    // Classiques
     'huhn',           // chicken
     'lachs',          // salmon
     'rindfleisch',    // beef
@@ -263,6 +399,126 @@ const MEAL_TYPE_SEARCHES: Record<string, string[]> = {
     'suppe abend',    // dinner soup
     'schnitzel',      // schnitzel
     'wok',            // wok/stir-fry
+    // Volaille
+    'hähnchenbrust',  // chicken breast
+    'hähnchenfilet',  // chicken fillet
+    'putenbrust',     // turkey breast
+    'hähnchen ofen',  // oven chicken
+    'hähnchen pfanne', // pan chicken
+    'chicken teriyaki', // chicken teriyaki
+    // Poissons et fruits de mer
+    'lachsfilet',     // salmon fillet
+    'forelle',        // trout
+    'kabeljau',       // cod
+    'seelachs',       // pollock
+    'thunfischsteak', // tuna steak
+    'dorade',         // sea bream
+    'zander',         // pike-perch
+    'garnelen',       // shrimp
+    'scampi',         // scampi
+    'muscheln',       // mussels
+    'calamari',       // calamari
+    'fischfilet',     // fish fillet
+    // Viandes
+    'schweinefilet',  // pork fillet
+    'kalbfleisch',    // veal
+    'lamm',           // lamb
+    'rindersteak',    // beef steak
+    'hackfleisch',    // ground meat
+    'frikadellen',    // meatballs
+    'fleischbällchen', // meatballs
+    'gyros',          // gyros
+    'köfte',          // kofte
+    // Végétarien/Vegan
+    'tempeh',         // tempeh
+    'seitan',         // seitan
+    'linsen',         // lentils
+    'bohnen',         // beans
+    'kichererbsen curry', // chickpea curry
+    'gemüsecurry',    // vegetable curry
+    'vegetarisch',    // vegetarian
+    'vegan abendessen', // vegan dinner
+    'pflanzlich',     // plant-based
+    // Pâtes et riz
+    'spaghetti',      // spaghetti
+    'penne',          // penne
+    'tagliatelle',    // tagliatelle
+    'lasagne',        // lasagna
+    'gnocchi',        // gnocchi
+    'nudeln',         // noodles
+    'reis',           // rice
+    'gebratener reis', // fried rice
+    'paella',         // paella
+    // Cuisine asiatique
+    'thai curry',     // thai curry
+    'pad thai',       // pad thai
+    'ramen',          // ramen
+    'pho',            // pho
+    'bibimbap',       // bibimbap
+    'fried rice',     // fried rice
+    'kung pao',       // kung pao
+    'sweet sour',     // sweet and sour
+    'teriyaki',       // teriyaki
+    'miso',           // miso
+    'dim sum',        // dim sum
+    'dumplings',      // dumplings
+    'gyoza',          // gyoza
+    // Cuisine méditerranéenne
+    'moussaka',       // moussaka
+    'souvlaki',       // souvlaki
+    'kofta',          // kofta
+    'tajine',         // tajine
+    'couscous',       // couscous
+    'falafel teller', // falafel plate
+    'shakshuka dinner', // shakshuka dinner
+    // Cuisine indienne
+    'tikka masala',   // tikka masala
+    'butter chicken', // butter chicken
+    'dal',            // dal
+    'korma',          // korma
+    'vindaloo',       // vindaloo
+    'biryani',        // biryani
+    'naan',           // naan
+    'samosa',         // samosa
+    // Cuisine mexicaine
+    'burrito',        // burrito
+    'enchiladas',     // enchiladas
+    'fajitas',        // fajitas
+    'chili con carne', // chili con carne
+    'nachos',         // nachos
+    // Légumes principaux
+    'zucchini',       // zucchini
+    'aubergine',      // eggplant
+    'paprika',        // bell pepper
+    'pilze',          // mushrooms
+    'champignons',    // mushrooms
+    'blumenkohl',     // cauliflower
+    'brokkoli',       // broccoli
+    'spinat',         // spinach
+    'kartoffel',      // potato
+    'süßkartoffel',   // sweet potato
+    'kürbis',         // pumpkin
+    'ratatouille',    // ratatouille
+    // Méthodes de cuisson
+    'ofengericht',    // oven dish
+    'pfannengericht', // pan dish
+    'one pot',        // one pot
+    'one pan',        // one pan
+    'slow cooker',    // slow cooker
+    'instant pot',    // instant pot
+    'gedämpft',       // steamed
+    'gebacken',       // baked
+    'gegrillt',       // grilled
+    // Diététique
+    'low carb',       // low carb
+    'high protein',   // high protein
+    'kalorienarm',    // low calorie
+    'leicht',         // light
+    'fitness',        // fitness
+    'clean eating',   // clean eating
+    'vollkorn',       // whole grain
+    'glutenfrei',     // gluten free
+    'laktosefrei',    // lactose free
   ],
 }
 
@@ -337,51 +593,77 @@ interface EnrichedRecipe {
 }
 
 /**
- * Post-validation: check if enriched recipe meets health criteria
- * Returns null if recipe should be rejected
+ * Post-validation: calculate health penalty based on enriched nutrition data
+ * NOW: Never rejects - always returns valid=true with a penalty score
+ * Penalty is used to adjust the final healthScore
  */
 function validateEnrichedRecipe(
   enriched: Record<string, unknown>,
   mealType: string
-): { valid: boolean; reason?: string } {
+): { valid: boolean; penalty: number; warnings: string[] } {
   const nutrition = enriched.nutrition as Record<string, number> | undefined
   if (!nutrition) {
-    return { valid: false, reason: 'missing nutrition data' }
+    // Missing nutrition is a penalty but not a rejection
+    return { valid: true, penalty: 30, warnings: ['missing nutrition data'] }
   }
+
+  let penalty = 0
+  const warnings: string[] = []
 
   const { calories, fats, sugar, saturatedFat, sodium } = nutrition
   const calorieLimit = CALORIE_LIMITS[mealType as keyof typeof CALORIE_LIMITS] || CALORIE_LIMITS.lunch
 
   // Check calories
-  if (calories > calorieLimit.max * 1.1) { // 10% tolerance
-    return { valid: false, reason: `calories too high: ${calories} > ${calorieLimit.max}` }
+  if (calories > calorieLimit.max * 1.5) {
+    penalty += 20
+    warnings.push(`very high calories: ${calories}`)
+  } else if (calories > calorieLimit.max * 1.1) {
+    penalty += 10
+    warnings.push(`high calories: ${calories}`)
   }
 
   // Check fat percentage
   if (calories > 0 && fats) {
     const fatPercentage = (fats * 9 / calories) * 100
-    if (fatPercentage > MAX_FAT_PERCENTAGE + 5) { // 5% tolerance
-      return { valid: false, reason: `fat percentage too high: ${Math.round(fatPercentage)}%` }
+    if (fatPercentage > 50) {
+      penalty += 15
+      warnings.push(`very high fat: ${Math.round(fatPercentage)}%`)
+    } else if (fatPercentage > MAX_FAT_PERCENTAGE + 5) {
+      penalty += 8
+      warnings.push(`high fat: ${Math.round(fatPercentage)}%`)
     }
   }
 
   // Check sugar (if available)
-  if (sugar !== undefined && sugar > MAX_SUGAR_DESSERT) {
-    return { valid: false, reason: `sugar too high: ${sugar}g` }
+  if (sugar !== undefined) {
+    if (sugar > MAX_SUGAR_DESSERT * 1.5) {
+      penalty += 15
+      warnings.push(`very high sugar: ${sugar}g`)
+    } else if (sugar > MAX_SUGAR_DESSERT) {
+      penalty += 8
+      warnings.push(`high sugar: ${sugar}g`)
+    }
   }
 
   // Check saturated fat (if available)
-  if (saturatedFat !== undefined && saturatedFat > MAX_SATURATED_FAT * 1.5) { // More tolerance
-    return { valid: false, reason: `saturated fat too high: ${saturatedFat}g` }
+  if (saturatedFat !== undefined) {
+    if (saturatedFat > MAX_SATURATED_FAT * 2) {
+      penalty += 15
+      warnings.push(`very high saturated fat: ${saturatedFat}g`)
+    } else if (saturatedFat > MAX_SATURATED_FAT * 1.5) {
+      penalty += 8
+      warnings.push(`high saturated fat: ${saturatedFat}g`)
+    }
   }
 
-  // Check health score
-  const healthScore = enriched.healthScore as number | undefined
-  if (healthScore !== undefined && healthScore < 50) {
-    return { valid: false, reason: `health score too low: ${healthScore}` }
+  // Check sodium (if available)
+  if (sodium !== undefined && sodium > MAX_SODIUM_PER_SERVING * 1.5) {
+    penalty += 10
+    warnings.push(`high sodium: ${sodium}mg`)
   }
 
-  return { valid: true }
+  // Always valid - we classify, don't reject
+  return { valid: true, penalty, warnings }
 }
 
 // Helper: Fetch from Gustar API
@@ -576,18 +858,20 @@ RÉPONDS UNIQUEMENT AVEC LE JSON, RIEN D'AUTRE.`
 
     const enriched = JSON.parse(cleanJson)
 
-    // Post-validation: reject unhealthy recipes
+    // Post-validation: calculate health penalty (no longer rejects)
     const validation = validateEnrichedRecipe(enriched, mealType)
-    if (!validation.valid) {
-      console.log(`    ⚠️  Post-validation failed for "${recipe.title}": ${validation.reason}`)
-      return null
-    }
 
     const prepTime = enriched.prepTime || recipe.prepTime || 20
     const cookTime = recipe.cookTime || Math.round(prepTime * 0.5)
 
-    // Extract health score (default to calculated if not provided)
-    const healthScore = enriched.healthScore || getHealthScore(recipe)
+    // Calculate final health score with penalties applied
+    const baseHealthScore = enriched.healthScore || getHealthScore(recipe)
+    const healthScore = Math.max(0, Math.min(100, baseHealthScore - validation.penalty))
+
+    // Log warnings if any
+    if (validation.warnings.length > 0) {
+      console.log(`    ⚠️  Health warnings for "${recipe.title}": ${validation.warnings.join(', ')} (score: ${healthScore})`)
+    }
 
     return {
       id: recipe.id,
@@ -682,8 +966,9 @@ async function main() {
       const recipes = await fetchGustarRecipes(term, 20)
 
       let newFound = 0
-      let skippedHealth = 0
+      let withWarnings = 0
       // Add unique recipes only (not in existing DB and not already seen)
+      // Note: We no longer skip recipes - all are classified by health quality
       for (const recipe of recipes) {
         const isDuplicate = seenIds.has(recipe.id) ||
                            existingIds.has(recipe.id) ||
@@ -691,11 +976,10 @@ async function main() {
 
         if (isDuplicate) continue
 
-        // Pre-filter: check health criteria before enrichment
+        // Pre-check health criteria (for logging only - no longer rejects)
         const healthCheck = shouldEnrichRecipe(recipe)
-        if (!healthCheck.pass) {
-          skippedHealth++
-          continue
+        if (healthCheck.healthPenalty > 0) {
+          withWarnings++
         }
 
         if (newRecipesPerMealType[mealType] < targetPerMealType) {
@@ -707,7 +991,7 @@ async function main() {
         }
       }
 
-      console.log(`    Found ${recipes.length} total, ${newFound} NEW, ${skippedHealth} skipped (unhealthy) (${mealType}: ${newRecipesPerMealType[mealType]}/${targetPerMealType})`)
+      console.log(`    Found ${recipes.length} total, ${newFound} NEW${withWarnings > 0 ? ` (${withWarnings} with health warnings)` : ''} (${mealType}: ${newRecipesPerMealType[mealType]}/${targetPerMealType})`)
 
       // Small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 300))

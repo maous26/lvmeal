@@ -33,6 +33,7 @@ import {
   Sparkles,
   X,
   Check,
+  Leaf,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -386,11 +387,20 @@ export default function RecipesScreen() {
     )
   }
 
+  // Get health quality indicator based on score
+  const getHealthQuality = (score?: number): { label: string; color: string; bgColor: string } => {
+    if (!score || score < 50) return { label: 'Plaisir', color: '#DC2626', bgColor: '#FEE2E2' }
+    if (score < 70) return { label: 'Correct', color: '#F59E0B', bgColor: '#FEF3C7' }
+    if (score < 85) return { label: 'Sain', color: '#10B981', bgColor: '#D1FAE5' }
+    return { label: 'Top', color: '#059669', bgColor: '#A7F3D0' }
+  }
+
   // Render recipe card for horizontal carousel
   const renderRecipeCard = (recipe: Recipe, size: 'large' | 'medium' = 'large') => {
     const isFavorite = favorites.includes(recipe.id)
     const cardWidth = size === 'large' ? 220 : 160
     const cardHeight = size === 'large' ? 140 : 110
+    const healthQuality = getHealthQuality(recipe.healthScore)
 
     return (
       <TouchableOpacity
@@ -413,10 +423,13 @@ export default function RecipesScreen() {
             </View>
           )}
 
-          {/* Nutri-Score badge */}
-          {recipe.nutriscore && recipe.nutriscore !== 'unknown' && (
-            <View style={styles.nutriscoreContainer}>
-              <NutriScoreBadge grade={recipe.nutriscore} size="sm" />
+          {/* Health quality badge (top-left) */}
+          {recipe.healthScore !== undefined && (
+            <View style={[styles.healthBadge, { backgroundColor: healthQuality.bgColor }]}>
+              <Leaf size={12} color={healthQuality.color} />
+              <Text style={[styles.healthBadgeText, { color: healthQuality.color }]}>
+                {healthQuality.label}
+              </Text>
             </View>
           )}
 
@@ -1025,6 +1038,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 6,
     padding: 2,
+  },
+  healthBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+  },
+  healthBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   favoriteButton: {
     position: 'absolute',
