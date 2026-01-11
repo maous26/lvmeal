@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  KeyboardAvoidingView,
+  Animated,
+  Easing,
 } from 'react-native'
 import { X, Check, Edit2, AlertCircle, Mic, MicOff } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
@@ -67,6 +70,52 @@ export default function VoiceFoodInput({
   const [isListening, setIsListening] = useState(false)
   const [partialTranscript, setPartialTranscript] = useState('')
   const [speechAvailable, setSpeechAvailable] = useState<boolean | null>(null)
+
+  // Animation for progress bar
+  const progressAnim = useRef(new Animated.Value(0)).current
+  const pulseAnim = useRef(new Animated.Value(1)).current
+
+  // Animate progress bar when analyzing
+  useEffect(() => {
+    if (isAnalyzing) {
+      // Reset and start progress animation
+      progressAnim.setValue(0)
+      Animated.timing(progressAnim, {
+        toValue: 0.9,
+        duration: 3000,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start()
+
+      // Pulse animation for the icon
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 600,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 600,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      )
+      pulse.start()
+
+      return () => pulse.stop()
+    } else {
+      // Complete the progress bar
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }).start()
+    }
+  }, [isAnalyzing])
 
   // Check speech recognition availability on mount
   useEffect(() => {
@@ -290,7 +339,11 @@ export default function VoiceFoodInput({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose}>
@@ -363,24 +416,23 @@ export default function VoiceFoodInput({
                   </Text>
 
                   {transcript && !isListening && (
-                    <View style={styles.actionButtons}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => setIsEditing(true)}
-                        icon={<Edit2 size={16} color={colors.accent.primary} />}
-                      >
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="primary"
-                        size="sm"
+                    <View style={styles.actionButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.analyzeButton}
                         onPress={handleAnalyze}
-                        disabled={isAnalyzing}
-                        icon={<Check size={16} color="#FFFFFF" />}
+                        activeOpacity={0.8}
                       >
-                        Analyser
-                      </Button>
+                        <Check size={20} color="#FFFFFF" />
+                        <Text style={styles.analyzeButtonText}>Analyser mon repas</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => setIsEditing(true)}
+                        activeOpacity={0.8}
+                      >
+                        <Edit2 size={16} color={colors.accent.primary} />
+                        <Text style={styles.editButtonText}>Modifier le texte</Text>
+                      </TouchableOpacity>
                     </View>
                   )}
                 </>
@@ -407,8 +459,8 @@ export default function VoiceFoodInput({
             </View>
           )}
 
-          {/* Transcript Editor - Show when editing, has transcript, OR when speech is not available */}
-          {(isEditing || transcript || speechAvailable === false) && analyzedFoods.length === 0 && (
+          {/* Transcript Editor - Show when editing mode OR speech not available */}
+          {(isEditing || speechAvailable === false) && (
             <View style={styles.transcriptSection}>
               <Text style={styles.sectionTitle}>Description du repas</Text>
               <TextInput
@@ -422,19 +474,16 @@ export default function VoiceFoodInput({
                 textAlignVertical="top"
                 autoFocus={isEditing}
               />
-
-              <Button
-                variant="primary"
-                size="lg"
-                fullWidth
-                onPress={handleAnalyze}
-                disabled={isAnalyzing || !transcript.trim()}
-                loading={isAnalyzing}
-                style={styles.analyzeButton}
-                icon={!isAnalyzing ? <Check size={20} color="#FFFFFF" /> : undefined}
-              >
-                {isAnalyzing ? 'Analyse en cours...' : 'Analyser'}
-              </Button>
+              {/* Bouton pour valider la modification et revenir */}
+              {isEditing && speechAvailable && (
+                <TouchableOpacity
+                  style={styles.validateEditButton}
+                  onPress={() => setIsEditing(false)}
+                >
+                  <Check size={18} color={colors.accent.primary} />
+                  <Text style={styles.validateEditText}>Valider la modification</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -537,21 +586,65 @@ export default function VoiceFoodInput({
           )}
         </ScrollView>
 
-        {/* Confirm Button */}
-        {selectedFoods.size > 0 && (
-          <View style={styles.confirmBar}>
+        {/* Bottom Action Bar - Always visible */}
+        <View style={styles.confirmBar}>
+          {isAnalyzing ? (
+            /* Loading during analysis - Pro animated progress */
+            <View style={styles.analysisContainer}>
+              <View style={styles.analysisHeader}>
+                <Animated.View style={[styles.analysisIconContainer, { transform: [{ scale: pulseAnim }] }]}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                </Animated.View>
+                <View style={styles.analysisTextContainer}>
+                  <Text style={styles.analysisTitle}>Analyse IA en cours</Text>
+                  <Text style={styles.analysisSubtitle}>Identification des aliments...</Text>
+                </View>
+              </View>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBarBg}>
+                  <Animated.View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : analyzedFoods.length > 0 ? (
+            /* After analysis - Add button */
             <Button
               variant="primary"
               size="lg"
               fullWidth
               onPress={handleConfirm}
+              disabled={selectedFoods.size === 0}
               icon={<Check size={20} color="#FFFFFF" />}
             >
               Ajouter {selectedFoods.size} aliment{selectedFoods.size > 1 ? 's' : ''}
             </Button>
-          </View>
-        )}
-      </View>
+          ) : transcript.trim() ? (
+            /* Has transcript - Analyze button */
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onPress={handleAnalyze}
+              icon={<Check size={20} color="#FFFFFF" />}
+            >
+              Analyser
+            </Button>
+          ) : (
+            /* No transcript yet */
+            <Text style={styles.hintText}>Décris ton repas pour commencer</Text>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
@@ -579,7 +672,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.default,
-    paddingBottom: spacing['3xl'],
+    paddingBottom: 120,
   },
   voiceSection: {
     alignItems: 'center',
@@ -655,8 +748,18 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
+    justifyContent: 'center',
     gap: spacing.md,
     marginTop: spacing.md,
+    width: '100%',
+  },
+  actionButtonsContainer: {
+    flexDirection: 'column',
+    gap: spacing.md,
+    marginTop: spacing.xl,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.default,
+    width: '100%',
   },
   voiceInstructions: {
     ...typography.h4,
@@ -692,7 +795,52 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   analyzeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.success,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    gap: spacing.sm,
+  },
+  analyzeButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    gap: spacing.xs,
+  },
+  editButtonText: {
+    ...typography.body,
+    color: colors.accent.primary,
+    fontSize: 14,
+  },
+  textModeAnalyzeButton: {
     marginTop: spacing.sm,
+  },
+  validateEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  validateEditText: {
+    ...typography.bodyMedium,
+    color: colors.accent.primary,
   },
   errorCard: {
     alignItems: 'center',
@@ -809,7 +957,85 @@ const styles = StyleSheet.create({
   },
   confirmBar: {
     padding: spacing.default,
+    paddingBottom: spacing.xl,
     borderTopWidth: 1,
     borderTopColor: colors.border.light,
+    backgroundColor: colors.bg.primary,
+  },
+  hintText: {
+    ...typography.body,
+    color: colors.text.muted,
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
+  },
+  analysisContainer: {
+    backgroundColor: colors.accent.primary,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  analysisHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  analysisIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  analysisTextContainer: {
+    flex: 1,
+  },
+  analysisTitle: {
+    ...typography.bodyMedium,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  analysisSubtitle: {
+    ...typography.small,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  progressBarContainer: {
+    width: '100%',
+  },
+  progressBarBg: {
+    width: '100%',
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 3,
+  },
+  analysisContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  analysisText: {
+    ...typography.bodyMedium,
+    color: colors.text.secondary,
+  },
+  progressBar: {
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.border.light,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    width: '60%',
+    height: '100%',
+    backgroundColor: colors.accent.primary,
+    borderRadius: 2,
   },
 })
