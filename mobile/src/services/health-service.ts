@@ -244,7 +244,7 @@ async function getTodayHealthDataIOS(): Promise<HealthData | null> {
   try {
     // Get steps
     const steps = await new Promise<number>((resolve) => {
-      AppleHealthKit.getStepCount(options, (error, results) => {
+      AppleHealthKit.getStepCount(options, (error: any, results: any) => {
         if (error || !results) {
           resolve(0)
           return
@@ -264,7 +264,7 @@ async function getTodayHealthDataIOS(): Promise<HealthData | null> {
     }
 
     const sleepHours = await new Promise<number | null>((resolve) => {
-      AppleHealthKit.getSleepSamples(sleepOptions, (error, results) => {
+      AppleHealthKit.getSleepSamples(sleepOptions, (error: any, results: any) => {
         if (error || !results || results.length === 0) {
           resolve(null)
           return
@@ -286,7 +286,7 @@ async function getTodayHealthDataIOS(): Promise<HealthData | null> {
 
     // Get active calories
     const activeCalories = await new Promise<number | null>((resolve) => {
-      AppleHealthKit.getActiveEnergyBurned(options, (error, results) => {
+      AppleHealthKit.getActiveEnergyBurned(options, (error: any, results: any) => {
         if (error || !results || results.length === 0) {
           resolve(null)
           return
@@ -412,7 +412,7 @@ export async function getStepsForDateRange(
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
         },
-        (error, results) => {
+        (error: any, results: any) => {
           if (error || !results) {
             resolve(0)
             return
@@ -473,7 +473,7 @@ async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWe
           ascending: false,
           limit: 100,
         },
-        (error, results) => {
+        (error: any, results: any) => {
           if (error || !results) {
             console.log('[HealthService] Weight samples error:', error)
             resolve([])
@@ -493,7 +493,7 @@ async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWe
           ascending: false,
           limit: 100,
         },
-        (error, results) => {
+        (error: any, results: any) => {
           if (error || !results) {
             resolve([])
             return

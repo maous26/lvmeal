@@ -112,6 +112,7 @@
       ],
       "react-native-health-connect",
       "./plugins/withHealthConnect.js",
+      "./plugins/withHealthKit.js",
       "@react-native-google-signin/google-signin"
     ],
     "extra": {
