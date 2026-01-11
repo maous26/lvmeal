@@ -36,7 +36,9 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   const insets = useSafeAreaInsets()
   const offWhite = '#FAF9F7'
   const cream = '#F8F6F1'
-  const footerHeight = 52 + spacing.lg + spacing.md + insets.bottom
+  // Reduce footer height to avoid cutting content - cap insets for large safe area devices
+  const safeBottom = Math.min(insets.bottom, 8)
+  const footerHeight = 44 + safeBottom
 
   // Smooth fade-in animation
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -172,8 +174,8 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         </View>
       </ScrollView>
 
-      {/* Premium CTA footer */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md, backgroundColor: offWhite }]}>
+      {/* Premium CTA footer - limit bottom padding for devices with large safe areas */}
+      <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: offWhite }]}>
         {/* Subtle top shadow */}
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.03)']}
@@ -255,7 +257,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
+    paddingTop: 0,
+    marginTop: -spacing.md,
   },
   brandContainer: {
     flexDirection: 'row',
@@ -274,13 +277,13 @@ const styles = StyleSheet.create({
     lineHeight: 42,
     fontFamily: fonts.serif.bold,
     letterSpacing: -0.5,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     gap: spacing.sm,
   },
   dividerLine: {
@@ -297,7 +300,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans.regular,
     lineHeight: 24,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   benefitsGrid: {
     flexDirection: 'row',
@@ -306,7 +309,7 @@ const styles = StyleSheet.create({
   },
   benefitCard: {
     width: (width - spacing.xl * 2 - spacing.sm) / 2,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.lg,
     alignItems: 'center',
@@ -341,7 +344,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xs,
   },
   footerShadow: {
     position: 'absolute',
@@ -354,7 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md + 2,
+    paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.xl,
     borderRadius: radius.lg,
     gap: spacing.sm,
@@ -375,7 +378,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   haveAccountButton: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
   },
   haveAccountText: {
