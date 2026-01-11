@@ -290,6 +290,8 @@ export default function AddMealScreen() {
     quantity: 100,
     unit: 'g',
   })
+  // Separate text input state to allow clearing the field
+  const [quantityInputText, setQuantityInputText] = useState('100')
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -400,12 +402,14 @@ export default function AddMealScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     // For custom recipes, default to 'portion' unit since their nutrition is per portion
     const defaultUnit: ServingUnit = (food.source === 'recipe' || food.isRecipe) ? 'portion' : 'g'
+    const defaultQty = getDefaultQuantity(defaultUnit)
     setQuantityModal({
       isOpen: true,
       food,
-      quantity: getDefaultQuantity(defaultUnit),
+      quantity: defaultQty,
       unit: defaultUnit,
     })
+    setQuantityInputText(String(defaultQty))
   }
 
   // Close quantity modal
@@ -421,11 +425,13 @@ export default function AddMealScreen() {
   // Change unit
   const changeUnit = (newUnit: ServingUnit) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    const defaultQty = getDefaultQuantity(newUnit)
     setQuantityModal(prev => ({
       ...prev,
       unit: newUnit,
-      quantity: getDefaultQuantity(newUnit),
+      quantity: defaultQty,
     }))
+    setQuantityInputText(String(defaultQty))
   }
 
   // Adjust quantity
@@ -434,11 +440,38 @@ export default function AddMealScreen() {
     const step = getQuantityStep(quantityModal.unit)
     const newQty = Math.max(step, quantityModal.quantity + delta * step)
     setQuantityModal(prev => ({ ...prev, quantity: newQty }))
+    setQuantityInputText(String(newQty))
   }
 
-  // Set quantity directly
+  // Set quantity directly (from presets or buttons)
   const setQuantityValue = (qty: number) => {
-    setQuantityModal(prev => ({ ...prev, quantity: Math.max(1, qty) }))
+    const validQty = Math.max(1, qty)
+    setQuantityModal(prev => ({ ...prev, quantity: validQty }))
+    setQuantityInputText(String(validQty))
+  }
+
+  // Handle text input change - allows empty field while typing
+  const handleQuantityTextChange = (text: string) => {
+    // Allow empty string for clearing
+    setQuantityInputText(text)
+    // Parse and update the actual quantity (for nutrition preview)
+    const parsed = parseFloat(text)
+    if (!isNaN(parsed) && parsed > 0) {
+      setQuantityModal(prev => ({ ...prev, quantity: parsed }))
+    }
+  }
+
+  // Handle text input blur - ensure valid value
+  const handleQuantityTextBlur = () => {
+    const parsed = parseFloat(quantityInputText)
+    if (isNaN(parsed) || parsed <= 0) {
+      // Reset to minimum valid value
+      const minQty = getQuantityStep(quantityModal.unit)
+      setQuantityModal(prev => ({ ...prev, quantity: minQty }))
+      setQuantityInputText(String(minQty))
+    } else {
+      setQuantityInputText(String(parsed))
+    }
   }
 
   // Calculate nutrition for modal
@@ -1792,8 +1825,9 @@ export default function AddMealScreen() {
                       <View style={styles.quantityInputContainer}>
                         <TextInput
                           style={styles.quantityInput}
-                          value={String(quantityModal.quantity)}
-                          onChangeText={(text) => setQuantityValue(parseFloat(text) || 0)}
+                          value={quantityInputText}
+                          onChangeText={handleQuantityTextChange}
+                          onBlur={handleQuantityTextBlur}
                           keyboardType="numeric"
                           selectTextOnFocus
                           returnKeyType="done"
