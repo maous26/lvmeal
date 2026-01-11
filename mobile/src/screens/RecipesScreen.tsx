@@ -451,20 +451,19 @@ export default function RecipesScreen() {
             />
           </TouchableOpacity>
 
-          {/* Gradient overlay for text */}
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.recipeGradient}
-          >
-            <Text style={styles.recipeTitle} numberOfLines={2}>
-              {recipe.title}
+          {/* Calories badge on image */}
+          <View style={styles.caloriesBadge}>
+            <Text style={styles.caloriesBadgeText}>
+              {recipe.nutritionPerServing?.calories || 0} kcal
             </Text>
-            <View style={styles.recipeMeta}>
-              <Text style={styles.recipeCalories}>
-                {recipe.nutritionPerServing?.calories || 0} kcal
-              </Text>
-            </View>
-          </LinearGradient>
+          </View>
+        </View>
+
+        {/* Title below image */}
+        <View style={styles.recipeInfoContainer}>
+          <Text style={[styles.recipeTitle, { color: colors.text.primary }]} numberOfLines={2}>
+            {recipe.title}
+          </Text>
         </View>
       </TouchableOpacity>
     )
@@ -1057,28 +1056,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  recipeGradient: {
+  caloriesBadge: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingTop: spacing.xl,
+    bottom: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  caloriesBadgeText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  recipeInfoContainer: {
+    padding: spacing.sm,
+    paddingTop: spacing.sm,
   },
   recipeTitle: {
-    ...typography.bodyMedium,
-    color: '#FFFFFF',
-    marginBottom: 4,
+    ...typography.smallMedium,
     fontFamily: fonts.serif.semibold,
-  },
-  recipeMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recipeCalories: {
-    ...typography.small,
-    color: '#9CA3AF',
+    lineHeight: 18,
   },
   noResultsText: {
     ...typography.body,
