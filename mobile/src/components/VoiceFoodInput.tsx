@@ -368,18 +368,18 @@ export default function VoiceFoodInput({
                         variant="outline"
                         size="sm"
                         onPress={() => setIsEditing(true)}
+                        icon={<Edit2 size={16} color={colors.accent.primary} />}
                       >
-                        <Edit2 size={16} color={colors.accent.primary} />
-                        <Text style={styles.editButtonText}>Modifier</Text>
+                        Modifier
                       </Button>
                       <Button
                         variant="primary"
                         size="sm"
                         onPress={handleAnalyze}
                         disabled={isAnalyzing}
+                        icon={<Check size={16} color="#FFFFFF" />}
                       >
-                        <Check size={16} color="#FFFFFF" />
-                        <Text style={styles.buttonTextSmall}>Analyser</Text>
+                        Analyser
                       </Button>
                     </View>
                   )}
@@ -429,19 +429,11 @@ export default function VoiceFoodInput({
                 fullWidth
                 onPress={handleAnalyze}
                 disabled={isAnalyzing || !transcript.trim()}
+                loading={isAnalyzing}
                 style={styles.analyzeButton}
+                icon={!isAnalyzing ? <Check size={20} color="#FFFFFF" /> : undefined}
               >
-                {isAnalyzing ? (
-                  <>
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                    <Text style={styles.buttonText}>Analyse en cours...</Text>
-                  </>
-                ) : (
-                  <>
-                    <Check size={20} color="#FFFFFF" />
-                    <Text style={styles.buttonText}>Analyser</Text>
-                  </>
-                )}
+                {isAnalyzing ? 'Analyse en cours...' : 'Analyser'}
               </Button>
             </View>
           )}
@@ -548,11 +540,14 @@ export default function VoiceFoodInput({
         {/* Confirm Button */}
         {selectedFoods.size > 0 && (
           <View style={styles.confirmBar}>
-            <Button variant="primary" size="lg" fullWidth onPress={handleConfirm}>
-              <Check size={20} color="#FFFFFF" />
-              <Text style={styles.buttonText}>
-                Ajouter {selectedFoods.size} aliment{selectedFoods.size > 1 ? 's' : ''}
-              </Text>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onPress={handleConfirm}
+              icon={<Check size={20} color="#FFFFFF" />}
+            >
+              Ajouter {selectedFoods.size} aliment{selectedFoods.size > 1 ? 's' : ''}
             </Button>
           </View>
         )}
@@ -663,16 +658,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.md,
   },
-  editButtonText: {
-    ...typography.smallMedium,
-    color: colors.accent.primary,
-    marginLeft: spacing.xs,
-  },
-  buttonTextSmall: {
-    ...typography.smallMedium,
-    color: '#FFFFFF',
-    marginLeft: spacing.xs,
-  },
   voiceInstructions: {
     ...typography.h4,
     color: colors.text.primary,
@@ -708,11 +693,6 @@ const styles = StyleSheet.create({
   },
   analyzeButton: {
     marginTop: spacing.sm,
-  },
-  buttonText: {
-    ...typography.bodyMedium,
-    color: '#FFFFFF',
-    marginLeft: spacing.sm,
   },
   errorCard: {
     alignItems: 'center',
