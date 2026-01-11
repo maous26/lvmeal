@@ -349,6 +349,15 @@ export async function checkAndSendMacroAlert(): Promise<boolean> {
     // Get today's nutrition
     const todayStr = new Date().toISOString().split('T')[0]
     const todayData = mealsState.dailyData[todayStr]
+
+    // Ne pas alerter si l'utilisateur n'a pas encore enregistré de repas aujourd'hui
+    // Envoyer des alertes à quelqu'un qui n'a pas utilisé l'app ne sert à rien
+    const todayMealsCount = todayData?.meals?.length || 0
+    if (todayMealsCount === 0) {
+      console.log('[CoachProactive] No meals logged today, skipping macro alert')
+      return false
+    }
+
     const consumed: NutritionInfo = todayData?.meals?.reduce(
       (acc, meal) => ({
         calories: acc.calories + (meal.totalNutrition?.calories || 0),
