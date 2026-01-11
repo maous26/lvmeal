@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { GlassCard } from '../ui/GlassCard'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, typography, radius } from '../../constants/theme'
+import { spacing, typography, radius, fonts } from '../../constants/theme'
 import Svg, { Circle } from 'react-native-svg'
 
 interface MacroCardProps {
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        fontFamily: 'Inter_500Medium',
+        fontFamily: fonts.sans.medium,
     },
     content: {
         gap: 6

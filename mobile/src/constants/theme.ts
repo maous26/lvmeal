@@ -6,19 +6,19 @@
 // FONTS - Organic Luxury Typography
 // =============================================================================
 export const fonts = {
-  // Serif pour titres luxueux (Playfair Display)
+  // Sans-serif humaniste pour titres (Nunito Sans - chaleureux et accessible)
   serif: {
-    regular: 'PlayfairDisplay_400Regular',
-    medium: 'PlayfairDisplay_500Medium',
-    semibold: 'PlayfairDisplay_600SemiBold',
-    bold: 'PlayfairDisplay_700Bold',
+    regular: 'NunitoSans_400Regular',
+    medium: 'NunitoSans_500Medium',
+    semibold: 'NunitoSans_600SemiBold',
+    bold: 'NunitoSans_700Bold',
   },
-  // Sans-serif pour corps de texte (Inter)
+  // Sans-serif humaniste pour corps de texte (Nunito Sans - cohérence totale)
   sans: {
-    regular: 'Inter_400Regular',
-    medium: 'Inter_500Medium',
-    semibold: 'Inter_600SemiBold',
-    bold: 'Inter_700Bold',
+    regular: 'NunitoSans_400Regular',
+    medium: 'NunitoSans_500Medium',
+    semibold: 'NunitoSans_600SemiBold',
+    bold: 'NunitoSans_700Bold',
   },
 }
 

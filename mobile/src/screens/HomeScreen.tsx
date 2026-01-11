@@ -353,7 +353,12 @@ export default function HomeScreen() {
 
   const userName = profile?.firstName || profile?.name?.split(' ')[0] || ''
   const greeting = getGreeting(userName || undefined)
-  const userInitials = userName.substring(0, 2).toUpperCase()
+  const userInitials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 
   // Date navigation
   const changeDate = (delta: number) => {
@@ -744,7 +749,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 18,
+    ...typography.h4,
     fontWeight: '700',
     color: '#FFFFFF',
   },

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native'
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg'
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated'
 import { useTheme } from '../../contexts/ThemeContext'
+import { fonts } from '../../constants/theme'
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 const { width } = Dimensions.get('window')
@@ -122,17 +123,17 @@ const styles = StyleSheet.create({
     },
     valueText: {
         fontSize: 52,
-        fontFamily: 'PlayfairDisplay_700Bold',
+        fontFamily: fonts.serif.bold,
         lineHeight: 62,
         paddingTop: 0,
     },
     unitText: {
         fontSize: 16,
-        fontFamily: 'Inter_500Medium',
+        fontFamily: fonts.sans.medium,
     },
     subText: {
         fontSize: 15,
-        fontFamily: 'Inter_400Regular',
+        fontFamily: fonts.sans.regular,
         marginTop: -4,
     }
 })

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native'
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg'
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing, withRepeat, withSequence } from 'react-native-reanimated'
 import { useTheme } from '../../contexts/ThemeContext'
-import { typography } from '../../constants/theme'
+import { typography, fonts } from '../../constants/theme'
 import { GlassCard } from '../ui/GlassCard'
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
@@ -129,17 +129,17 @@ const styles = StyleSheet.create({
     },
     caloriesValue: {
         fontSize: 48,
-        fontFamily: 'PlayfairDisplay_700Bold',
+        fontFamily: fonts.serif.bold,
         lineHeight: 56,
     },
     caloriesUnit: {
         fontSize: 18,
-        fontFamily: 'PlayfairDisplay_400Regular',
+        fontFamily: fonts.serif.regular,
         marginBottom: 8,
     },
     subText: {
         fontSize: 16,
-        fontFamily: 'Inter_400Regular',
+        fontFamily: fonts.sans.regular,
         marginTop: -4,
     }
 })

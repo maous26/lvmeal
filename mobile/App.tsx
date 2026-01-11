@@ -8,6 +8,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as ExpoSplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 import { PlayfairDisplay_400Regular, PlayfairDisplay_500Medium, PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display'
+import { Lora_400Regular, Lora_500Medium, Lora_600SemiBold, Lora_700Bold } from '@expo-google-fonts/lora'
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display'
+import { NunitoSans_400Regular, NunitoSans_500Medium, NunitoSans_600SemiBold, NunitoSans_700Bold } from '@expo-google-fonts/nunito-sans'
 
 import { RootNavigator } from './src/navigation'
 import { linkingConfig, isAuthDeepLink, getAuthAction } from './src/navigation/linking'
@@ -69,6 +72,15 @@ export default Sentry.wrap(function App() {
     PlayfairDisplay_500Medium,
     PlayfairDisplay_600SemiBold,
     PlayfairDisplay_700Bold,
+    Lora_400Regular,
+    Lora_500Medium,
+    Lora_600SemiBold,
+    Lora_700Bold,
+    DMSerifDisplay_400Regular,
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
   })
 
   useEffect(() => {

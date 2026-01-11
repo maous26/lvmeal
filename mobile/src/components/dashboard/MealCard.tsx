@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { GlassCard } from '../ui/GlassCard'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, typography } from '../../constants/theme'
+import { spacing, typography, fonts } from '../../constants/theme'
 import { ArrowRight } from 'lucide-react-native'
 
 interface MealCardProps {
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     },
     description: {
         fontSize: 12,
-        fontFamily: 'Inter_400Regular',
+        fontFamily: fonts.sans.regular,
     },
     calories: {
         fontSize: 14,

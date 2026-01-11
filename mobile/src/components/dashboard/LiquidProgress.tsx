@@ -12,7 +12,7 @@ import Animated, {
     useDerivedValue
 } from 'react-native-reanimated'
 import { useTheme } from '../../contexts/ThemeContext'
-import { typography } from '../../constants/theme'
+import { typography, fonts } from '../../constants/theme'
 import { formatNumber } from '../../lib/utils'
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle)
@@ -160,13 +160,13 @@ export const LiquidProgress = ({ value, max, size = 260, strokeWidth = 18 }: Liq
 
 const styles = StyleSheet.create({
     mainValue: {
-        fontFamily: 'PlayfairDisplay_700Bold', // SERIF FONT HERE
+        fontFamily: fonts.serif.bold,
         fontSize: 42,
         lineHeight: 48,
         textAlign: 'center',
     },
     label: {
-        fontFamily: 'Inter_500Medium',
+        fontFamily: fonts.sans.medium,
         fontSize: 14,
         marginTop: 4,
         opacity: 0.8,
