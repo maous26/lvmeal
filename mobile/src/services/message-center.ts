@@ -13,6 +13,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { lightColors, darkColors } from '../constants/theme'
 
 // ============= TYPES =============
 
@@ -48,18 +49,42 @@ export interface LymiaMessage {
   dedupKey?: string // Clé pour éviter doublons (ex: "nutrition-8h-alert")
 }
 
-// Priority config - P0 = vraiment urgent (rare), vibrations seulement P0
-export const PRIORITY_CONFIG: Record<MessagePriority, {
-  color: string
+// Priority config - behavior only (colors come from theme)
+export interface PriorityBehavior {
   vibrate: boolean
   persistent: boolean
   maxAge: number // hours
   cooldown: number // heures avant de pouvoir renvoyer un message similaire
-}> = {
-  P0: { color: '#C75D5D', vibrate: true, persistent: true, maxAge: 24, cooldown: 24 },   // Rouge terre - urgent (rare!)
-  P1: { color: '#8B5A5A', vibrate: false, persistent: true, maxAge: 12, cooldown: 8 },   // Grenat - action needed
-  P2: { color: '#5C8A5E', vibrate: false, persistent: false, maxAge: 8, cooldown: 24 },  // Vert naturel - celebration
-  P3: { color: '#2D7A9C', vibrate: false, persistent: false, maxAge: 4, cooldown: 4 },   // Océan - tip
+}
+
+export const PRIORITY_BEHAVIOR: Record<MessagePriority, PriorityBehavior> = {
+  P0: { vibrate: true, persistent: true, maxAge: 24, cooldown: 24 },   // Urgent (rare!)
+  P1: { vibrate: false, persistent: true, maxAge: 12, cooldown: 8 },   // Action needed
+  P2: { vibrate: false, persistent: false, maxAge: 8, cooldown: 24 },  // Celebration
+  P3: { vibrate: false, persistent: false, maxAge: 4, cooldown: 4 },   // Tip
+}
+
+// Priority config with colors - uses theme tokens (palette bienveillante)
+// For components, use getPriorityConfig() to get theme-aware colors
+export const PRIORITY_CONFIG: Record<MessagePriority, PriorityBehavior & { color: string }> = {
+  P0: { ...PRIORITY_BEHAVIOR.P0, color: lightColors.coach.urgent },
+  P1: { ...PRIORITY_BEHAVIOR.P1, color: lightColors.coach.action },
+  P2: { ...PRIORITY_BEHAVIOR.P2, color: lightColors.coach.celebration },
+  P3: { ...PRIORITY_BEHAVIOR.P3, color: lightColors.coach.tip },
+}
+
+/**
+ * Get priority config with theme-aware colors
+ * Use this in components with access to theme context
+ */
+export function getPriorityConfig(isDarkMode: boolean): Record<MessagePriority, PriorityBehavior & { color: string }> {
+  const colors = isDarkMode ? darkColors : lightColors
+  return {
+    P0: { ...PRIORITY_BEHAVIOR.P0, color: colors.coach.urgent },
+    P1: { ...PRIORITY_BEHAVIOR.P1, color: colors.coach.action },
+    P2: { ...PRIORITY_BEHAVIOR.P2, color: colors.coach.celebration },
+    P3: { ...PRIORITY_BEHAVIOR.P3, color: colors.coach.tip },
+  }
 }
 
 // Cooldown tracking pour éviter spam
@@ -495,6 +520,8 @@ export default {
   generateDailyMessages,
   toast,
   PRIORITY_CONFIG,
+  PRIORITY_BEHAVIOR,
+  getPriorityConfig,
   CATEGORY_EMOJI,
   DEFAULT_PREFERENCES,
 }

@@ -39,7 +39,7 @@ import { useCaloricBankStore } from '../stores/caloric-bank-store'
 import {
   useMessageCenter,
   generateDailyMessages,
-  PRIORITY_CONFIG,
+  getPriorityConfig,
   type LymiaMessage,
 } from '../services/message-center'
 import { CoachMessageCard } from '../components/coach'
@@ -176,9 +176,10 @@ const welcomeStyles = StyleSheet.create({
 // ============= MAIN COMPONENT =============
 
 export default function CoachScreen() {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
+  const priorityConfig = getPriorityConfig(isDark)
   // Use the real store hydration state instead of a timer
   const isStoreHydrated = useUserStoreHydration()
 
@@ -319,8 +320,8 @@ export default function CoachScreen() {
             {alerts.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <AlertTriangle size={16} color={PRIORITY_CONFIG.P0.color} />
-                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P0.color }]}>
+                  <AlertTriangle size={16} color={priorityConfig.P0.color} />
+                  <Text style={[styles.sectionTitle, { color: priorityConfig.P0.color }]}>
                     Alertes
                   </Text>
                 </View>
@@ -340,8 +341,8 @@ export default function CoachScreen() {
             {actions.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Bell size={16} color={PRIORITY_CONFIG.P1.color} />
-                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P1.color }]}>
+                  <Bell size={16} color={priorityConfig.P1.color} />
+                  <Text style={[styles.sectionTitle, { color: priorityConfig.P1.color }]}>
                     Actions suggérées
                   </Text>
                 </View>
@@ -361,8 +362,8 @@ export default function CoachScreen() {
             {celebrations.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Trophy size={16} color={PRIORITY_CONFIG.P2.color} />
-                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P2.color }]}>
+                  <Trophy size={16} color={priorityConfig.P2.color} />
+                  <Text style={[styles.sectionTitle, { color: priorityConfig.P2.color }]}>
                     Félicitations
                   </Text>
                 </View>
@@ -382,8 +383,8 @@ export default function CoachScreen() {
             {tips.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Lightbulb size={16} color={PRIORITY_CONFIG.P3.color} />
-                  <Text style={[styles.sectionTitle, { color: PRIORITY_CONFIG.P3.color }]}>
+                  <Lightbulb size={16} color={priorityConfig.P3.color} />
+                  <Text style={[styles.sectionTitle, { color: priorityConfig.P3.color }]}>
                     Conseils
                   </Text>
                 </View>

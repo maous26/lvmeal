@@ -112,6 +112,30 @@ export const lightColors = {
     diamond: '#7A9E7E',      // Sauge
   },
 
+  // Coach - Palette bienveillante (jamais culpabilisante)
+  // P0-P3 utilisent des teintes douces au lieu de rouges agressifs
+  coach: {
+    // Priority colors - palette douce et organique
+    urgent: '#A85C5C',       // Prune douce (P0) - alerte sans agressivité
+    action: '#8B6B61',       // Terre sienne (P1) - action chaleureuse
+    celebration: '#5C8A5E',  // Vert naturel (P2) - célébration positive
+    tip: '#6B8A9B',          // Bleu gris (P3) - conseil apaisant
+    // Category backgrounds
+    categoryBg: {
+      nutrition: '#F5F0E8',  // Crème chaud
+      hydration: '#EEF6F9',  // Bleu très pâle
+      sleep: '#F3F0F8',      // Lavande pâle
+      sport: '#EDF5EE',      // Vert très pâle
+      stress: '#F8F5F0',     // Beige chaud
+      progress: '#FDF8F3',   // Caramel pâle
+      wellness: '#FBF5F3',   // Rose terre pâle
+      system: '#F5F5F5',     // Gris neutre
+    },
+    // State colors
+    unreadBorder: 'rgba(74, 103, 65, 0.4)',  // Vert mousse semi-transparent
+    readBorder: 'rgba(0, 0, 0, 0.08)',       // Gris très léger
+  },
+
   // Organic specific
   organic: organicPalette,
 }
@@ -191,6 +215,32 @@ export const darkColors = {
     platinum: '#E5E4E2',
     diamond: '#B9F2FF',
   },
+
+  // Coach - Dark mode palette (softer contrast)
+  coach: {
+    // Priority colors - darker tones for dark mode
+    urgent: '#D18A8A',       // Rose-prune clair (P0)
+    action: '#C9A090',       // Terre sienne clair (P1)
+    celebration: '#7DBF80',  // Vert lumineux (P2)
+    tip: '#8BB0C4',          // Bleu gris clair (P3)
+    // Category backgrounds
+    categoryBg: {
+      nutrition: '#2A2520',
+      hydration: '#1E2A30',
+      sleep: '#252030',
+      sport: '#1E2520',
+      stress: '#2A2825',
+      progress: '#2A2520',
+      wellness: '#2A2225',
+      system: '#202025',
+    },
+    // State colors
+    unreadBorder: 'rgba(56, 189, 248, 0.4)',
+    readBorder: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  // Organic specific (same as light for consistency)
+  organic: organicPalette,
 }
 
 // Default export uses light colors for backward compatibility

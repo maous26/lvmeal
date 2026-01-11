@@ -23,7 +23,8 @@ import * as Haptics from 'expo-haptics'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius, shadows, fonts } from '../../constants/theme'
 import {
-  PRIORITY_CONFIG,
+  getPriorityConfig,
+  PRIORITY_BEHAVIOR,
   CATEGORY_EMOJI,
   type LymiaMessage,
   type MessageType,
@@ -60,12 +61,15 @@ export function CoachMessageCard({
   showReason = true,
   style,
 }: CoachMessageCardProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
 
+  // Get theme-aware priority colors
+  const priorityConfig = getPriorityConfig(isDark)
   const typeConf = TYPE_CONFIG[message.type]
-  const priorityConf = PRIORITY_CONFIG[message.priority]
+  const priorityConf = priorityConfig[message.priority]
+  const priorityBehavior = PRIORITY_BEHAVIOR[message.priority]
   const emoji = message.emoji || CATEGORY_EMOJI[message.category]
-  const canDismiss = !priorityConf.persistent
+  const canDismiss = !priorityBehavior.persistent
 
   const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)

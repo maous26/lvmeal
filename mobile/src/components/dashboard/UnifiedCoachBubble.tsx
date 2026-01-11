@@ -25,7 +25,8 @@ import { spacing, typography, radius, fonts } from '../../constants/theme'
 import {
   useMessageCenter,
   generateDailyMessages,
-  PRIORITY_CONFIG,
+  getPriorityConfig,
+  PRIORITY_BEHAVIOR,
   CATEGORY_EMOJI,
   type LymiaMessage,
 } from '../../services/message-center'
@@ -44,7 +45,8 @@ export default function UnifiedCoachBubble({
   onSeeAll,
 }: UnifiedCoachBubbleProps) {
   const navigation = useNavigation()
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
+  const priorityConfig = getPriorityConfig(isDark)
 
   // MessageCenter
   const priorityMessage = useMessageCenter((s) => s.getPriorityMessage())
@@ -131,7 +133,7 @@ export default function UnifiedCoachBubble({
 
   // Vibrate for P0 messages
   useEffect(() => {
-    if (priorityMessage?.priority === 'P0' && PRIORITY_CONFIG.P0.vibrate) {
+    if (priorityMessage?.priority === 'P0' && PRIORITY_BEHAVIOR.P0.vibrate) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
     }
   }, [priorityMessage?.id])
@@ -188,9 +190,10 @@ export default function UnifiedCoachBubble({
     )
   }
 
-  const config = PRIORITY_CONFIG[priorityMessage.priority]
+  const config = priorityConfig[priorityMessage.priority]
+  const behavior = PRIORITY_BEHAVIOR[priorityMessage.priority]
   const emoji = priorityMessage.emoji || CATEGORY_EMOJI[priorityMessage.category]
-  const canDismiss = !config.persistent
+  const canDismiss = !behavior.persistent
 
   if (compact) {
     return (
