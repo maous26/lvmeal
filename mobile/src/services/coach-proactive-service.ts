@@ -282,10 +282,13 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
     const triggerDate = new Date(now)
     triggerDate.setHours(summaryHour, 0, 0, 0)
 
+    const title = getRandomMessage(COACH_MESSAGES.evening_summary.titles)
+    const body = 'Consulte le resume de ta journee nutrition.'
+
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: getRandomMessage(COACH_MESSAGES.evening_summary.titles),
-        body: 'Consulte le resume de ta journee nutrition.',
+        title,
+        body,
         data: {
           type: 'coach_proactive',
           subtype: 'evening_summary',
@@ -299,6 +302,10 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
         date: triggerDate,
       },
     })
+
+    // Add to MessageCenter so it appears in Coach screen
+    const today = new Date().toDateString()
+    addToMessageCenter('evening_summary', title, body, `evening-summary-${today}`, '📊')
 
     // Save notification ID
     const existingIds = await getScheduledNotificationIds()

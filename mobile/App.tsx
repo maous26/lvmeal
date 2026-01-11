@@ -20,7 +20,9 @@ import { clearFoodSearchCache } from './src/services/food-search'
 import {
   requestNotificationPermissions,
   addNotificationResponseListener,
+  addNotificationReceivedListener,
 } from './src/services/notification-service'
+import { useMessageCenter } from './src/services/message-center'
 import {
   markOnboardingDayNotified,
 } from './src/services/onboarding-notifications-service'
@@ -128,6 +130,37 @@ export default Sentry.wrap(function App() {
     }
 
     prepare()
+  }, [])
+
+  // Handle notifications RECEIVED (sync to MessageCenter for Coach screen)
+  useEffect(() => {
+    const subscription = addNotificationReceivedListener((notification) => {
+      const { title, body, data } = notification.request.content
+      console.log('[App] Notification received:', title)
+
+      // Skip if already added to MessageCenter by the sender
+      // (notifications sent via sendNotification already add to MessageCenter)
+      // Only sync scheduled notifications that fire when app is in foreground
+      if (data?.type === 'coach_proactive' || data?.type === 'daily_insight_trigger') {
+        const messageCenter = useMessageCenter.getState()
+        const emoji = data?.type === 'coach_proactive' ? '📊' : '💡'
+        messageCenter.addMessage({
+          priority: 'P3',
+          type: 'insight',
+          category: 'wellness',
+          title: title?.replace(/^[^\s]+\s/, '') || 'Coach LYM', // Remove emoji prefix
+          message: body || '',
+          emoji,
+          reason: `Notification reçue: ${data?.type}`,
+          confidence: 0.7,
+          dedupKey: `notif-received-${data?.type}-${new Date().toDateString()}`,
+          actionRoute: 'Coach',
+        })
+        console.log('[App] Synced notification to MessageCenter')
+      }
+    })
+
+    return () => subscription.remove()
   }, [])
 
   // Handle notification taps
