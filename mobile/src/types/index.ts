@@ -268,6 +268,7 @@ export interface Recipe {
   servings: number
   difficulty?: 'easy' | 'medium' | 'hard'
   category?: string
+  mealType?: MealType // breakfast, lunch, snack, dinner
   ingredients: RecipeIngredient[]
   instructions: string[]
   nutrition: NutritionInfo

@@ -225,9 +225,70 @@ async function searchGustarRecipes(
   }
 }
 
+// Portions réalistes par type d'aliment (en grammes)
+const REALISTIC_PORTIONS: Record<string, { min: number; max: number; unit: string }> = {
+  // Produits laitiers
+  yaourt: { min: 125, max: 150, unit: 'g' },
+  'fromage blanc': { min: 100, max: 150, unit: 'g' },
+  fromage: { min: 30, max: 40, unit: 'g' },
+  lait: { min: 200, max: 250, unit: 'ml' },
+  // Fruits
+  pomme: { min: 150, max: 200, unit: 'g' },
+  banane: { min: 100, max: 150, unit: 'g' },
+  compote: { min: 100, max: 130, unit: 'g' },
+  fruit: { min: 100, max: 150, unit: 'g' },
+  // Céréales et féculents
+  cereales: { min: 30, max: 50, unit: 'g' },
+  muesli: { min: 40, max: 60, unit: 'g' },
+  pain: { min: 40, max: 80, unit: 'g' },
+  tartine: { min: 30, max: 50, unit: 'g' },
+  brioche: { min: 40, max: 70, unit: 'g' },
+  croissant: { min: 45, max: 60, unit: 'g' },
+  // Accompagnements
+  confiture: { min: 20, max: 30, unit: 'g' },
+  miel: { min: 15, max: 25, unit: 'g' },
+  beurre: { min: 10, max: 15, unit: 'g' },
+  // Par défaut
+  default: { min: 100, max: 150, unit: 'g' },
+}
+
+/**
+ * Get realistic portion for a food item
+ */
+function getRealisticPortion(foodName: string): { amount: number; unit: string } {
+  const lowerName = foodName.toLowerCase()
+
+  for (const [key, portion] of Object.entries(REALISTIC_PORTIONS)) {
+    if (key !== 'default' && lowerName.includes(key)) {
+      // Return a value in the middle of the range
+      const amount = Math.round((portion.min + portion.max) / 2)
+      return { amount, unit: portion.unit }
+    }
+  }
+
+  return { amount: 100, unit: 'g' }
+}
+
+/**
+ * Calculate nutrition for a specific portion size
+ */
+function scaleNutrition(
+  nutrition: { calories: number; proteins: number; carbs: number; fats: number },
+  baseSize: number,
+  targetSize: number
+): { calories: number; proteins: number; carbs: number; fats: number } {
+  const factor = targetSize / baseSize
+  return {
+    calories: Math.round(nutrition.calories * factor),
+    proteins: Math.round(nutrition.proteins * factor * 10) / 10,
+    carbs: Math.round(nutrition.carbs * factor * 10) / 10,
+    fats: Math.round(nutrition.fats * factor * 10) / 10,
+  }
+}
+
 /**
  * Search foods from CIQUAL database only (OFF is too slow for plan generation)
- * Note: CIQUAL/OFF products don't have ingredients/instructions - they are single food items
+ * Returns foods with REALISTIC portions (not just 100g)
  */
 async function searchFoodDatabases(
   query: string,
@@ -250,6 +311,13 @@ async function searchFoodDatabases(
         ? `${food.name} - ${food.brand}`
         : food.name
 
+      // Get realistic portion for this food type
+      const portion = getRealisticPortion(food.name)
+      const baseSize = food.servingSize || 100
+
+      // Scale nutrition to the realistic portion
+      const scaledNutrition = scaleNutrition(food.nutrition, baseSize, portion.amount)
+
       return {
         id: generateId(),
         dayIndex: 0,
@@ -258,23 +326,20 @@ async function searchFoodDatabases(
         description: food.brand || food.category || 'Produit alimentaire',
         prepTime: 5, // Quick prep for simple products
         servings: 1,
-        nutrition: {
-          calories: food.nutrition.calories,
-          proteins: food.nutrition.proteins,
-          carbs: food.nutrition.carbs,
-          fats: food.nutrition.fats,
-        },
+        nutrition: scaledNutrition,
         // For CIQUAL/OFF products, we don't have recipe ingredients/instructions
-        // The product itself IS the ingredient
+        // The product itself IS the ingredient with realistic portion
         ingredients: [{
           name: food.name,
-          amount: `${food.servingSize || 100}${food.servingUnit || 'g'}`,
-          calories: food.nutrition.calories,
+          amount: `${portion.amount}${portion.unit}`,
+          calories: scaledNutrition.calories,
         }],
         instructions: ['Prêt à consommer ou à préparer selon tes préférences.'],
         isValidated: false,
         source: actualSource as 'ciqual' | 'openfoodfacts',
-      }
+        // Store base nutrition for later scaling
+        _baseNutritionPer100g: food.nutrition,
+      } as PlannedMealItem
     })
   } catch (error) {
     console.warn('Food database search error:', error)
@@ -547,12 +612,60 @@ async function generateMealWithAI(
   }
 }
 
-// Fallback recipes by complexity (French staples)
-const FALLBACK_BASIQUE: Record<MealType, Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>> = {
+// Fallback recipes by complexity (French staples) WITH realistic portions and nutrition
+interface FallbackRecipe {
+  name: string
+  description: string
+  prepTime: number
+  ingredients: Array<{ name: string; amount: string; calories: number }>
+  nutrition: { calories: number; proteins: number; carbs: number; fats: number }
+}
+
+const FALLBACK_BASIQUE: Record<MealType, FallbackRecipe[]> = {
   breakfast: [
-    { name: 'Tartines beurre confiture', description: 'Petit-dejeuner classique francais', prepTime: 5, ingredients: ['Pain', 'Beurre', 'Confiture'] },
-    { name: 'Yaourt miel', description: 'Petit-dejeuner leger', prepTime: 2, ingredients: ['Yaourt nature', 'Miel'] },
-    { name: 'Bol de cereales', description: 'Petit-dejeuner rapide', prepTime: 3, ingredients: ['Cereales', 'Lait'] },
+    {
+      name: 'Tartines beurre confiture',
+      description: 'Petit-dejeuner classique francais',
+      prepTime: 5,
+      ingredients: [
+        { name: 'Pain de campagne', amount: '60g (2 tranches)', calories: 150 },
+        { name: 'Beurre', amount: '10g', calories: 75 },
+        { name: 'Confiture', amount: '25g', calories: 65 },
+      ],
+      nutrition: { calories: 290, proteins: 5, carbs: 48, fats: 9 },
+    },
+    {
+      name: 'Yaourt miel et fruits',
+      description: 'Petit-dejeuner leger et equilibre',
+      prepTime: 2,
+      ingredients: [
+        { name: 'Yaourt nature', amount: '125g', calories: 70 },
+        { name: 'Miel', amount: '20g', calories: 65 },
+        { name: 'Banane', amount: '100g', calories: 90 },
+      ],
+      nutrition: { calories: 225, proteins: 6, carbs: 45, fats: 2 },
+    },
+    {
+      name: 'Bol de cereales au lait',
+      description: 'Petit-dejeuner rapide',
+      prepTime: 3,
+      ingredients: [
+        { name: 'Cereales petit-dejeuner', amount: '40g', calories: 150 },
+        { name: 'Lait demi-ecreme', amount: '200ml', calories: 90 },
+      ],
+      nutrition: { calories: 240, proteins: 8, carbs: 42, fats: 5 },
+    },
+    {
+      name: 'Pain grille et fromage blanc',
+      description: 'Petit-dejeuner proteine',
+      prepTime: 5,
+      ingredients: [
+        { name: 'Pain complet', amount: '50g (2 tranches)', calories: 120 },
+        { name: 'Fromage blanc 0%', amount: '100g', calories: 45 },
+        { name: 'Miel', amount: '15g', calories: 50 },
+      ],
+      nutrition: { calories: 215, proteins: 12, carbs: 38, fats: 2 },
+    },
   ],
   lunch: [
     { name: 'Pates au beurre parmesan', description: 'Dejeuner express', prepTime: 15, ingredients: ['Pates', 'Beurre', 'Parmesan'] },

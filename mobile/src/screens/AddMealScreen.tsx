@@ -871,8 +871,8 @@ export default function AddMealScreen() {
             [
               { text: 'Voir le plan', onPress: () => {
                 setShowAIRecipeModal(false)
-                // @ts-ignore
-                navigation.navigate('WeeklyPlan')
+                // @ts-ignore - Navigate with duration param so title displays correctly
+                navigation.navigate('WeeklyPlan', { duration: planDuration, calorieReduction })
               }},
               { text: 'Fermer', style: 'cancel' }
             ]

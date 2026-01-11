@@ -179,19 +179,10 @@ export default function RecipesScreen() {
     setRefreshing(false)
   }, [])
 
-  // Filter recipes by meal type (based on calories)
+  // Filter recipes by meal type (using mealType field, not calories)
   const filterByMealType = (recipes: Recipe[], mealType: MealType | ''): Recipe[] => {
     if (!mealType) return recipes
-    return recipes.filter(recipe => {
-      const cals = recipe.nutritionPerServing?.calories || 0
-      switch (mealType) {
-        case 'breakfast': return cals >= 150 && cals <= 500
-        case 'lunch': return cals >= 400 && cals <= 800
-        case 'snack': return cals >= 50 && cals <= 300
-        case 'dinner': return cals >= 350 && cals <= 700
-        default: return true
-      }
-    })
+    return recipes.filter(recipe => recipe.mealType === mealType)
   }
 
   // Filter recipes by category
@@ -319,12 +310,11 @@ export default function RecipesScreen() {
     return recipes
   }, [allRecipes, selectedCategory, filterByCategory, applyAdvancedFilters])
 
-  // Group recipes by categories (with deduplication and daily rotation)
+  // Group recipes by mealType field (with deduplication and daily rotation)
+  // Recipes are classified during enrichment, not just by calories
   const breakfastRecipes = useMemo(() => {
-    const filtered = filteredRecipes.filter(r => {
-      const cals = r.nutritionPerServing?.calories || 0
-      return cals >= 150 && cals <= 500
-    })
+    // Filter by mealType field - no more chicken curry at breakfast!
+    const filtered = filteredRecipes.filter(r => r.mealType === 'breakfast')
     const unique = deduplicateRecipes(filtered)
     // Rotate based on daily seed (different offset for each section)
     const shuffled = seededShuffle(unique, dailySeed + 1)
@@ -332,30 +322,21 @@ export default function RecipesScreen() {
   }, [filteredRecipes, dailySeed])
 
   const lunchRecipes = useMemo(() => {
-    const filtered = filteredRecipes.filter(r => {
-      const cals = r.nutritionPerServing?.calories || 0
-      return cals >= 400 && cals <= 800
-    })
+    const filtered = filteredRecipes.filter(r => r.mealType === 'lunch')
     const unique = deduplicateRecipes(filtered)
     const shuffled = seededShuffle(unique, dailySeed + 2)
     return shuffled.slice(0, 10)
   }, [filteredRecipes, dailySeed])
 
   const snackRecipes = useMemo(() => {
-    const filtered = filteredRecipes.filter(r => {
-      const cals = r.nutritionPerServing?.calories || 0
-      return cals >= 50 && cals <= 300
-    })
+    const filtered = filteredRecipes.filter(r => r.mealType === 'snack')
     const unique = deduplicateRecipes(filtered)
     const shuffled = seededShuffle(unique, dailySeed + 3)
     return shuffled.slice(0, 10)
   }, [filteredRecipes, dailySeed])
 
   const dinnerRecipes = useMemo(() => {
-    const filtered = filteredRecipes.filter(r => {
-      const cals = r.nutritionPerServing?.calories || 0
-      return cals >= 350 && cals <= 700
-    })
+    const filtered = filteredRecipes.filter(r => r.mealType === 'dinner')
     const unique = deduplicateRecipes(filtered)
     const shuffled = seededShuffle(unique, dailySeed + 4)
     return shuffled.slice(0, 10)

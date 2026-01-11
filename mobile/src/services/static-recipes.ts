@@ -171,6 +171,7 @@ export function staticToRecipe(enriched: StaticEnrichedRecipe): Recipe {
     totalTime: enriched.totalTime,
     difficulty: enriched.difficulty,
     category: 'general',
+    mealType: enriched.mealType, // Use the classified meal type from enriched data
     ingredients: enriched.ingredientsFr.map((ing, idx) => ({
       id: `${enriched.id}-ing-${idx}`,
       name: ing.name,
