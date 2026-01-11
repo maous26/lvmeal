@@ -98,6 +98,9 @@ export interface CloudGamificationData {
   current_streak: number
   longest_streak: number
   last_activity_date: string
+  // Trial tracking - CANNOT be reset by user
+  trial_start_date: string | null  // When user first registered (immutable)
+  trial_used: boolean              // True once trial has been started
   // Achievements
   unlocked_achievements: string[]
   // AI Credits
@@ -595,6 +598,120 @@ export async function syncWellness(date: string, data: Partial<CloudWellnessData
   } catch (error) {
     console.error('[CloudSync] Wellness sync failed:', error)
     return false
+  }
+}
+
+// ============================================================================
+// TRIAL MANAGEMENT - Anti-abuse protection
+// ============================================================================
+
+/**
+ * Check if user has already used their trial period
+ * This is stored in the cloud and CANNOT be reset by reinstalling the app
+ */
+export async function checkTrialStatus(): Promise<{
+  hasUsedTrial: boolean
+  trialStartDate: string | null
+  isEligibleForTrial: boolean
+}> {
+  const client = getSupabaseClient()
+  if (!client) {
+    return { hasUsedTrial: false, trialStartDate: null, isEligibleForTrial: true }
+  }
+
+  const userId = await getCloudUserId()
+  if (!userId) {
+    return { hasUsedTrial: false, trialStartDate: null, isEligibleForTrial: true }
+  }
+
+  try {
+    const { data, error } = await client
+      .from('gamification_data')
+      .select('trial_start_date, trial_used')
+      .eq('user_id', userId)
+      .single()
+
+    if (error || !data) {
+      // No record = new user, eligible for trial
+      return { hasUsedTrial: false, trialStartDate: null, isEligibleForTrial: true }
+    }
+
+    const hasUsedTrial = data.trial_used === true
+    const trialStartDate = data.trial_start_date
+
+    // User is eligible only if they haven't used trial before
+    return {
+      hasUsedTrial,
+      trialStartDate,
+      isEligibleForTrial: !hasUsedTrial,
+    }
+  } catch (error) {
+    console.error('[CloudSync] Check trial status failed:', error)
+    return { hasUsedTrial: false, trialStartDate: null, isEligibleForTrial: true }
+  }
+}
+
+/**
+ * Start the trial period for a user - can only be done ONCE per account
+ * The trial_start_date is immutable once set
+ */
+export async function startTrialInCloud(): Promise<{
+  success: boolean
+  trialStartDate: string | null
+  error?: string
+}> {
+  const client = getSupabaseClient()
+  if (!client) {
+    return { success: false, trialStartDate: null, error: 'Service non disponible' }
+  }
+
+  const userId = await getCloudUserId()
+  if (!userId) {
+    return { success: false, trialStartDate: null, error: 'Non authentifié' }
+  }
+
+  try {
+    // First check if trial already used
+    const { data: existing } = await client
+      .from('gamification_data')
+      .select('trial_start_date, trial_used')
+      .eq('user_id', userId)
+      .single()
+
+    if (existing?.trial_used) {
+      // Trial already used - return existing start date
+      console.log('[CloudSync] Trial already used for this account')
+      return {
+        success: false,
+        trialStartDate: existing.trial_start_date,
+        error: 'Tu as déjà bénéficié de la période d\'essai avec ce compte',
+      }
+    }
+
+    // Start trial - set immutable trial_start_date
+    const now = new Date().toISOString()
+    const { error } = await client
+      .from('gamification_data')
+      .upsert({
+        user_id: userId,
+        trial_start_date: now,
+        trial_used: true,
+        updated_at: now,
+      }, {
+        onConflict: 'user_id',
+        // Only update if trial_used is false (prevent race conditions)
+      })
+
+    if (error) {
+      console.error('[CloudSync] Start trial error:', error)
+      return { success: false, trialStartDate: null, error: 'Erreur lors du démarrage de l\'essai' }
+    }
+
+    console.log('[CloudSync] Trial started successfully at:', now)
+    return { success: true, trialStartDate: now }
+  } catch (error) {
+    console.error('[CloudSync] Start trial failed:', error)
+    return { success: false, trialStartDate: null, error: 'Erreur inattendue' }
   }
 }
 

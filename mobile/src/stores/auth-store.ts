@@ -17,8 +17,14 @@ import {
   restoreFromCloud,
   createLocalBackup,
   restoreLocalBackup,
+  checkTrialStatus,
+  startTrialInCloud,
   type CloudRestoreData,
 } from '../services/cloud-sync-service'
+import {
+  checkDeviceTrialStatus,
+  registerDeviceForUser,
+} from '../services/device-fingerprint-service'
 import {
   signInWithGoogle,
   signInWithGoogleToken as signInWithGoogleTokenService,
@@ -187,6 +193,14 @@ export const useAuthStore = create<AuthState>()(
               syncEnabled: true,
             })
 
+            // Check and restore trial status from cloud (prevent abuse)
+            const trialStatus = await checkTrialStatus()
+            if (trialStatus.trialStartDate) {
+              console.log('[AuthStore] Restoring trial date from cloud:', trialStatus.trialStartDate)
+              const { useGamificationStore } = await import('./gamification-store')
+              useGamificationStore.getState().setTrialStartDate(trialStatus.trialStartDate)
+            }
+
             // Auto-restore from cloud on first sign-in
             await get().restoreData()
 
@@ -223,6 +237,44 @@ export const useAuthStore = create<AuthState>()(
               syncStatus: 'success',
               syncEnabled: true,
             })
+
+            // ANTI-ABUSE: Double verification - account AND device
+            // 1. Check if this account already used trial
+            const accountTrialStatus = await checkTrialStatus()
+            // 2. Check if this device already used trial (different account)
+            const deviceTrialStatus = await checkDeviceTrialStatus()
+
+            const { useGamificationStore } = await import('./gamification-store')
+
+            if (accountTrialStatus.hasUsedTrial && accountTrialStatus.trialStartDate) {
+              // Account already used trial - restore original date
+              console.log('[AuthStore] Account already used trial:', accountTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(accountTrialStatus.trialStartDate)
+              // Still register device for this user
+              await registerDeviceForUser(result.user.id, false)
+            } else if (deviceTrialStatus.hasUsedTrial && deviceTrialStatus.trialStartDate) {
+              // Device already used trial with different account - use device's trial date
+              console.log('[AuthStore] Device already used trial:', deviceTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(deviceTrialStatus.trialStartDate)
+              // Sync this to the account too
+              await startTrialInCloud() // Will use existing date
+              await registerDeviceForUser(result.user.id, false)
+            } else {
+              // New user AND new device - start fresh trial
+              const deviceResult = await registerDeviceForUser(result.user.id, true)
+              if (deviceResult.success && deviceResult.trialStartDate) {
+                console.log('[AuthStore] Started new trial:', deviceResult.trialStartDate)
+                useGamificationStore.getState().setTrialStartDate(deviceResult.trialStartDate)
+                // Also sync to account
+                await startTrialInCloud()
+              } else if (deviceResult.error) {
+                // Device blocked (too many accounts) - no trial
+                console.warn('[AuthStore] Device blocked:', deviceResult.error)
+                // Set trial as already expired (start date in the past)
+                const expiredDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                useGamificationStore.getState().setTrialStartDate(expiredDate)
+              }
+            }
 
             // Sync current local data to cloud
             await get().triggerSync()
@@ -263,6 +315,36 @@ export const useAuthStore = create<AuthState>()(
               syncStatus: 'success',
               syncEnabled: true,
             })
+
+            // ANTI-ABUSE: Double verification - account AND device
+            const accountTrialStatus = await checkTrialStatus()
+            const deviceTrialStatus = await checkDeviceTrialStatus()
+            const { useGamificationStore } = await import('./gamification-store')
+
+            if (accountTrialStatus.hasUsedTrial && accountTrialStatus.trialStartDate) {
+              // Account already used trial
+              console.log('[AuthStore] Google account already used trial:', accountTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(accountTrialStatus.trialStartDate)
+              await registerDeviceForUser(result.user.id, false)
+            } else if (deviceTrialStatus.hasUsedTrial && deviceTrialStatus.trialStartDate) {
+              // Device already used trial with different account
+              console.log('[AuthStore] Device already used trial:', deviceTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(deviceTrialStatus.trialStartDate)
+              await startTrialInCloud()
+              await registerDeviceForUser(result.user.id, false)
+            } else {
+              // New user AND new device - start fresh trial
+              const deviceResult = await registerDeviceForUser(result.user.id, true)
+              if (deviceResult.success && deviceResult.trialStartDate) {
+                console.log('[AuthStore] Started new Google trial:', deviceResult.trialStartDate)
+                useGamificationStore.getState().setTrialStartDate(deviceResult.trialStartDate)
+                await startTrialInCloud()
+              } else if (deviceResult.error) {
+                console.warn('[AuthStore] Device blocked:', deviceResult.error)
+                const expiredDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                useGamificationStore.getState().setTrialStartDate(expiredDate)
+              }
+            }
 
             // Auto-restore from cloud on first sign-in
             await get().restoreData()

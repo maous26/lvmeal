@@ -253,6 +253,7 @@ interface GamificationState {
   useAICredit: () => boolean
   checkAchievements: () => void
   startTrial: () => void  // Initialize trial period
+  setTrialStartDate: (date: string) => void  // Set trial start date from cloud (for anti-abuse)
   setPremium: (isPremium: boolean) => void  // Set premium status (from payment system)
 
   // Getters
@@ -412,6 +413,12 @@ export const useGamificationStore = create<GamificationState>()(
         if (!state.trialStartDate) {
           set({ trialStartDate: new Date().toISOString() })
         }
+      },
+
+      // Set trial start date from cloud (used for anti-abuse when user re-registers)
+      setTrialStartDate: (date: string) => {
+        console.log('[GamificationStore] Setting trial start date from cloud:', date)
+        set({ trialStartDate: date })
       },
 
       setPremium: (isPremium: boolean) => {

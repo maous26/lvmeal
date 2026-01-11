@@ -97,9 +97,13 @@ export function CaloricBalance({
                 <Text style={styles.setupSubtitle}>Economisez 200 kcal pour debloquer un repas plaisir des le jour 3</Text>
               </View>
             </View>
-            <Button variant="primary" size="sm" onPress={onConfirmStart || (() => {})}>
-              <Check size={16} color="#FFFFFF" />
-              <Text style={styles.setupButtonText}>C'est parti !</Text>
+            <Button
+              variant="primary"
+              size="sm"
+              onPress={onConfirmStart || (() => {})}
+              icon={<Check size={16} color="#FFFFFF" />}
+            >
+              C'est parti !
             </Button>
           </View>
         )}
