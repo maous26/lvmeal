@@ -88,14 +88,21 @@ export default function RecipeDetailScreen() {
 
   useEffect(() => {
     const loadRecipeData = async () => {
+      console.log('[RecipeDetail] loadRecipeData called with params:', JSON.stringify(params, null, 2))
+
       if (params.recipe) {
+        console.log('[RecipeDetail] Using params.recipe directly')
         setRecipe(params.recipe)
       } else if (params.suggestion) {
         const suggestion = params.suggestion
+        console.log('[RecipeDetail] Loading from suggestion, id:', suggestion.id)
 
         // Try to load full recipe data from enriched-recipes.json
-        await loadStaticRecipes()
+        const recipes = await loadStaticRecipes()
+        console.log('[RecipeDetail] Loaded', recipes.length, 'static recipes')
+
         const staticRecipe = getStaticRecipe(suggestion.id)
+        console.log('[RecipeDetail] getStaticRecipe result:', staticRecipe ? 'FOUND' : 'NOT FOUND')
 
         if (staticRecipe) {
           // Found full recipe with ingredients and instructions

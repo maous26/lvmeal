@@ -490,11 +490,20 @@ export async function searchCIQUAL(query: string): Promise<CIQUALFood[]> {
 
 /**
  * Decide which source to use for a meal based on context
+ * Now respects user's mealSourcePreference setting:
+ * - 'fresh' = Priorité produits frais (CIQUAL) - petit-déj/collation 100% CIQUAL, repas 70/20/10
+ * - 'recipes' = Priorité plats élaborés (Gustar) - petit-déj/collation CIQUAL, repas 70% Gustar
+ * - 'quick' = Priorité snacks/rapide (OFF) - petit-déj/collation OFF, repas mix
+ * - 'balanced' = Mix équilibré intelligent selon le type de repas
  */
 export function decideMealSource(context: RAGContext): MealSourceDecision {
   console.log('[RAG:decide] decideMealSource called')
   const { userProfile, mealType, targetCalories, preferences } = context
-  console.log('[RAG:decide] mealType:', mealType, 'targetCalories:', targetCalories)
+  const sourcePreference = userProfile.mealSourcePreference || 'balanced'
+  const isSimpleMeal = mealType === 'breakfast' || mealType === 'snack'
+  const isMainMeal = mealType === 'lunch' || mealType === 'dinner'
+
+  console.log('[RAG:decide] mealType:', mealType, 'targetCalories:', targetCalories, 'sourcePreference:', sourcePreference)
 
   // Check for complex dietary restrictions
   const hasComplexRestrictions = (userProfile.allergies?.length || 0) > 2 ||
@@ -504,46 +513,90 @@ export function decideMealSource(context: RAGContext): MealSourceDecision {
   // Check for very specific calorie targets
   const isStrictCalories = targetCalories < 200 || targetCalories > 800
 
-  // Decision logic
+  // Decision logic based on user's source preference
   let source: MealSource = 'gustar'
   let confidence = 0.8
   let reason = ''
   const fallbackSources: MealSource[] = []
 
-  // Snacks -> prefer OFF/CIQUAL (simple foods)
-  if (mealType === 'snack') {
-    source = 'off'
-    confidence = 0.85
-    reason = 'Collation simple - Open Food Facts pour aliments du commerce'
-    fallbackSources.push('ciqual', 'ai')
+  // Apply source preference strategy
+  switch (sourcePreference) {
+    case 'fresh':
+      // Produits frais prioritaires (CIQUAL)
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: 100% produits frais CIQUAL
+        source = 'ciqual'
+        confidence = 0.90
+        reason = 'Preference produits frais - aliments CIQUAL pour petit-dejeuner/collation'
+        fallbackSources.push('off', 'gustar')
+      } else {
+        // Déj/Dîner: 70% CIQUAL, 20% Gustar pour variété
+        source = 'ciqual'
+        confidence = 0.85
+        reason = 'Preference produits frais - aliments CIQUAL avec recettes Gustar en complement'
+        fallbackSources.push('gustar', 'off')
+      }
+      break
+
+    case 'recipes':
+      // Recettes maison prioritaires (Gustar)
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: produits simples (pas de recettes élaborées)
+        source = 'ciqual'
+        confidence = 0.80
+        reason = 'Preference recettes mais petit-dejeuner/collation simple'
+        fallbackSources.push('off', 'gustar')
+      } else {
+        // Déj/Dîner: 70% Gustar (recettes)
+        source = 'gustar'
+        confidence = 0.90
+        reason = 'Preference recettes maison - plats elabores Gustar'
+        fallbackSources.push('ciqual', 'off')
+      }
+      break
+
+    case 'quick':
+      // Produits rapides/pratiques prioritaires (OFF)
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: 60% OFF (céréales, barres)
+        source = 'off'
+        confidence = 0.85
+        reason = 'Preference rapide - produits du commerce pour petit-dejeuner/collation'
+        fallbackSources.push('ciqual', 'gustar')
+      } else {
+        // Déj/Dîner: mix avec OFF dominant
+        source = 'off'
+        confidence = 0.80
+        reason = 'Preference rapide - plats prepares et produits du commerce'
+        fallbackSources.push('gustar', 'ciqual')
+      }
+      break
+
+    case 'balanced':
+    default:
+      // Mix équilibré selon le type de repas
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: principalement CIQUAL
+        source = 'ciqual'
+        confidence = 0.80
+        reason = 'Mode equilibre - produits simples pour petit-dejeuner/collation'
+        fallbackSources.push('off', 'gustar')
+      } else {
+        // Déj/Dîner: recettes avec mix sources
+        source = 'gustar'
+        confidence = 0.85
+        reason = 'Mode equilibre - recettes completes pour repas principaux'
+        fallbackSources.push('ciqual', 'off')
+      }
+      break
   }
-  // Breakfast -> Gustar has good breakfast recipes
-  else if (mealType === 'breakfast') {
-    if (preferences?.preferQuick) {
-      source = 'off'
-      confidence = 0.75
-      reason = 'Petit-dejeuner rapide - produits du commerce'
-      fallbackSources.push('gustar', 'ai')
-    } else {
-      source = 'gustar'
-      confidence = 0.8
-      reason = 'Petit-dejeuner maison - recettes enrichies Gustar'
-      fallbackSources.push('ai', 'off')
-    }
-  }
-  // Lunch/Dinner -> Gustar for elaborate meals
-  else if (mealType === 'lunch' || mealType === 'dinner') {
-    if (hasComplexRestrictions) {
-      source = 'ai'
-      confidence = 0.9
-      reason = 'Restrictions complexes - IA pour personnalisation max'
-      fallbackSources.push('gustar')
-    } else {
-      source = 'gustar'
-      confidence = 0.85
-      reason = 'Repas elabore - recettes completes avec instructions'
-      fallbackSources.push('ai', 'ciqual')
-    }
+
+  // Override: complex dietary restrictions need AI precision
+  if (hasComplexRestrictions && isMainMeal) {
+    source = 'ai'
+    confidence = 0.9
+    reason = 'Restrictions complexes - IA pour personnalisation max'
+    fallbackSources.unshift('gustar')
   }
 
   // Override: strict calories need AI precision
@@ -554,12 +607,12 @@ export function decideMealSource(context: RAGContext): MealSourceDecision {
     fallbackSources.unshift('gustar')
   }
 
-  // Override: user prefers homemade
+  // Override: user prefers homemade (from RAG preferences, not source preference)
   if (preferences?.preferHomemade && source === 'off') {
     source = 'gustar'
     confidence = 0.8
     reason = 'Preference fait maison - recettes Gustar'
-    fallbackSources.unshift('ai')
+    fallbackSources.unshift('ciqual')
   }
 
   console.log('[RAG:decide] Decision:', { source, confidence, reason, fallbackSources })

@@ -216,6 +216,9 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   )
 
   // Combine all sources: AI recipes first, then favorites, then static recipes from enriched-recipes.json
+  // Display up to 5 suggestions for better discovery
+  const MAX_SUGGESTIONS = 5
+
   const suggestions = useMemo(() => {
     const combined: SuggestedMeal[] = []
 
@@ -223,12 +226,12 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     combined.push(...aiSuggestions.slice(0, 2))
 
     // 2. Favorite recipes if any
-    if (combined.length < 3 && favoriteSuggestions.length > 0) {
-      combined.push(...favoriteSuggestions.slice(0, 3 - combined.length))
+    if (combined.length < MAX_SUGGESTIONS && favoriteSuggestions.length > 0) {
+      combined.push(...favoriteSuggestions.slice(0, MAX_SUGGESTIONS - combined.length))
     }
 
-    // 3. Static recipes from enriched-recipes.json
-    const remaining = 3 - combined.length
+    // 3. Static recipes from enriched-recipes.json (Gustar)
+    const remaining = MAX_SUGGESTIONS - combined.length
     if (remaining > 0 && staticSuggestions.length > 0) {
       combined.push(...staticSuggestions.slice(0, remaining))
     }

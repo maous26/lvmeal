@@ -46,6 +46,8 @@ import {
   ProgressWidget,
   UnifiedCoachBubble,
   HydrationWidget,
+  MealSuggestions,
+  type SuggestedMeal,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
@@ -425,6 +427,34 @@ export default function HomeScreen() {
     navigation.navigate('Progress')
   }
 
+  // Handle recipe suggestion press - navigate to recipe detail
+  const handleSuggestionPress = (suggestion: SuggestedMeal) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // @ts-ignore - Pass the full suggestion object for RecipeDetailScreen to load
+    navigation.navigate('RecipeDetail', {
+      suggestion: {
+        id: suggestion.id,
+        name: suggestion.name,
+        calories: suggestion.calories,
+        proteins: suggestion.proteins,
+        carbs: suggestion.carbs,
+        fats: suggestion.fats,
+        prepTime: suggestion.prepTime,
+        mealType: suggestion.mealType,
+        imageUrl: suggestion.imageUrl,
+        isAI: suggestion.isAI,
+        source: suggestion.source,
+      }
+    })
+  }
+
+  // Handle "View all" recipes - navigate to discover modal via AddMeal
+  const handleViewAllRecipes = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // @ts-ignore - Navigate to AddMeal which has the Discover modal
+    navigation.navigate('AddMeal', { openDiscover: true })
+  }
+
   const currentDayIndex = getCurrentDayIndex()
 
   return (
@@ -669,6 +699,12 @@ export default function HomeScreen() {
             )
           })}
         </GlassCard>
+
+        {/* Meal Suggestions - Gustar recipes based on profile and time of day */}
+        <MealSuggestions
+          onSuggestionPress={handleSuggestionPress}
+          onViewAll={handleViewAllRecipes}
+        />
 
         {/* Programs Widget - Compact summary, navigates to Programs tab */}
         <View style={styles.programsWidgetContainer}>

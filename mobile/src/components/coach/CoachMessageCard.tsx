@@ -15,7 +15,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
 } from 'react-native'
 import { ChevronRight, X } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
@@ -24,7 +23,6 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius, shadows, fonts } from '../../constants/theme'
 import {
   getPriorityConfig,
-  PRIORITY_BEHAVIOR,
   CATEGORY_EMOJI,
   type LymiaMessage,
   type MessageType,
@@ -67,9 +65,9 @@ export function CoachMessageCard({
   const priorityConfig = getPriorityConfig(isDark)
   const typeConf = TYPE_CONFIG[message.type]
   const priorityConf = priorityConfig[message.priority]
-  const priorityBehavior = PRIORITY_BEHAVIOR[message.priority]
   const emoji = message.emoji || CATEGORY_EMOJI[message.category]
-  const canDismiss = !priorityBehavior.persistent
+  // Permettre à l'utilisateur de supprimer tous les messages
+  const canDismiss = true
 
   const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)

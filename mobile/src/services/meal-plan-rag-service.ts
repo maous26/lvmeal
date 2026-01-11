@@ -84,6 +84,514 @@ async function loadCIQUALData(): Promise<CIQUALFood[]> {
   }
 }
 
+// ============= MEAL TEMPLATES BY SOURCE PREFERENCE =============
+// Templates for ALL source preferences: fresh, quick, recipes, balanced
+// Each template defines a realistic, balanced meal with typical portions
+
+type SourcePreference = 'fresh' | 'quick' | 'recipes' | 'balanced'
+
+interface FreshMealTemplate {
+  id: string
+  name: string
+  mealType: MealType
+  sourcePreference: SourcePreference[] // Which preferences this template works for
+  components: Array<{
+    name: string
+    searchTerms: string[] // Terms to search in CIQUAL
+    portionGrams: number
+    role: 'main' | 'side' | 'drink' | 'extra'
+  }>
+  baseCalories: number
+  tags: string[]
+}
+
+const FRESH_MEAL_TEMPLATES: FreshMealTemplate[] = [
+  // =====================================
+  // ===== FRESH (Produits frais) =====
+  // =====================================
+
+  // BREAKFAST - Fresh
+  {
+    id: 'fresh-breakfast-yaourt',
+    name: 'Yaourt fruits frais',
+    mealType: 'breakfast',
+    sourcePreference: ['fresh', 'balanced'],
+    components: [
+      { name: 'Yaourt nature', searchTerms: ['yaourt nature', 'yaourt'], portionGrams: 125, role: 'main' },
+      { name: 'Muesli', searchTerms: ['muesli', 'flocons avoine'], portionGrams: 40, role: 'side' },
+      { name: 'Banane', searchTerms: ['banane'], portionGrams: 100, role: 'side' },
+      { name: 'Miel', searchTerms: ['miel'], portionGrams: 15, role: 'extra' },
+    ],
+    baseCalories: 380,
+    tags: ['fresh'],
+  },
+  {
+    id: 'fresh-breakfast-oeufs',
+    name: 'Oeufs tartines',
+    mealType: 'breakfast',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Oeufs', searchTerms: ['oeuf', 'omelette'], portionGrams: 100, role: 'main' },
+      { name: 'Pain complet', searchTerms: ['pain complet', 'pain'], portionGrams: 60, role: 'side' },
+      { name: 'Beurre', searchTerms: ['beurre'], portionGrams: 10, role: 'extra' },
+    ],
+    baseCalories: 350,
+    tags: ['fresh'],
+  },
+  {
+    id: 'fresh-breakfast-porridge',
+    name: 'Porridge maison',
+    mealType: 'breakfast',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Flocons d\'avoine', searchTerms: ['flocons avoine', 'avoine'], portionGrams: 50, role: 'main' },
+      { name: 'Lait', searchTerms: ['lait'], portionGrams: 200, role: 'side' },
+      { name: 'Fruits rouges', searchTerms: ['fraise', 'framboise'], portionGrams: 100, role: 'side' },
+    ],
+    baseCalories: 320,
+    tags: ['fresh'],
+  },
+
+  // SNACK - Fresh
+  {
+    id: 'fresh-snack-yaourt',
+    name: 'Yaourt et fruit',
+    mealType: 'snack',
+    sourcePreference: ['fresh', 'balanced'],
+    components: [
+      { name: 'Yaourt nature', searchTerms: ['yaourt'], portionGrams: 125, role: 'main' },
+      { name: 'Pomme', searchTerms: ['pomme'], portionGrams: 150, role: 'side' },
+    ],
+    baseCalories: 180,
+    tags: ['fresh'],
+  },
+  {
+    id: 'fresh-snack-fruits-secs',
+    name: 'Fruits secs amandes',
+    mealType: 'snack',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Amandes', searchTerms: ['amande'], portionGrams: 25, role: 'main' },
+      { name: 'Abricots secs', searchTerms: ['abricot sec'], portionGrams: 30, role: 'side' },
+    ],
+    baseCalories: 180,
+    tags: ['fresh'],
+  },
+
+  // LUNCH - Fresh
+  {
+    id: 'fresh-lunch-salade',
+    name: 'Salade poulet',
+    mealType: 'lunch',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Salade verte', searchTerms: ['salade', 'laitue'], portionGrams: 100, role: 'side' },
+      { name: 'Poulet', searchTerms: ['poulet', 'blanc de poulet'], portionGrams: 120, role: 'main' },
+      { name: 'Tomates', searchTerms: ['tomate'], portionGrams: 100, role: 'side' },
+      { name: 'Pain', searchTerms: ['pain'], portionGrams: 50, role: 'extra' },
+    ],
+    baseCalories: 420,
+    tags: ['fresh'],
+  },
+  {
+    id: 'fresh-lunch-poisson',
+    name: 'Poisson légumes riz',
+    mealType: 'lunch',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Filet de poisson', searchTerms: ['poisson', 'cabillaud', 'saumon'], portionGrams: 150, role: 'main' },
+      { name: 'Riz', searchTerms: ['riz'], portionGrams: 150, role: 'side' },
+      { name: 'Haricots verts', searchTerms: ['haricots verts'], portionGrams: 100, role: 'side' },
+    ],
+    baseCalories: 480,
+    tags: ['fresh'],
+  },
+
+  // DINNER - Fresh
+  {
+    id: 'fresh-dinner-soupe',
+    name: 'Soupe fromage pain',
+    mealType: 'dinner',
+    sourcePreference: ['fresh'],
+    components: [
+      { name: 'Soupe de légumes', searchTerms: ['soupe', 'potage'], portionGrams: 300, role: 'main' },
+      { name: 'Pain', searchTerms: ['pain'], portionGrams: 60, role: 'side' },
+      { name: 'Fromage', searchTerms: ['fromage', 'gruyère'], portionGrams: 30, role: 'extra' },
+    ],
+    baseCalories: 350,
+    tags: ['fresh'],
+  },
+  {
+    id: 'fresh-dinner-omelette',
+    name: 'Omelette salade',
+    mealType: 'dinner',
+    sourcePreference: ['fresh', 'balanced'],
+    components: [
+      { name: 'Omelette', searchTerms: ['omelette', 'oeuf'], portionGrams: 150, role: 'main' },
+      { name: 'Salade', searchTerms: ['salade'], portionGrams: 100, role: 'side' },
+      { name: 'Pain', searchTerms: ['pain'], portionGrams: 40, role: 'extra' },
+    ],
+    baseCalories: 400,
+    tags: ['fresh'],
+  },
+
+  // =====================================
+  // ===== QUICK (Rapide/Pratique) =====
+  // =====================================
+
+  // BREAKFAST - Quick
+  {
+    id: 'quick-breakfast-cereales',
+    name: 'Céréales lait',
+    mealType: 'breakfast',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Céréales', searchTerms: ['céréales', 'corn flakes', 'muesli'], portionGrams: 50, role: 'main' },
+      { name: 'Lait', searchTerms: ['lait'], portionGrams: 200, role: 'side' },
+      { name: 'Jus de fruits', searchTerms: ['jus orange', 'jus'], portionGrams: 150, role: 'drink' },
+    ],
+    baseCalories: 350,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-breakfast-tartines',
+    name: 'Tartines express',
+    mealType: 'breakfast',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Pain de mie', searchTerms: ['pain de mie', 'pain'], portionGrams: 60, role: 'main' },
+      { name: 'Confiture', searchTerms: ['confiture'], portionGrams: 30, role: 'extra' },
+      { name: 'Yaourt', searchTerms: ['yaourt'], portionGrams: 125, role: 'side' },
+    ],
+    baseCalories: 320,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-breakfast-biscuits',
+    name: 'Biscuits lait chocolat',
+    mealType: 'breakfast',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Biscuits petit-déj', searchTerms: ['biscuit', 'petit beurre'], portionGrams: 50, role: 'main' },
+      { name: 'Lait chocolaté', searchTerms: ['lait chocolat', 'chocolat'], portionGrams: 250, role: 'drink' },
+    ],
+    baseCalories: 380,
+    tags: ['quick'],
+  },
+
+  // SNACK - Quick
+  {
+    id: 'quick-snack-barre',
+    name: 'Barre céréales compote',
+    mealType: 'snack',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Barre céréales', searchTerms: ['barre céréales', 'barre'], portionGrams: 30, role: 'main' },
+      { name: 'Compote', searchTerms: ['compote'], portionGrams: 90, role: 'side' },
+    ],
+    baseCalories: 150,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-snack-biscuits',
+    name: 'Biscuits jus',
+    mealType: 'snack',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Biscuits', searchTerms: ['biscuit', 'sablé'], portionGrams: 30, role: 'main' },
+      { name: 'Jus de fruits', searchTerms: ['jus'], portionGrams: 150, role: 'drink' },
+    ],
+    baseCalories: 180,
+    tags: ['quick'],
+  },
+
+  // LUNCH - Quick
+  {
+    id: 'quick-lunch-sandwich',
+    name: 'Sandwich jambon fromage',
+    mealType: 'lunch',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Baguette', searchTerms: ['baguette', 'pain'], portionGrams: 100, role: 'main' },
+      { name: 'Jambon', searchTerms: ['jambon'], portionGrams: 60, role: 'main' },
+      { name: 'Fromage', searchTerms: ['emmental', 'fromage'], portionGrams: 30, role: 'extra' },
+      { name: 'Salade', searchTerms: ['salade'], portionGrams: 30, role: 'side' },
+    ],
+    baseCalories: 450,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-lunch-plat-prepare',
+    name: 'Plat préparé yaourt',
+    mealType: 'lunch',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Plat préparé', searchTerms: ['plat préparé', 'lasagne', 'hachis'], portionGrams: 300, role: 'main' },
+      { name: 'Yaourt', searchTerms: ['yaourt'], portionGrams: 125, role: 'side' },
+    ],
+    baseCalories: 500,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-lunch-salade-traiteur',
+    name: 'Salade traiteur pain',
+    mealType: 'lunch',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Salade composée', searchTerms: ['salade composée', 'taboulé'], portionGrams: 250, role: 'main' },
+      { name: 'Pain', searchTerms: ['pain'], portionGrams: 50, role: 'side' },
+    ],
+    baseCalories: 400,
+    tags: ['quick'],
+  },
+
+  // DINNER - Quick
+  {
+    id: 'quick-dinner-soupe-toast',
+    name: 'Soupe toast fromage',
+    mealType: 'dinner',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Soupe', searchTerms: ['soupe', 'velouté'], portionGrams: 250, role: 'main' },
+      { name: 'Pain grillé', searchTerms: ['pain', 'toast'], portionGrams: 60, role: 'side' },
+      { name: 'Fromage', searchTerms: ['fromage'], portionGrams: 30, role: 'extra' },
+    ],
+    baseCalories: 320,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-dinner-pizza',
+    name: 'Pizza salade',
+    mealType: 'dinner',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Pizza', searchTerms: ['pizza'], portionGrams: 200, role: 'main' },
+      { name: 'Salade verte', searchTerms: ['salade'], portionGrams: 80, role: 'side' },
+    ],
+    baseCalories: 500,
+    tags: ['quick'],
+  },
+  {
+    id: 'quick-dinner-quiche',
+    name: 'Quiche salade',
+    mealType: 'dinner',
+    sourcePreference: ['quick'],
+    components: [
+      { name: 'Quiche', searchTerms: ['quiche', 'tarte salée'], portionGrams: 150, role: 'main' },
+      { name: 'Salade', searchTerms: ['salade'], portionGrams: 100, role: 'side' },
+    ],
+    baseCalories: 450,
+    tags: ['quick'],
+  },
+
+  // =====================================
+  // ===== BALANCED (Équilibré) =====
+  // =====================================
+
+  // BREAKFAST - Balanced
+  {
+    id: 'balanced-breakfast-complet',
+    name: 'Petit-déj équilibré',
+    mealType: 'breakfast',
+    sourcePreference: ['balanced'],
+    components: [
+      { name: 'Pain complet', searchTerms: ['pain complet'], portionGrams: 60, role: 'main' },
+      { name: 'Beurre', searchTerms: ['beurre'], portionGrams: 10, role: 'extra' },
+      { name: 'Confiture', searchTerms: ['confiture'], portionGrams: 20, role: 'extra' },
+      { name: 'Yaourt', searchTerms: ['yaourt'], portionGrams: 125, role: 'side' },
+    ],
+    baseCalories: 350,
+    tags: ['balanced'],
+  },
+
+  // SNACK - Balanced
+  {
+    id: 'balanced-snack-fromage',
+    name: 'Fromage crackers',
+    mealType: 'snack',
+    sourcePreference: ['balanced'],
+    components: [
+      { name: 'Fromage', searchTerms: ['fromage', 'emmental'], portionGrams: 30, role: 'main' },
+      { name: 'Crackers', searchTerms: ['crackers', 'biscuit salé'], portionGrams: 25, role: 'side' },
+    ],
+    baseCalories: 180,
+    tags: ['balanced'],
+  },
+
+  // LUNCH - Balanced
+  {
+    id: 'balanced-lunch-complet',
+    name: 'Assiette équilibrée',
+    mealType: 'lunch',
+    sourcePreference: ['balanced'],
+    components: [
+      { name: 'Viande/Poisson', searchTerms: ['poulet', 'poisson', 'viande'], portionGrams: 120, role: 'main' },
+      { name: 'Féculents', searchTerms: ['riz', 'pâtes', 'pomme de terre'], portionGrams: 150, role: 'side' },
+      { name: 'Légumes', searchTerms: ['légumes', 'haricots verts'], portionGrams: 100, role: 'side' },
+    ],
+    baseCalories: 480,
+    tags: ['balanced'],
+  },
+
+  // DINNER - Balanced
+  {
+    id: 'balanced-dinner-leger',
+    name: 'Dîner léger',
+    mealType: 'dinner',
+    sourcePreference: ['balanced'],
+    components: [
+      { name: 'Soupe', searchTerms: ['soupe', 'potage'], portionGrams: 250, role: 'main' },
+      { name: 'Pain', searchTerms: ['pain'], portionGrams: 50, role: 'side' },
+      { name: 'Yaourt', searchTerms: ['yaourt'], portionGrams: 125, role: 'side' },
+    ],
+    baseCalories: 350,
+    tags: ['balanced'],
+  },
+
+  // =====================================
+  // ===== RECIPES fallbacks =====
+  // Note: 'recipes' uses Gustar primarily, these are fallbacks
+  // =====================================
+
+  {
+    id: 'recipes-breakfast-complet',
+    name: 'Brunch maison',
+    mealType: 'breakfast',
+    sourcePreference: ['recipes'],
+    components: [
+      { name: 'Oeufs au plat', searchTerms: ['oeuf', 'oeuf au plat'], portionGrams: 100, role: 'main' },
+      { name: 'Bacon/Jambon', searchTerms: ['bacon', 'jambon'], portionGrams: 40, role: 'side' },
+      { name: 'Pain grillé', searchTerms: ['pain', 'toast'], portionGrams: 50, role: 'side' },
+      { name: 'Jus frais', searchTerms: ['jus orange'], portionGrams: 150, role: 'drink' },
+    ],
+    baseCalories: 420,
+    tags: ['recipes'],
+  },
+  {
+    id: 'recipes-snack-gateau',
+    name: 'Part de gâteau',
+    mealType: 'snack',
+    sourcePreference: ['recipes'],
+    components: [
+      { name: 'Gâteau maison', searchTerms: ['gâteau', 'cake'], portionGrams: 80, role: 'main' },
+      { name: 'Thé/Café', searchTerms: ['thé', 'café'], portionGrams: 200, role: 'drink' },
+    ],
+    baseCalories: 220,
+    tags: ['recipes'],
+  },
+]
+
+/**
+ * Find CIQUAL food by search terms
+ */
+function findCIQUALFood(foods: CIQUALFood[], searchTerms: string[]): CIQUALFood | null {
+  for (const term of searchTerms) {
+    const found = foods.find(f =>
+      f.name.toLowerCase().includes(term.toLowerCase()) ||
+      (f.subGroupName || '').toLowerCase().includes(term.toLowerCase())
+    )
+    if (found) return found
+  }
+  return null
+}
+
+/**
+ * Compose a fresh meal from template using CIQUAL data
+ * Scales portions to match target calories
+ */
+async function composeFreshMealFromTemplate(
+  template: FreshMealTemplate,
+  targetCalories: number,
+  ciqualFoods: CIQUALFood[]
+): Promise<ComposedMeal | null> {
+  const components: MealComponent[] = []
+  let totalCalories = 0
+
+  // Scale factor to adjust portions to target calories
+  const scaleFactor = targetCalories / template.baseCalories
+
+  for (const comp of template.components) {
+    const ciqualFood = findCIQUALFood(ciqualFoods, comp.searchTerms)
+
+    if (ciqualFood) {
+      // Scale portion based on target calories
+      const scaledPortion = Math.round(comp.portionGrams * scaleFactor)
+      const portionMultiplier = scaledPortion / 100 // CIQUAL is per 100g
+
+      const componentNutrition = {
+        calories: Math.round(ciqualFood.nutrition.calories * portionMultiplier),
+        proteins: Math.round(ciqualFood.nutrition.proteins * portionMultiplier * 10) / 10,
+        carbs: Math.round(ciqualFood.nutrition.carbs * portionMultiplier * 10) / 10,
+        fats: Math.round(ciqualFood.nutrition.fats * portionMultiplier * 10) / 10,
+      }
+
+      components.push({
+        id: `ciqual-${ciqualFood.code}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: comp.name, // Use template name for cleaner display
+        type: comp.role === 'main' ? 'main' : comp.role === 'side' ? 'side' : comp.role === 'drink' ? 'drink' : 'side',
+        nutrition: componentNutrition,
+        source: 'ciqual',
+        ingredients: [{ name: ciqualFood.name, amount: `${scaledPortion}g`, calories: componentNutrition.calories }],
+      })
+
+      totalCalories += componentNutrition.calories
+    } else {
+      // Fallback: create component with estimated nutrition based on template
+      const scaledPortion = Math.round(comp.portionGrams * scaleFactor)
+      const estimatedCalPerGram = template.baseCalories / template.components.reduce((sum, c) => sum + c.portionGrams, 0)
+      const estimatedCal = Math.round(scaledPortion * estimatedCalPerGram)
+
+      components.push({
+        id: `fresh-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: comp.name,
+        type: comp.role === 'main' ? 'main' : 'side',
+        nutrition: {
+          calories: estimatedCal,
+          proteins: Math.round(estimatedCal * 0.15 / 4), // Estimate 15% protein
+          carbs: Math.round(estimatedCal * 0.50 / 4), // Estimate 50% carbs
+          fats: Math.round(estimatedCal * 0.35 / 9), // Estimate 35% fat
+        },
+        source: 'ciqual',
+        ingredients: [{ name: comp.name, amount: `${scaledPortion}g`, calories: estimatedCal }],
+      })
+
+      totalCalories += estimatedCal
+    }
+  }
+
+  if (components.length === 0) return null
+
+  // Calculate total nutrition
+  const totalNutrition = components.reduce(
+    (acc, c) => ({
+      calories: acc.calories + c.nutrition.calories,
+      proteins: acc.proteins + c.nutrition.proteins,
+      carbs: acc.carbs + c.nutrition.carbs,
+      fats: acc.fats + c.nutrition.fats,
+    }),
+    { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+  )
+
+  // Build detailed description with quantities
+  // e.g., "Yaourt nature 150g, Muesli 50g, Banane 120g"
+  const detailedDescription = components
+    .map(c => {
+      const amount = c.ingredients?.[0]?.amount || ''
+      return `${c.name} ${amount}`.trim()
+    })
+    .join(', ')
+
+  return {
+    id: generateMealId(),
+    mealType: template.mealType,
+    components,
+    totalNutrition,
+    targetCalories,
+    actualCalories: totalNutrition.calories,
+    description: detailedDescription, // "Yaourt nature 150g, Muesli 50g, Banane 120g"
+  }
+}
+
 /**
  * Search CIQUAL foods by name and meal type
  */
@@ -327,6 +835,11 @@ const COMPONENT_SEARCH_TERMS: Record<MealComponent['type'], Record<MealType, str
 
 /**
  * Compose a complete meal with multiple components to reach target calories
+ *
+ * For 'fresh' preference: Uses pre-defined meal templates that combine CIQUAL products
+ * into realistic, balanced meals (e.g., "Yaourt et fruits frais" instead of raw products)
+ *
+ * For other preferences: Uses Gustar recipes or dynamic CIQUAL search
  */
 async function composeMultiComponentMeal(params: {
   mealType: MealType
@@ -338,14 +851,60 @@ async function composeMultiComponentMeal(params: {
 
   console.log(`[ComposeMeal] Composing ${mealType} with target ${targetCalories} kcal`)
 
+  // Determine source strategy based on user preference AND meal type
+  const sourceStrategy = determineSourceStrategy(userProfile, mealType)
+  const sourcePreference = userProfile.mealSourcePreference || 'balanced'
+
+  // For ALL preferences except 'recipes': try templates first
+  // This ensures coherent meals (e.g., "Yaourt et fruits" instead of raw "Beurre")
+  // Templates are tagged with which sourcePreference they support
+  if (sourcePreference !== 'recipes') {
+    console.log(`[ComposeMeal] Looking for ${sourcePreference} templates for ${mealType}`)
+
+    // Load CIQUAL data for nutrition lookups
+    const ciqualFoods = await loadCIQUALData()
+
+    // Get templates matching BOTH the meal type AND the user's source preference
+    const templates = FRESH_MEAL_TEMPLATES.filter(t =>
+      t.mealType === mealType &&
+      t.sourcePreference.includes(sourcePreference)
+    )
+
+    console.log(`[ComposeMeal] Found ${templates.length} templates for ${sourcePreference}/${mealType}`)
+
+    if (templates.length > 0) {
+      // Pick a random template
+      const template = templates[Math.floor(Math.random() * templates.length)]
+
+      console.log(`[ComposeMeal] Selected template: ${template.name}`)
+
+      // Compose meal from template
+      const composedMeal = await composeFreshMealFromTemplate(template, targetCalories, ciqualFoods)
+
+      if (composedMeal) {
+        console.log(`[ComposeMeal] Template meal composed: ${composedMeal.description} (${composedMeal.actualCalories} kcal)`)
+        return composedMeal
+      }
+    }
+
+    // If no templates available for this preference, fall through to standard composition
+    console.log(`[ComposeMeal] No matching templates for ${sourcePreference}/${mealType}, falling back to standard composition`)
+  }
+
+  // For 'recipes' preference: use Gustar recipes directly
+  // For other preferences: only use Gustar as last resort fallback
+  const allowGustar = sourcePreference === 'recipes' || sourceStrategy.gustar > 0.5
+
+  console.log(`[ComposeMeal] Source preference: ${sourcePreference}, allowGustar: ${allowGustar}, strategy: G=${sourceStrategy.gustar} C=${sourceStrategy.ciqual}`)
+
   const composition = MEAL_COMPOSITION[mealType]
   const components: MealComponent[] = []
   let remainingCalories = targetCalories
 
-  // Load recipes for potential main dishes
-  const allRecipes = await loadStaticRecipes()
-  const mealTypeRecipes = getStaticRecipesByMealType(mealType)
-    .filter(r => !excludeRecipeIds.includes(r.id))
+  // Load recipes for potential main dishes (only if allowed)
+  const mealTypeRecipes = allowGustar
+    ? getStaticRecipesByMealType(mealType).filter(r => !excludeRecipeIds.includes(r.id))
+    : []
 
   // For each component in the composition
   for (const slot of composition) {
@@ -361,8 +920,9 @@ async function composeMultiComponentMeal(params: {
     // Try to find a suitable item for this component
     let component: MealComponent | null = null
 
-    if (slot.type === 'main') {
-      // Use Gustar recipes for main dishes
+    // For main dish: use Gustar only if allowed by preference
+    if (slot.type === 'main' && allowGustar && mealTypeRecipes.length > 0) {
+      // Use Gustar recipes for main dishes (only if preference allows)
       const suitable = mealTypeRecipes
         .filter(r => r.nutrition.calories <= componentTargetCalories + 100)
         .filter(r => r.nutrition.calories >= componentTargetCalories * 0.5)
@@ -386,9 +946,14 @@ async function composeMultiComponentMeal(params: {
           instructions: recipe.instructionsFr,
         }
       }
-    } else {
-      // Use CIQUAL/OFF for sides, starters, desserts
-      const searchTerms = COMPONENT_SEARCH_TERMS[slot.type][mealType]
+    }
+
+    // If no Gustar component found (or not allowed), use CIQUAL/OFF
+    if (!component) {
+      const searchTerms = slot.type === 'main'
+        ? COMPONENT_SEARCH_TERMS.main[mealType]
+        : COMPONENT_SEARCH_TERMS[slot.type][mealType]
+
       if (searchTerms.length > 0) {
         const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)]
 
@@ -442,7 +1007,7 @@ async function composeMultiComponentMeal(params: {
     { calories: 0, proteins: 0, carbs: 0, fats: 0 }
   )
 
-  // Generate description
+  // Generate description - just the food names, no technical info
   const componentNames = components.map(c => c.name)
   const description = componentNames.length === 1
     ? componentNames[0]
@@ -1063,12 +1628,16 @@ export async function generateSingleMealWithRAG(params: {
         // Also create a legacy recipe format for backward compatibility
         const mainComponent = composedMeal.components.find(c => c.type === 'main') || composedMeal.components[0]
 
+        // Determine actual source based on components
+        const hasGustarComponent = composedMeal.components.some(c => c.source === 'gustar')
+        const actualSource = hasGustarComponent ? 'gustar' : 'ciqual'
+
         return {
           success: true,
           recipe: {
             id: composedMeal.id,
             title: composedMeal.description,
-            description: `Repas compose de ${composedMeal.components.length} elements pour atteindre ${targetCalories} kcal`,
+            description: '', // No technical description needed
             ingredients: composedMeal.components.flatMap(c => c.ingredients || [{ name: c.name, amount: '1 portion', calories: c.nutrition.calories }]),
             instructions: mainComponent.instructions || ['Preparer chaque element du repas'],
             nutrition: composedMeal.totalNutrition,
@@ -1077,8 +1646,8 @@ export async function generateSingleMealWithRAG(params: {
             imageUrl: mainComponent.imageUrl,
           },
           composedMeal, // NEW: Include the composed meal structure
-          source: 'gustar', // Primary source for composed meals
-          sourceLabel: 'Repas compose LymIA',
+          source: actualSource,
+          sourceLabel: hasGustarComponent ? 'Recettes Gustar' : 'Produits CIQUAL',
           confidence: 0.85,
         }
       }
@@ -1194,18 +1763,31 @@ export async function generateSingleMealWithRAG(params: {
 /**
  * Build meal context passages for DSPy
  * Converts available meals to DSPy passages for intelligent selection
+ * Respects user's mealSourcePreference by adjusting passage counts
  */
 function buildMealPassages(
   gustarRecipes: StaticEnrichedRecipe[],
   ciqualFoods: CIQUALFood[],
   mealType: MealType,
-  targetCalories: number
+  targetCalories: number,
+  sourceStrategy?: { gustar: number; ciqual: number; off: number }
 ): DSPyPassage[] {
   const passages: DSPyPassage[] = []
 
-  // Add Gustar recipes as passages
+  // Calculate passage counts based on strategy (default: balanced)
+  const totalPassages = 15
+  const gustarWeight = sourceStrategy?.gustar ?? 0.35
+  const ciqualWeight = sourceStrategy?.ciqual ?? 0.50
+
+  // Calculate counts - minimum 2 of each to ensure variety
+  const gustarCount = Math.max(2, Math.round(totalPassages * gustarWeight))
+  const ciqualCount = Math.max(2, Math.round(totalPassages * ciqualWeight))
+
+  console.log(`[DSPy] Building passages with strategy: gustar=${gustarCount}, ciqual=${ciqualCount}`)
+
+  // Add Gustar recipes as passages (respecting strategy weight)
   const recipesForType = getStaticRecipesByMealType(mealType)
-  recipesForType.slice(0, 10).forEach((recipe, idx) => {
+  recipesForType.slice(0, gustarCount).forEach((recipe, idx) => {
     passages.push({
       id: `gustar-${recipe.id}`,
       content: `Recette: ${recipe.titleFr}. ${recipe.descriptionFr}. Calories: ${recipe.nutrition.calories}kcal, Protéines: ${recipe.nutrition.proteins}g, Glucides: ${recipe.nutrition.carbs}g, Lipides: ${recipe.nutrition.fats}g. Temps: ${recipe.prepTime}min. Ingrédients: ${recipe.ingredientsFr.map(i => i.name).join(', ')}.`,
@@ -1214,9 +1796,9 @@ function buildMealPassages(
     })
   })
 
-  // Add CIQUAL foods as passages
+  // Add CIQUAL foods as passages (respecting strategy weight)
   const ciqualForType = searchCIQUALByMealType(ciqualFoods, mealType, targetCalories)
-  ciqualForType.slice(0, 10).forEach((food, idx) => {
+  ciqualForType.slice(0, ciqualCount).forEach((food, idx) => {
     passages.push({
       id: `ciqual-${food.id}`,
       content: `Aliment CIQUAL: ${food.name}. Catégorie: ${food.groupName}. Calories: ${food.nutrition.calories}kcal/100g, Protéines: ${food.nutrition.proteins}g, Glucides: ${food.nutrition.carbs}g, Lipides: ${food.nutrition.fats}g. Source officielle ANSES.`,
@@ -1418,10 +2000,6 @@ export async function generateFlexibleMealPlanWithRAG(params: {
   const sourceBreakdown = { gustar: 0, off: 0, ciqual: 0, ai: 0 }
   let dspyUsedCount = 0
 
-  // Determine source distribution based on user profile (uses mealSourcePreference)
-  const sourceStrategy = determineSourceStrategy(userProfile)
-  console.log(`[Agent] Strategy for "${sourcePreference}": ${JSON.stringify(sourceStrategy)}`)
-
   for (let dayIndex = 0; dayIndex < days; dayIndex++) {
     console.log(`[Agent] Generating day ${dayIndex + 1}/${days}`)
 
@@ -1429,12 +2007,15 @@ export async function generateFlexibleMealPlanWithRAG(params: {
       const targetCalories = mealTargets[mealType]
       let plannedMeal: PlannedMealItem | null = null
 
+      // Determine source strategy for THIS meal type (varies by breakfast/snack vs lunch/dinner)
+      const sourceStrategy = determineSourceStrategy(userProfile, mealType)
+
       // Try DSPy intelligent selection first if available
       if (dspyEnabled) {
         console.log(`  [DSPy] Attempting intelligent selection for ${mealType}...`)
 
-        // Build passages from available meals
-        const passages = buildMealPassages(gustarRecipes, ciqualFoods, mealType, targetCalories)
+        // Build passages from available meals (respecting user's source preference per meal type)
+        const passages = buildMealPassages(gustarRecipes, ciqualFoods, mealType, targetCalories, sourceStrategy)
 
         // Use DSPy to select the best meal
         const dspyResult = await selectMealWithDSPy(
@@ -1571,7 +2152,7 @@ export async function generateFlexibleMealPlanWithRAG(params: {
 }
 
 /**
- * Agent determines source strategy based on user profile
+ * Agent determines source strategy based on user profile AND meal type
  *
  * Sources:
  * - CIQUAL = Produits frais, données officielles ANSES (fruits, légumes, viandes, poissons)
@@ -1579,61 +2160,93 @@ export async function generateFlexibleMealPlanWithRAG(params: {
  * - OFF = Produits commerciaux pratiques (snacks, plats préparés)
  *
  * User preferences (mealSourcePreference):
- * - 'fresh' = Priorité produits frais (CIQUAL)
- * - 'recipes' = Priorité plats élaborés (Gustar)
- * - 'quick' = Priorité snacks/rapide (OFF)
- * - 'balanced' = Mix équilibré intelligent
+ * - 'fresh' = Priorité produits frais (CIQUAL) - petit-déj/collation 100% CIQUAL, repas 70/20/10
+ * - 'recipes' = Priorité plats élaborés (Gustar) - petit-déj/collation CIQUAL, repas 70% Gustar
+ * - 'quick' = Priorité snacks/rapide (OFF) - petit-déj/collation OFF, repas mix
+ * - 'balanced' = Mix équilibré intelligent selon le type de repas
+ *
+ * Règles par type de repas:
+ * - Petit-déjeuner & Collation: produits simples (CIQUAL/OFF), pas de recettes élaborées
+ * - Déjeuner & Dîner: recettes possibles selon la préférence
  */
-function determineSourceStrategy(profile: UserProfile): {
+function determineSourceStrategy(profile: UserProfile, mealType?: MealType): {
   gustar: number  // Weight 0-1
   ciqual: number
   off: number
 } {
-  // Check user's meal source preference first
   const preference = profile.mealSourcePreference || 'balanced'
+  const isSimpleMeal = mealType === 'breakfast' || mealType === 'snack'
+  const isMainMeal = mealType === 'lunch' || mealType === 'dinner'
 
-  // Base strategy selon la préférence utilisateur
   let strategy: { gustar: number; ciqual: number; off: number }
 
   switch (preference) {
     case 'fresh':
-      // Produits frais - CIQUAL prioritaire (fruits, légumes, viandes, poissons)
-      strategy = { gustar: 0.20, ciqual: 0.70, off: 0.10 }
+      // Produits frais prioritaires
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: 100% produits frais CIQUAL
+        strategy = { gustar: 0, ciqual: 0.90, off: 0.10 }
+      } else {
+        // Déj/Dîner: 70% CIQUAL, 20% Gustar (pour variété), 10% OFF
+        strategy = { gustar: 0.20, ciqual: 0.70, off: 0.10 }
+      }
       break
+
     case 'recipes':
-      // Plats élaborés - Gustar prioritaire (recettes maison complètes)
-      strategy = { gustar: 0.65, ciqual: 0.25, off: 0.10 }
+      // Recettes maison prioritaires
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: produits simples CIQUAL (pas de recettes élaborées)
+        strategy = { gustar: 0.10, ciqual: 0.80, off: 0.10 }
+      } else {
+        // Déj/Dîner: 70% Gustar (recettes), 20% CIQUAL, 10% OFF
+        strategy = { gustar: 0.70, ciqual: 0.20, off: 0.10 }
+      }
       break
+
     case 'quick':
-      // Snacks/Rapide - OFF prioritaire (produits du commerce pratiques)
-      strategy = { gustar: 0.20, ciqual: 0.30, off: 0.50 }
+      // Produits rapides/pratiques prioritaires
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: 60% OFF (céréales, barres), 30% CIQUAL, 10% Gustar
+        strategy = { gustar: 0.10, ciqual: 0.30, off: 0.60 }
+      } else {
+        // Déj/Dîner: 40% OFF, 30% CIQUAL, 30% Gustar (quelques recettes rapides)
+        strategy = { gustar: 0.30, ciqual: 0.30, off: 0.40 }
+      }
       break
+
     case 'balanced':
     default:
-      // Équilibré - mix intelligent, CIQUAL légèrement prioritaire (plus sain)
-      strategy = { gustar: 0.35, ciqual: 0.50, off: 0.15 }
+      // Mix équilibré selon le type de repas
+      if (isSimpleMeal) {
+        // Petit-déj/Collation: principalement CIQUAL, peu de recettes
+        strategy = { gustar: 0.10, ciqual: 0.70, off: 0.20 }
+      } else {
+        // Déj/Dîner: mix équilibré avec recettes
+        strategy = { gustar: 0.40, ciqual: 0.45, off: 0.15 }
+      }
       break
   }
 
-  // Ajustements fins selon l'objectif (modifications mineures)
-  if (profile.goal === 'weight_loss' && preference === 'balanced') {
-    // Perte de poids + balanced = plus de CIQUAL pour précision calorique
-    strategy.ciqual += 0.10
-    strategy.off -= 0.10
-  } else if (profile.goal === 'muscle_gain' && preference === 'balanced') {
-    // Prise de muscle + balanced = plus de Gustar pour recettes protéinées
-    strategy.gustar += 0.10
-    strategy.off -= 0.10
+  // Ajustements fins selon l'objectif (uniquement pour repas principaux)
+  if (isMainMeal) {
+    if (profile.goal === 'weight_loss') {
+      // Perte de poids: plus de CIQUAL pour précision calorique
+      strategy.ciqual = Math.min(0.80, strategy.ciqual + 0.10)
+      strategy.off = Math.max(0.05, strategy.off - 0.10)
+    } else if (profile.goal === 'muscle_gain') {
+      // Prise de muscle: plus de Gustar pour recettes protéinées
+      strategy.gustar = Math.min(0.75, strategy.gustar + 0.10)
+      strategy.off = Math.max(0.05, strategy.off - 0.10)
+    }
   }
 
   // Ajustement pour régime végétarien/vegan
   if (profile.dietType === 'vegetarian' || profile.dietType === 'vegan') {
-    // CIQUAL a beaucoup d'aliments végétaux de qualité
-    strategy.ciqual = Math.min(0.80, strategy.ciqual + 0.10)
+    strategy.ciqual = Math.min(0.85, strategy.ciqual + 0.10)
     strategy.off = Math.max(0.05, strategy.off - 0.10)
   }
 
-  console.log(`[Agent] Strategy for preference="${preference}": G=${strategy.gustar} C=${strategy.ciqual} O=${strategy.off}`)
+  console.log(`[Agent] Strategy for "${preference}" + ${mealType || 'general'}: G=${strategy.gustar.toFixed(2)} C=${strategy.ciqual.toFixed(2)} O=${strategy.off.toFixed(2)}`)
   return strategy
 }
 
