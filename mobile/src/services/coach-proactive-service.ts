@@ -18,6 +18,7 @@ import { buildFastingContext, isInEatingWindow } from './lymia-brain'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useMessageCenter, type MessagePriority, type MessageType, type MessageCategory } from './message-center'
 import type { UserProfile, NutritionInfo, MealType } from '../types'
 
 // Storage keys
@@ -205,6 +206,57 @@ function getRandomMessage(messages: string[]): string {
 }
 
 /**
+ * Map coach notification type to MessageCenter priority and type
+ */
+function mapToMessageCenterConfig(notifType: CoachNotificationType): {
+  priority: MessagePriority
+  type: MessageType
+  category: MessageCategory
+} {
+  switch (notifType) {
+    case 'macro_alert':
+      return { priority: 'P1', type: 'action', category: 'nutrition' }
+    case 'goal_reminder':
+      return { priority: 'P2', type: 'tip', category: 'nutrition' }
+    case 'encouragement':
+      return { priority: 'P2', type: 'celebration', category: 'progress' }
+    case 'fasting_tip':
+      return { priority: 'P3', type: 'tip', category: 'wellness' }
+    case 'evening_summary':
+      return { priority: 'P3', type: 'insight', category: 'nutrition' }
+    default:
+      return { priority: 'P3', type: 'tip', category: 'wellness' }
+  }
+}
+
+/**
+ * Add message to MessageCenter (sync with notifications)
+ */
+function addToMessageCenter(
+  notifType: CoachNotificationType,
+  title: string,
+  body: string,
+  dedupKey: string,
+  emoji?: string
+): void {
+  const config = mapToMessageCenterConfig(notifType)
+  const messageCenter = useMessageCenter.getState()
+
+  messageCenter.addMessage({
+    priority: config.priority,
+    type: config.type,
+    category: config.category,
+    title,
+    message: body,
+    emoji,
+    reason: `Coach proactif: ${notifType}`,
+    confidence: 0.8,
+    dedupKey,
+    actionRoute: 'Coach',
+  })
+}
+
+/**
  * Schedule evening summary notification
  */
 export async function scheduleEveningSummary(profile: UserProfile): Promise<void> {
@@ -320,9 +372,10 @@ export async function checkAndSendMacroAlert(): Promise<boolean> {
     if (!alert) return false
 
     // Send notification
+    const title = getRandomMessage(COACH_MESSAGES.macro_alert.titles)
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: getRandomMessage(COACH_MESSAGES.macro_alert.titles),
+        title,
         body: alert.message,
         data: {
           type: 'coach_proactive',
@@ -335,6 +388,9 @@ export async function checkAndSendMacroAlert(): Promise<boolean> {
       },
       trigger: null, // Immediate
     })
+
+    // Add to MessageCenter for Coach screen
+    addToMessageCenter('macro_alert', title, alert.message, `macro-alert-${alert.type}-${today}`, '🥗')
 
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_MACRO_ALERT_DATE, today)
     console.log('[CoachProactive] Sent macro alert:', alert.type)
@@ -402,6 +458,9 @@ export async function sendEncouragementIfDeserved(): Promise<boolean> {
       trigger: null,
     })
 
+    // Add to MessageCenter for Coach screen
+    addToMessageCenter('encouragement', title, message, `encouragement-${today}`, '🎉')
+
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_ENCOURAGEMENT_DATE, today)
     console.log('[CoachProactive] Sent encouragement:', message)
     return true
@@ -450,10 +509,13 @@ export async function sendFastingTip(profile: UserProfile): Promise<boolean> {
 
     if (!tipType || messages.length === 0) return false
 
+    const title = getRandomMessage(COACH_MESSAGES.fasting_tip.titles)
+    const body = getRandomMessage(messages)
+
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: getRandomMessage(COACH_MESSAGES.fasting_tip.titles),
-        body: getRandomMessage(messages),
+        title,
+        body,
         data: {
           type: 'coach_proactive',
           subtype: 'fasting_tip',
@@ -465,6 +527,10 @@ export async function sendFastingTip(profile: UserProfile): Promise<boolean> {
       },
       trigger: null,
     })
+
+    // Add to MessageCenter for Coach screen
+    const today = new Date().toDateString()
+    addToMessageCenter('fasting_tip', title, body, `fasting-tip-${tipType}-${today}`, '🧘')
 
     console.log('[CoachProactive] Sent fasting tip:', tipType)
     return true

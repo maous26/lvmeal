@@ -13,6 +13,7 @@ import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
 import { Platform } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useMessageCenter, type MessageCategory, type MessageType } from './message-center'
 import type { DailyInsight, NotificationPreferences } from '../types'
 
 // Configuration des notifications
@@ -204,6 +205,33 @@ export async function sendNotification(data: NotificationData): Promise<boolean>
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },
       trigger: null, // Immédiat
+    })
+
+    // Add to MessageCenter for Coach screen
+    const severityToPriority: Record<string, 'P0' | 'P1' | 'P2' | 'P3'> = {
+      alert: 'P0',
+      warning: 'P1',
+      celebration: 'P2',
+      info: 'P3',
+    }
+    const severityToType: Record<string, MessageType> = {
+      alert: 'alert',
+      warning: 'action',
+      celebration: 'celebration',
+      info: 'tip',
+    }
+    const messageCenter = useMessageCenter.getState()
+    messageCenter.addMessage({
+      priority: severityToPriority[data.severity] || 'P3',
+      type: severityToType[data.severity] || 'tip',
+      category: (data.category as MessageCategory) || 'wellness',
+      title: data.title,
+      message: data.body,
+      emoji,
+      reason: data.source ? `Source: ${data.source}` : 'Notification système',
+      confidence: 0.8,
+      dedupKey: `notif-${data.category}-${new Date().toDateString()}`,
+      actionRoute: 'Coach',
     })
 
     // Enregistrer dans l'historique
