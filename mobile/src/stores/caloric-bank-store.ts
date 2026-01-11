@@ -52,10 +52,13 @@ interface CaloricBankState {
 }
 
 // ============================================================================
-// RÈGLES DU SOLDE PLAISIR (Pleasure Balance Rules)
+// RÈGLES DU SOLDE PLAISIR (Bonus Repas)
 // ============================================================================
 //
-// Principe : UN SEUL solde hebdomadaire, consommable en 1 ou 2 repas plaisir
+// Principe : Économiser des calories pour les AJOUTER à un repas normal
+// Le bonus s'ajoute aux calories du repas, ce n'est pas un remplacement.
+//
+// Exemple : Dîner prévu 600 kcal + bonus 400 kcal = 1000 kcal au total
 //
 // Accumulation :
 // - L'utilisateur économise des calories au fil des jours
@@ -63,10 +66,10 @@ interface CaloricBankState {
 // - Réinitialisé chaque semaine
 //
 // Déclenchement :
-// - 1er repas plaisir : jour >= 3 ET solde >= 200 kcal
-// - 2ème repas plaisir : si solde restant > 0 après le 1er
+// - 1er bonus : jour >= 3 ET solde >= 200 kcal
+// - 2ème bonus : si solde restant > 0 après le 1er
 //
-// Plafond par repas : 600 kcal max (évite les gros excès)
+// Plafond par bonus : 600 kcal max (évite les gros excès)
 // ============================================================================
 
 // Seuil minimum pour débloquer un repas plaisir
@@ -306,30 +309,30 @@ export const useCaloricBankStore = create<CaloricBankState>()(
 
         let suggestion = ''
 
-        // Cas où on a déjà utilisé les 2 repas plaisir de la semaine
+        // Cas où on a déjà utilisé les 2 bonus de la semaine
         if (!canUseThisWeek) {
-          suggestion = `Tu as déjà profité de tes 2 repas plaisir cette semaine. Nouvelle semaine, nouveaux plaisirs !`
+          suggestion = `Tu as déjà utilisé tes 2 bonus cette semaine. Nouveau cycle, nouveaux bonus !`
         } else if (available) {
-          // Messages bienveillants : on dit le budget, on encourage la différence sans nommer d'aliments
+          // Messages bienveillants : on dit le budget bonus à ajouter sur un repas
           if (requiresSplit) {
-            // Budget > 600 kcal → peut faire 2 repas plaisir
+            // Budget > 600 kcal → peut faire 2 bonus
             if (remainingMeals === 2) {
-              suggestion = `+${maxPerMeal} kcal bonus par repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+              suggestion = `Ajoute jusqu'à +${maxPerMeal} kcal sur un repas. Choisis ce qui te fait vraiment envie !`
             } else {
-              suggestion = `+${maxPerMeal} kcal bonus pour ton dernier repas plaisir. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
+              suggestion = `Ajoute jusqu'à +${maxPerMeal} kcal sur ton dernier bonus repas de la semaine.`
             }
           } else {
-            // Budget <= 600 kcal → un seul repas
-            suggestion = `+${cheatMealBudget} kcal bonus pour ton repas plaisir. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
+            // Budget <= 600 kcal → un seul bonus
+            suggestion = `Ajoute jusqu'à +${cheatMealBudget} kcal sur un repas de ton choix !`
           }
         } else if (dayIndex < MIN_DAY_FOR_PLAISIR) {
           // Pas encore jour 3
           const daysLeft = MIN_DAY_FOR_PLAISIR - dayIndex
-          suggestion = `Encore ${daysLeft} jour${daysLeft > 1 ? 's' : ''} avant de pouvoir débloquer ton repas plaisir`
+          suggestion = `Encore ${daysLeft} jour${daysLeft > 1 ? 's' : ''} avant de débloquer ton bonus repas`
         } else {
           // Jour >= 3 mais solde insuffisant
           const needed = MIN_PLAISIR_THRESHOLD - cheatMealBudget
-          suggestion = `Encore ${needed} kcal à économiser pour débloquer ton repas plaisir`
+          suggestion = `Encore ${needed} kcal à économiser pour débloquer ton bonus`
         }
 
         return {

@@ -94,7 +94,7 @@ export function CaloricBalance({
               <Gift size={20} color={colors.accent.primary} />
               <View style={styles.setupText}>
                 <Text style={styles.setupTitle}>Ton cycle plaisir commence !</Text>
-                <Text style={styles.setupSubtitle}>Economisez 200 kcal pour debloquer un repas plaisir des le jour 3</Text>
+                <Text style={styles.setupSubtitle}>Economise 200 kcal pour debloquer un bonus repas des le jour 3</Text>
               </View>
             </View>
             <Button
@@ -143,7 +143,7 @@ export function CaloricBalance({
           <View style={styles.infoBoxContent}>
             <Text style={styles.infoBoxTitle}>1 a 2 repas plaisir par semaine</Text>
             <Text style={styles.infoBoxText}>
-              Des le jour 3 avec 200 kcal economisees, debloque un repas plaisir (max 600 kcal/repas).
+              Des le jour 3 avec 200 kcal economisees, ajoute jusqu'a +600 kcal bonus sur un repas.
             </Text>
           </View>
         </View>
@@ -198,12 +198,12 @@ export function CaloricBalance({
                 <Text style={styles.modalSectionTitle}>Le principe</Text>
               </View>
               <Text style={styles.modalSectionText}>
-                Economisez des calories au quotidien et debloque jusqu'a 2 repas plaisir par semaine !
+                Economise des calories au quotidien et debloque jusqu'a 2 bonus repas par semaine !
               </Text>
               <View style={styles.modalExample}>
                 <Text style={styles.modalExampleText}>
-                  Des 200 kcal economisees (a partir du jour 3), tu peux te faire plaisir avec
-                  <Text style={styles.modalExampleHighlight}> max 600 kcal</Text> par repas bonus.
+                  Des 200 kcal economisees (a partir du jour 3), ajoute jusqu'a
+                  <Text style={styles.modalExampleHighlight}> +600 kcal bonus</Text> sur un repas de ton choix.
                 </Text>
               </View>
             </View>
@@ -221,11 +221,11 @@ export function CaloricBalance({
                 </Text>
                 <Text style={styles.stepItem}>
                   <Text style={styles.stepNumber}>2. </Text>
-                  A partir du jour 3 et 200 kcal economisees : repas plaisir debloque !
+                  A partir du jour 3 et 200 kcal economisees : bonus debloque !
                 </Text>
                 <Text style={styles.stepItem}>
                   <Text style={styles.stepNumber}>3. </Text>
-                  Max 600 kcal par repas plaisir, jusqu'a 2 fois par semaine
+                  Ajoute jusqu'a +600 kcal sur un repas, jusqu'a 2 fois par semaine
                 </Text>
               </View>
             </View>
@@ -234,14 +234,13 @@ export function CaloricBalance({
             <View style={[styles.modalSection, styles.plaisirSection]}>
               <View style={styles.modalSectionHeader}>
                 <Gift size={20} color="#10B981" />
-                <Text style={styles.modalSectionTitle}>Tes repas plaisir</Text>
+                <Text style={styles.modalSectionTitle}>Ton bonus repas</Text>
               </View>
               <Text style={styles.modalSectionText}>
-                Choisis quelque chose qui te fait vraiment envie — pas juste plus de la meme chose.
-                Si ton solde depasse 600 kcal, repartis-le sur 2 repas.
+                Le bonus s'ajoute aux calories de ton repas normal. Par exemple : diner prevu 600 kcal + bonus 400 kcal = 1000 kcal au total.
               </Text>
               <Text style={styles.plaisirHint}>
-                C'est ta recompense bien meritee, savoure-la !
+                Choisis quelque chose qui te fait vraiment envie !
               </Text>
             </View>
           </ScrollView>
