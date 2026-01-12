@@ -534,27 +534,6 @@ export default function ProfileScreen() {
         {/* Settings - Consolidated */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Paramètres</Text>
         <Card padding="none" style={{ backgroundColor: colors.bg.elevated, marginBottom: spacing.lg }}>
-          {/* Meal Source Settings */}
-          <TouchableOpacity
-            style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              navigation.navigate('MealSourceSettings')
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
-              <Database size={20} color={colors.accent.primary} />
-            </View>
-            <View style={styles.notificationInfo}>
-              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Sources de repas</Text>
-              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                {mealSourceLabels[profile?.mealSourcePreference || 'balanced'].label}
-              </Text>
-            </View>
-            <ChevronRight size={20} color={colors.text.tertiary} />
-          </TouchableOpacity>
-
           {/* Notification Settings */}
           <TouchableOpacity
             style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}

@@ -304,6 +304,7 @@ export async function scheduleDailyMealReminders(
         confidence: 0.7,
         dedupKey: `meal-reminder-${mealType}-${now.toISOString().split('T')[0]}`,
         actionRoute: 'AddMeal',
+        actionLabel: 'Ajouter ce repas',
       })
 
       notificationIds.push(id)

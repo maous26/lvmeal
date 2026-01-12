@@ -44,6 +44,8 @@ export interface CloudUserData {
     celebrationsEnabled: boolean
     lastNotificationDate: string | null
   }
+  // UI state (persisted across devices)
+  has_seen_coach_welcome?: boolean
   // Timestamps
   created_at: string
   updated_at: string
@@ -427,7 +429,12 @@ export async function getAuthSession() {
 /**
  * Sync profile data to cloud
  */
-export async function syncProfile(profile: Partial<UserProfile>, nutritionGoals: CloudUserData['nutrition_goals'], notificationPrefs: CloudUserData['notification_preferences']): Promise<boolean> {
+export async function syncProfile(
+  profile: Partial<UserProfile>,
+  nutritionGoals: CloudUserData['nutrition_goals'],
+  notificationPrefs: CloudUserData['notification_preferences'],
+  hasSeenCoachWelcome?: boolean
+): Promise<boolean> {
   const client = getSupabaseClient()
   if (!client) return false
 
@@ -442,6 +449,7 @@ export async function syncProfile(profile: Partial<UserProfile>, nutritionGoals:
         profile,
         nutrition_goals: nutritionGoals,
         notification_preferences: notificationPrefs,
+        has_seen_coach_welcome: hasSeenCoachWelcome ?? false,
         updated_at: new Date().toISOString(),
         last_sync_at: new Date().toISOString(),
       }, {
@@ -839,7 +847,8 @@ export async function processSyncQueue(): Promise<void> {
           success = await syncProfile(
             (item.data as { profile: Partial<UserProfile> }).profile,
             (item.data as { nutritionGoals: CloudUserData['nutrition_goals'] }).nutritionGoals,
-            (item.data as { notificationPrefs: CloudUserData['notification_preferences'] }).notificationPrefs
+            (item.data as { notificationPrefs: CloudUserData['notification_preferences'] }).notificationPrefs,
+            (item.data as { hasSeenCoachWelcome?: boolean }).hasSeenCoachWelcome
           )
           break
         case 'weight':

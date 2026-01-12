@@ -221,7 +221,14 @@ export default function CoachScreen() {
     const newMessages = generateDailyMessages({
       caloriesConsumed: todayData.totalNutrition.calories,
       caloriesTarget: nutritionGoals?.calories || 2000,
+      // Macros détaillés pour les messages contextuels
+      proteinsConsumed: todayData.totalNutrition.proteins,
+      proteinsTarget: nutritionGoals?.proteins,
       proteinsPercent,
+      carbsConsumed: todayData.totalNutrition.carbs,
+      carbsTarget: nutritionGoals?.carbs,
+      fatsConsumed: todayData.totalNutrition.fats,
+      fatsTarget: nutritionGoals?.fats,
       waterPercent,
       sleepHours: null, // TODO: intégrer wellness store
       streak: currentStreak,
@@ -249,9 +256,11 @@ export default function CoachScreen() {
     setRefreshing(false)
   }, [clearExpired, generateMessages])
 
-  const handleAction = (route: string) => {
-    // @ts-ignore
-    navigation.navigate(route)
+  const handleAction = (route: string, message?: LymiaMessage) => {
+    // Extract meal type from dedupKey if available (e.g., "meal-reminder-dinner-2026-01-12")
+    const mealType = message?.dedupKey?.match(/meal-reminder-(breakfast|lunch|snack|dinner)/)?.[1]
+    // @ts-ignore - navigation typing
+    navigation.navigate(route, mealType ? { mealType } : undefined)
   }
 
   const handleDismissWelcome = () => {
@@ -331,7 +340,7 @@ export default function CoachScreen() {
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
-                    onAction={handleAction}
+                    onAction={(route) => handleAction(route, msg)}
                   />
                 ))}
               </View>
@@ -352,7 +361,7 @@ export default function CoachScreen() {
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
-                    onAction={handleAction}
+                    onAction={(route) => handleAction(route, msg)}
                   />
                 ))}
               </View>
@@ -373,7 +382,7 @@ export default function CoachScreen() {
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
-                    onAction={handleAction}
+                    onAction={(route) => handleAction(route, msg)}
                   />
                 ))}
               </View>
@@ -394,7 +403,7 @@ export default function CoachScreen() {
                     message={msg}
                     onRead={() => markAsRead(msg.id)}
                     onDismiss={() => dismiss(msg.id)}
-                    onAction={handleAction}
+                    onAction={(route) => handleAction(route, msg)}
                   />
                 ))}
               </View>

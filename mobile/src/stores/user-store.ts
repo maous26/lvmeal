@@ -313,16 +313,25 @@ export const useUserStore = create<UserState>()(
         } : null
         console.log('[UserStore] Calculated goals:', goals)
         const finalProfile = { ...profile, nutritionalNeeds: needs || undefined }
+        // Preserve hasSeenCoachWelcome when setting profile (important for cloud restore)
+        const currentHasSeenCoachWelcome = get().hasSeenCoachWelcome
         set({
           profile: finalProfile,
           isOnboarded: profile.onboardingCompleted || false,
           nutritionGoals: goals,
+          // Keep hasSeenCoachWelcome true if it was already true (don't reset on reconnect)
+          hasSeenCoachWelcome: currentHasSeenCoachWelcome || false,
         })
-        // Sync profile to cloud
+        // Sync profile to cloud (include all fields needed by syncProfile)
         addToSyncQueue({
           type: 'profile',
           action: 'upsert',
-          data: finalProfile,
+          data: {
+            profile: finalProfile,
+            nutritionGoals: goals,
+            notificationPrefs: get().notificationPreferences,
+            hasSeenCoachWelcome: currentHasSeenCoachWelcome || false,
+          },
         })
         console.log('[UserStore] Profile added to sync queue')
       },
@@ -343,11 +352,16 @@ export const useUserStore = create<UserState>()(
           profile: finalProfile,
           nutritionGoals: goals,
         })
-        // Sync profile to cloud
+        // Sync profile to cloud (include all fields needed by syncProfile)
         addToSyncQueue({
           type: 'profile',
           action: 'upsert',
-          data: finalProfile,
+          data: {
+            profile: finalProfile,
+            nutritionGoals: goals,
+            notificationPrefs: get().notificationPreferences,
+            hasSeenCoachWelcome: get().hasSeenCoachWelcome,
+          },
         })
         console.log('[UserStore] Profile update added to sync queue')
       },
@@ -389,6 +403,20 @@ export const useUserStore = create<UserState>()(
 
       setHasSeenCoachWelcome: (value) => {
         set({ hasSeenCoachWelcome: value })
+        // Sync to cloud so this persists across devices/reinstalls
+        if (value) {
+          const state = get()
+          addToSyncQueue({
+            type: 'profile',
+            action: 'upsert',
+            data: {
+              profile: state.profile || {},
+              nutritionGoals: state.nutritionGoals,
+              notificationPrefs: state.notificationPreferences,
+              hasSeenCoachWelcome: true,
+            },
+          })
+        }
       },
 
       calculateNeeds: () => {

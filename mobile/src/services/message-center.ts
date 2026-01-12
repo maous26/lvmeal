@@ -335,7 +335,13 @@ export function generateDailyMessages(
   userData: {
     caloriesConsumed: number
     caloriesTarget: number
+    proteinsConsumed?: number
+    proteinsTarget?: number
     proteinsPercent: number
+    carbsConsumed?: number
+    carbsTarget?: number
+    fatsConsumed?: number
+    fatsTarget?: number
     waterPercent: number
     sleepHours: number | null
     streak: number
@@ -351,6 +357,10 @@ export function generateDailyMessages(
   const now = new Date()
   const hour = now.getHours()
   const prefs = preferences || DEFAULT_PREFERENCES
+
+  // Calculs utiles
+  const caloriesRemaining = Math.max(0, userData.caloriesTarget - userData.caloriesConsumed)
+  const caloriesPercent = Math.round((userData.caloriesConsumed / userData.caloriesTarget) * 100)
 
   // P1: No meal for 8+ hours (downgraded from P0 - moins intrusif)
   // Devient P0 SEULEMENT si opt-in activé par l'utilisateur
@@ -376,13 +386,19 @@ export function generateDailyMessages(
 
   // P1: Low protein (< 50% at dinner time)
   if (hour >= 18 && userData.proteinsPercent < 50) {
+    const proteinsRemaining = userData.proteinsTarget
+      ? Math.round(userData.proteinsTarget - (userData.proteinsConsumed || 0))
+      : null
+    const proteinsInfo = proteinsRemaining ? ` (~${proteinsRemaining}g à rattraper)` : ''
     messages.push({
       priority: 'P1',
       type: 'action',
       category: 'nutrition',
       title: 'Protéines à rattraper',
-      message: `Tu es à ${userData.proteinsPercent}% de ton objectif protéines. Pense à en ajouter ce soir.`,
+      message: `Tu es à ${userData.proteinsPercent}% de ton objectif protéines.${proteinsInfo} Pense à en ajouter ce soir.`,
       emoji: '🥩',
+      actionLabel: 'Ajouter mon dîner',
+      actionRoute: 'AddMeal',
       reason: `Protéines à ${userData.proteinsPercent}% après 18h`,
       confidence: 0.8,
       dedupKey: 'nutrition-low-protein',
@@ -391,13 +407,16 @@ export function generateDailyMessages(
 
   // P1: Low hydration
   if (userData.waterPercent < 40 && hour >= 14) {
+    const waterRemaining = Math.round(2000 * (100 - userData.waterPercent) / 100)
     messages.push({
       priority: 'P1',
       type: 'action',
       category: 'hydration',
       title: 'Hydrate-toi',
-      message: `Seulement ${userData.waterPercent}% de ton objectif eau. Un verre d'eau ?`,
+      message: `Seulement ${userData.waterPercent}% de ton objectif eau (~${waterRemaining}ml restants). Un verre d'eau ?`,
       emoji: '💧',
+      actionLabel: 'Ajouter de l\'eau',
+      actionRoute: 'Home',
       reason: `Hydratation à ${userData.waterPercent}% après 14h`,
       confidence: 0.7,
       dedupKey: 'hydration-low',
@@ -478,6 +497,90 @@ export function generateDailyMessages(
       confidence: 0.7,
       dedupKey: 'sleep-bad',
     })
+  }
+
+  // P3: Bilan nutrition du soir (après 19h, si on a mangé)
+  if (hour >= 19 && userData.caloriesConsumed > 0) {
+    const proteinsG = userData.proteinsConsumed || 0
+    const carbsG = userData.carbsConsumed || 0
+    const fatsG = userData.fatsConsumed || 0
+
+    // Construire le résumé macros si disponible
+    let macrosSummary = ''
+    if (proteinsG > 0 || carbsG > 0 || fatsG > 0) {
+      macrosSummary = ` (P: ${Math.round(proteinsG)}g · G: ${Math.round(carbsG)}g · L: ${Math.round(fatsG)}g)`
+    }
+
+    // Déterminer le ton du message selon le niveau de calories
+    let bilanMessage: string
+    let bilanEmoji: string
+    if (caloriesPercent >= 90 && caloriesPercent <= 110) {
+      bilanMessage = `Parfait ! ${userData.caloriesConsumed} kcal aujourd'hui, pile dans l'objectif.${macrosSummary}`
+      bilanEmoji = '✅'
+    } else if (caloriesPercent < 70) {
+      bilanMessage = `${userData.caloriesConsumed} kcal (${caloriesPercent}%). Il te reste ${caloriesRemaining} kcal si tu as encore faim.${macrosSummary}`
+      bilanEmoji = '📊'
+    } else if (caloriesPercent > 120) {
+      bilanMessage = `${userData.caloriesConsumed} kcal aujourd'hui. Pas de stress, un jour ne fait pas tout !${macrosSummary}`
+      bilanEmoji = '💪'
+    } else {
+      bilanMessage = `${userData.caloriesConsumed} / ${userData.caloriesTarget} kcal (${caloriesPercent}%).${macrosSummary}`
+      bilanEmoji = '📊'
+    }
+
+    messages.push({
+      priority: 'P3',
+      type: 'insight',
+      category: 'nutrition',
+      title: 'Bilan nutrition',
+      message: bilanMessage,
+      emoji: bilanEmoji,
+      actionLabel: 'Voir mes progrès',
+      actionRoute: 'Progress',
+      reason: 'Bilan journalier après 19h',
+      confidence: 0.9,
+      dedupKey: `bilan-nutrition-${now.toISOString().split('T')[0]}`,
+    })
+  }
+
+  // P3: Rappels de repas contextuels avec calories restantes
+  const mealReminders: Array<{ type: 'breakfast' | 'lunch' | 'snack' | 'dinner'; startHour: number; endHour: number; title: string; emoji: string }> = [
+    { type: 'breakfast', startHour: 7, endHour: 10, title: 'Petit-déjeuner', emoji: '🌅' },
+    { type: 'lunch', startHour: 11, endHour: 14, title: 'Déjeuner', emoji: '🍽️' },
+    { type: 'snack', startHour: 15, endHour: 17, title: 'Collation', emoji: '🍎' },
+    { type: 'dinner', startHour: 18, endHour: 21, title: 'Dîner', emoji: '🌙' },
+  ]
+
+  for (const reminder of mealReminders) {
+    if (hour >= reminder.startHour && hour < reminder.endHour) {
+      // Suggérer des calories basées sur ce qu'il reste
+      const mealsLeft = reminder.type === 'dinner' ? 1 : (reminder.type === 'snack' ? 2 : 3)
+      const suggestedCalories = Math.round(caloriesRemaining / mealsLeft)
+
+      let contextMessage: string
+      if (caloriesRemaining > 200) {
+        contextMessage = `~${suggestedCalories} kcal suggérées pour ce repas. Il te reste ${caloriesRemaining} kcal aujourd'hui.`
+      } else if (caloriesRemaining > 0) {
+        contextMessage = `Budget serré : ${caloriesRemaining} kcal restantes. Opte pour quelque chose de léger.`
+      } else {
+        contextMessage = `Tu as atteint ton objectif ! Un repas léger si tu as faim.`
+      }
+
+      messages.push({
+        priority: 'P3',
+        type: 'tip',
+        category: 'nutrition',
+        title: reminder.title,
+        message: contextMessage,
+        emoji: reminder.emoji,
+        actionLabel: 'Ajouter ce repas',
+        actionRoute: 'AddMeal',
+        reason: `Rappel ${reminder.type} (${reminder.startHour}h-${reminder.endHour}h)`,
+        confidence: 0.7,
+        dedupKey: `meal-reminder-${reminder.type}-${now.toISOString().split('T')[0]}`,
+      })
+      break // Un seul rappel de repas à la fois
+    }
   }
 
   return messages
