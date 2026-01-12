@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { UserProfile, NutritionalNeeds, WeightEntry, NutritionInfo } from '../types'
 import { LymIABrain, type UserContext } from '../services/lymia-brain'
+import { addToSyncQueue } from '../services/cloud-sync-service'
 
 // Keys of all persisted stores to clear on full reset
 // IMPORTANT: These names MUST match the 'name' property in each store's persist config
@@ -311,20 +312,19 @@ export const useUserStore = create<UserState>()(
           fats: needs.fats,
         } : null
         console.log('[UserStore] Calculated goals:', goals)
+        const finalProfile = { ...profile, nutritionalNeeds: needs || undefined }
         set({
-          profile: { ...profile, nutritionalNeeds: needs || undefined },
+          profile: finalProfile,
           isOnboarded: profile.onboardingCompleted || false,
           nutritionGoals: goals,
         })
-        // Verify persistence after a short delay
-        setTimeout(async () => {
-          try {
-            const stored = await AsyncStorage.getItem('presence-user')
-            console.log('[UserStore] Persisted data check:', stored ? JSON.parse(stored) : null)
-          } catch (e) {
-            console.error('[UserStore] Persistence check error:', e)
-          }
-        }, 500)
+        // Sync profile to cloud
+        addToSyncQueue({
+          type: 'profile',
+          action: 'upsert',
+          data: finalProfile,
+        })
+        console.log('[UserStore] Profile added to sync queue')
       },
 
       updateProfile: (updates) => {
@@ -343,6 +343,13 @@ export const useUserStore = create<UserState>()(
           profile: finalProfile,
           nutritionGoals: goals,
         })
+        // Sync profile to cloud
+        addToSyncQueue({
+          type: 'profile',
+          action: 'upsert',
+          data: finalProfile,
+        })
+        console.log('[UserStore] Profile update added to sync queue')
       },
 
       clearProfile: () => {
