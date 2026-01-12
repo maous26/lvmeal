@@ -1,11 +1,11 @@
 /**
- * PaywallScreen - Écran d'abonnement LYM
+ * PaywallScreen - Faux paywall qualitatif (phase test)
  *
- * Philosophie LYM:
- * - Ton calme, non vendeur
- * - Relation installée après 7 jours
- * - Focus sur la continuité, pas les features
- * - Prix transparent: 12,90€/mois
+ * Philosophie:
+ * - Pas de vrai paiement pour les testeurs
+ * - Collecte de feedback qualitatif sur la valeur perçue
+ * - Accès gratuit maintenu après réponse
+ * - Objectif: apprendre, pas monétiser
  */
 
 import React, { useState } from 'react'
@@ -16,255 +16,311 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native'
 import { useToast } from '../components/ui/Toast'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
   X,
-  Check,
   Heart,
   Sparkles,
   Shield,
   Clock,
+  ThumbsUp,
+  Clock3,
+  XCircle,
+  MessageSquare,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
 import { useOnboardingStore, SUBSCRIPTION_PRICE } from '../stores/onboarding-store'
+import { useFeedbackStore, type PaywallResponse } from '../stores/feedback-store'
 import { useUserStore } from '../stores/user-store'
-import { fonts } from '../constants/theme'
+import { fonts, spacing, radius } from '../constants/theme'
 
 export default function PaywallScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
   const toast = useToast()
   const { profile } = useUserStore()
-  const {
-    subscribe,
-    markPaywallSeen,
-    getDaysSinceSignup,
-    getTrialDaysRemaining,
-  } = useOnboardingStore()
+  const { markPaywallSeen, getDaysSinceSignup, subscribe } = useOnboardingStore()
+  const { submitPaywallFeedback, hasRespondedToPaywall } = useFeedbackStore()
 
-  const [isLoading, setIsLoading] = useState(false)
+  const [selectedResponse, setSelectedResponse] = useState<PaywallResponse | null>(null)
+  const [customReason, setCustomReason] = useState('')
+  const [showReasonInput, setShowReasonInput] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const daysSinceSignup = getDaysSinceSignup()
-  const trialDaysRemaining = getTrialDaysRemaining()
   const userName = profile?.firstName || 'toi'
 
-  const handleSubscribe = async () => {
+  const responseOptions: { key: PaywallResponse; label: string; sublabel: string; icon: React.ReactNode; color: string }[] = [
+    {
+      key: 'would_pay',
+      label: 'Je paierais pour continuer',
+      sublabel: 'LYM m\'apporte de la valeur',
+      icon: <ThumbsUp size={24} color={colors.success} />,
+      color: colors.success,
+    },
+    {
+      key: 'need_more_time',
+      label: 'J\'ai besoin de plus de temps',
+      sublabel: 'Je veux encore tester',
+      icon: <Clock3 size={24} color={colors.info} />,
+      color: colors.info,
+    },
+    {
+      key: 'too_expensive',
+      label: 'Le prix est trop élevé',
+      sublabel: `${SUBSCRIPTION_PRICE.toFixed(2).replace('.', ',')}€/mois`,
+      icon: <XCircle size={24} color={colors.warning} />,
+      color: colors.warning,
+    },
+    {
+      key: 'not_now',
+      label: 'Autre raison',
+      sublabel: 'Je veux préciser',
+      icon: <MessageSquare size={24} color={colors.text.secondary} />,
+      color: colors.text.secondary,
+    },
+  ]
+
+  const handleSelectResponse = (response: PaywallResponse) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setSelectedResponse(response)
+    setShowReasonInput(response === 'not_now')
+  }
+
+  const handleSubmit = async () => {
+    if (!selectedResponse) return
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setIsLoading(true)
+    setIsSubmitting(true)
 
-    try {
-      // TODO: Intégrer RevenueCat ou autre système de paiement
-      // Pour l'instant, simulation
-      await new Promise(resolve => setTimeout(resolve, 1500))
+    // Submit feedback
+    submitPaywallFeedback(
+      selectedResponse,
+      selectedResponse === 'not_now' ? customReason : undefined,
+      daysSinceSignup
+    )
 
-      subscribe()
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    // Mark paywall as seen
+    markPaywallSeen()
 
-      Alert.alert(
-        'Bienvenue ! 💜',
-        'Ton abonnement est activé. LYM est maintenant à tes côtés sans limite.',
-        [{ text: 'Parfait', onPress: () => navigation.goBack() }]
-      )
-    } catch (error) {
-      toast.error('Une erreur est survenue. Reessaie plus tard.')
-    } finally {
-      setIsLoading(false)
-    }
+    // Give access (fake subscription for testers)
+    subscribe()
+
+    // Show thank you message
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    toast.success('Merci ! Tu as maintenant accès complet à LYM.')
+
+    setIsSubmitting(false)
+    navigation.goBack()
   }
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // Allow close without feedback for testers
     markPaywallSeen()
+    subscribe() // Give access anyway
     navigation.goBack()
-  }
-
-  const handleRestorePurchases = () => {
-    // TODO: Intégrer RevenueCat restore
-    toast.info('Aucun achat a restaurer')
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.closeButton, { backgroundColor: colors.bg.secondary }]}
-          onPress={handleClose}
-        >
-          <X size={24} color={colors.text.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        {/* Hero */}
-        <View style={styles.heroSection}>
-          <LinearGradient
-            colors={[colors.accent.primary, colors.secondary.primary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroIcon}
-          >
-            <Heart size={40} color="#FFFFFF" />
-          </LinearGradient>
-
-          <Text style={[styles.heroTitle, { color: colors.text.primary }]}>
-            Rejoins le{'\n'}LYM Circle
-          </Text>
-
-          <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>
-            {daysSinceSignup} jours ensemble, {userName}.{'\n'}
-            Continue ce chemin avec nous.
-          </Text>
-        </View>
-
-        {/* Testimonial */}
-        <View style={[styles.testimonialCard, { backgroundColor: colors.bg.elevated }]}>
-          <Text style={[styles.testimonialQuote, { color: colors.text.primary }]}>
-            "LYM m'a aidée à retrouver une relation apaisée avec la nourriture. Plus de culpabilité, juste du plaisir."
-          </Text>
-          <View style={styles.testimonialAuthor}>
-            <View style={[styles.testimonialAvatar, { backgroundColor: colors.accent.light }]}>
-              <Text style={styles.testimonialInitial}>M</Text>
-            </View>
-            <View>
-              <Text style={[styles.testimonialName, { color: colors.text.primary }]}>
-                Marie, 34 ans
-              </Text>
-              <Text style={[styles.testimonialMeta, { color: colors.text.tertiary }]}>
-                Membre depuis 4 mois
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Benefits - Ton LYM */}
-        <View style={[styles.benefitsCard, { backgroundColor: colors.bg.elevated }]}>
-          <Text style={[styles.benefitsTitle, { color: colors.text.primary }]}>
-            En tant que membre Circle
-          </Text>
-
-          <View style={styles.benefitsList}>
-            <BenefitItem
-              icon={<Sparkles size={20} color={colors.accent.primary} />}
-              text="Un coach qui te comprend vraiment"
-              colors={colors}
-            />
-            <BenefitItem
-              icon={<Heart size={20} color={colors.secondary.primary} />}
-              text="Des suggestions adaptées à ton rythme"
-              colors={colors}
-            />
-            <BenefitItem
-              icon={<Shield size={20} color={colors.success} />}
-              text="Zéro pression, zéro culpabilité"
-              colors={colors}
-            />
-            <BenefitItem
-              icon={<Clock size={20} color={colors.info} />}
-              text="Ton historique et ta progression"
-              colors={colors}
-            />
-          </View>
-        </View>
-
-        {/* Pricing */}
-        <View style={styles.pricingSection}>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            style={[styles.priceCard, { borderColor: colors.accent.primary }]}
-            activeOpacity={0.9}
-            onPress={handleSubscribe}
-            disabled={isLoading}
+            style={[styles.closeButton, { backgroundColor: colors.bg.secondary }]}
+            onPress={handleClose}
           >
+            <X size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Hero */}
+          <View style={styles.heroSection}>
             <LinearGradient
-              colors={[colors.accent.primary + '10', colors.secondary.primary + '10']}
+              colors={[colors.accent.primary, colors.secondary.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.priceCardGradient}
+              style={styles.heroIcon}
             >
-              <View style={styles.priceHeader}>
-                <Text style={[styles.priceLabel, { color: colors.text.secondary }]}>
-                  Abonnement mensuel
-                </Text>
-                <View style={[styles.popularBadge, { backgroundColor: colors.accent.primary }]}>
-                  <Text style={styles.popularText}>Recommandé</Text>
+              <Heart size={40} color="#FFFFFF" />
+            </LinearGradient>
+
+            <Text style={[styles.heroTitle, { color: colors.text.primary }]}>
+              {daysSinceSignup} jours ensemble
+            </Text>
+
+            <Text style={[styles.heroSubtitle, { color: colors.text.secondary }]}>
+              {userName}, LYM commence à te connaître.{'\n'}
+              On aimerait avoir ton avis.
+            </Text>
+          </View>
+
+          {/* Context card */}
+          <View style={[styles.contextCard, { backgroundColor: colors.bg.elevated }]}>
+            <Text style={[styles.contextTitle, { color: colors.text.primary }]}>
+              Si LYM devenait payant...
+            </Text>
+            <Text style={[styles.contextPrice, { color: colors.accent.primary }]}>
+              {SUBSCRIPTION_PRICE.toFixed(2).replace('.', ',')} €/mois
+            </Text>
+            <Text style={[styles.contextNote, { color: colors.text.tertiary }]}>
+              (C'est une question, pas un paiement)
+            </Text>
+          </View>
+
+          {/* Response options */}
+          <View style={styles.optionsSection}>
+            <Text style={[styles.questionText, { color: colors.text.primary }]}>
+              Quelle serait ta réaction ?
+            </Text>
+
+            {responseOptions.map((option) => (
+              <TouchableOpacity
+                key={option.key}
+                style={[
+                  styles.optionCard,
+                  { backgroundColor: colors.bg.elevated, borderColor: colors.border.default },
+                  selectedResponse === option.key && {
+                    borderColor: option.color,
+                    backgroundColor: option.color + '10',
+                  },
+                ]}
+                onPress={() => handleSelectResponse(option.key)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.optionIcon, { backgroundColor: option.color + '15' }]}>
+                  {option.icon}
                 </View>
-              </View>
+                <View style={styles.optionContent}>
+                  <Text style={[styles.optionLabel, { color: colors.text.primary }]}>
+                    {option.label}
+                  </Text>
+                  <Text style={[styles.optionSublabel, { color: colors.text.tertiary }]}>
+                    {option.sublabel}
+                  </Text>
+                </View>
+                {selectedResponse === option.key && (
+                  <View style={[styles.checkMark, { backgroundColor: option.color }]}>
+                    <Text style={styles.checkMarkText}>✓</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
 
-              <View style={styles.priceRow}>
-                <Text style={[styles.priceAmount, { color: colors.text.primary }]}>
-                  {SUBSCRIPTION_PRICE.toFixed(2).replace('.', ',')} €
-                </Text>
-                <Text style={[styles.pricePeriod, { color: colors.text.tertiary }]}>
-                  / mois
-                </Text>
-              </View>
+          {/* Custom reason input */}
+          {showReasonInput && (
+            <View style={styles.reasonSection}>
+              <Text style={[styles.reasonLabel, { color: colors.text.secondary }]}>
+                Dis-nous en plus (optionnel)
+              </Text>
+              <TextInput
+                style={[
+                  styles.reasonInput,
+                  {
+                    backgroundColor: colors.bg.elevated,
+                    borderColor: colors.border.default,
+                    color: colors.text.primary,
+                  },
+                ]}
+                placeholder="Ce qui manque, ce qui te bloque..."
+                placeholderTextColor={colors.text.muted}
+                value={customReason}
+                onChangeText={setCustomReason}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            </View>
+          )}
 
-              <Text style={[styles.priceNote, { color: colors.text.tertiary }]}>
-                Résiliable à tout moment, sans engagement
+          {/* Submit button */}
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !selectedResponse && styles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={!selectedResponse || isSubmitting}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={
+                selectedResponse
+                  ? [colors.accent.primary, colors.secondary.primary]
+                  : [colors.bg.secondary, colors.bg.secondary]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.submitGradient}
+            >
+              <Text
+                style={[
+                  styles.submitText,
+                  { color: selectedResponse ? '#FFFFFF' : colors.text.muted },
+                ]}
+              >
+                {isSubmitting ? 'Envoi...' : 'Envoyer mon avis'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
 
-        {/* CTA Button */}
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={handleSubscribe}
-          disabled={isLoading}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={[colors.accent.primary, colors.secondary.primary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.ctaGradient, isLoading && styles.ctaLoading]}
-          >
-            <Text style={styles.ctaText}>
-              {isLoading ? 'Chargement...' : 'Continuer avec LYM'}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Trial reminder */}
-        {trialDaysRemaining > 0 && (
-          <Text style={[styles.trialReminder, { color: colors.text.tertiary }]}>
-            Il te reste {trialDaysRemaining} jour{trialDaysRemaining > 1 ? 's' : ''} d'essai gratuit
+          {/* Privacy note */}
+          <Text style={[styles.privacyNote, { color: colors.text.muted }]}>
+            Ton avis reste anonyme et nous aide à améliorer LYM.{'\n'}
+            Tu garderas l'accès complet après cette question.
           </Text>
-        )}
 
-        {/* Footer links */}
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={handleRestorePurchases}>
-            <Text style={[styles.footerLink, { color: colors.text.tertiary }]}>
-              Restaurer mes achats
+          {/* Benefits reminder */}
+          <View style={[styles.benefitsCard, { backgroundColor: colors.bg.elevated }]}>
+            <Text style={[styles.benefitsTitle, { color: colors.text.primary }]}>
+              Ce que LYM t'apporte
             </Text>
-          </TouchableOpacity>
 
-          <Text style={[styles.footerDot, { color: colors.text.muted }]}>•</Text>
-
-          <TouchableOpacity onPress={handleClose}>
-            <Text style={[styles.footerLink, { color: colors.text.tertiary }]}>
-              Plus tard
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Legal */}
-        <Text style={[styles.legalText, { color: colors.text.muted }]}>
-          L'abonnement sera facturé sur ton compte iTunes.{'\n'}
-          Tu peux gérer ou annuler ton abonnement à tout moment{'\n'}
-          dans les réglages de ton compte.
-        </Text>
-      </ScrollView>
+            <View style={styles.benefitsList}>
+              <BenefitItem
+                icon={<Sparkles size={18} color={colors.accent.primary} />}
+                text="Un coach qui s'adapte à toi"
+                colors={colors}
+              />
+              <BenefitItem
+                icon={<Heart size={18} color={colors.secondary.primary} />}
+                text="Zéro culpabilité, zéro pression"
+                colors={colors}
+              />
+              <BenefitItem
+                icon={<Shield size={18} color={colors.success} />}
+                text="Tes données restent privées"
+                colors={colors}
+              />
+              <BenefitItem
+                icon={<Clock size={18} color={colors.info} />}
+                text="Moins de charge mentale"
+                colors={colors}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -295,6 +351,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  keyboardView: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -314,187 +373,166 @@ const styles = StyleSheet.create({
   // Hero
   heroSection: {
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  heroIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 24,
   },
+  heroIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     fontFamily: fonts.serif.bold,
     textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
   },
-  // Testimonial
-  testimonialCard: {
-    borderRadius: 20,
+  // Context card
+  contextCard: {
+    borderRadius: 16,
     padding: 20,
+    alignItems: 'center',
     marginBottom: 24,
   },
-  testimonialQuote: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  testimonialAuthor: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  testimonialAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  testimonialInitial: {
+  contextTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#009FEB',
+    fontWeight: '500',
+    marginBottom: 8,
   },
-  testimonialName: {
-    fontSize: 14,
-    fontWeight: '600',
+  contextPrice: {
+    fontSize: 32,
+    fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
-  testimonialMeta: {
-    fontSize: 12,
+  contextNote: {
+    fontSize: 13,
+    marginTop: 4,
   },
-  // Benefits
-  benefitsCard: {
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
+  // Options
+  optionsSection: {
+    marginBottom: 20,
   },
-  benefitsTitle: {
+  questionText: {
     fontSize: 18,
     fontWeight: '600',
     fontFamily: fonts.serif.semibold,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 2,
+    marginBottom: 12,
+  },
+  optionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionContent: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  optionLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  optionSublabel: {
+    fontSize: 13,
+  },
+  checkMark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkMarkText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // Reason input
+  reasonSection: {
     marginBottom: 20,
   },
+  reasonLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  reasonInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    fontSize: 15,
+    minHeight: 80,
+  },
+  // Submit
+  submitButton: {
+    marginBottom: 12,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitGradient: {
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  submitText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  // Privacy
+  privacyNote: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 24,
+  },
+  // Benefits
+  benefitsCard: {
+    borderRadius: 16,
+    padding: 20,
+  },
+  benefitsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.serif.semibold,
+    marginBottom: 16,
+  },
   benefitsList: {
-    gap: 16,
+    gap: 12,
   },
   benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   benefitIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   benefitText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
-  },
-  // Pricing
-  pricingSection: {
-    marginBottom: 24,
-  },
-  priceCard: {
-    borderRadius: 20,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
-  priceCardGradient: {
-    padding: 24,
-  },
-  priceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  priceLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  popularBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  popularText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 8,
-  },
-  priceAmount: {
-    fontSize: 36,
-    fontWeight: '700',
-    fontFamily: fonts.serif.bold,
-  },
-  pricePeriod: {
-    fontSize: 16,
-    marginLeft: 4,
-  },
-  priceNote: {
-    fontSize: 13,
-  },
-  // CTA
-  ctaButton: {
-    marginBottom: 16,
-  },
-  ctaGradient: {
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  ctaLoading: {
-    opacity: 0.7,
-  },
-  ctaText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  // Trial reminder
-  trialReminder: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  // Footer
-  footerLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  footerLink: {
-    fontSize: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  footerDot: {
-    fontSize: 14,
-  },
-  legalText: {
-    fontSize: 11,
-    textAlign: 'center',
-    lineHeight: 16,
   },
 })
