@@ -2,10 +2,10 @@
  * PaywallScreen - Faux paywall qualitatif (phase test)
  *
  * Philosophie:
- * - Pas de vrai paiement pour les testeurs
  * - Collecte de feedback qualitatif sur la valeur perçue
- * - Accès gratuit maintenu après réponse
- * - Objectif: apprendre, pas monétiser
+ * - AUCUN accès premium donné (c'est du test, pas de paiement)
+ * - Après jour 7: tout le monde passe en mode FREE
+ * - Objectif: mesurer la friction et collecter les raisons
  */
 
 import React, { useState } from 'react'
@@ -47,7 +47,7 @@ export default function PaywallScreen() {
   const { colors } = useTheme()
   const toast = useToast()
   const { profile } = useUserStore()
-  const { markPaywallSeen, getDaysSinceSignup, subscribe } = useOnboardingStore()
+  const { markPaywallSeen, getDaysSinceSignup } = useOnboardingStore()
   const { submitPaywallFeedback, hasRespondedToPaywall } = useFeedbackStore()
 
   const [selectedResponse, setSelectedResponse] = useState<PaywallResponse | null>(null)
@@ -108,17 +108,14 @@ export default function PaywallScreen() {
       daysSinceSignup
     )
 
-    // Mark paywall as seen
+    // Mark paywall as seen (but NO subscription - this is test phase)
     markPaywallSeen()
-
-    // Give access (fake subscription for testers)
-    subscribe()
 
     // Show thank you message
     await new Promise(resolve => setTimeout(resolve, 500))
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-    toast.success('Merci ! Tu as maintenant accès complet à LYM.')
+    toast.success('Merci pour ton retour !')
 
     setIsSubmitting(false)
     navigation.goBack()
@@ -126,9 +123,8 @@ export default function PaywallScreen() {
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    // Allow close without feedback for testers
+    // Just mark as seen, no subscription
     markPaywallSeen()
-    subscribe() // Give access anyway
     navigation.goBack()
   }
 
@@ -287,7 +283,7 @@ export default function PaywallScreen() {
           {/* Privacy note */}
           <Text style={[styles.privacyNote, { color: colors.text.muted }]}>
             Ton avis reste anonyme et nous aide à améliorer LYM.{'\n'}
-            Tu garderas l'accès complet après cette question.
+            Les fonctions de base restent accessibles gratuitement.
           </Text>
 
           {/* Benefits reminder */}
