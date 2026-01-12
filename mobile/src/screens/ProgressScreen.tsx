@@ -644,37 +644,6 @@ export default function ProgressScreen() {
                 </View>
               </View>
             </View>
-
-            {/* Coach insight - compact */}
-            {(() => {
-              const caloriesRatio = averageCalories / goals.calories
-              const proteinsRatio = averageProteins / goals.proteins
-
-              const getInsight = () => {
-                if (proteinsRatio < 0.8) {
-                  return { icon: '💪', message: 'Augmente les protéines (+œuf, amandes)' }
-                }
-                if (caloriesRatio < 0.9 && proteinsRatio >= 0.9) {
-                  return { icon: '✨', message: 'Parfait ! Déficit maîtrisé, protéines au top' }
-                }
-                if (caloriesRatio > 1.15) {
-                  return { icon: '⚡', message: 'Réduis les portions du soir' }
-                }
-                if (calorieGoalMet >= 5) {
-                  return { icon: '🏆', message: 'Semaine exemplaire, continue !' }
-                }
-                return { icon: '🎯', message: 'Tu progresses, garde le cap' }
-              }
-
-              const insight = getInsight()
-
-              return (
-                <View style={[styles.insightBar, { backgroundColor: colors.accent.light }]}>
-                  <Text style={styles.insightIcon}>{insight.icon}</Text>
-                  <Text style={[styles.insightText, { color: colors.text.secondary }]}>{insight.message}</Text>
-                </View>
-              )
-            })()}
           </>
         )}
 
@@ -1156,24 +1125,6 @@ const styles = StyleSheet.create({
   noDataText: {
     ...typography.small,
     textAlign: 'center',
-  },
-
-  // Insight bar
-  insightBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.default,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  insightIcon: {
-    fontSize: 16,
-  },
-  insightText: {
-    ...typography.small,
-    flex: 1,
   },
 
   // Tier card
