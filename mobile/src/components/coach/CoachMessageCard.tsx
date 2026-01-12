@@ -44,7 +44,7 @@ export interface CoachMessageCardProps {
   onAction?: (route: string) => void
   /** Compact mode for inline display */
   compact?: boolean
-  /** Show transparency reason */
+  /** Show transparency reason (hidden by default - technical info) */
   showReason?: boolean
   /** Custom style */
   style?: object
@@ -56,7 +56,7 @@ export function CoachMessageCard({
   onDismiss,
   onAction,
   compact = false,
-  showReason = true,
+  showReason = false, // Hidden by default - technical info not useful to user
   style,
 }: CoachMessageCardProps) {
   const { colors, isDark } = useTheme()
@@ -167,20 +167,13 @@ export function CoachMessageCard({
         {message.message}
       </Text>
 
-      {/* Transparency: Why this message */}
+      {/* Transparency: Why this message (hidden by default) */}
       {showReason && message.reason && (
         <View style={[styles.reasonContainer, { backgroundColor: colors.bg.secondary }]}>
           <Text style={[styles.reasonText, { color: colors.text.muted }]}>
             💡 {message.reason}
           </Text>
         </View>
-      )}
-
-      {/* Confidence indicator (subtle) */}
-      {message.confidence !== undefined && message.confidence < 0.7 && (
-        <Text style={[styles.confidenceText, { color: colors.text.muted }]}>
-          Suggestion basée sur {Math.round(message.confidence * 100)}% de confiance
-        </Text>
       )}
 
       {/* Action Button */}
@@ -261,10 +254,6 @@ const styles = StyleSheet.create({
   reasonText: {
     ...typography.caption,
     fontStyle: 'italic',
-  },
-  confidenceText: {
-    ...typography.caption,
-    marginBottom: spacing.sm,
   },
   actionButton: {
     flexDirection: 'row',
