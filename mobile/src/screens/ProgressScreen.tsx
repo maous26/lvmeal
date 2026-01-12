@@ -30,6 +30,7 @@ import type { WeightEntry } from '../types'
 const { width } = Dimensions.get('window')
 
 type TabType = 'progress' | 'gamification'
+type TrendPeriod = 30 | 60 | 90
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 
@@ -40,6 +41,7 @@ export default function ProgressScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('progress')
   const [showAddWeight, setShowAddWeight] = useState(false)
   const [newWeight, setNewWeight] = useState('')
+  const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30)
   const { profile, nutritionGoals, weightHistory, addWeightEntry } = useUserStore()
   const { dailyData } = useMealsStore()
   const {
@@ -148,6 +150,86 @@ export default function ProgressScreen() {
   const calorieGoalMet = weeklyData.filter(
     (d) => d.calories >= goals.calories * 0.9 && d.calories <= goals.calories * 1.1
   ).length
+
+  // Calculate trends for selected period (30/60/90 days)
+  const trendStats = useMemo(() => {
+    const getDaysData = (numDays: number) => {
+      const days = []
+      for (let i = numDays - 1; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        days.push(getDateKey(date))
+      }
+      return days
+    }
+
+    const currentDays = getDaysData(trendPeriod)
+    const previousDays = getDaysData(trendPeriod * 2).slice(0, trendPeriod)
+
+    const calculatePeriodStats = (days: string[]) => {
+      let totalCalories = 0
+      let totalProteins = 0
+      let totalCarbs = 0
+      let totalFats = 0
+      let daysWithData = 0
+
+      days.forEach(date => {
+        const dayData = dailyData[date]?.totalNutrition
+        if (dayData && dayData.calories > 0) {
+          totalCalories += dayData.calories
+          totalProteins += dayData.proteins || 0
+          totalCarbs += dayData.carbs || 0
+          totalFats += dayData.fats || 0
+          daysWithData++
+        }
+      })
+
+      if (daysWithData === 0) return null
+
+      return {
+        avgCalories: Math.round(totalCalories / daysWithData),
+        avgProteins: Math.round(totalProteins / daysWithData),
+        avgCarbs: Math.round(totalCarbs / daysWithData),
+        avgFats: Math.round(totalFats / daysWithData),
+        daysTracked: daysWithData,
+      }
+    }
+
+    const current = calculatePeriodStats(currentDays)
+    const previous = calculatePeriodStats(previousDays)
+
+    // Weight evolution over period
+    const periodStart = new Date()
+    periodStart.setDate(periodStart.getDate() - trendPeriod)
+    const startWeight = sortedWeights.find(w => new Date(w.date) <= periodStart)?.weight
+    const currentWeightValue = sortedWeights[0]?.weight
+    const weightChange = startWeight && currentWeightValue
+      ? +(currentWeightValue - startWeight).toFixed(1)
+      : null
+
+    // Calculate evolution percentages
+    const getEvolution = (currentVal: number | undefined, previousVal: number | undefined) => {
+      if (!currentVal || !previousVal || previousVal === 0) return null
+      return Math.round(((currentVal - previousVal) / previousVal) * 100)
+    }
+
+    return {
+      current,
+      previous,
+      weightChange,
+      evolution: current && previous ? {
+        calories: getEvolution(current.avgCalories, previous.avgCalories),
+        proteins: getEvolution(current.avgProteins, previous.avgProteins),
+        carbs: getEvolution(current.avgCarbs, previous.avgCarbs),
+        fats: getEvolution(current.avgFats, previous.avgFats),
+      } : null,
+    }
+  }, [trendPeriod, dailyData, sortedWeights])
+
+  const handlePeriodChange = (period: TrendPeriod) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setTrendPeriod(period)
+  }
 
   const handleTabChange = (tab: TabType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -404,9 +486,128 @@ export default function ProgressScreen() {
               </View>
             </View>
 
+            {/* Trends Section - 30/60/90 days */}
+            <View style={[styles.compactCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconGradient, { backgroundColor: colors.secondary.primary }]}>
+                    <TrendingUp size={16} color="#FFFFFF" />
+                  </View>
+                  <Text style={[styles.cardTitle, { color: colors.text.primary }]}>Tendances</Text>
+                </View>
+              </View>
+
+              {/* Period selector */}
+              <View style={styles.periodSelector}>
+                {([30, 60, 90] as TrendPeriod[]).map((period) => (
+                  <TouchableOpacity
+                    key={period}
+                    style={[
+                      styles.periodButton,
+                      { backgroundColor: colors.bg.secondary },
+                      trendPeriod === period && { backgroundColor: colors.accent.primary },
+                    ]}
+                    onPress={() => handlePeriodChange(period)}
+                  >
+                    <Text
+                      style={[
+                        styles.periodButtonText,
+                        { color: colors.text.secondary },
+                        trendPeriod === period && { color: '#FFFFFF' },
+                      ]}
+                    >
+                      {period}j
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {trendStats.current ? (
+                <>
+                  {/* Calories & Weight row */}
+                  <View style={styles.trendRow}>
+                    <View style={styles.trendItem}>
+                      <Text style={[styles.trendLabel, { color: colors.text.muted }]}>Calories/j</Text>
+                      <View style={styles.trendValueRow}>
+                        <Text style={[styles.trendValue, { color: colors.text.primary }]}>
+                          {formatNumber(trendStats.current.avgCalories)}
+                        </Text>
+                        {trendStats.evolution?.calories !== null && (
+                          <View style={[styles.evolutionBadge, { backgroundColor: trendStats.evolution.calories <= 0 ? colors.success + '20' : colors.warning + '20' }]}>
+                            {trendStats.evolution.calories <= 0 ? (
+                              <TrendingDown size={10} color={colors.success} />
+                            ) : (
+                              <TrendingUp size={10} color={colors.warning} />
+                            )}
+                            <Text style={[styles.evolutionText, { color: trendStats.evolution.calories <= 0 ? colors.success : colors.warning }]}>
+                              {trendStats.evolution.calories > 0 ? '+' : ''}{trendStats.evolution.calories}%
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    {trendStats.weightChange !== null && (
+                      <View style={styles.trendItem}>
+                        <Text style={[styles.trendLabel, { color: colors.text.muted }]}>Poids</Text>
+                        <View style={styles.trendValueRow}>
+                          <Text style={[styles.trendValue, { color: trendStats.weightChange < 0 ? colors.success : trendStats.weightChange > 0 ? colors.warning : colors.text.primary }]}>
+                            {trendStats.weightChange > 0 ? '+' : ''}{trendStats.weightChange} kg
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Macros row */}
+                  <View style={styles.trendMacrosRow}>
+                    <View style={styles.trendMacroItem}>
+                      <View style={[styles.macroDot, { backgroundColor: colors.nutrients.proteins }]} />
+                      <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>P</Text>
+                      <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgProteins}g</Text>
+                      {trendStats.evolution?.proteins !== null && (
+                        <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.proteins >= 0 ? colors.success : colors.warning }]}>
+                          {trendStats.evolution.proteins >= 0 ? '+' : ''}{trendStats.evolution.proteins}%
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.trendMacroItem}>
+                      <View style={[styles.macroDot, { backgroundColor: colors.nutrients.carbs }]} />
+                      <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>G</Text>
+                      <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgCarbs}g</Text>
+                      {trendStats.evolution?.carbs !== null && (
+                        <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.carbs <= 0 ? colors.success : colors.warning }]}>
+                          {trendStats.evolution.carbs > 0 ? '+' : ''}{trendStats.evolution.carbs}%
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.trendMacroItem}>
+                      <View style={[styles.macroDot, { backgroundColor: colors.nutrients.fats }]} />
+                      <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>L</Text>
+                      <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgFats}g</Text>
+                      {trendStats.evolution?.fats !== null && (
+                        <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.fats <= 0 ? colors.success : colors.warning }]}>
+                          {trendStats.evolution.fats > 0 ? '+' : ''}{trendStats.evolution.fats}%
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+
+                  <Text style={[styles.trendFooter, { color: colors.text.muted }]}>
+                    {trendStats.current.daysTracked} jours trackés sur {trendPeriod}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={[styles.noDataText, { color: colors.text.muted }]}>
+                    Pas assez de données sur {trendPeriod} jours
+                  </Text>
+                </View>
+              )}
+            </View>
+
             {/* Macros compact */}
             <View style={[styles.compactCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
-              <Text style={[styles.cardTitle, { color: colors.text.primary, marginBottom: spacing.sm }]}>Macros moyens</Text>
+              <Text style={[styles.cardTitle, { color: colors.text.primary, marginBottom: spacing.sm }]}>Macros moyens (7j)</Text>
               <View style={styles.macrosRow}>
                 <View style={styles.macroItem}>
                   <CircularProgress
@@ -860,6 +1061,101 @@ const styles = StyleSheet.create({
   },
   macroItem: {
     alignItems: 'center',
+  },
+
+  // Trends section
+  periodSelector: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  periodButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+  },
+  periodButtonText: {
+    ...typography.smallMedium,
+    fontWeight: '600',
+  },
+  trendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  trendItem: {
+    flex: 1,
+  },
+  trendLabel: {
+    ...typography.caption,
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  trendValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  trendValue: {
+    ...typography.h4,
+    fontWeight: '700',
+  },
+  evolutionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    gap: 2,
+  },
+  evolutionText: {
+    ...typography.caption,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  trendMacrosRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  trendMacroItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  macroDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  trendMacroLabel: {
+    ...typography.caption,
+    fontSize: 10,
+  },
+  trendMacroValue: {
+    ...typography.smallMedium,
+    fontWeight: '600',
+  },
+  trendMacroEvolution: {
+    ...typography.caption,
+    fontSize: 9,
+    fontWeight: '500',
+  },
+  trendFooter: {
+    ...typography.caption,
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  noDataContainer: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  noDataText: {
+    ...typography.small,
+    textAlign: 'center',
   },
 
   // Insight bar
