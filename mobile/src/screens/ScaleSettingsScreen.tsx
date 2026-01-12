@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -18,9 +18,7 @@ import {
   Smartphone,
   RefreshCw,
   CheckCircle2,
-  XCircle,
   Info,
-  ChevronRight,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -33,11 +31,9 @@ import {
   isHealthAvailable,
   requestHealthPermissions,
   getWeightDataFromScale,
-  getLatestWeightFromScale,
   getCompatibleScales,
   getScaleSetupInstructions,
   type HealthPermissionStatus,
-  type ScaleWeightData,
 } from '../services/health-service'
 
 export default function ScaleSettingsScreen() {
@@ -240,25 +236,6 @@ export default function ScaleSettingsScreen() {
           </LinearGradient>
         </Card>
 
-        {/* Availability Warning */}
-        {isAvailable === false && (
-          <Card style={[styles.warningCard, { backgroundColor: colors.warning + '15' }]}>
-            <XCircle size={24} color={colors.warning} />
-            <View style={styles.warningContent}>
-              <Text style={[styles.warningTitle, { color: colors.warning }]}>
-                Non disponible en mode développement
-              </Text>
-              <Text style={[styles.warningText, { color: colors.text.secondary }]}>
-                {Platform.OS === 'ios'
-                  ? 'HealthKit nécessite un build de production. Cette fonctionnalité sera disponible dans l\'app publiée.'
-                  : 'Health Connect nécessite un build de production. Cette fonctionnalité sera disponible dans l\'app publiée.'}
-              </Text>
-              <Text style={[styles.warningHint, { color: colors.text.tertiary }]}>
-                En attendant, tu peux ajouter tes mesures manuellement dans l'onglet Progrès.
-              </Text>
-            </View>
-          </Card>
-        )}
 
         {/* Setup Instructions */}
         <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
@@ -436,30 +413,6 @@ const styles = StyleSheet.create({
   lastSyncText: {
     ...typography.small,
     marginTop: spacing.md,
-  },
-  warningCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-    padding: spacing.default,
-  },
-  warningContent: {
-    flex: 1,
-  },
-  warningTitle: {
-    ...typography.bodySemibold,
-    marginBottom: 4,
-  },
-  warningText: {
-    ...typography.small,
-    lineHeight: 18,
-  },
-  warningHint: {
-    ...typography.small,
-    lineHeight: 18,
-    marginTop: spacing.sm,
-    fontStyle: 'italic',
   },
   sectionTitle: {
     ...typography.bodyMedium,
