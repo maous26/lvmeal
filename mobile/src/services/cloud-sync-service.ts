@@ -137,11 +137,23 @@ export interface SyncStatus {
 
 export interface SyncQueueItem {
   id: string
-  type: 'profile' | 'weight' | 'meal' | 'gamification' | 'wellness'
+  type: 'profile' | 'weight' | 'meal' | 'gamification' | 'wellness' | 'feedback'
   action: 'upsert' | 'delete'
   data: unknown
   timestamp: string
   retries: number
+}
+
+export interface CloudFeedbackEntry {
+  id: string
+  user_id: string
+  feedback_type: 'paywall' | 'general'
+  response?: string        // For paywall: 'would_pay', 'not_now', etc.
+  reason?: string          // Optional custom reason
+  days_since_signup?: number
+  message?: string         // For general feedback
+  screen?: string
+  created_at: string
 }
 
 // Data returned when restoring from cloud
@@ -601,6 +613,39 @@ export async function syncWellness(date: string, data: Partial<CloudWellnessData
   }
 }
 
+/**
+ * Sync feedback to cloud (paywall or general feedback)
+ */
+export async function syncFeedback(data: Omit<CloudFeedbackEntry, 'user_id'>): Promise<boolean> {
+  const client = getSupabaseClient()
+  if (!client) return false
+
+  const userId = await getCloudUserId()
+  if (!userId) return false
+
+  try {
+    const { error } = await client
+      .from('feedbacks')
+      .upsert({
+        ...data,
+        user_id: userId,
+      }, {
+        onConflict: 'id',
+      })
+
+    if (error) {
+      console.error('[CloudSync] Feedback sync error:', error)
+      return false
+    }
+
+    console.log('[CloudSync] Feedback synced successfully:', data.feedback_type)
+    return true
+  } catch (error) {
+    console.error('[CloudSync] Feedback sync failed:', error)
+    return false
+  }
+}
+
 // ============================================================================
 // TRIAL MANAGEMENT - Anti-abuse protection
 // ============================================================================
@@ -799,6 +844,9 @@ export async function processSyncQueue(): Promise<void> {
           break
         case 'weight':
           success = await syncWeightEntry(item.data as WeightEntry)
+          break
+        case 'feedback':
+          success = await syncFeedback(item.data as Omit<CloudFeedbackEntry, 'user_id'>)
           break
         // Add other cases as needed
       }

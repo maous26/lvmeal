@@ -61,12 +61,15 @@ export const useFeedbackStore = create<FeedbackState>()(
       generalFeedbacks: [],
 
       submitPaywallFeedback: (response, reason, daysSinceSignup = 7) => {
+        const feedbackId = `paywall-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const timestamp = new Date().toISOString()
+
         const feedback: PaywallFeedback = {
-          id: `paywall-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: feedbackId,
           response,
           reason,
           daysSinceSignup,
-          timestamp: new Date().toISOString(),
+          timestamp,
         }
 
         set((state) => ({
@@ -76,11 +79,15 @@ export const useFeedbackStore = create<FeedbackState>()(
 
         // Sync to cloud for analytics
         addToSyncQueue({
-          type: 'profile', // Using profile type as it's already supported
+          type: 'feedback',
           action: 'upsert',
           data: {
-            feedbackType: 'paywall',
-            ...feedback,
+            id: feedbackId,
+            feedback_type: 'paywall',
+            response,
+            reason,
+            days_since_signup: daysSinceSignup,
+            created_at: timestamp,
           },
         })
 
@@ -88,12 +95,15 @@ export const useFeedbackStore = create<FeedbackState>()(
       },
 
       submitGeneralFeedback: (type, message, screen) => {
+        const feedbackId = `general-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        const timestamp = new Date().toISOString()
+
         const feedback: GeneralFeedback = {
-          id: `general-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: feedbackId,
           type,
           message,
           screen,
-          timestamp: new Date().toISOString(),
+          timestamp,
         }
 
         set((state) => ({
@@ -102,11 +112,15 @@ export const useFeedbackStore = create<FeedbackState>()(
 
         // Sync to cloud
         addToSyncQueue({
-          type: 'profile',
+          type: 'feedback',
           action: 'upsert',
           data: {
-            feedbackType: 'general',
-            ...feedback,
+            id: feedbackId,
+            feedback_type: 'general',
+            response: type, // bug, suggestion, question, other
+            message,
+            screen,
+            created_at: timestamp,
           },
         })
 
