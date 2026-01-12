@@ -492,6 +492,9 @@ export const useAuthStore = create<AuthState>()(
             const cloudProfile = data.profile.profile
             const cloudGoals = data.profile.nutrition_goals
 
+            // Preserve hasSeenCoachWelcome to avoid showing welcome message again on reconnect
+            const hasSeenCoachWelcome = userStore.hasSeenCoachWelcome
+
             if (cloudProfile && Object.keys(cloudProfile).length > 0) {
               console.log('[AuthStore] Applying cloud profile:', Object.keys(cloudProfile))
 
@@ -500,6 +503,11 @@ export const useAuthStore = create<AuthState>()(
                 ...cloudProfile,
                 onboardingCompleted: true,
               })
+
+              // Restore hasSeenCoachWelcome after setProfile (which doesn't preserve it)
+              if (hasSeenCoachWelcome) {
+                userStore.setHasSeenCoachWelcome(true)
+              }
 
               // If cloud has specific goals, apply them too
               if (cloudGoals) {
