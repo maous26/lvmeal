@@ -72,6 +72,7 @@ interface UserState {
   setProfile: (profile: Partial<UserProfile>) => void
   updateProfile: (updates: Partial<UserProfile>) => void
   clearProfile: () => void
+  setNutritionGoals: (goals: NutritionGoals | null) => void
   resetStore: () => void
   resetAllData: () => Promise<void> // Clear ALL app data (all stores)
   addWeightEntry: (entry: WeightEntry) => void
@@ -295,16 +296,21 @@ export const useUserStore = create<UserState>()(
       },
 
       setProfile: (profile) => {
+        // MERGE with existing profile instead of replacing
+        const currentProfile = get().profile || {}
+        const mergedProfile = { ...currentProfile, ...profile }
+
         console.log('[UserStore] setProfile called with:', {
           hasProfile: !!profile,
           keys: profile ? Object.keys(profile) : [],
           weight: profile?.weight,
           goal: profile?.goal,
           onboardingCompleted: profile?.onboardingCompleted,
+          mergedKeys: Object.keys(mergedProfile),
         })
         // ALWAYS recalculate using Mifflin-St Jeor + ISSN/ANSES formulas
         // This ensures consistency and uses the latest calculation method
-        const needs = calculateNutritionalNeeds(profile)
+        const needs = calculateNutritionalNeeds(mergedProfile)
         const goals = needs ? {
           calories: needs.calories,
           proteins: needs.proteins,
@@ -312,7 +318,7 @@ export const useUserStore = create<UserState>()(
           fats: needs.fats,
         } : null
         console.log('[UserStore] Calculated goals:', goals)
-        const finalProfile = { ...profile, nutritionalNeeds: needs || undefined }
+        const finalProfile = { ...mergedProfile, nutritionalNeeds: needs || undefined }
         // Preserve hasSeenCoachWelcome when setting profile (important for cloud restore)
         const currentHasSeenCoachWelcome = get().hasSeenCoachWelcome
         set({
@@ -370,6 +376,11 @@ export const useUserStore = create<UserState>()(
         // Note: On conserve hasSeenCoachWelcome pour éviter de réafficher le message de bienvenue
         // même si le profil est réinitialisé (cas de re-onboarding après inconsistent state)
         set({ profile: null, isOnboarded: false, weightHistory: [], nutritionGoals: null })
+      },
+
+      setNutritionGoals: (goals: NutritionGoals | null) => {
+        console.log('[UserStore] setNutritionGoals called with:', goals)
+        set({ nutritionGoals: goals })
       },
 
       resetStore: () => {

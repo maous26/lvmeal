@@ -482,41 +482,62 @@ export const useAuthStore = create<AuthState>()(
         set({ syncStatus: 'syncing', lastError: null })
 
         try {
+          // Wait for user-store to be hydrated before restoring cloud data
+          // This prevents race condition where cloud data overwrites local data
+          const userStore = useUserStore.getState()
+          if (!userStore._hasHydrated) {
+            console.log('[AuthStore] ⏳ Waiting for user-store hydration...')
+            await new Promise<void>((resolve) => {
+              const unsubscribe = useUserStore.subscribe((state) => {
+                if (state._hasHydrated) {
+                  unsubscribe()
+                  resolve()
+                }
+              })
+              // Timeout after 5 seconds to avoid infinite wait
+              setTimeout(() => {
+                unsubscribe()
+                resolve()
+              }, 5000)
+            })
+            console.log('[AuthStore] ✅ User-store hydrated, proceeding with restore')
+          }
+
           const data = await restoreFromCloud()
 
           if (data && data.profile) {
             console.log('[AuthStore] 📥 Restoring profile from cloud...')
 
-            // Apply profile data to user-store
-            const userStore = useUserStore.getState()
+            // Apply profile data to user-store (refresh reference after waiting)
+            const currentUserStore = useUserStore.getState()
             const cloudProfile = data.profile.profile
             const cloudGoals = data.profile.nutrition_goals
 
             // Preserve hasSeenCoachWelcome: use cloud value if true, or local value
-            const localHasSeenCoachWelcome = userStore.hasSeenCoachWelcome
+            const localHasSeenCoachWelcome = currentUserStore.hasSeenCoachWelcome
             const cloudHasSeenCoachWelcome = data.profile.has_seen_coach_welcome
 
             if (cloudProfile && Object.keys(cloudProfile).length > 0) {
               console.log('[AuthStore] Applying cloud profile:', Object.keys(cloudProfile))
 
               // Set profile (this will also recalculate nutritionGoals)
-              userStore.setProfile({
+              currentUserStore.setProfile({
                 ...cloudProfile,
                 onboardingCompleted: true,
               })
 
               // Restore hasSeenCoachWelcome: true if either local or cloud says true
               if (localHasSeenCoachWelcome || cloudHasSeenCoachWelcome) {
-                userStore.setHasSeenCoachWelcome(true)
+                currentUserStore.setHasSeenCoachWelcome(true)
               }
 
-              // If cloud has specific goals, apply them too
-              if (cloudGoals) {
+              // If cloud has specific goals that differ from calculated ones, apply them
+              if (cloudGoals && Object.keys(cloudGoals).length > 0) {
                 console.log('[AuthStore] Applying cloud nutrition goals:', cloudGoals)
-                // Goals are set via setProfile's calculateNutritionalNeeds
+                currentUserStore.setNutritionGoals(cloudGoals)
               }
 
-              userStore.setOnboarded(true)
+              currentUserStore.setOnboarded(true)
               console.log('[AuthStore] ✅ Profile restored from cloud')
             }
 
