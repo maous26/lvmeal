@@ -10,6 +10,8 @@ import Animated, {
   withDelay
 } from 'react-native-reanimated'
 import { useTheme } from '../../contexts/ThemeContext'
+import { blobPalettes } from '../../constants/theme'
+import { useUserStore } from '../../stores/user-store'
 
 const { width, height } = Dimensions.get('window')
 
@@ -90,52 +92,68 @@ export function AnimatedBackground({
   circleCount = 4, // kept for prop compatibility
   intensity = 0.08, // kept for prop compatibility
 }: AnimatedBackgroundProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
+  const blobPaletteId = useUserStore((s) => s.blobPalette)
+
+  // Get the selected palette (only applies in light mode)
+  // In dark mode, we use the theme's accent colors
+  const palette = isDark ? null : blobPalettes[blobPaletteId] || blobPalettes.default
+
+  // Determine blob colors based on mode and palette
+  const blobColors = isDark
+    ? {
+        topRight: colors.accent.primary,
+        middleLeft: colors.secondary.primary,
+        bottomRight: colors.warning,
+        topLeft: '#8B6914', // Dark mode pastel
+      }
+    : {
+        topRight: palette?.colors.topRight || colors.accent.primary,
+        middleLeft: palette?.colors.middleLeft || colors.secondary.primary,
+        bottomRight: palette?.colors.bottomRight || colors.warning,
+        topLeft: palette?.colors.topLeft || '#FFD8B1',
+      }
 
   // We use the curated blobs approach which is cleaner and more aesthetic than random circles
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Top Right - Sage Green glow */}
+      {/* Top Right blob */}
       <Blob
-        color={colors.accent.primary}
+        color={blobColors.topRight}
         size={width * 0.85}
         top={-width * 0.25}
         left={width * 0.35}
       />
 
-      {/* Middle Left - Terracotta/Coral glow */}
+      {/* Middle Left blob */}
       <Blob
-        color={colors.secondary.primary}
+        color={blobColors.middleLeft}
         size={width * 0.75}
         top={height * 0.25}
         left={-width * 0.35}
         delay={2000}
       />
 
-      {/* Bottom Right - Accent glow (Gold/Caramel) */}
+      {/* Bottom Right blob */}
       <Blob
-        color={colors.warning}
+        color={blobColors.bottomRight}
         size={width * 0.9}
         top={height * 0.65}
         left={width * 0.25}
         delay={1000}
       />
 
-      {/* New: Very Light Pastel Orange Touch - Top Leftish */}
+      {/* Top Left pastel touch */}
       <Blob
-        color="#FFD8B1"
+        color={blobColors.topLeft}
         size={width * 0.7}
         top={height * 0.1}
         left={-width * 0.1}
         delay={3000}
       />
 
-      {/* Overlay to diffuse everything. 
-                Original was 0.85 (hidden). 
-                Reduced to 0.4 to make orbs VERY visible as requested. 
-                Using bg.primary (cream) to blend.
-            */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg.primary, opacity: 0.4 }]} />
+      {/* Overlay to diffuse everything */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg.primary, opacity: isDark ? 0.5 : 0.3 }]} />
     </View>
   )
 }

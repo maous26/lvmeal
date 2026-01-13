@@ -33,6 +33,7 @@ import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore, useUserStoreHydration } from '../stores/user-store'
+import { useAuthStore } from '../stores/auth-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
@@ -196,6 +197,7 @@ export default function CoachScreen() {
 
   // User data
   const { profile, nutritionGoals, hasSeenCoachWelcome, setHasSeenCoachWelcome } = useUserStore()
+  const { syncStatus, userId } = useAuthStore((s) => ({ syncStatus: s.syncStatus, userId: s.userId }))
   const { getTodayData } = useMealsStore()
   const { currentStreak } = useGamificationStore()
   const { getPlaisirSuggestion } = useCaloricBankStore()
@@ -269,6 +271,16 @@ export default function CoachScreen() {
     setHasSeenCoachWelcome(true)
   }
 
+  // Auto-mark welcome as seen for returning users (restored from cloud)
+  // This prevents the welcome card from showing again after reinstall/reconnect
+  useEffect(() => {
+    if (isStoreHydrated && syncStatus === 'success' && userId && !hasSeenCoachWelcome && profile?.firstName) {
+      // User was restored from cloud - they're not a new user
+      console.log('[CoachScreen] Returning user detected, auto-marking welcome as seen')
+      setHasSeenCoachWelcome(true)
+    }
+  }, [isStoreHydrated, syncStatus, userId, hasSeenCoachWelcome, profile?.firstName, setHasSeenCoachWelcome])
+
   // Get active messages organized by priority
   const activeMessages = getActiveMessages()
   const unreadCount = getUnreadCount()
@@ -307,8 +319,8 @@ export default function CoachScreen() {
           </View>
         </View>
 
-        {/* Welcome Card - shown only once after onboarding (wait for store hydration) */}
-        {isStoreHydrated && !hasSeenCoachWelcome && profile?.firstName && (
+        {/* Welcome Card - shown only once after onboarding (wait for store hydration and cloud sync) */}
+        {isStoreHydrated && !hasSeenCoachWelcome && profile?.firstName && syncStatus !== 'syncing' && (
           <WelcomeCard
             firstName={profile.firstName}
             onDismiss={handleDismissWelcome}

@@ -16,7 +16,6 @@ import Animated, {
   withRepeat,
   withSequence,
   Easing,
-  interpolate,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -107,83 +106,82 @@ const SmallBlob = ({
   )
 }
 
-// Animated timeline item
-const TimelineItem = ({
+// Animated benefit card with reveal animation
+const AnimatedBenefitCard = ({
   icon,
   title,
   description,
   color,
   index,
-  isLast
+  textColor,
+  textColorMuted,
 }: {
   icon: React.ReactNode
   title: string
   description: string
   color: string
   index: number
-  isLast: boolean
+  textColor: string
+  textColorMuted: string
 }) => {
   const opacity = useSharedValue(0)
-  const translateX = useSharedValue(-20)
-  const lineHeight = useSharedValue(0)
-  const dotScale = useSharedValue(0)
+  const translateY = useSharedValue(20)
+  const iconScale = useSharedValue(1)
+  const iconTranslateY = useSharedValue(0)
 
   useEffect(() => {
-    const baseDelay = 300 + index * 150
+    // Cascade delay - 100ms between each card
+    const baseDelay = 300 + index * 100
 
-    // Fade in and slide
-    opacity.value = withDelay(baseDelay, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }))
-    translateX.value = withDelay(baseDelay, withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }))
+    // Fade in and slide up (reveal effect)
+    opacity.value = withDelay(baseDelay, withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) }))
+    translateY.value = withDelay(baseDelay, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }))
 
-    // Dot pulse
-    dotScale.value = withDelay(baseDelay, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
+    // Icon float animation - subtle continuous movement
+    iconTranslateY.value = withDelay(baseDelay + 300, withRepeat(
+      withSequence(
+        withTiming(-3, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(3, { duration: 1500, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    ))
 
-    // Line draws down (if not last)
-    if (!isLast) {
-      lineHeight.value = withDelay(baseDelay + 200, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
-    }
+    // Icon subtle pulse
+    iconScale.value = withDelay(baseDelay + 300, withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    ))
   }, [])
 
-  const containerStyle = useAnimatedStyle(() => ({
+  const cardStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateX: translateX.value }]
+    transform: [{ translateY: translateY.value }]
   }))
 
-  const dotStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: dotScale.value }]
-  }))
-
-  const lineStyle = useAnimatedStyle(() => ({
-    height: interpolate(lineHeight.value, [0, 1], [0, 32]),
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: iconScale.value },
+      { translateY: iconTranslateY.value }
+    ]
   }))
 
   return (
-    <View style={styles.timelineItem}>
-      {/* Timeline connector */}
-      <View style={styles.timelineConnector}>
-        <Animated.View style={[styles.timelineDot, dotStyle, { backgroundColor: color }]}>
-          <View style={[styles.timelineDotInner, { backgroundColor: color + '30' }]} />
-        </Animated.View>
-        {!isLast && (
-          <Animated.View style={[styles.timelineLine, lineStyle, { backgroundColor: color + '40' }]} />
-        )}
-      </View>
-
-      {/* Content */}
-      <Animated.View style={[styles.timelineContent, containerStyle]}>
-        <View style={[styles.timelineIconContainer, { backgroundColor: color + '15' }]}>
-          {icon}
-        </View>
-        <View style={styles.timelineTextContainer}>
-          <Text style={[styles.timelineTitle, { color: organicPalette.stone }]}>
-            {title}
-          </Text>
-          <Text style={[styles.timelineDescription, { color: organicPalette.stone + '99' }]}>
-            {description}
-          </Text>
-        </View>
+    <Animated.View style={[styles.benefitCard, cardStyle]}>
+      <Animated.View style={[styles.benefitIconContainer, iconStyle, { backgroundColor: color + '15' }]}>
+        {icon}
       </Animated.View>
-    </View>
+      <Text style={[styles.benefitTitle, { color: textColor }]}>
+        {title}
+      </Text>
+      <Text style={[styles.benefitDescription, { color: textColorMuted }]}>
+        {description}
+      </Text>
+    </Animated.View>
   )
 }
 
@@ -193,9 +191,9 @@ interface OnboardingHeroProps {
 }
 
 export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
-  const offWhite = '#FAF9F7'
+  const bgColor = colors.bg.primary
   const safeBottom = Math.min(insets.bottom, 8)
   const footerHeight = 44 + safeBottom
 
@@ -245,7 +243,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   ]
 
   return (
-    <View style={[styles.container, { backgroundColor: offWhite }]}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Floating blobs background - smaller than main screens */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <SmallBlob
@@ -284,7 +282,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(250,249,247,0.2)', 'rgba(250,249,247,0.8)', offWhite]}
+            colors={['transparent', isDark ? 'rgba(26,26,26,0.2)' : 'rgba(250,249,247,0.2)', isDark ? 'rgba(26,26,26,0.8)' : 'rgba(250,249,247,0.8)', bgColor]}
             locations={[0, 0.4, 0.7, 1]}
             style={styles.imageOverlay}
           />
@@ -298,8 +296,8 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         <Animated.View style={[styles.content, mainStyle]}>
           {/* Brand with leaf accent */}
           <View style={styles.brandContainer}>
-            <Leaf size={14} color={organicPalette.sage} strokeWidth={1.5} />
-            <Text style={[styles.brandName, { color: organicPalette.moss }]}>
+            <Leaf size={14} color={colors.accent.primary} strokeWidth={1.5} />
+            <Text style={[styles.brandName, { color: colors.accent.primary }]}>
               LYM
             </Text>
           </View>
@@ -311,9 +309,9 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
           {/* Elegant divider */}
           <View style={styles.dividerContainer}>
-            <View style={[styles.dividerLine, { backgroundColor: organicPalette.sage + '40' }]} />
-            <View style={[styles.dividerDot, { backgroundColor: organicPalette.sage }]} />
-            <View style={[styles.dividerLine, { backgroundColor: organicPalette.sage + '40' }]} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.accent.primary + '40' }]} />
+            <View style={[styles.dividerDot, { backgroundColor: colors.accent.primary }]} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.accent.primary + '40' }]} />
           </View>
 
           {/* Subheadline */}
@@ -321,17 +319,18 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             Un compagnon qui s'adapte à toi,{'\n'}sans pression, sans jugement.
           </Text>
 
-          {/* Timeline Benefits */}
-          <View style={styles.timelineContainer}>
+          {/* Benefits Grid - 2x2 */}
+          <View style={styles.benefitsGrid}>
             {benefits.map((benefit, index) => (
-              <TimelineItem
+              <AnimatedBenefitCard
                 key={benefit.id}
                 icon={benefit.icon}
                 title={benefit.title}
                 description={benefit.description}
                 color={benefit.color}
                 index={index}
-                isLast={index === benefits.length - 1}
+                textColor={colors.text.primary}
+                textColorMuted={colors.text.secondary}
               />
             ))}
           </View>
@@ -339,7 +338,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
       </ScrollView>
 
       {/* CTA footer */}
-      <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: offWhite }]}>
+      <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: bgColor }]}>
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.03)']}
           style={styles.footerShadow}
@@ -472,65 +471,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
-  // Timeline
-  timelineContainer: {
+  // Benefits Grid
+  benefitsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginTop: spacing.sm,
+    marginHorizontal: -spacing.xs,
   },
-  timelineItem: {
-    flexDirection: 'row',
-    minHeight: 56,
+  benefitCard: {
+    width: '50%',
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.md,
   },
-  timelineConnector: {
-    width: 24,
-    alignItems: 'center',
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  benefitIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    marginBottom: spacing.xs,
   },
-  timelineDotInner: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    position: 'absolute',
-  },
-  timelineLine: {
-    width: 2,
-    marginTop: 4,
-    borderRadius: 1,
-  },
-  timelineContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingBottom: spacing.md,
-    marginLeft: spacing.sm,
-  },
-  timelineIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timelineTextContainer: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    paddingTop: 2,
-  },
-  timelineTitle: {
-    fontSize: 15,
+  benefitTitle: {
+    fontSize: 14,
     fontFamily: fonts.sans.semibold,
     letterSpacing: 0.2,
+    marginBottom: 2,
   },
-  timelineDescription: {
-    fontSize: 13,
+  benefitDescription: {
+    fontSize: 12,
     fontFamily: fonts.sans.regular,
-    marginTop: 2,
+    lineHeight: 16,
   },
   // Footer
   footer: {

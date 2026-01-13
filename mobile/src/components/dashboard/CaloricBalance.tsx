@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { View, Text, StyleSheet, Pressable, ScrollView, Modal, SafeAreaView } from 'react-native'
+import { View, Text, StyleSheet, Pressable, ScrollView, Modal, TouchableOpacity } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Gift, TrendingUp, Calendar, Info, X, Check, Heart } from 'lucide-react-native'
 import { Card } from '../ui/Card'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { colors, radius, spacing, typography } from '../../constants/theme'
+import { useTheme } from '../../contexts/ThemeContext'
+import { radius, spacing, typography } from '../../constants/theme'
 
 interface DailyBalance {
   day: string
@@ -42,6 +44,7 @@ export function CaloricBalance({
   isFirstTimeSetup = false,
   onConfirmStart,
 }: CaloricBalanceProps) {
+  const { colors } = useTheme()
   const [showInfoModal, setShowInfoModal] = useState(false)
 
   const maxDailyVariance = Math.round(dailyTarget * MAX_VARIANCE_PERCENT)
@@ -77,7 +80,7 @@ export function CaloricBalance({
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Gift size={20} color={colors.accent.primary} />
-            <Text style={styles.title}>Solde Plaisir</Text>
+            <Text style={[styles.title, { color: colors.text.primary }]}>Solde Plaisir</Text>
             <Pressable onPress={() => setShowInfoModal(true)} style={styles.infoButton}>
               <Info size={16} color={colors.text.tertiary} />
             </Pressable>
@@ -89,72 +92,82 @@ export function CaloricBalance({
 
         {/* First time setup banner */}
         {isFirstTimeSetup && (
-          <View style={styles.setupBanner}>
+          <View style={[styles.setupBanner, { backgroundColor: colors.accent.light }]}>
             <View style={styles.setupContent}>
               <Gift size={20} color={colors.accent.primary} />
               <View style={styles.setupText}>
-                <Text style={styles.setupTitle}>Ton cycle plaisir commence !</Text>
-                <Text style={styles.setupSubtitle}>Economise 200 kcal pour debloquer un bonus repas des le jour 3</Text>
+                <Text style={[styles.setupTitle, { color: colors.text.primary }]}>Ton cycle plaisir commence !</Text>
+                <Text style={[styles.setupSubtitle, { color: colors.text.tertiary }]}>Economise 200 kcal pour debloquer un bonus repas des le jour 3</Text>
               </View>
             </View>
-            <Button
-              variant="primary"
-              size="sm"
+            <TouchableOpacity
               onPress={onConfirmStart || (() => {})}
-              icon={<Check size={16} color="#FFFFFF" />}
+              style={{
+                backgroundColor: colors.accent.primary,
+                paddingVertical: spacing.sm,
+                paddingHorizontal: spacing.md,
+                borderRadius: radius.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+              }}
+              activeOpacity={0.8}
             >
-              C'est parti !
-            </Button>
+              <Check size={16} color="#FFFFFF" />
+              <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600' }}>
+                C'est parti !
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
         {/* Credit display */}
         <View style={styles.creditDisplay}>
-          <Text style={styles.creditLabel}>Solde disponible</Text>
+          <Text style={[styles.creditLabel, { color: colors.text.tertiary }]}>Solde disponible</Text>
           <View style={styles.creditValue}>
-            <Text style={styles.creditNumber}>{formatNumber(Math.max(0, availableCredit))}</Text>
-            <Text style={styles.creditUnit}>kcal</Text>
+            <Text style={[styles.creditNumber, { color: colors.accent.primary }]}>{formatNumber(Math.max(0, availableCredit))}</Text>
+            <Text style={[styles.creditUnit, { color: colors.text.secondary }]}>kcal</Text>
           </View>
-          <Text style={styles.creditMax}>sur {formatNumber(maxCredit)} kcal max possible</Text>
+          <Text style={[styles.creditMax, { color: colors.text.tertiary }]}>sur {formatNumber(maxCredit)} kcal max possible</Text>
         </View>
 
         {/* Credit gauge */}
         <View style={styles.gaugeContainer}>
-          <View style={styles.gaugeTrack}>
+          <View style={[styles.gaugeTrack, { backgroundColor: colors.bg.tertiary }]}>
             <View
               style={[
                 styles.gaugeFill,
-                { width: `${Math.min(creditPercentage, 100)}%` }
+                { width: `${Math.min(creditPercentage, 100)}%`, backgroundColor: colors.accent.primary }
               ]}
             />
           </View>
           <View style={styles.gaugeLabels}>
-            <Text style={styles.gaugeLabel}>0</Text>
-            <Text style={styles.gaugeLabel}>{formatNumber(Math.round(maxCredit / 2))}</Text>
-            <Text style={styles.gaugeLabel}>{formatNumber(maxCredit)}</Text>
+            <Text style={[styles.gaugeLabel, { color: colors.text.tertiary }]}>0</Text>
+            <Text style={[styles.gaugeLabel, { color: colors.text.tertiary }]}>{formatNumber(Math.round(maxCredit / 2))}</Text>
+            <Text style={[styles.gaugeLabel, { color: colors.text.tertiary }]}>{formatNumber(maxCredit)}</Text>
           </View>
         </View>
 
         {/* Info box */}
         <View style={styles.infoBox}>
-          <View style={styles.infoBoxIcon}>
+          <View style={[styles.infoBoxIcon, { backgroundColor: colors.success }]}>
             <Gift size={16} color="#FFFFFF" />
           </View>
           <View style={styles.infoBoxContent}>
-            <Text style={styles.infoBoxTitle}>1 a 2 repas plaisir par semaine</Text>
-            <Text style={styles.infoBoxText}>
+            <Text style={[styles.infoBoxTitle, { color: colors.text.primary }]}>1 a 2 repas plaisir par semaine</Text>
+            <Text style={[styles.infoBoxText, { color: colors.text.secondary }]}>
               Des le jour 3 avec 200 kcal economisees, ajoute jusqu'a +600 kcal bonus sur un repas.
             </Text>
           </View>
         </View>
 
         {/* Next cycle info */}
-        <View style={styles.cycleInfo}>
+        <View style={[styles.cycleInfo, { borderTopColor: colors.border.light }]}>
           <View style={styles.cycleInfoLeft}>
             <Calendar size={16} color={colors.text.tertiary} />
             <View>
-              <Text style={styles.cycleInfoTitle}>Nouveau cycle</Text>
-              <Text style={styles.cycleInfoSubtitle}>
+              <Text style={[styles.cycleInfoTitle, { color: colors.text.secondary }]}>Nouveau cycle</Text>
+              <Text style={[styles.cycleInfoSubtitle, { color: colors.text.tertiary }]}>
                 {daysUntilNewWeek > 0
                   ? `Dans ${daysUntilNewWeek} jour${daysUntilNewWeek > 1 ? 's' : ''}`
                   : 'Demain'
@@ -175,15 +188,15 @@ export function CaloricBalance({
         presentationStyle="pageSheet"
         onRequestClose={() => setShowInfoModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHandle} />
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.bg.primary }]}>
+          <View style={[styles.modalHandle, { backgroundColor: colors.border.default }]} />
 
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderLeft}>
-              <View style={styles.modalIcon}>
+              <View style={[styles.modalIcon, { backgroundColor: colors.accent.primary }]}>
                 <Gift size={20} color="#FFFFFF" />
               </View>
-              <Text style={styles.modalTitle}>Solde Plaisir</Text>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Solde Plaisir</Text>
             </View>
             <Pressable onPress={() => setShowInfoModal(false)} style={styles.modalClose}>
               <X size={20} color={colors.text.tertiary} />
@@ -192,39 +205,39 @@ export function CaloricBalance({
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* What is it */}
-            <View style={styles.modalSection}>
+            <View style={[styles.modalSection, { backgroundColor: colors.bg.secondary }]}>
               <View style={styles.modalSectionHeader}>
                 <Heart size={20} color={colors.accent.primary} />
-                <Text style={styles.modalSectionTitle}>Le principe</Text>
+                <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Le principe</Text>
               </View>
-              <Text style={styles.modalSectionText}>
+              <Text style={[styles.modalSectionText, { color: colors.text.secondary }]}>
                 Economise des calories au quotidien et debloque jusqu'a 2 bonus repas par semaine !
               </Text>
-              <View style={styles.modalExample}>
-                <Text style={styles.modalExampleText}>
+              <View style={[styles.modalExample, { backgroundColor: colors.bg.tertiary }]}>
+                <Text style={[styles.modalExampleText, { color: colors.text.tertiary }]}>
                   Des 200 kcal economisees (a partir du jour 3), ajoute jusqu'a
-                  <Text style={styles.modalExampleHighlight}> +600 kcal bonus</Text> sur un repas de ton choix.
+                  <Text style={[styles.modalExampleHighlight, { color: colors.success }]}> +600 kcal bonus</Text> sur un repas de ton choix.
                 </Text>
               </View>
             </View>
 
             {/* How it works */}
-            <View style={styles.modalSection}>
+            <View style={[styles.modalSection, { backgroundColor: colors.bg.secondary }]}>
               <View style={styles.modalSectionHeader}>
-                <TrendingUp size={20} color="#10B981" />
-                <Text style={styles.modalSectionTitle}>Comment ca marche</Text>
+                <TrendingUp size={20} color={colors.success} />
+                <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Comment ca marche</Text>
               </View>
               <View style={styles.stepsList}>
-                <Text style={styles.stepItem}>
-                  <Text style={styles.stepNumber}>1. </Text>
+                <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
+                  <Text style={[styles.stepNumber, { color: colors.success }]}>1. </Text>
                   Mange legerement sous ton objectif pour accumuler des calories
                 </Text>
-                <Text style={styles.stepItem}>
-                  <Text style={styles.stepNumber}>2. </Text>
+                <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
+                  <Text style={[styles.stepNumber, { color: colors.success }]}>2. </Text>
                   A partir du jour 3 et 200 kcal economisees : bonus debloque !
                 </Text>
-                <Text style={styles.stepItem}>
-                  <Text style={styles.stepNumber}>3. </Text>
+                <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
+                  <Text style={[styles.stepNumber, { color: colors.success }]}>3. </Text>
                   Ajoute jusqu'a +600 kcal sur un repas, jusqu'a 2 fois par semaine
                 </Text>
               </View>
@@ -233,13 +246,13 @@ export function CaloricBalance({
             {/* Plaisir day */}
             <View style={[styles.modalSection, styles.plaisirSection]}>
               <View style={styles.modalSectionHeader}>
-                <Gift size={20} color="#10B981" />
-                <Text style={styles.modalSectionTitle}>Ton bonus repas</Text>
+                <Gift size={20} color={colors.success} />
+                <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Ton bonus repas</Text>
               </View>
-              <Text style={styles.modalSectionText}>
+              <Text style={[styles.modalSectionText, { color: colors.text.secondary }]}>
                 Le bonus s'ajoute aux calories de ton repas normal. Par exemple : diner prevu 600 kcal + bonus 400 kcal = 1000 kcal au total.
               </Text>
-              <Text style={styles.plaisirHint}>
+              <Text style={[styles.plaisirHint, { color: colors.text.tertiary }]}>
                 Choisis quelque chose qui te fait vraiment envie !
               </Text>
             </View>
@@ -273,7 +286,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   infoButton: {
     padding: spacing.xs,
@@ -286,7 +298,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
-    backgroundColor: colors.accent.light,
     borderRadius: radius.lg,
     marginBottom: spacing.default,
     gap: spacing.md,
@@ -302,11 +313,9 @@ const styles = StyleSheet.create({
   },
   setupTitle: {
     ...typography.smallMedium,
-    color: colors.text.primary,
   },
   setupSubtitle: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   setupButtonText: {
     ...typography.smallMedium,
@@ -319,7 +328,6 @@ const styles = StyleSheet.create({
   },
   creditLabel: {
     ...typography.small,
-    color: colors.text.tertiary,
     marginBottom: spacing.xs,
   },
   creditValue: {
@@ -329,16 +337,13 @@ const styles = StyleSheet.create({
   creditNumber: {
     fontSize: 40,
     fontWeight: '700',
-    color: colors.accent.primary,
   },
   creditUnit: {
     fontSize: 18,
-    color: colors.text.secondary,
     marginLeft: spacing.xs,
   },
   creditMax: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: spacing.xs,
   },
   gaugeContainer: {
@@ -346,13 +351,11 @@ const styles = StyleSheet.create({
   },
   gaugeTrack: {
     height: 16,
-    backgroundColor: colors.bg.tertiary,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
   gaugeFill: {
     height: '100%',
-    backgroundColor: colors.accent.primary,
     borderRadius: radius.full,
   },
   gaugeLabels: {
@@ -362,7 +365,6 @@ const styles = StyleSheet.create({
   },
   gaugeLabel: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   infoBox: {
     flexDirection: 'row',
@@ -376,7 +378,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: radius.md,
-    backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -385,11 +386,9 @@ const styles = StyleSheet.create({
   },
   infoBoxTitle: {
     ...typography.smallMedium,
-    color: colors.text.primary,
   },
   infoBoxText: {
     ...typography.caption,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   cycleInfo: {
@@ -398,7 +397,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: spacing.default,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
   },
   cycleInfoLeft: {
     flexDirection: 'row',
@@ -407,11 +405,9 @@ const styles = StyleSheet.create({
   },
   cycleInfoTitle: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   cycleInfoSubtitle: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   dayBadgeText: {
     ...typography.caption,
@@ -419,12 +415,10 @@ const styles = StyleSheet.create({
   // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.bg.primary,
   },
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border.default,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: spacing.md,
@@ -446,13 +440,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.lg,
-    backgroundColor: colors.accent.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalTitle: {
     ...typography.h4,
-    color: colors.text.primary,
   },
   modalClose: {
     padding: spacing.sm,
@@ -463,7 +455,6 @@ const styles = StyleSheet.create({
   },
   modalSection: {
     padding: spacing.default,
-    backgroundColor: colors.bg.secondary,
     borderRadius: radius.lg,
     marginBottom: spacing.default,
   },
@@ -475,25 +466,20 @@ const styles = StyleSheet.create({
   },
   modalSectionTitle: {
     ...typography.bodyMedium,
-    color: colors.text.primary,
   },
   modalSectionText: {
     ...typography.small,
-    color: colors.text.secondary,
     lineHeight: 20,
   },
   modalExample: {
     marginTop: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.bg.tertiary,
     borderRadius: radius.md,
   },
   modalExampleText: {
     ...typography.caption,
-    color: colors.text.tertiary,
   },
   modalExampleHighlight: {
-    color: colors.success,
     fontWeight: '500',
   },
   stepsList: {
@@ -501,10 +487,9 @@ const styles = StyleSheet.create({
   },
   stepItem: {
     ...typography.small,
-    color: colors.text.secondary,
   },
   stepNumber: {
-    color: colors.success,
+    fontWeight: '500',
   },
   plaisirSection: {
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -513,7 +498,6 @@ const styles = StyleSheet.create({
   },
   plaisirHint: {
     ...typography.caption,
-    color: colors.text.tertiary,
     marginTop: spacing.sm,
   },
   modalFooter: {

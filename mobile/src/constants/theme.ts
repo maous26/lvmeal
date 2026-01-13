@@ -247,6 +247,62 @@ export const darkColors = {
 export const colors = lightColors
 
 // =============================================================================
+// BLOB COLOR PALETTES - Thèmes visuels pour le background animé (Light mode only)
+// =============================================================================
+export type BlobPaletteId = 'default' | 'sunset' | 'ocean'
+
+export interface BlobPalette {
+  id: BlobPaletteId
+  name: string
+  description: string
+  colors: {
+    topRight: string      // Top right blob
+    middleLeft: string    // Middle left blob
+    bottomRight: string   // Bottom right blob
+    topLeft: string       // Top left blob (pastel touch)
+  }
+}
+
+export const blobPalettes: Record<BlobPaletteId, BlobPalette> = {
+  // Default - Uses theme accent colors (current behavior)
+  default: {
+    id: 'default',
+    name: 'Nature',
+    description: 'Vert mousse et terre cuite',
+    colors: {
+      topRight: '#4A6741',     // Moss green (accent.primary)
+      middleLeft: '#C87863',   // Terracotta (secondary.primary)
+      bottomRight: '#D4A574',  // Caramel (warning)
+      topLeft: '#FFD8B1',      // Pastel orange
+    },
+  },
+  // Sunset - Warm coral and peach tones
+  sunset: {
+    id: 'sunset',
+    name: 'Sunset',
+    description: 'Corail et pêche dorée',
+    colors: {
+      topRight: '#E8A87C',     // Peach coral
+      middleLeft: '#D4788C',   // Rose pink
+      bottomRight: '#F5C77E',  // Golden yellow
+      topLeft: '#FFE4D6',      // Light peach
+    },
+  },
+  // Ocean - Cool blue and turquoise tones
+  ocean: {
+    id: 'ocean',
+    name: 'Ocean',
+    description: 'Bleu océan et turquoise',
+    colors: {
+      topRight: '#5B9AA0',     // Teal blue
+      middleLeft: '#7FB3D5',   // Sky blue
+      bottomRight: '#A8D8EA',  // Light turquoise
+      topLeft: '#E0F4F1',      // Mint cream
+    },
+  },
+}
+
+// =============================================================================
 // SHADOWS - Teintes organiques vertes/terreuses
 // =============================================================================
 export const shadows = {

@@ -20,7 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows, fonts, organicPalette } from '../../constants/theme'
+import { spacing, radius, typography, fonts } from '../../constants/theme'
 import { MockHomePreview } from './MockHomePreview'
 import { Button } from '../ui/Button'
 
@@ -48,8 +48,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   const insets = useSafeAreaInsets()
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const offWhite = '#FAF9F7'
-  const overlayMid = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(250,249,247,0.3)'
+  const bgColor = colors.bg.primary
+  const overlayMid = isDark ? 'rgba(26,26,26,0.5)' : 'rgba(250,249,247,0.3)'
   const purple = colors.nutrients.fats
 
   const benefits: BenefitSlide[] = [
@@ -140,7 +140,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           </LinearGradient>
         )}
         <LinearGradient
-          colors={['transparent', overlayMid, offWhite]}
+          colors={['transparent', overlayMid, bgColor]}
           locations={[0, 0.5, 1]}
           style={styles.imageOverlay}
         />
@@ -162,7 +162,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: offWhite }]}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Header with skip */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -216,7 +216,7 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
             handleNext()
           }}
           style={{
-            backgroundColor: organicPalette.moss,
+            backgroundColor: colors.accent.primary,
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
             borderRadius: radius.lg,

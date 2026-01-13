@@ -36,7 +36,7 @@ import * as Haptics from 'expo-haptics'
 
 import { Card, Button, AnimatedBackground } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, fonts } from '../constants/theme'
+import { spacing, typography, radius, fonts, blobPalettes, type BlobPaletteId } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
@@ -114,7 +114,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>()
   const { colors, isDark, toggleTheme } = useTheme()
-  const { profile, nutritionGoals, resetStore, updateProfile, notificationPreferences, updateNotificationPreferences } = useUserStore()
+  const { profile, nutritionGoals, resetStore, updateProfile, notificationPreferences, updateNotificationPreferences, blobPalette, setBlobPalette } = useUserStore()
   const {
     isEnrolled: isMetabolicEnrolled,
     enroll: enrollMetabolic,
@@ -597,6 +597,50 @@ export default function ProfileScreen() {
               ios_backgroundColor={colors.bg.tertiary}
             />
           </View>
+
+          {/* Blob Palette Selector - Only in light mode */}
+          {!isDark && (
+            <View style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light, flexDirection: 'column', alignItems: 'stretch' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md }}>
+                <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(122, 158, 126, 0.15)' }]}>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.accent.primary }} />
+                </View>
+                <Text style={[styles.settingLabel, { flex: 1, color: colors.text.primary }]}>Thème couleurs</Text>
+              </View>
+              <View style={styles.paletteGrid}>
+                {(Object.keys(blobPalettes) as BlobPaletteId[]).map((paletteId) => {
+                  const palette = blobPalettes[paletteId]
+                  const isSelected = blobPalette === paletteId
+                  return (
+                    <TouchableOpacity
+                      key={paletteId}
+                      style={[
+                        styles.paletteItem,
+                        { borderColor: isSelected ? colors.accent.primary : colors.border.light },
+                        isSelected && { backgroundColor: colors.accent.light },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setBlobPalette(paletteId)
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.paletteColors}>
+                        <View style={[styles.paletteColorDot, { backgroundColor: palette.colors.topRight }]} />
+                        <View style={[styles.paletteColorDot, { backgroundColor: palette.colors.middleLeft }]} />
+                        <View style={[styles.paletteColorDot, { backgroundColor: palette.colors.bottomRight }]} />
+                        <View style={[styles.paletteColorDot, { backgroundColor: palette.colors.topLeft }]} />
+                      </View>
+                      <Text style={[styles.paletteName, { color: isSelected ? colors.accent.primary : colors.text.primary }]}>
+                        {palette.name}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+            </View>
+          )}
+
           <SettingItem
             icon={<Shield size={20} color={colors.text.secondary} />}
             label="Confidentialité"
@@ -944,5 +988,31 @@ const styles = StyleSheet.create({
   progressLinkSubtitle: {
     ...typography.small,
     marginTop: 2,
+  },
+  // Palette Selector
+  paletteGrid: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  paletteItem: {
+    flex: 1,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  paletteColors: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  paletteColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  paletteName: {
+    ...typography.caption,
+    fontWeight: '600',
   },
 })

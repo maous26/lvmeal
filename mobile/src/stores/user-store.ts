@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { UserProfile, NutritionalNeeds, WeightEntry, NutritionInfo } from '../types'
+import type { BlobPaletteId } from '../constants/theme'
 import { LymIABrain, type UserContext } from '../services/lymia-brain'
 import { addToSyncQueue } from '../services/cloud-sync-service'
 
@@ -67,6 +68,7 @@ interface UserState {
   nutritionGoals: NutritionGoals | null
   lastRAGUpdate: string | null // Track when RAG last calculated needs
   notificationPreferences: NotificationPreferences
+  blobPalette: BlobPaletteId // Blob color palette preference (light mode only)
 
   // Actions
   setProfile: (profile: Partial<UserProfile>) => void
@@ -88,6 +90,8 @@ interface UserState {
   recalculateNutritionGoals: () => void
   // Notification preferences
   updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void
+  // Blob palette preference
+  setBlobPalette: (palette: BlobPaletteId) => void
 }
 
 // Mifflin-St Jeor BMR calculation (more accurate than Harris-Benedict)
@@ -294,6 +298,7 @@ export const useUserStore = create<UserState>()(
         coachProactiveEnabled: true,
         lastNotificationDate: null,
       },
+      blobPalette: 'default',
 
       setProfile: (profile) => {
         // MERGE with existing profile instead of replacing
@@ -545,6 +550,10 @@ export const useUserStore = create<UserState>()(
           },
         }))
       },
+
+      setBlobPalette: (palette: BlobPaletteId) => {
+        set({ blobPalette: palette })
+      },
     }),
     {
       name: 'presence-user',
@@ -557,6 +566,7 @@ export const useUserStore = create<UserState>()(
         nutritionGoals: state.nutritionGoals,
         lastRAGUpdate: state.lastRAGUpdate,
         notificationPreferences: state.notificationPreferences,
+        blobPalette: state.blobPalette,
       }),
       onRehydrateStorage: () => (state, error) => {
         hasHydrated = true

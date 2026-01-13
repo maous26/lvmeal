@@ -136,7 +136,7 @@ export function OnboardingLayout({
   loading = false,
   showProgress = true,
 }: OnboardingLayoutProps) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
 
   const progress = ((step) / (totalSteps - 1)) * 100
@@ -261,7 +261,7 @@ export function OnboardingLayout({
             activeOpacity={0.8}
             style={[
               styles.nextButton,
-              { backgroundColor: nextDisabled ? '#CCCCCC' : colors.accent.primary },
+              { backgroundColor: nextDisabled ? (isDark ? '#444444' : '#CCCCCC') : colors.accent.primary },
               !nextDisabled && shadows.glowPrimary,
             ]}
           >
