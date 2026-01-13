@@ -35,6 +35,8 @@ import {
   ChevronDown,
   ChevronUp,
   Settings2,
+  Trash2,
+  Send,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -453,6 +455,123 @@ function NutritionSummary({ nutrition, foodCount }: { nutrition: NutritionInfo; 
   )
 }
 
+// Type for captured photos
+interface CapturedPhoto {
+  id: string
+  uri: string
+  base64: string
+}
+
+// Photo thumbnail strip component for multi-photo mode
+function PhotoThumbnailStrip({
+  photos,
+  onRemove,
+}: {
+  photos: CapturedPhoto[]
+  onRemove: (id: string) => void
+}) {
+  if (photos.length === 0) return null
+
+  return (
+    <View style={thumbnailStyles.container}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={thumbnailStyles.scrollContent}
+      >
+        {photos.map((photo, index) => (
+          <View key={photo.id} style={thumbnailStyles.thumbnailWrapper}>
+            <Image source={{ uri: photo.uri }} style={thumbnailStyles.thumbnail} />
+            <TouchableOpacity
+              style={thumbnailStyles.removeButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                onRemove(photo.id)
+              }}
+            >
+              <X size={12} color="#FFF" strokeWidth={3} />
+            </TouchableOpacity>
+            <View style={thumbnailStyles.indexBadge}>
+              <Text style={thumbnailStyles.indexText}>{index + 1}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+      <View style={thumbnailStyles.countBadge}>
+        <Camera size={14} color={PASTEL.greenDark} />
+        <Text style={thumbnailStyles.countText}>{photos.length} photo{photos.length > 1 ? 's' : ''}</Text>
+      </View>
+    </View>
+  )
+}
+
+const thumbnailStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 140,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.md,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.xs,
+    gap: spacing.sm,
+  },
+  thumbnailWrapper: {
+    position: 'relative',
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: PASTEL.greenDark,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#E17055',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indexBadge: {
+    position: 'absolute',
+    bottom: -4,
+    left: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: PASTEL.greenDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indexText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  countBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: radius.full,
+    gap: spacing.xs,
+  },
+  countText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: PASTEL.greenDark,
+  },
+})
+
 export default function PhotoFoodScanner({
   visible,
   onClose,
@@ -461,6 +580,7 @@ export default function PhotoFoodScanner({
   const [permission, requestPermission] = useCameraPermissions()
   const [facing, setFacing] = useState<CameraType>('back')
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([]) // Multi-photo mode
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analyzedFoods, setAnalyzedFoods] = useState<AnalyzedFood[]>([])
   const [mealTitle, setMealTitle] = useState<string | null>(null) // AI-generated meal title
@@ -476,6 +596,7 @@ export default function PhotoFoodScanner({
 
   const resetState = () => {
     setCapturedImage(null)
+    setCapturedPhotos([])
     setAnalyzedFoods([])
     setMealTitle(null)
     setSelectedFoods(new Set())
@@ -488,9 +609,24 @@ export default function PhotoFoodScanner({
     imageOpacityAnim.setValue(1)
   }
 
+  const removePhoto = (id: string) => {
+    setCapturedPhotos(prev => prev.filter(p => p.id !== id))
+  }
+
   const handleClose = () => {
     resetState()
     onClose()
+  }
+
+  // Add photo to collection (multi-photo mode)
+  const addPhotoToCollection = (uri: string, base64: string) => {
+    const newPhoto: CapturedPhoto = {
+      id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      uri,
+      base64,
+    }
+    setCapturedPhotos(prev => [...prev, newPhoto])
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
   }
 
   const takePicture = async () => {
@@ -504,9 +640,9 @@ export default function PhotoFoodScanner({
         base64: true,
       })
 
-      if (photo?.base64) {
-        setCapturedImage(`data:image/jpeg;base64,${photo.base64}`)
-        await analyzeImage(photo.base64)
+      if (photo?.base64 && photo?.uri) {
+        // Add to collection instead of immediate analysis
+        addPhotoToCollection(photo.uri, photo.base64)
       }
     } catch (err) {
       console.error('Error taking picture:', err)
@@ -521,16 +657,36 @@ export default function PhotoFoodScanner({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
       base64: true,
+      allowsMultipleSelection: true, // Allow multiple photos from gallery
     })
 
-    if (!result.canceled && result.assets[0]?.base64) {
-      const imageUri = result.assets[0].uri
-      setCapturedImage(imageUri)
-      await analyzeImage(result.assets[0].base64)
+    if (!result.canceled && result.assets.length > 0) {
+      // Add all selected photos to collection
+      result.assets.forEach(asset => {
+        if (asset.base64 && asset.uri) {
+          addPhotoToCollection(asset.uri, asset.base64)
+        }
+      })
     }
   }
 
-  const analyzeImage = async (base64: string) => {
+  // Analyze all captured photos
+  const analyzeAllPhotos = async () => {
+    if (capturedPhotos.length === 0) {
+      setError('Prends au moins une photo')
+      return
+    }
+
+    // Use the first photo as the displayed image
+    setCapturedImage(capturedPhotos[0].uri)
+
+    // Combine all base64 images for analysis
+    const allBase64 = capturedPhotos.map(p => p.base64)
+    await analyzeImages(allBase64)
+  }
+
+  // Analyze multiple images
+  const analyzeImages = async (base64Images: string[]) => {
     const hasKey = await hasOpenAIApiKey()
     if (!hasKey) {
       Alert.alert(
@@ -546,13 +702,26 @@ export default function PhotoFoodScanner({
     const startTime = Date.now()
 
     // Track scan started
-    analytics.track('photo_scan_started')
+    analytics.track('photo_scan_started', { photo_count: base64Images.length })
 
     try {
-      const result = await analyzeFood(base64)
+      // Analyze each image and combine results
+      const allFoods: AnalyzedFood[] = []
+      let combinedMealTitle: string | null = null
+
+      for (const base64 of base64Images) {
+        const result = await analyzeFood(base64)
+        if (result.success && result.foods.length > 0) {
+          allFoods.push(...result.foods)
+          if (!combinedMealTitle && result.mealTitle) {
+            combinedMealTitle = result.mealTitle
+          }
+        }
+      }
+
       const durationMs = Date.now() - startTime
 
-      if (result.success && result.foods.length > 0) {
+      if (allFoods.length > 0) {
         // Animate image transition
         Animated.parallel([
           Animated.timing(imageScaleAnim, {
@@ -563,27 +732,35 @@ export default function PhotoFoodScanner({
           }),
         ]).start()
 
-        setAnalyzedFoods(result.foods)
-        setMealTitle(result.mealTitle || null)
-        setSelectedFoods(new Set(result.foods.map((_, i) => i)))
+        // Deduplicate foods by name (keep the one with higher confidence)
+        const uniqueFoods = allFoods.reduce((acc, food) => {
+          const existing = acc.find(f => f.name.toLowerCase() === food.name.toLowerCase())
+          if (!existing) {
+            acc.push(food)
+          } else if (food.confidence > existing.confidence) {
+            const idx = acc.indexOf(existing)
+            acc[idx] = food
+          }
+          return acc
+        }, [] as AnalyzedFood[])
+
+        setAnalyzedFoods(uniqueFoods)
+        setMealTitle(combinedMealTitle || `Repas (${base64Images.length} photos)`)
+        setSelectedFoods(new Set(uniqueFoods.map((_, i) => i)))
         setShowResults(true)
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
         // Track success
         analytics.trackAIFeature('photo_scan', true, durationMs, {
-          foods_count: result.foods.length,
+          foods_count: uniqueFoods.length,
+          photos_count: base64Images.length,
         })
-      } else if (result.foods.length === 0) {
-        setError('Aucun aliment détecté dans cette image')
+      } else {
+        setError('Aucun aliment détecté dans les images')
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
         analytics.trackAIFeature('photo_scan', false, durationMs, {
           error_type: 'no_foods_detected',
-        })
-      } else {
-        setError(result.error || "Erreur lors de l'analyse")
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-        analytics.trackAIFeature('photo_scan', false, durationMs, {
-          error_type: 'analysis_failed',
+          photos_count: base64Images.length,
         })
       }
     } catch (err) {
@@ -593,11 +770,13 @@ export default function PhotoFoodScanner({
       errorReporting.captureFeatureError('photo_scan', err)
       analytics.trackAIFeature('photo_scan', false, durationMs, {
         error_type: 'exception',
+        photos_count: base64Images.length,
       })
     } finally {
       setIsAnalyzing(false)
     }
   }
+
 
   const toggleFoodSelection = (index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -731,10 +910,15 @@ export default function PhotoFoodScanner({
               <View style={styles.instructions}>
                 <BlurView intensity={50} tint="dark" style={styles.instructionBlur}>
                   <Text style={styles.instructionText}>
-                    Cadre ton repas dans le viseur
+                    {capturedPhotos.length === 0
+                      ? 'Prends plusieurs photos de ton repas'
+                      : `${capturedPhotos.length} photo${capturedPhotos.length > 1 ? 's' : ''} - Continue ou lance l'analyse`}
                   </Text>
                 </BlurView>
               </View>
+
+              {/* Photo thumbnails strip */}
+              <PhotoThumbnailStrip photos={capturedPhotos} onRemove={removePhoto} />
 
               {/* Controls */}
               <View style={styles.controls}>
@@ -755,7 +939,20 @@ export default function PhotoFoodScanner({
                   </LinearGradient>
                 </TouchableOpacity>
 
-                <View style={styles.galleryButton} />
+                {/* Analyze button - appears when photos are taken */}
+                {capturedPhotos.length > 0 ? (
+                  <TouchableOpacity style={styles.analyzeButton} onPress={analyzeAllPhotos}>
+                    <LinearGradient
+                      colors={['#F59E0B', '#D97706']}
+                      style={styles.analyzeGradient}
+                    >
+                      <Send size={20} color="#FFFFFF" />
+                      <Text style={styles.analyzeButtonText}>Analyser</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.galleryButton} />
+                )}
               </View>
             </View>
           </>
@@ -1398,6 +1595,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  analyzeButton: {
+    borderRadius: 27,
+    overflow: 'hidden',
+  },
+  analyzeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 6,
+    minWidth: 54,
+    height: 54,
+    borderRadius: 27,
+  },
+  analyzeButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   permissionContainer: {
     flex: 1,
