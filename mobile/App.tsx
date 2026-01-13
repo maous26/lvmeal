@@ -42,6 +42,7 @@ import { analytics } from './src/services/analytics-service'
 import { errorReporting } from './src/services/error-reporting-service'
 import { lymInsights } from './src/services/lym-insights-service'
 import { configureGoogleSignIn } from './src/services/google-auth-service'
+import { requestHealthPermissions, isHealthAvailable } from './src/services/health-service'
 
 // Initialize Sentry
 Sentry.init({
@@ -111,6 +112,17 @@ export default Sentry.wrap(function App() {
         // Initialize notifications
         const notificationsEnabled = await requestNotificationPermissions()
         console.log('[App] Notifications enabled:', notificationsEnabled)
+
+        // Request HealthKit permissions early (Apple recommends this)
+        // This ensures the permission popup appears reliably
+        const healthAvailable = await isHealthAvailable()
+        if (healthAvailable) {
+          console.log('[App] HealthKit available, requesting permissions...')
+          const healthPerms = await requestHealthPermissions()
+          console.log('[App] HealthKit permissions:', JSON.stringify(healthPerms))
+        } else {
+          console.log('[App] HealthKit not available on this device')
+        }
 
         // Initialize Super Agent daily insight service
         if (notificationsEnabled) {
