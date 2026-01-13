@@ -308,9 +308,9 @@ export default function CoachScreen() {
         </View>
 
         {/* Welcome Card - shown only once after onboarding (wait for store hydration) */}
-        {isStoreHydrated && !hasSeenCoachWelcome && (
+        {isStoreHydrated && !hasSeenCoachWelcome && profile?.firstName && (
           <WelcomeCard
-            firstName={profile?.firstName || 'toi'}
+            firstName={profile.firstName}
             onDismiss={handleDismissWelcome}
             colors={colors}
           />
