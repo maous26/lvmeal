@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,9 +7,17 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  Animated,
-  Easing,
 } from 'react-native'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withRepeat,
+  withSequence,
+  Easing,
+  interpolate,
+} from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -22,9 +30,162 @@ import {
   Leaf,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, fonts, organicPalette } from '../../constants/theme'
+import { spacing, radius, fonts, organicPalette } from '../../constants/theme'
 
 const { width, height } = Dimensions.get('window')
+
+// Small floating blob for background
+const SmallBlob = ({
+  color,
+  size,
+  top,
+  left,
+  delay = 0
+}: {
+  color: string
+  size: number
+  top: number
+  left: number
+  delay?: number
+}) => {
+  const scale = useSharedValue(1)
+  const translateY = useSharedValue(0)
+  const translateX = useSharedValue(0)
+
+  useEffect(() => {
+    scale.value = withDelay(delay, withRepeat(
+      withSequence(
+        withTiming(1.15, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.95, { duration: 6000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    ))
+
+    translateY.value = withDelay(delay, withRepeat(
+      withSequence(
+        withTiming(-15, { duration: 7000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(15, { duration: 7000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    ))
+
+    translateX.value = withDelay(delay, withRepeat(
+      withSequence(
+        withTiming(10, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-10, { duration: 8000, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      true
+    ))
+  }, [])
+
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value },
+      { translateY: translateY.value },
+      { translateX: translateX.value }
+    ]
+  }))
+
+  return (
+    <Animated.View
+      style={[
+        styles.smallBlob,
+        style,
+        {
+          backgroundColor: color,
+          width: size,
+          height: size,
+          top,
+          left,
+          borderRadius: size / 2,
+        }
+      ]}
+    />
+  )
+}
+
+// Animated timeline item
+const TimelineItem = ({
+  icon,
+  title,
+  description,
+  color,
+  index,
+  isLast
+}: {
+  icon: React.ReactNode
+  title: string
+  description: string
+  color: string
+  index: number
+  isLast: boolean
+}) => {
+  const opacity = useSharedValue(0)
+  const translateX = useSharedValue(-20)
+  const lineHeight = useSharedValue(0)
+  const dotScale = useSharedValue(0)
+
+  useEffect(() => {
+    const baseDelay = 300 + index * 150
+
+    // Fade in and slide
+    opacity.value = withDelay(baseDelay, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }))
+    translateX.value = withDelay(baseDelay, withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }))
+
+    // Dot pulse
+    dotScale.value = withDelay(baseDelay, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
+
+    // Line draws down (if not last)
+    if (!isLast) {
+      lineHeight.value = withDelay(baseDelay + 200, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
+    }
+  }, [])
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }]
+  }))
+
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: dotScale.value }]
+  }))
+
+  const lineStyle = useAnimatedStyle(() => ({
+    height: interpolate(lineHeight.value, [0, 1], [0, 32]),
+  }))
+
+  return (
+    <View style={styles.timelineItem}>
+      {/* Timeline connector */}
+      <View style={styles.timelineConnector}>
+        <Animated.View style={[styles.timelineDot, dotStyle, { backgroundColor: color }]}>
+          <View style={[styles.timelineDotInner, { backgroundColor: color + '30' }]} />
+        </Animated.View>
+        {!isLast && (
+          <Animated.View style={[styles.timelineLine, lineStyle, { backgroundColor: color + '40' }]} />
+        )}
+      </View>
+
+      {/* Content */}
+      <Animated.View style={[styles.timelineContent, containerStyle]}>
+        <View style={[styles.timelineIconContainer, { backgroundColor: color + '15' }]}>
+          {icon}
+        </View>
+        <View style={styles.timelineTextContainer}>
+          <Text style={[styles.timelineTitle, { color: organicPalette.stone }]}>
+            {title}
+          </Text>
+          <Text style={[styles.timelineDescription, { color: organicPalette.stone + '99' }]}>
+            {description}
+          </Text>
+        </View>
+      </Animated.View>
+    </View>
+  )
+}
 
 interface OnboardingHeroProps {
   onGetStarted: () => void
@@ -32,34 +193,25 @@ interface OnboardingHeroProps {
 }
 
 export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroProps) {
-  const { colors, isDark } = useTheme()
+  const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const offWhite = '#FAF9F7'
-  const cream = '#F8F6F1'
-  // Reduce footer height to avoid cutting content - cap insets for large safe area devices
   const safeBottom = Math.min(insets.bottom, 8)
   const footerHeight = 44 + safeBottom
 
-  // Smooth fade-in animation
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(30)).current
+  // Main content animation
+  const mainOpacity = useSharedValue(0)
+  const mainTranslateY = useSharedValue(20)
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 900,
-        easing: Easing.bezier(0.4, 0, 0.2, 1),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 900,
-        easing: Easing.bezier(0.4, 0, 0.2, 1),
-        useNativeDriver: true,
-      }),
-    ]).start()
+    mainOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) })
+    mainTranslateY.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
   }, [])
+
+  const mainStyle = useAnimatedStyle(() => ({
+    opacity: mainOpacity.value,
+    transform: [{ translateY: mainTranslateY.value }]
+  }))
 
   const benefits = [
     {
@@ -87,19 +239,38 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
       id: 'smart',
       icon: <Brain size={18} color={organicPalette.ocean} strokeWidth={1.5} />,
       title: 'Intelligent',
-      description: 'Coach IA',
+      description: 'Coach IA personnel',
       color: organicPalette.ocean,
     },
   ]
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        { backgroundColor: offWhite },
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: offWhite }]}>
+      {/* Floating blobs background - smaller than main screens */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <SmallBlob
+          color={organicPalette.sage}
+          size={width * 0.35}
+          top={height * 0.08}
+          left={width * 0.65}
+          delay={0}
+        />
+        <SmallBlob
+          color={organicPalette.clay}
+          size={width * 0.28}
+          top={height * 0.55}
+          left={-width * 0.1}
+          delay={1500}
+        />
+        <SmallBlob
+          color={organicPalette.lavender}
+          size={width * 0.25}
+          top={height * 0.75}
+          left={width * 0.7}
+          delay={800}
+        />
+      </View>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: footerHeight + spacing.xl }]}
@@ -112,13 +283,11 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             style={styles.heroImage}
             resizeMode="cover"
           />
-          {/* Multi-layer gradient for depth */}
           <LinearGradient
             colors={['transparent', 'rgba(250,249,247,0.2)', 'rgba(250,249,247,0.8)', offWhite]}
             locations={[0, 0.4, 0.7, 1]}
             style={styles.imageOverlay}
           />
-          {/* Subtle vignette effect */}
           <LinearGradient
             colors={['rgba(0,0,0,0.1)', 'transparent', 'transparent']}
             style={styles.vignetteTop}
@@ -126,7 +295,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         </View>
 
         {/* Content */}
-        <View style={styles.content}>
+        <Animated.View style={[styles.content, mainStyle]}>
           {/* Brand with leaf accent */}
           <View style={styles.brandContainer}>
             <Leaf size={14} color={organicPalette.sage} strokeWidth={1.5} />
@@ -135,7 +304,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             </Text>
           </View>
 
-          {/* Main headline - serif luxury */}
+          {/* Main headline */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
             Retrouve le plaisir{'\n'}de bien manger
           </Text>
@@ -152,31 +321,25 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             Un compagnon qui s'adapte à toi,{'\n'}sans pression, sans jugement.
           </Text>
 
-          {/* Benefits Grid 2x2 - Premium cards */}
-          <View style={styles.benefitsGrid}>
-            {benefits.map((benefit) => (
-              <View
+          {/* Timeline Benefits */}
+          <View style={styles.timelineContainer}>
+            {benefits.map((benefit, index) => (
+              <TimelineItem
                 key={benefit.id}
-                style={[styles.benefitCard, { backgroundColor: cream }]}
-              >
-                <View style={[styles.benefitIcon, { backgroundColor: benefit.color + '12' }]}>
-                  {benefit.icon}
-                </View>
-                <Text style={[styles.benefitTitle, { color: colors.text.primary }]}>
-                  {benefit.title}
-                </Text>
-                <Text style={[styles.benefitDescription, { color: colors.text.tertiary }]}>
-                  {benefit.description}
-                </Text>
-              </View>
+                icon={benefit.icon}
+                title={benefit.title}
+                description={benefit.description}
+                color={benefit.color}
+                index={index}
+                isLast={index === benefits.length - 1}
+              />
             ))}
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
 
-      {/* Premium CTA footer - limit bottom padding for devices with large safe areas */}
+      {/* CTA footer */}
       <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: offWhite }]}>
-        {/* Subtle top shadow */}
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.03)']}
           style={styles.footerShadow}
@@ -219,7 +382,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
           </TouchableOpacity>
         )}
       </View>
-    </Animated.View>
+    </View>
   )
 }
 
@@ -233,6 +396,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
+  // Small blobs
+  smallBlob: {
+    position: 'absolute',
+    opacity: 0.25,
+  },
+  // Image
   imageContainer: {
     height: Math.min(height * 0.38, 320),
     position: 'relative',
@@ -255,6 +424,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: 80,
   },
+  // Content
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: 0,
@@ -300,44 +470,69 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans.regular,
     lineHeight: 24,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  benefitsGrid: {
+  // Timeline
+  timelineContainer: {
+    marginTop: spacing.sm,
+  },
+  timelineItem: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    minHeight: 56,
   },
-  benefitCard: {
-    width: (width - spacing.xl * 2 - spacing.sm) / 2,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.lg,
+  timelineConnector: {
+    width: 24,
     alignItems: 'center',
-    // Premium subtle shadow via border
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
   },
-  benefitIcon: {
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  timelineDotInner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    position: 'absolute',
+  },
+  timelineLine: {
+    width: 2,
+    marginTop: 4,
+    borderRadius: 1,
+  },
+  timelineContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingBottom: spacing.md,
+    marginLeft: spacing.sm,
+  },
+  timelineIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xs,
   },
-  benefitTitle: {
-    fontSize: 13,
+  timelineTextContainer: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    paddingTop: 2,
+  },
+  timelineTitle: {
+    fontSize: 15,
     fontFamily: fonts.sans.semibold,
     letterSpacing: 0.2,
-    marginBottom: 2,
-    textAlign: 'center',
   },
-  benefitDescription: {
-    fontSize: 11,
+  timelineDescription: {
+    fontSize: 13,
     fontFamily: fonts.sans.regular,
-    textAlign: 'center',
-    letterSpacing: 0.1,
+    marginTop: 2,
   },
+  // Footer
   footer: {
     position: 'absolute',
     left: 0,
@@ -361,7 +556,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     borderRadius: radius.lg,
     gap: spacing.sm,
-    // Premium shadow
     shadowColor: organicPalette.moss,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
