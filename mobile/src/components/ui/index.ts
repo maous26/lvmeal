@@ -1,4 +1,5 @@
 // UI Components
+export { AnimatedBackground } from './AnimatedBackground'
 export { Button } from './Button'
 export { Card } from './Card'
 export { Badge } from './Badge'

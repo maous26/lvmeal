@@ -37,7 +37,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 import * as Haptics from 'expo-haptics'
 
-import { Card } from '../components/ui'
+import { Card, AnimatedBackground } from '../components/ui'
 import { GlassCard } from '../components/ui/GlassCard'
 import { LiquidProgress } from '../components/dashboard/LiquidProgress'
 import {
@@ -459,6 +459,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+      <AnimatedBackground circleCount={4} intensity={0.06} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

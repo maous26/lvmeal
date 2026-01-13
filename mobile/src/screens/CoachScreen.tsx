@@ -43,6 +43,7 @@ import {
   type LymiaMessage,
 } from '../services/message-center'
 import { CoachMessageCard } from '../components/coach'
+import { AnimatedBackground } from '../components/ui'
 
 // ============= WELCOME CARD COMPONENT =============
 
@@ -70,7 +71,7 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
 
       {/* Welcome message */}
       <Text style={[welcomeStyles.greeting, { color: colors.accent.primary }]}>
-        Salut {firstName} !
+        Bonjour {firstName}
       </Text>
       <Text style={[welcomeStyles.title, { color: colors.text.primary }]}>
         Bienvenue sur LYM
@@ -282,6 +283,7 @@ export default function CoachScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+      <AnimatedBackground circleCount={4} intensity={0.06} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

@@ -34,7 +34,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
-import { Card, Button } from '../components/ui'
+import { Card, Button, AnimatedBackground } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -313,6 +313,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+      <AnimatedBackground circleCount={4} intensity={0.06} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
