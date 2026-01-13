@@ -162,6 +162,16 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
     return new Promise((resolve) => {
       try {
         const permissions = getHealthKitPermissions()
+        console.log('[HealthService] Requesting HealthKit permissions:', JSON.stringify(permissions))
+        console.log('[HealthService] AppleHealthKit available:', !!AppleHealthKit)
+        console.log('[HealthService] initHealthKit function:', !!AppleHealthKit?.initHealthKit)
+
+        if (!AppleHealthKit?.initHealthKit) {
+          console.log('[HealthService] initHealthKit not available')
+          resolve(result)
+          return
+        }
+
         AppleHealthKit.initHealthKit(permissions, (error: any) => {
           if (error) {
             console.log('[HealthService] HealthKit init error:', error)
@@ -169,6 +179,7 @@ export async function requestHealthPermissions(): Promise<HealthPermissionStatus
             return
           }
 
+          console.log('[HealthService] HealthKit init SUCCESS - permissions granted')
           // HealthKit doesn't tell us which specific permissions were granted
           // We assume all were granted if init succeeded
           resolve({

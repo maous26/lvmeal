@@ -64,23 +64,43 @@ export default function ScaleSettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
     try {
+      // Check availability first
+      const available = await isHealthAvailable()
+      if (!available) {
+        Alert.alert(
+          'Apple Santé non disponible',
+          'Vérifie que l\'app Santé est installée et activée sur ton iPhone.',
+          [{ text: 'OK' }]
+        )
+        setIsLoading(false)
+        return
+      }
+
       const result = await requestHealthPermissions()
+      console.log('[ScaleSettings] Permission result:', JSON.stringify(result))
       setPermissions(result)
 
       if (result.weight) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        toast.success('Connexion réussie !')
         // Auto-sync after connecting
         await handleSync()
+      } else if (!result.isAvailable) {
+        Alert.alert(
+          'Connexion impossible',
+          'La connexion à Apple Santé a échoué. Réessaie ou vérifie les paramètres de ton iPhone.',
+          [{ text: 'OK' }]
+        )
       } else {
         Alert.alert(
           'Permissions requises',
-          'Autorise l\'accès au poids dans les paramètres de ton téléphone.',
+          'Pour synchroniser ton poids, va dans Réglages > Santé > Accès aux données > LYM et active "Poids".',
           [{ text: 'OK' }]
         )
       }
     } catch (error) {
       console.error('Connection error:', error)
-      toast.error('Impossible de se connecter. Reessayez.')
+      toast.error('Erreur de connexion. Réessaie.')
     } finally {
       setIsLoading(false)
     }
