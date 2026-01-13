@@ -19,19 +19,32 @@ const Blob = ({ color, size, top, left, delay = 0 }: { color: string, size: numb
     const translateX = useSharedValue(0)
 
     useEffect(() => {
+        // More fluid breathing animation
         scale.value = withDelay(delay, withRepeat(
             withSequence(
-                withTiming(1.2, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-                withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+                withTiming(1.3, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
+                withTiming(1, { duration: 8000, easing: Easing.inOut(Easing.sin) })
             ),
             -1,
             true
         ))
 
+        // Vertical floating - increased range
         translateY.value = withDelay(delay, withRepeat(
             withSequence(
-                withTiming(-30, { duration: 5000, easing: Easing.inOut(Easing.quad) }),
-                withTiming(0, { duration: 5000, easing: Easing.inOut(Easing.quad) })
+                withTiming(-50, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
+                withTiming(20, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
+                withTiming(-20, { duration: 9000, easing: Easing.inOut(Easing.sin) })
+            ),
+            -1,
+            true
+        ))
+
+        // Horizontal floating - added for fluidity
+        translateX.value = withDelay(delay, withRepeat(
+            withSequence(
+                withTiming(30, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
+                withTiming(-30, { duration: 11000, easing: Easing.inOut(Easing.sin) })
             ),
             -1,
             true
@@ -87,7 +100,7 @@ export const BackgroundOrbs = () => {
                 delay={2000}
             />
 
-            {/* Bottom Right - Accent glow (Gold) */}
+            {/* Bottom Right - Accent glow (Gold/Caramel) */}
             <Blob
                 color={colors.warning}
                 size={width * 0.9}
@@ -96,8 +109,17 @@ export const BackgroundOrbs = () => {
                 delay={1000}
             />
 
-            {/* Overlay to diffuse everything */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg.primary, opacity: 0.85 }]} />
+            {/* New: Very Light Pastel Orange Touch */}
+            <Blob
+                color="#FFD8B1"
+                size={width * 0.6}
+                top={height * 0.15}
+                left={width * 0.1}
+                delay={3000}
+            />
+
+            {/* Overlay to diffuse everything - Reduced opacity to make orbs more visible */}
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.bg.primary, opacity: 0.6 }]} />
         </View>
     )
 }
@@ -105,6 +127,6 @@ export const BackgroundOrbs = () => {
 const styles = StyleSheet.create({
     blob: {
         position: 'absolute',
-        opacity: 0.6,
+        opacity: 0.6, // Kept at 0.6 but overlay reduced, making effective opacity higher
     }
 })
