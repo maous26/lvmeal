@@ -204,8 +204,22 @@ export default function CoachScreen() {
 
   // Generate messages on mount/refresh
   const generateMessages = useCallback(() => {
+    // Guard: ne pas générer de messages si les stores ne sont pas hydratés
+    if (!isStoreHydrated) {
+      console.log('[CoachScreen] Stores not hydrated yet, skipping message generation')
+      return
+    }
+
     const todayData = getTodayData()
-    const plaisirInfo = getPlaisirSuggestion()
+
+    // Récupérer plaisirInfo avec valeurs par défaut sécurisées
+    // (évite crash si le store n'est pas encore prêt)
+    let plaisirInfo = { available: false, maxPerMeal: 0, remainingPlaisirMeals: 0, budget: 0, suggestion: '', requiresSplit: false }
+    try {
+      plaisirInfo = getPlaisirSuggestion() || plaisirInfo
+    } catch (e) {
+      console.warn('[CoachScreen] Error getting plaisir suggestion:', e)
+    }
 
     // Calculer les pourcentages
     const proteinsPercent = nutritionGoals?.proteins
@@ -244,12 +258,15 @@ export default function CoachScreen() {
 
     // Ajouter les messages (le cooldown empêche les doublons)
     newMessages.forEach(msg => addMessage(msg))
-  }, [getTodayData, nutritionGoals, currentStreak, getPlaisirSuggestion, preferences, addMessage])
+  }, [isStoreHydrated, getTodayData, nutritionGoals, currentStreak, getPlaisirSuggestion, preferences, addMessage])
 
+  // Générer les messages seulement quand les stores sont hydratés
   useEffect(() => {
-    clearExpired()
-    generateMessages()
-  }, [])
+    if (isStoreHydrated) {
+      clearExpired()
+      generateMessages()
+    }
+  }, [isStoreHydrated, clearExpired, generateMessages])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
