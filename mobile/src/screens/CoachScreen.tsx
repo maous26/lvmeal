@@ -193,11 +193,10 @@ export default function CoachScreen() {
 
   const isStoreHydrated = isUserStoreHydrated && isMealsStoreHydrated && isGamificationStoreHydrated && isCaloricBankStoreHydrated
 
-  // MessageCenter - only subscribe to what we need for rendering
+  // MessageCenter - subscribe to messages array to trigger re-renders on changes
+  const messages = useMessageCenter((s) => s.messages)
   const markAsRead = useMessageCenter((s) => s.markAsRead)
   const dismiss = useMessageCenter((s) => s.dismiss)
-  const getActiveMessages = useMessageCenter((s) => s.getActiveMessages)
-  const getUnreadCount = useMessageCenter((s) => s.getUnreadCount)
 
   // User data - use individual selectors for stable references
   const profile = useUserStore((s) => s.profile)
@@ -304,10 +303,20 @@ export default function CoachScreen() {
     }
   }, [isStoreHydrated, syncStatus, userId, hasSeenCoachWelcome, profile?.firstName, setHasSeenCoachWelcome])
 
-  // Get active messages organized by priority
-  // GUARD: Only access MessageCenter data after stores are hydrated to prevent crashes
-  const activeMessages = isStoreHydrated ? getActiveMessages() : []
-  const unreadCount = isStoreHydrated ? getUnreadCount() : 0
+  // Compute active messages from the messages array (reactive to changes)
+  const activeMessages = React.useMemo(() => {
+    if (!isStoreHydrated) return []
+    const now = new Date().toISOString()
+    return messages.filter((m) => {
+      if (m.dismissed) return false
+      if (m.expiresAt && m.expiresAt < now) return false
+      return true
+    })
+  }, [isStoreHydrated, messages])
+
+  const unreadCount = React.useMemo(() => {
+    return activeMessages.filter(m => !m.read).length
+  }, [activeMessages])
 
   // Organize by type for sections
   const alerts = activeMessages.filter(m => m.type === 'alert' || m.priority === 'P0')
