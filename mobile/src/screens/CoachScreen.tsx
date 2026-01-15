@@ -5,7 +5,7 @@
  * Affiche tous les messages du système avec priorité visuelle.
  */
 
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useState, Component, ErrorInfo, ReactNode } from 'react'
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Modal,
+  Alert,
 } from 'react-native'
 import {
   Sparkles,
@@ -175,9 +176,63 @@ const welcomeStyles = StyleSheet.create({
   },
 })
 
+// ============= ERROR BOUNDARY =============
+
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+  errorInfo: string
+}
+
+class CoachErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null, errorInfo: '' }
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    const errorDetails = `${error.name}: ${error.message}\n\nStack: ${error.stack}\n\nComponent Stack: ${errorInfo.componentStack}`
+    this.setState({ errorInfo: errorDetails })
+    // Log pour debug - visible dans Console.app
+    console.error('[CoachScreen CRASH]', errorDetails)
+    // Afficher une alerte avec l'erreur pour debug
+    Alert.alert(
+      'Erreur Coach Screen',
+      `${error.name}: ${error.message}\n\nVoir les logs pour plus de détails.`,
+      [{ text: 'OK' }]
+    )
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+            Oups, une erreur s'est produite
+          </Text>
+          <Text style={{ fontSize: 12, color: '#666', textAlign: 'center' }}>
+            {this.state.error?.message || 'Erreur inconnue'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.setState({ hasError: false, error: null })}
+            style={{ marginTop: 20, padding: 10, backgroundColor: '#007AFF', borderRadius: 8 }}
+          >
+            <Text style={{ color: 'white' }}>Réessayer</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      )
+    }
+    return this.props.children
+  }
+}
+
 // ============= MAIN COMPONENT =============
 
-export default function CoachScreen() {
+function CoachScreenContent() {
   const { colors, isDark } = useTheme()
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
@@ -515,3 +570,13 @@ const styles = StyleSheet.create({
     height: 40,
   },
 })
+
+// ============= EXPORT WITH ERROR BOUNDARY =============
+
+export default function CoachScreen() {
+  return (
+    <CoachErrorBoundary>
+      <CoachScreenContent />
+    </CoachErrorBoundary>
+  )
+}
