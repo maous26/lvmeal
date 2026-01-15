@@ -15,6 +15,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from 'react-native'
 import {
   Sparkles,
@@ -34,9 +35,9 @@ import { useTheme } from '../contexts/ThemeContext'
 import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore, useUserStoreHydration } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
-import { useMealsStore } from '../stores/meals-store'
-import { useGamificationStore } from '../stores/gamification-store'
-import { useCaloricBankStore } from '../stores/caloric-bank-store'
+import { useMealsStore, useMealsStoreHydration } from '../stores/meals-store'
+import { useGamificationStore, useGamificationStoreHydration } from '../stores/gamification-store'
+import { useCaloricBankStore, useCaloricBankStoreHydration } from '../stores/caloric-bank-store'
 import {
   useMessageCenter,
   generateDailyMessages,
@@ -182,8 +183,15 @@ export default function CoachScreen() {
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
   const priorityConfig = getPriorityConfig(isDark)
-  // Use the real store hydration state instead of a timer
-  const isStoreHydrated = useUserStoreHydration()
+
+  // Wait for ALL stores to be hydrated before rendering/generating messages
+  // This prevents crashes when accessing store data before AsyncStorage rehydration
+  const isUserStoreHydrated = useUserStoreHydration()
+  const isMealsStoreHydrated = useMealsStoreHydration()
+  const isGamificationStoreHydrated = useGamificationStoreHydration()
+  const isCaloricBankStoreHydrated = useCaloricBankStoreHydration()
+
+  const isStoreHydrated = isUserStoreHydrated && isMealsStoreHydrated && isGamificationStoreHydrated && isCaloricBankStoreHydrated
 
   // MessageCenter
   const messages = useMessageCenter((s) => s.messages)
@@ -299,8 +307,9 @@ export default function CoachScreen() {
   }, [isStoreHydrated, syncStatus, userId, hasSeenCoachWelcome, profile?.firstName, setHasSeenCoachWelcome])
 
   // Get active messages organized by priority
-  const activeMessages = getActiveMessages()
-  const unreadCount = getUnreadCount()
+  // GUARD: Only access MessageCenter data after stores are hydrated to prevent crashes
+  const activeMessages = isStoreHydrated ? getActiveMessages() : []
+  const unreadCount = isStoreHydrated ? getUnreadCount() : 0
 
   // Organize by type for sections
   const alerts = activeMessages.filter(m => m.type === 'alert' || m.priority === 'P0')
@@ -309,6 +318,21 @@ export default function CoachScreen() {
   const tips = activeMessages.filter(m => m.type === 'tip' || m.type === 'insight')
 
   const hasMessages = activeMessages.length > 0
+
+  // Show loading state while stores are hydrating to prevent crashes
+  if (!isStoreHydrated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+        <AnimatedBackground circleCount={4} intensity={0.06} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.accent.primary} />
+          <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
+            Chargement...
+          </Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -513,5 +537,14 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  loadingText: {
+    ...typography.body,
   },
 })
