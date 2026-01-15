@@ -11,6 +11,7 @@ interface MealsState {
   currentDate: string
   recentFoods: FoodItem[]
   favoriteFoods: FoodItem[]
+  _hasHydrated: boolean
 
   // Actions
   setCurrentDate: (date: string) => void
@@ -78,6 +79,7 @@ export const useMealsStore = create<MealsState>()(
       dailyData: {},
       currentDate: getDateKey(),
       recentFoods: [],
+      _hasHydrated: false,
       favoriteFoods: [],
 
       setCurrentDate: (date) => set({ currentDate: date }),
@@ -334,9 +336,13 @@ export const useMealsStore = create<MealsState>()(
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
         console.log('[MealsStore] Hydrated, dailyData dates:', state?.dailyData ? Object.keys(state.dailyData) : 'none')
+        useMealsStore.setState({ _hasHydrated: true })
       },
     }
   )
 )
+
+// Hydration hook - must be defined AFTER useMealsStore
+export const useMealsStoreHydration = () => useMealsStore((s) => s._hasHydrated)
 
 export default useMealsStore

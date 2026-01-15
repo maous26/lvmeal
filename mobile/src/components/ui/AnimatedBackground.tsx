@@ -93,7 +93,8 @@ export function AnimatedBackground({
   intensity = 0.08, // kept for prop compatibility
 }: AnimatedBackgroundProps) {
   const { colors, isDark } = useTheme()
-  const blobPaletteId = useUserStore((s) => s.blobPalette)
+  // Get blob palette with safe default (prevents crash if store not hydrated yet)
+  const blobPaletteId = useUserStore((s) => s.blobPalette) || 'default'
 
   // Get the selected palette (only applies in light mode)
   // In dark mode, we use the theme's accent colors

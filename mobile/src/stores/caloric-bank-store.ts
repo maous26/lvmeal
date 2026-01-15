@@ -9,6 +9,9 @@ function getTodayString(): string {
 }
 
 interface CaloricBankState {
+  // Hydration state
+  _hasHydrated: boolean
+
   // Solde hebdomadaire (7 jours glissants)
   dailyBalances: DailyBalance[]
 
@@ -87,6 +90,7 @@ const MAX_PLAISIR_MEALS_PER_WEEK = 2
 export const useCaloricBankStore = create<CaloricBankState>()(
   persist(
     (set, get) => ({
+      _hasHydrated: false,
       dailyBalances: [],
       weekStartDate: null,
       isFirstTime: true,
@@ -353,6 +357,10 @@ export const useCaloricBankStore = create<CaloricBankState>()(
     {
       name: 'presence-caloric-bank',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => () => {
+        console.log('[CaloricBankStore] Hydrated')
+        useCaloricBankStore.setState({ _hasHydrated: true })
+      },
       partialize: (state) => ({
         dailyBalances: state.dailyBalances,
         weekStartDate: state.weekStartDate,
@@ -365,5 +373,8 @@ export const useCaloricBankStore = create<CaloricBankState>()(
     }
   )
 )
+
+// Hydration hook - must be defined AFTER useCaloricBankStore
+export const useCaloricBankStoreHydration = () => useCaloricBankStore((s) => s._hasHydrated)
 
 export default useCaloricBankStore

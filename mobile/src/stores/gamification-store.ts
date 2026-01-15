@@ -218,6 +218,9 @@ export const TRIAL_DURATION_DAYS = 7
 export const TRIAL_AI_CREDITS = 15  // ~2/jour, pousse vers abonnement
 
 interface GamificationState {
+  // Hydration state
+  _hasHydrated: boolean
+
   // Core stats
   totalXP: number
   currentStreak: number
@@ -291,6 +294,7 @@ interface GamificationState {
 export const useGamificationStore = create<GamificationState>()(
   persist(
     (set, get) => ({
+      _hasHydrated: false,
       totalXP: 0,
       currentStreak: 0,
       longestStreak: 0,
@@ -644,6 +648,10 @@ export const useGamificationStore = create<GamificationState>()(
     {
       name: 'presence-gamification-v4',  // Bump version for premium field
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => () => {
+        console.log('[GamificationStore] Hydrated')
+        useGamificationStore.setState({ _hasHydrated: true })
+      },
       partialize: (state) => ({
         totalXP: state.totalXP,
         currentStreak: state.currentStreak,
@@ -662,6 +670,9 @@ export const useGamificationStore = create<GamificationState>()(
     }
   )
 )
+
+// Hydration hook - must be defined AFTER useGamificationStore
+export const useGamificationStoreHydration = () => useGamificationStore((s) => s._hasHydrated)
 
 // Legacy exports for backward compatibility
 export const BADGES = ACHIEVEMENTS
