@@ -193,38 +193,37 @@ export default function CoachScreen() {
 
   const isStoreHydrated = isUserStoreHydrated && isMealsStoreHydrated && isGamificationStoreHydrated && isCaloricBankStoreHydrated
 
-  // MessageCenter
-  const messages = useMessageCenter((s) => s.messages)
-  const preferences = useMessageCenter((s) => s.preferences)
-  const addMessage = useMessageCenter((s) => s.addMessage)
+  // MessageCenter - only subscribe to what we need for rendering
   const markAsRead = useMessageCenter((s) => s.markAsRead)
   const dismiss = useMessageCenter((s) => s.dismiss)
-  const clearExpired = useMessageCenter((s) => s.clearExpired)
   const getActiveMessages = useMessageCenter((s) => s.getActiveMessages)
   const getUnreadCount = useMessageCenter((s) => s.getUnreadCount)
 
-  // User data
-  const { profile, nutritionGoals, hasSeenCoachWelcome, setHasSeenCoachWelcome } = useUserStore()
-  const { syncStatus, userId } = useAuthStore((s) => ({ syncStatus: s.syncStatus, userId: s.userId }))
-  const { getTodayData } = useMealsStore()
-  const { currentStreak } = useGamificationStore()
-  const { getPlaisirSuggestion } = useCaloricBankStore()
+  // User data - use individual selectors for stable references
+  const profile = useUserStore((s) => s.profile)
+  const nutritionGoals = useUserStore((s) => s.nutritionGoals)
+  const hasSeenCoachWelcome = useUserStore((s) => s.hasSeenCoachWelcome)
+  const setHasSeenCoachWelcome = useUserStore((s) => s.setHasSeenCoachWelcome)
+  const syncStatus = useAuthStore((s) => s.syncStatus)
+  const userId = useAuthStore((s) => s.userId)
 
-  // Generate messages on mount/refresh
-  const generateMessages = useCallback(() => {
-    // Guard: ne pas générer de messages si les stores ne sont pas hydratés
-    if (!isStoreHydrated) {
-      console.log('[CoachScreen] Stores not hydrated yet, skipping message generation')
-      return
-    }
+  // Track if messages have been generated to prevent infinite loops
+  const hasGeneratedMessages = React.useRef(false)
 
-    const todayData = getTodayData()
+  // Generate messages - called imperatively, not via useCallback to avoid dependency issues
+  const generateMessages = () => {
+    // Get fresh data from stores directly to avoid stale closures
+    const mealsStore = useMealsStore.getState()
+    const caloricBankStore = useCaloricBankStore.getState()
+    const gamificationStore = useGamificationStore.getState()
+    const messageCenter = useMessageCenter.getState()
+
+    const todayData = mealsStore.getTodayData()
 
     // Récupérer plaisirInfo avec valeurs par défaut sécurisées
-    // (évite crash si le store n'est pas encore prêt)
     let plaisirInfo = { available: false, maxPerMeal: 0, remainingPlaisirMeals: 0, budget: 0, suggestion: '', requiresSplit: false }
     try {
-      plaisirInfo = getPlaisirSuggestion() || plaisirInfo
+      plaisirInfo = caloricBankStore.getPlaisirSuggestion() || plaisirInfo
     } catch (e) {
       console.warn('[CoachScreen] Error getting plaisir suggestion:', e)
     }
@@ -246,7 +245,6 @@ export default function CoachScreen() {
     const newMessages = generateDailyMessages({
       caloriesConsumed: todayData.totalNutrition.calories,
       caloriesTarget: nutritionGoals?.calories || 2000,
-      // Macros détaillés pour les messages contextuels
       proteinsConsumed: todayData.totalNutrition.proteins,
       proteinsTarget: nutritionGoals?.proteins,
       proteinsPercent,
@@ -255,34 +253,34 @@ export default function CoachScreen() {
       fatsConsumed: todayData.totalNutrition.fats,
       fatsTarget: nutritionGoals?.fats,
       waterPercent,
-      sleepHours: null, // TODO: intégrer wellness store
-      streak: currentStreak,
+      sleepHours: null,
+      streak: gamificationStore.currentStreak,
       lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
-      // Repas plaisir: max 600 kcal/repas, max 2/semaine, à partir du jour 3
       plaisirAvailable: plaisirInfo.available,
       maxPlaisirPerMeal: plaisirInfo.maxPerMeal,
       remainingPlaisirMeals: plaisirInfo.remainingPlaisirMeals,
-    }, preferences)
+    }, messageCenter.preferences)
 
     // Ajouter les messages (le cooldown empêche les doublons)
-    newMessages.forEach(msg => addMessage(msg))
-  }, [isStoreHydrated, getTodayData, nutritionGoals, currentStreak, getPlaisirSuggestion, preferences, addMessage])
+    newMessages.forEach(msg => messageCenter.addMessage(msg))
+  }
 
-  // Générer les messages seulement quand les stores sont hydratés
+  // Générer les messages UNE SEULE FOIS quand les stores sont hydratés
   useEffect(() => {
-    if (isStoreHydrated) {
-      clearExpired()
+    if (isStoreHydrated && !hasGeneratedMessages.current) {
+      hasGeneratedMessages.current = true
+      useMessageCenter.getState().clearExpired()
       generateMessages()
     }
-  }, [isStoreHydrated, clearExpired, generateMessages])
+  }, [isStoreHydrated])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    clearExpired()
+    useMessageCenter.getState().clearExpired()
     generateMessages()
     setRefreshing(false)
-  }, [clearExpired, generateMessages])
+  }, [])
 
   const handleAction = (route: string, message?: LymiaMessage) => {
     // Extract meal type from dedupKey if available (e.g., "meal-reminder-dinner-2026-01-12")
@@ -323,7 +321,7 @@ export default function CoachScreen() {
   if (!isStoreHydrated) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-        {/* AnimatedBackground temporairement désactivé pour debug crash */}
+        <AnimatedBackground circleCount={4} intensity={0.06} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
           <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
@@ -336,7 +334,7 @@ export default function CoachScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      {/* AnimatedBackground temporairement désactivé pour debug crash */}
+      <AnimatedBackground circleCount={4} intensity={0.06} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
