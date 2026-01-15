@@ -323,7 +323,7 @@ export default function CoachScreen() {
   if (!isStoreHydrated) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-        <AnimatedBackground circleCount={4} intensity={0.06} />
+        {/* AnimatedBackground temporairement désactivé pour debug crash */}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
           <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
@@ -336,7 +336,7 @@ export default function CoachScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      <AnimatedBackground circleCount={4} intensity={0.06} />
+      {/* AnimatedBackground temporairement désactivé pour debug crash */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
