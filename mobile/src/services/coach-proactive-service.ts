@@ -18,8 +18,10 @@ import { buildFastingContext, isInEatingWindow } from './lymia-brain'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useWellnessStore } from '../stores/wellness-store'
 import { useMessageCenter, type MessagePriority, type MessageType, type MessageCategory } from './message-center'
-import type { UserProfile, NutritionInfo, MealType } from '../types'
+import { SuperAgent, type SuperAgentContext } from './super-agent'
+import type { UserProfile, NutritionInfo, MealType, WellnessEntry } from '../types'
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -259,8 +261,215 @@ function addToMessageCenter(
   })
 }
 
+// ============= EVENING ANALYSIS GENERATION =============
+
+interface EveningAnalysis {
+  title: string
+  body: string
+  emoji: string
+  highlights: string[]
+  caloriesConsumed: number
+  caloriesTarget: number
+  percentAchieved: number
+}
+
 /**
- * Schedule evening summary notification
+ * Generate a real AI-powered evening summary analysis
+ * Collects today's data and generates personalized insights
+ */
+async function generateEveningSummaryAnalysis(profile: UserProfile): Promise<EveningAnalysis> {
+  try {
+    // Collect today's data
+    const mealsState = useMealsStore.getState()
+    const wellnessState = useWellnessStore.getState()
+    const gamificationState = useGamificationStore.getState()
+    const userState = useUserStore.getState()
+
+    const today = new Date().toISOString().split('T')[0]
+    const todayData = mealsState.dailyData[today]
+
+    // Calculate today's nutrition
+    let todayNutrition: NutritionInfo = { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    const todayMeals = todayData?.meals || []
+
+    if (todayMeals.length > 0) {
+      todayNutrition = todayMeals.reduce(
+        (acc, meal) => ({
+          calories: acc.calories + (meal.totalNutrition?.calories || 0),
+          proteins: acc.proteins + (meal.totalNutrition?.proteins || 0),
+          carbs: acc.carbs + (meal.totalNutrition?.carbs || 0),
+          fats: acc.fats + (meal.totalNutrition?.fats || 0),
+        }),
+        { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+      )
+    }
+
+    // Get goals
+    const goals = userState.nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 70 }
+    const percentCalories = Math.round((todayNutrition.calories / goals.calories) * 100)
+    const percentProteins = Math.round((todayNutrition.proteins / goals.proteins) * 100)
+
+    // Get wellness data
+    const wellnessEntries = Object.values(wellnessState.entries || {}) as WellnessEntry[]
+    const todayWellness = wellnessEntries.find(w => w.date === today)
+
+    // Get streak
+    const streak = gamificationState.currentStreak || 0
+
+    // Build highlights based on data
+    const highlights: string[] = []
+
+    // Calorie highlight
+    if (percentCalories >= 90 && percentCalories <= 110) {
+      highlights.push(`✅ Objectif calorique atteint (${percentCalories}%)`)
+    } else if (percentCalories < 70) {
+      highlights.push(`⚠️ Apport calorique faible (${percentCalories}%)`)
+    } else if (percentCalories > 120) {
+      highlights.push(`📊 Apport calorique élevé (${percentCalories}%)`)
+    } else {
+      highlights.push(`📊 ${todayNutrition.calories} kcal sur ${goals.calories}`)
+    }
+
+    // Protein highlight
+    if (percentProteins >= 90) {
+      highlights.push(`💪 Protéines: ${todayNutrition.proteins}g (objectif atteint!)`)
+    } else if (percentProteins < 50) {
+      highlights.push(`⚠️ Protéines insuffisantes: ${todayNutrition.proteins}g/${goals.proteins}g`)
+    }
+
+    // Meals tracked
+    if (todayMeals.length > 0) {
+      highlights.push(`🍽️ ${todayMeals.length} repas tracké${todayMeals.length > 1 ? 's' : ''}`)
+    } else {
+      highlights.push(`📝 Aucun repas tracké aujourd'hui`)
+    }
+
+    // Streak highlight
+    if (streak >= 3) {
+      highlights.push(`🔥 Série de ${streak} jours!`)
+    }
+
+    // Wellness highlight
+    if (todayWellness) {
+      if (todayWellness.sleepHours && todayWellness.sleepHours >= 7) {
+        highlights.push(`😴 Bon sommeil: ${todayWellness.sleepHours}h`)
+      }
+      if (todayWellness.stressLevel && todayWellness.stressLevel <= 3) {
+        highlights.push(`😌 Stress bien géré`)
+      }
+    }
+
+    // Try to get AI-powered analysis from SuperAgent
+    let aiBody = ''
+    try {
+      // Build context for SuperAgent
+      const dates: string[] = []
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+        dates.push(date.toISOString().split('T')[0])
+      }
+
+      const weeklyNutrition: NutritionInfo[] = dates.map(date => {
+        const dayData = mealsState.dailyData[date]
+        if (!dayData?.meals || dayData.meals.length === 0) {
+          return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+        }
+        return dayData.meals.reduce(
+          (acc, meal) => ({
+            calories: acc.calories + (meal.totalNutrition?.calories || 0),
+            proteins: acc.proteins + (meal.totalNutrition?.proteins || 0),
+            carbs: acc.carbs + (meal.totalNutrition?.carbs || 0),
+            fats: acc.fats + (meal.totalNutrition?.fats || 0),
+          }),
+          { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+        )
+      })
+
+      const recentWellness = wellnessEntries.filter(w => dates.includes(w.date))
+
+      const context: SuperAgentContext = {
+        profile,
+        meals: todayMeals,
+        todayNutrition,
+        weeklyNutrition,
+        wellnessEntries: recentWellness,
+        todayWellness,
+        fastingContext: buildFastingContext(profile),
+        streak,
+        level: gamificationState.currentLevel || 1,
+        xp: gamificationState.totalXP || 0,
+        daysTracked: dates.filter(d => mealsState.dailyData[d]?.meals?.length > 0).length,
+      }
+
+      const insight = await SuperAgent.generateDailyInsight(context)
+      if (insight?.body) {
+        aiBody = insight.body
+      }
+    } catch (aiError) {
+      console.log('[CoachProactive] AI analysis not available, using structured summary')
+    }
+
+    // Determine title and emoji based on performance
+    let title: string
+    let emoji: string
+
+    if (todayMeals.length === 0) {
+      title = 'Journée sans tracking'
+      emoji = '📝'
+    } else if (percentCalories >= 85 && percentCalories <= 115 && percentProteins >= 80) {
+      title = 'Excellente journée!'
+      emoji = '🎉'
+    } else if (percentCalories >= 70 && percentCalories <= 130) {
+      title = 'Bonne journée'
+      emoji = '👍'
+    } else {
+      title = 'Bilan de ta journée'
+      emoji = '📊'
+    }
+
+    // Build the body message
+    let body: string
+    if (aiBody) {
+      body = aiBody
+    } else {
+      // Fallback to structured summary
+      if (todayMeals.length === 0) {
+        body = 'Tu n\'as pas tracké de repas aujourd\'hui. Demain est une nouvelle opportunité!'
+      } else if (percentCalories >= 85 && percentCalories <= 115) {
+        body = `Super! Tu as consommé ${todayNutrition.calories} kcal sur ${goals.calories} (${percentCalories}%). Continue comme ça!`
+      } else if (percentCalories < 70) {
+        body = `Tu as consommé ${todayNutrition.calories} kcal aujourd'hui, soit ${percentCalories}% de ton objectif. Pense à bien te nourrir.`
+      } else {
+        body = `Aujourd'hui: ${todayNutrition.calories} kcal, ${todayNutrition.proteins}g protéines. ${percentCalories}% de ton objectif atteint.`
+      }
+    }
+
+    return {
+      title,
+      body,
+      emoji,
+      highlights,
+      caloriesConsumed: Math.round(todayNutrition.calories),
+      caloriesTarget: goals.calories,
+      percentAchieved: percentCalories,
+    }
+  } catch (error) {
+    console.error('[CoachProactive] Error generating evening analysis:', error)
+    // Return fallback
+    return {
+      title: 'Bilan du jour',
+      body: 'Consulte tes progrès dans l\'onglet Progrès.',
+      emoji: '📊',
+      highlights: [],
+      caloriesConsumed: 0,
+      caloriesTarget: 2000,
+      percentAchieved: 0,
+    }
+  }
+}
+
+/**
+ * Schedule evening summary notification with AI-powered analysis
  */
 export async function scheduleEveningSummary(profile: UserProfile): Promise<void> {
   try {
@@ -285,8 +494,11 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
     const triggerDate = new Date(now)
     triggerDate.setHours(summaryHour, 0, 0, 0)
 
-    const title = getRandomMessage(COACH_MESSAGES.evening_summary.titles)
-    const body = 'Consulte tes progrès du jour dans l\'onglet Progrès.'
+    // Generate AI-powered analysis
+    const analysis = await generateEveningSummaryAnalysis(profile)
+
+    const title = `${analysis.emoji} ${analysis.title}`
+    const body = analysis.body
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
@@ -295,7 +507,13 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
         data: {
           type: 'coach_proactive',
           subtype: 'evening_summary',
-          deepLink: 'lym://progress',
+          deepLink: 'lym://coach',
+          analysis: JSON.stringify({
+            highlights: analysis.highlights,
+            caloriesConsumed: analysis.caloriesConsumed,
+            caloriesTarget: analysis.caloriesTarget,
+            percentAchieved: analysis.percentAchieved,
+          }),
         },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.DEFAULT,
@@ -306,9 +524,22 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
       },
     })
 
-    // Add to MessageCenter so it appears in Coach screen with action to Progress
+    // Add detailed analysis to MessageCenter so it appears in Coach screen
     const today = new Date().toDateString()
-    addToMessageCenter('evening_summary', title, body, `evening-summary-${today}`, '📊', 'Progress', 'Voir mes progrès')
+    const highlightsText = analysis.highlights.length > 0
+      ? `\n\n${analysis.highlights.join('\n')}`
+      : ''
+    const fullMessage = `${body}${highlightsText}`
+
+    addToMessageCenter(
+      'evening_summary',
+      analysis.title,
+      fullMessage,
+      `evening-summary-${today}`,
+      analysis.emoji,
+      'Coach', // Route to Coach to see the full analysis
+      'Voir l\'analyse'
+    )
 
     // Save notification ID
     const existingIds = await getScheduledNotificationIds()
@@ -316,6 +547,7 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
     await AsyncStorage.setItem(STORAGE_KEYS.COACH_NOTIFICATION_IDS, JSON.stringify(existingIds))
 
     console.log(`[CoachProactive] Evening summary scheduled for ${triggerDate.toLocaleTimeString()}`)
+    console.log(`[CoachProactive] Analysis: ${analysis.title} - ${analysis.percentAchieved}% achieved`)
   } catch (error) {
     console.error('[CoachProactive] Error scheduling evening summary:', error)
   }
