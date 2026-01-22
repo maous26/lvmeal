@@ -24,6 +24,8 @@ import type { PlannedMealItem, ShoppingList, ShoppingItem } from '../stores/meal
 
 // ============= TYPES =============
 
+import type { MealSourcePreference } from '../types'
+
 export type RecipeComplexity = 'basique' | 'elabore' | 'mix'
 export type CookingLevel = 'beginner' | 'intermediate' | 'advanced'
 
@@ -39,11 +41,330 @@ export interface WeeklyPlanPreferences {
   cookingTimeWeekend?: number
   complexity?: RecipeComplexity
   cookingLevel?: CookingLevel
+  mealSourcePreference?: MealSourcePreference
+  goal?: string // weight_loss, muscle_gain, health
 }
 
 // ============= CONSTANTS =============
 
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+// ============= SOURCE STRATEGY =============
+
+interface SourceStrategy {
+  gustar: number  // Weight 0-1 for Gustar recipes
+  ciqual: number  // Weight 0-1 for CIQUAL products
+  off: number     // Weight 0-1 for Open Food Facts
+}
+
+// ============= GOAL-BASED COMPOSITION =============
+
+/**
+ * Nutritional scoring criteria based on user goal.
+ * Higher score = better match for the user's objective.
+ */
+interface NutritionCriteria {
+  // Ideal macro ratios (as % of calories)
+  proteinRatio: { min: number; ideal: number; max: number }
+  carbRatio: { min: number; ideal: number; max: number }
+  fatRatio: { min: number; ideal: number; max: number }
+  // Caloric density preference (kcal per 100g)
+  caloricDensity: { prefer: 'low' | 'medium' | 'high'; maxPer100g?: number }
+  // Protein density preference (g protein per 100 kcal)
+  proteinDensity: { min: number; ideal: number }
+}
+
+/**
+ * Get nutrition criteria based on user goal.
+ */
+function getNutritionCriteria(goal?: string): NutritionCriteria {
+  switch (goal) {
+    case 'lose':
+    case 'weight_loss':
+      // Weight loss: high protein, moderate carbs, lower fat, low caloric density
+      return {
+        proteinRatio: { min: 25, ideal: 30, max: 40 },
+        carbRatio: { min: 30, ideal: 40, max: 50 },
+        fatRatio: { min: 20, ideal: 25, max: 35 },
+        caloricDensity: { prefer: 'low', maxPer100g: 150 },
+        proteinDensity: { min: 8, ideal: 12 }, // g protein per 100 kcal
+      }
+
+    case 'gain':
+    case 'muscle':
+    case 'muscle_gain':
+      // Muscle gain: very high protein, high carbs, moderate fat
+      return {
+        proteinRatio: { min: 30, ideal: 35, max: 45 },
+        carbRatio: { min: 35, ideal: 45, max: 55 },
+        fatRatio: { min: 15, ideal: 20, max: 30 },
+        caloricDensity: { prefer: 'medium' },
+        proteinDensity: { min: 10, ideal: 15 },
+      }
+
+    case 'maintain':
+    case 'health':
+    default:
+      // Balanced: standard macro distribution
+      return {
+        proteinRatio: { min: 15, ideal: 25, max: 35 },
+        carbRatio: { min: 40, ideal: 50, max: 60 },
+        fatRatio: { min: 20, ideal: 25, max: 35 },
+        caloricDensity: { prefer: 'medium' },
+        proteinDensity: { min: 6, ideal: 10 },
+      }
+  }
+}
+
+/**
+ * Score a meal based on how well it matches the user's nutritional goals.
+ * Returns a score from 0 to 100.
+ */
+function scoreMealForGoal(
+  meal: PlannedMealItem,
+  criteria: NutritionCriteria,
+  targetCalories: number
+): number {
+  const { calories, proteins, carbs, fats } = meal.nutrition
+
+  // Skip meals with no nutrition data
+  if (calories === 0) return 50 // Neutral score
+
+  let score = 0
+
+  // 1. Protein density score (40 points) - most important for all goals
+  const proteinPer100kcal = calories > 0 ? (proteins / calories) * 100 : 0
+  if (proteinPer100kcal >= criteria.proteinDensity.ideal) {
+    score += 40
+  } else if (proteinPer100kcal >= criteria.proteinDensity.min) {
+    score += 25 + ((proteinPer100kcal - criteria.proteinDensity.min) / (criteria.proteinDensity.ideal - criteria.proteinDensity.min)) * 15
+  } else {
+    score += (proteinPer100kcal / criteria.proteinDensity.min) * 25
+  }
+
+  // 2. Caloric density score (30 points)
+  // Estimate calories per 100g based on meal data
+  const estimatedPer100g = calories // Most CIQUAL data is per 100g
+  if (criteria.caloricDensity.prefer === 'low') {
+    if (criteria.caloricDensity.maxPer100g && estimatedPer100g <= criteria.caloricDensity.maxPer100g) {
+      score += 30
+    } else if (estimatedPer100g <= 200) {
+      score += 25
+    } else if (estimatedPer100g <= 300) {
+      score += 15
+    } else {
+      score += 5
+    }
+  } else if (criteria.caloricDensity.prefer === 'high') {
+    if (estimatedPer100g >= 300) {
+      score += 30
+    } else if (estimatedPer100g >= 200) {
+      score += 20
+    } else {
+      score += 10
+    }
+  } else {
+    // Medium preference - balanced scoring
+    if (estimatedPer100g >= 100 && estimatedPer100g <= 300) {
+      score += 30
+    } else {
+      score += 15
+    }
+  }
+
+  // 3. Macro balance score (30 points)
+  const totalMacroCalories = (proteins * 4) + (carbs * 4) + (fats * 9)
+  if (totalMacroCalories > 0) {
+    const actualProteinRatio = ((proteins * 4) / totalMacroCalories) * 100
+    const actualCarbRatio = ((carbs * 4) / totalMacroCalories) * 100
+    const actualFatRatio = ((fats * 9) / totalMacroCalories) * 100
+
+    // Check if ratios are within acceptable ranges
+    let macroScore = 0
+
+    // Protein ratio check
+    if (actualProteinRatio >= criteria.proteinRatio.min && actualProteinRatio <= criteria.proteinRatio.max) {
+      macroScore += 10
+      if (Math.abs(actualProteinRatio - criteria.proteinRatio.ideal) <= 5) {
+        macroScore += 5 // Bonus for being close to ideal
+      }
+    }
+
+    // Carb ratio check
+    if (actualCarbRatio >= criteria.carbRatio.min && actualCarbRatio <= criteria.carbRatio.max) {
+      macroScore += 5
+    }
+
+    // Fat ratio check
+    if (actualFatRatio >= criteria.fatRatio.min && actualFatRatio <= criteria.fatRatio.max) {
+      macroScore += 5
+    }
+
+    score += macroScore
+  }
+
+  return Math.min(100, Math.round(score))
+}
+
+/**
+ * Check if a meal matches diet restrictions.
+ */
+function matchesDiet(meal: PlannedMealItem, dietType?: string): boolean {
+  if (!dietType || dietType === 'omnivore') return true
+
+  const mealName = meal.name.toLowerCase()
+  const ingredients = meal.ingredients.map(i => i.name.toLowerCase()).join(' ')
+  const combined = `${mealName} ${ingredients}`
+
+  switch (dietType.toLowerCase()) {
+    case 'vegetarian':
+    case 'végétarien':
+      // Exclude meat and fish
+      const meatKeywords = ['poulet', 'boeuf', 'bœuf', 'porc', 'viande', 'jambon', 'bacon', 'saucisse',
+        'steak', 'escalope', 'filet de', 'côte de', 'rôti', 'agneau', 'veau', 'canard', 'dinde',
+        'poisson', 'saumon', 'thon', 'cabillaud', 'crevette', 'fruits de mer', 'anchois']
+      return !meatKeywords.some(kw => combined.includes(kw))
+
+    case 'vegan':
+    case 'végan':
+      // Exclude all animal products
+      const animalKeywords = ['poulet', 'boeuf', 'bœuf', 'porc', 'viande', 'jambon', 'bacon',
+        'poisson', 'saumon', 'thon', 'crevette', 'lait', 'fromage', 'yaourt', 'yogourt',
+        'crème', 'beurre', 'œuf', 'oeuf', 'miel', 'gélatine']
+      return !animalKeywords.some(kw => combined.includes(kw))
+
+    case 'pescatarian':
+    case 'pescétarien':
+      // Allow fish, exclude meat
+      const landMeatKeywords = ['poulet', 'boeuf', 'bœuf', 'porc', 'viande', 'jambon', 'bacon',
+        'steak', 'escalope', 'rôti', 'agneau', 'veau', 'canard', 'dinde']
+      return !landMeatKeywords.some(kw => combined.includes(kw))
+
+    case 'halal':
+      // Exclude pork and alcohol
+      const haramKeywords = ['porc', 'jambon', 'bacon', 'saucisse de porc', 'lard', 'alcool', 'vin', 'bière']
+      return !haramKeywords.some(kw => combined.includes(kw))
+
+    case 'keto':
+    case 'cétogène':
+      // Prefer low carb (this is a soft preference, handled more in scoring)
+      return meal.nutrition.carbs < 20 || (meal.nutrition.carbs / meal.nutrition.calories * 100) < 10
+
+    default:
+      return true
+  }
+}
+
+/**
+ * Check if a meal contains any allergens to exclude.
+ */
+function containsAllergen(meal: PlannedMealItem, allergies?: string[]): boolean {
+  if (!allergies || allergies.length === 0) return false
+
+  const mealName = meal.name.toLowerCase()
+  const ingredients = meal.ingredients.map(i => i.name.toLowerCase()).join(' ')
+  const combined = `${mealName} ${ingredients}`
+
+  const allergenKeywords: Record<string, string[]> = {
+    gluten: ['blé', 'farine', 'pain', 'pâtes', 'semoule', 'orge', 'seigle', 'avoine', 'croissant', 'brioche'],
+    lactose: ['lait', 'fromage', 'yaourt', 'yogourt', 'crème', 'beurre', 'lactose'],
+    dairy: ['lait', 'fromage', 'yaourt', 'yogourt', 'crème', 'beurre'],
+    eggs: ['œuf', 'oeuf', 'omelette', 'mayonnaise'],
+    nuts: ['noix', 'amande', 'noisette', 'pistache', 'cajou', 'pécan', 'macadamia'],
+    peanuts: ['arachide', 'cacahuète', 'beurre de cacahuète'],
+    soy: ['soja', 'tofu', 'tempeh', 'edamame'],
+    fish: ['poisson', 'saumon', 'thon', 'cabillaud', 'anchois', 'sardine', 'maquereau'],
+    shellfish: ['crevette', 'crabe', 'homard', 'moule', 'huître', 'fruits de mer'],
+    sesame: ['sésame', 'tahini'],
+  }
+
+  for (const allergy of allergies) {
+    const allergyLower = allergy.toLowerCase()
+    const keywords = allergenKeywords[allergyLower]
+    if (keywords && keywords.some(kw => combined.includes(kw))) {
+      return true
+    }
+    // Also check if the allergy name itself is in the meal
+    if (combined.includes(allergyLower)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Determine source selection strategy based on user preferences and meal type.
+ *
+ * Rules:
+ * - Breakfast & Snack: simple products (CIQUAL/OFF), fewer recipes
+ * - Lunch & Dinner: recipes possible based on preference
+ * - Goal adjustments: weight_loss = more CIQUAL precision, muscle_gain = more protein recipes
+ */
+function determineSourceStrategy(
+  mealSourcePreference: MealSourcePreference = 'balanced',
+  mealType: MealType,
+  goal?: string
+): SourceStrategy {
+  const isSimpleMeal = mealType === 'breakfast' || mealType === 'snack'
+  const isMainMeal = mealType === 'lunch' || mealType === 'dinner'
+
+  let strategy: SourceStrategy
+
+  switch (mealSourcePreference) {
+    case 'fresh':
+      // Fresh products priority (CIQUAL)
+      if (isSimpleMeal) {
+        strategy = { gustar: 0, ciqual: 0.90, off: 0.10 }
+      } else {
+        strategy = { gustar: 0.20, ciqual: 0.70, off: 0.10 }
+      }
+      break
+
+    case 'recipes':
+      // Homemade recipes priority (Gustar)
+      if (isSimpleMeal) {
+        strategy = { gustar: 0.10, ciqual: 0.80, off: 0.10 }
+      } else {
+        strategy = { gustar: 0.70, ciqual: 0.20, off: 0.10 }
+      }
+      break
+
+    case 'quick':
+      // Quick/practical products priority (OFF)
+      if (isSimpleMeal) {
+        strategy = { gustar: 0.10, ciqual: 0.30, off: 0.60 }
+      } else {
+        strategy = { gustar: 0.30, ciqual: 0.30, off: 0.40 }
+      }
+      break
+
+    case 'balanced':
+    default:
+      // Balanced mix based on meal type
+      if (isSimpleMeal) {
+        strategy = { gustar: 0.10, ciqual: 0.70, off: 0.20 }
+      } else {
+        strategy = { gustar: 0.40, ciqual: 0.45, off: 0.15 }
+      }
+      break
+  }
+
+  // Goal-based adjustments (only for main meals)
+  if (isMainMeal && goal) {
+    if (goal === 'weight_loss' || goal === 'lose') {
+      // Weight loss: more CIQUAL for caloric precision
+      strategy.ciqual = Math.min(0.80, strategy.ciqual + 0.10)
+      strategy.off = Math.max(0.05, strategy.off - 0.10)
+    } else if (goal === 'muscle_gain' || goal === 'muscle' || goal === 'gain') {
+      // Muscle gain: more Gustar for protein-rich recipes
+      strategy.gustar = Math.min(0.75, strategy.gustar + 0.10)
+      strategy.off = Math.max(0.05, strategy.off - 0.10)
+    }
+  }
+
+  return strategy
+}
 
 // ============= HELPERS =============
 
@@ -459,10 +780,15 @@ function getMaxIngredientsForComplexity(complexity: RecipeComplexity): number {
 /**
  * Get meal suggestions from all sources
  *
- * STRATEGY:
- * - Petit-déjeuner & Collation: CIQUAL/OFF uniquement (aliments simples français)
- *   L'agent IA élaborera les repas en se basant sur le RAG (traditions françaises)
- * - Déjeuner & Dîner: Recettes Gustar enrichies + CIQUAL comme fallback
+ * STRATEGY based on user's mealSourcePreference:
+ * - 'fresh': Priorité CIQUAL (produits frais)
+ * - 'recipes': Priorité Gustar (recettes maison)
+ * - 'quick': Priorité OFF (produits rapides)
+ * - 'balanced': Mix intelligent selon le type de repas
+ *
+ * Rules by meal type:
+ * - Petit-déjeuner & Collation: produits simples, moins de recettes élaborées
+ * - Déjeuner & Dîner: recettes possibles selon la préférence
  */
 async function getMealSuggestions(
   mealType: MealType,
@@ -471,6 +797,12 @@ async function getMealSuggestions(
   isWeekend: boolean
 ): Promise<PlannedMealItem[]> {
   const complexity = preferences.complexity || 'mix'
+  const sourcePreference = preferences.mealSourcePreference || 'balanced'
+  const goal = preferences.goal
+
+  // Get source strategy based on user preferences
+  const strategy = determineSourceStrategy(sourcePreference, mealType, goal)
+  console.log(`MealPlanAgent: Source strategy for ${mealType} (pref: ${sourcePreference}):`, strategy)
 
   // Adjust prep time based on complexity and cooking level
   let maxPrepTime = isWeekend
@@ -489,53 +821,63 @@ async function getMealSuggestions(
 
   const allSuggestions: PlannedMealItem[] = []
 
-  // ===== PETIT-DÉJEUNER & COLLATION: CIQUAL/OFF uniquement =====
-  // L'agent IA élaborera ces repas en se basant sur le RAG (tradition française = sucré)
-  if (mealType === 'breakfast' || mealType === 'snack') {
-    console.log(`MealPlanAgent: Using CIQUAL/OFF for ${mealType} (French tradition)`)
+  // Calculate how many items to fetch from each source (total ~15)
+  const totalItems = 15
+  const gustarLimit = Math.round(totalItems * strategy.gustar)
+  const ciqualLimit = Math.round(totalItems * strategy.ciqual)
+  // const offLimit = Math.round(totalItems * strategy.off) // OFF not used directly yet
 
-    // Use French breakfast/snack queries from RAG knowledge
-    const queries = BASIQUE_QUERIES[mealType]
-    for (const query of queries.slice(0, 3)) {
-      const foodResults = await searchFoodDatabases(query, 3)
-      allSuggestions.push(...foodResults)
-    }
-
-    console.log(`MealPlanAgent: Got ${allSuggestions.length} CIQUAL results for ${mealType}`)
-  } else {
-    // ===== DÉJEUNER & DÎNER: Recettes Gustar enrichies =====
-    // Priority 1: Static enriched recipes (already in French)
-    const staticRecipes = await getStaticEnrichedRecipes(mealType, maxPrepTime, 10)
+  // ===== GUSTAR (Recettes enrichies) =====
+  if (gustarLimit > 0) {
+    const staticRecipes = await getStaticEnrichedRecipes(mealType, maxPrepTime, gustarLimit)
     allSuggestions.push(...staticRecipes)
-    console.log(`MealPlanAgent: Got ${staticRecipes.length} static recipes for ${mealType}`)
+    console.log(`MealPlanAgent: Got ${staticRecipes.length} Gustar recipes for ${mealType}`)
 
-    // Priority 2: CIQUAL for basique complexity
-    if (complexity === 'basique' && allSuggestions.length < 5) {
-      const queries = BASIQUE_QUERIES[mealType]
-      const randomQuery = queries[Math.floor(Math.random() * queries.length)]
-      const foodResults = await searchFoodDatabases(randomQuery, 5)
-      allSuggestions.push(...foodResults)
-    }
-
-    // Priority 3: Gustar API (fallback only)
-    if (allSuggestions.length < 3) {
-      console.log(`MealPlanAgent: Not enough recipes, trying Gustar API fallback for ${mealType}`)
+    // Fallback to Gustar API if not enough static recipes
+    if (staticRecipes.length < gustarLimit / 2) {
       const queries = complexity === 'basique' ? BASIQUE_QUERIES[mealType] : ELABORE_QUERIES[mealType]
       const randomQuery = queries[Math.floor(Math.random() * queries.length)]
       const gustarResults = await searchGustarRecipes(
         randomQuery,
         preferences.dietType,
         maxPrepTime,
-        3
+        Math.ceil(gustarLimit / 2)
       )
       allSuggestions.push(...gustarResults)
     }
   }
 
+  // ===== CIQUAL (Produits frais) =====
+  if (ciqualLimit > 0) {
+    const queries = BASIQUE_QUERIES[mealType]
+    const numQueries = Math.min(3, queries.length)
+    const itemsPerQuery = Math.ceil(ciqualLimit / numQueries)
+
+    for (let i = 0; i < numQueries; i++) {
+      const query = queries[i]
+      const foodResults = await searchFoodDatabases(query, itemsPerQuery)
+      allSuggestions.push(...foodResults)
+    }
+    console.log(`MealPlanAgent: Got ${allSuggestions.length - (gustarLimit > 0 ? gustarLimit : 0)} CIQUAL products for ${mealType}`)
+  }
+
+  // ===== Fallback: ensure we have at least some suggestions =====
+  if (allSuggestions.length < 3) {
+    console.log(`MealPlanAgent: Not enough suggestions, adding fallback for ${mealType}`)
+    const queries = BASIQUE_QUERIES[mealType]
+    const randomQuery = queries[Math.floor(Math.random() * queries.length)]
+    const fallbackResults = await searchFoodDatabases(randomQuery, 5)
+    allSuggestions.push(...fallbackResults)
+  }
+
   // Filter out already used meals and apply complexity filter
   const maxIngredients = getMaxIngredientsForComplexity(complexity)
 
-  return allSuggestions
+  // Get nutrition criteria for scoring based on user goal
+  const nutritionCriteria = getNutritionCriteria(goal)
+
+  // Filter and score meals
+  const filteredAndScored = allSuggestions
     .filter(meal => {
       // Filter by used names
       if (usedNames.includes(meal.name.toLowerCase())) return false
@@ -549,9 +891,36 @@ async function getMealSuggestions(
         return false
       }
 
+      // Filter by diet type (vegetarian, vegan, etc.)
+      if (!matchesDiet(meal, preferences.dietType)) {
+        console.log(`MealPlanAgent: Excluded ${meal.name} - doesn't match diet ${preferences.dietType}`)
+        return false
+      }
+
+      // Filter by allergens
+      if (containsAllergen(meal, preferences.allergies)) {
+        console.log(`MealPlanAgent: Excluded ${meal.name} - contains allergen`)
+        return false
+      }
+
       return true
     })
-    .map(meal => ({ ...meal, mealType }))
+    .map(meal => {
+      // Score each meal based on nutritional fit for the user's goal
+      const score = scoreMealForGoal(meal, nutritionCriteria, preferences.dailyCalories / 4)
+      return { meal: { ...meal, mealType }, score }
+    })
+    // Sort by score (highest first) to prioritize meals that best match the user's goal
+    .sort((a, b) => b.score - a.score)
+
+  // Log top scoring meals for debugging
+  if (filteredAndScored.length > 0) {
+    const topMeals = filteredAndScored.slice(0, 3)
+    console.log(`MealPlanAgent: Top ${mealType} meals for goal "${goal || 'maintain'}":`,
+      topMeals.map(m => `${m.meal.name} (score: ${m.score})`).join(', '))
+  }
+
+  return filteredAndScored.map(item => item.meal)
 }
 
 /**
@@ -668,40 +1037,239 @@ const FALLBACK_BASIQUE: Record<MealType, FallbackRecipe[]> = {
     },
   ],
   lunch: [
-    { name: 'Pates au beurre parmesan', description: 'Dejeuner express', prepTime: 15, ingredients: ['Pates', 'Beurre', 'Parmesan'] },
-    { name: 'Riz au thon', description: 'Dejeuner simple', prepTime: 15, ingredients: ['Riz', 'Thon', 'Huile olive'] },
-    { name: 'Omelette nature', description: 'Dejeuner proteines', prepTime: 10, ingredients: ['Oeufs', 'Beurre', 'Sel'] },
-    { name: 'Croque-monsieur', description: 'Classique francais', prepTime: 10, ingredients: ['Pain de mie', 'Jambon', 'Fromage'] },
+    {
+      name: 'Pates au beurre parmesan',
+      description: 'Dejeuner express',
+      prepTime: 15,
+      ingredients: [
+        { name: 'Pates', amount: '100g', calories: 350 },
+        { name: 'Beurre', amount: '15g', calories: 110 },
+        { name: 'Parmesan', amount: '20g', calories: 80 },
+      ],
+      nutrition: { calories: 540, proteins: 18, carbs: 70, fats: 20 },
+    },
+    {
+      name: 'Riz au thon',
+      description: 'Dejeuner simple',
+      prepTime: 15,
+      ingredients: [
+        { name: 'Riz', amount: '80g', calories: 280 },
+        { name: 'Thon au naturel', amount: '100g', calories: 110 },
+        { name: 'Huile olive', amount: '10ml', calories: 90 },
+      ],
+      nutrition: { calories: 480, proteins: 28, carbs: 62, fats: 12 },
+    },
+    {
+      name: 'Omelette nature',
+      description: 'Dejeuner proteines',
+      prepTime: 10,
+      ingredients: [
+        { name: 'Oeufs', amount: '3 oeufs (180g)', calories: 260 },
+        { name: 'Beurre', amount: '10g', calories: 75 },
+      ],
+      nutrition: { calories: 335, proteins: 22, carbs: 2, fats: 27 },
+    },
+    {
+      name: 'Croque-monsieur',
+      description: 'Classique francais',
+      prepTime: 10,
+      ingredients: [
+        { name: 'Pain de mie', amount: '4 tranches (80g)', calories: 200 },
+        { name: 'Jambon', amount: '50g', calories: 60 },
+        { name: 'Fromage emmental', amount: '40g', calories: 150 },
+        { name: 'Beurre', amount: '10g', calories: 75 },
+      ],
+      nutrition: { calories: 485, proteins: 25, carbs: 38, fats: 25 },
+    },
   ],
   snack: [
-    { name: 'Pomme', description: 'Collation fruit', prepTime: 1, ingredients: ['Pomme'] },
-    { name: 'Yaourt nature', description: 'Collation lactee', prepTime: 1, ingredients: ['Yaourt'] },
-    { name: 'Fromage blanc', description: 'Collation proteinee', prepTime: 1, ingredients: ['Fromage blanc'] },
+    {
+      name: 'Pomme',
+      description: 'Collation fruit',
+      prepTime: 1,
+      ingredients: [
+        { name: 'Pomme', amount: '150g', calories: 80 },
+      ],
+      nutrition: { calories: 80, proteins: 0.5, carbs: 20, fats: 0 },
+    },
+    {
+      name: 'Yaourt nature',
+      description: 'Collation lactee',
+      prepTime: 1,
+      ingredients: [
+        { name: 'Yaourt nature', amount: '125g', calories: 70 },
+      ],
+      nutrition: { calories: 70, proteins: 5, carbs: 6, fats: 2 },
+    },
+    {
+      name: 'Fromage blanc',
+      description: 'Collation proteinee',
+      prepTime: 1,
+      ingredients: [
+        { name: 'Fromage blanc 0%', amount: '100g', calories: 45 },
+      ],
+      nutrition: { calories: 45, proteins: 8, carbs: 4, fats: 0 },
+    },
   ],
   dinner: [
-    { name: 'Soupe de legumes', description: 'Diner leger', prepTime: 15, ingredients: ['Legumes', 'Bouillon'] },
-    { name: 'Omelette aux herbes', description: 'Diner rapide', prepTime: 10, ingredients: ['Oeufs', 'Herbes', 'Beurre'] },
-    { name: 'Salade verte vinaigrette', description: 'Diner tres leger', prepTime: 5, ingredients: ['Salade', 'Vinaigrette'] },
+    {
+      name: 'Soupe de legumes',
+      description: 'Diner leger',
+      prepTime: 15,
+      ingredients: [
+        { name: 'Legumes varies', amount: '200g', calories: 80 },
+        { name: 'Bouillon', amount: '300ml', calories: 20 },
+      ],
+      nutrition: { calories: 100, proteins: 3, carbs: 18, fats: 1 },
+    },
+    {
+      name: 'Omelette aux herbes',
+      description: 'Diner rapide',
+      prepTime: 10,
+      ingredients: [
+        { name: 'Oeufs', amount: '2 oeufs (120g)', calories: 170 },
+        { name: 'Herbes fraiches', amount: '5g', calories: 2 },
+        { name: 'Beurre', amount: '10g', calories: 75 },
+      ],
+      nutrition: { calories: 247, proteins: 14, carbs: 1, fats: 20 },
+    },
+    {
+      name: 'Salade verte vinaigrette',
+      description: 'Diner tres leger',
+      prepTime: 5,
+      ingredients: [
+        { name: 'Salade verte', amount: '100g', calories: 15 },
+        { name: 'Vinaigrette', amount: '15ml', calories: 70 },
+      ],
+      nutrition: { calories: 85, proteins: 1, carbs: 3, fats: 8 },
+    },
   ],
 }
 
-const FALLBACK_ELABORE: Record<MealType, Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>> = {
+const FALLBACK_ELABORE: Record<MealType, FallbackRecipe[]> = {
   breakfast: [
-    { name: 'Oeufs brouilles aux herbes', description: 'Petit-dejeuner gourmand', prepTime: 15, ingredients: ['Oeufs', 'Beurre', 'Ciboulette', 'Creme', 'Pain', 'Sel'] },
-    { name: 'Crepes maison', description: 'Petit-dejeuner festif', prepTime: 25, ingredients: ['Farine', 'Oeufs', 'Lait', 'Sucre', 'Beurre'] },
+    {
+      name: 'Oeufs brouilles aux herbes',
+      description: 'Petit-dejeuner gourmand',
+      prepTime: 15,
+      ingredients: [
+        { name: 'Oeufs', amount: '3 unites', calories: 210 },
+        { name: 'Beurre', amount: '15g', calories: 110 },
+        { name: 'Ciboulette', amount: '5g', calories: 2 },
+        { name: 'Pain de campagne', amount: '60g', calories: 150 },
+      ],
+      nutrition: { calories: 472, proteins: 22, carbs: 30, fats: 28 },
+    },
+    {
+      name: 'Crepes maison',
+      description: 'Petit-dejeuner festif',
+      prepTime: 25,
+      ingredients: [
+        { name: 'Farine', amount: '100g', calories: 340 },
+        { name: 'Oeufs', amount: '2 unites', calories: 140 },
+        { name: 'Lait', amount: '250ml', calories: 115 },
+        { name: 'Sucre', amount: '30g', calories: 120 },
+        { name: 'Beurre', amount: '20g', calories: 150 },
+      ],
+      nutrition: { calories: 430, proteins: 12, carbs: 55, fats: 18 },
+    },
   ],
   lunch: [
-    { name: 'Poulet roti aux legumes', description: 'Dejeuner complet', prepTime: 45, ingredients: ['Poulet', 'Carottes', 'Pommes de terre', 'Oignons', 'Herbes', 'Huile'] },
-    { name: 'Salade nicoise', description: 'Dejeuner mediterraneen', prepTime: 20, ingredients: ['Salade', 'Thon', 'Oeufs', 'Olives', 'Tomates', 'Haricots verts'] },
-    { name: 'Hachis parmentier', description: 'Plat traditionnel', prepTime: 40, ingredients: ['Boeuf hache', 'Pommes de terre', 'Oignons', 'Creme', 'Fromage'] },
+    {
+      name: 'Poulet roti aux legumes',
+      description: 'Dejeuner complet',
+      prepTime: 45,
+      ingredients: [
+        { name: 'Poulet (cuisse)', amount: '200g', calories: 260 },
+        { name: 'Carottes', amount: '100g', calories: 40 },
+        { name: 'Pommes de terre', amount: '150g', calories: 130 },
+        { name: 'Oignons', amount: '50g', calories: 20 },
+        { name: 'Huile olive', amount: '15ml', calories: 130 },
+      ],
+      nutrition: { calories: 580, proteins: 42, carbs: 38, fats: 28 },
+    },
+    {
+      name: 'Salade nicoise',
+      description: 'Dejeuner mediterraneen',
+      prepTime: 20,
+      ingredients: [
+        { name: 'Thon (conserve)', amount: '120g', calories: 130 },
+        { name: 'Oeufs durs', amount: '2 unites', calories: 140 },
+        { name: 'Haricots verts', amount: '100g', calories: 30 },
+        { name: 'Tomates', amount: '100g', calories: 20 },
+        { name: 'Olives noires', amount: '30g', calories: 50 },
+        { name: 'Huile olive', amount: '15ml', calories: 130 },
+      ],
+      nutrition: { calories: 500, proteins: 38, carbs: 12, fats: 32 },
+    },
+    {
+      name: 'Hachis parmentier',
+      description: 'Plat traditionnel',
+      prepTime: 40,
+      ingredients: [
+        { name: 'Boeuf hache 5%', amount: '150g', calories: 180 },
+        { name: 'Pommes de terre', amount: '200g', calories: 170 },
+        { name: 'Oignons', amount: '50g', calories: 20 },
+        { name: 'Creme fraiche', amount: '30g', calories: 90 },
+        { name: 'Fromage rape', amount: '30g', calories: 120 },
+      ],
+      nutrition: { calories: 580, proteins: 35, carbs: 42, fats: 28 },
+    },
   ],
   snack: [
-    { name: 'Smoothie fruits', description: 'Collation vitaminee', prepTime: 5, ingredients: ['Banane', 'Fruits rouges', 'Yaourt', 'Miel', 'Lait'] },
+    {
+      name: 'Smoothie fruits',
+      description: 'Collation vitaminee',
+      prepTime: 5,
+      ingredients: [
+        { name: 'Banane', amount: '100g', calories: 90 },
+        { name: 'Fruits rouges', amount: '100g', calories: 45 },
+        { name: 'Yaourt nature', amount: '100g', calories: 55 },
+        { name: 'Miel', amount: '15g', calories: 50 },
+      ],
+      nutrition: { calories: 240, proteins: 6, carbs: 48, fats: 3 },
+    },
   ],
   dinner: [
-    { name: 'Ratatouille', description: 'Plat provencal', prepTime: 35, ingredients: ['Courgettes', 'Aubergines', 'Poivrons', 'Tomates', 'Oignons', 'Ail', 'Herbes'] },
-    { name: 'Gratin dauphinois', description: 'Accompagnement savoyard', prepTime: 45, ingredients: ['Pommes de terre', 'Creme', 'Lait', 'Ail', 'Muscade', 'Beurre'] },
-    { name: 'Risotto aux champignons', description: 'Diner italien', prepTime: 30, ingredients: ['Riz arborio', 'Champignons', 'Oignon', 'Vin blanc', 'Parmesan', 'Bouillon'] },
+    {
+      name: 'Ratatouille',
+      description: 'Plat provencal',
+      prepTime: 35,
+      ingredients: [
+        { name: 'Courgettes', amount: '150g', calories: 25 },
+        { name: 'Aubergines', amount: '150g', calories: 35 },
+        { name: 'Poivrons', amount: '100g', calories: 25 },
+        { name: 'Tomates', amount: '150g', calories: 30 },
+        { name: 'Oignons', amount: '50g', calories: 20 },
+        { name: 'Huile olive', amount: '20ml', calories: 175 },
+      ],
+      nutrition: { calories: 310, proteins: 6, carbs: 25, fats: 20 },
+    },
+    {
+      name: 'Gratin dauphinois',
+      description: 'Accompagnement savoyard',
+      prepTime: 45,
+      ingredients: [
+        { name: 'Pommes de terre', amount: '300g', calories: 260 },
+        { name: 'Creme fraiche', amount: '100g', calories: 300 },
+        { name: 'Lait', amount: '100ml', calories: 45 },
+        { name: 'Beurre', amount: '20g', calories: 150 },
+      ],
+      nutrition: { calories: 755, proteins: 12, carbs: 55, fats: 52 },
+    },
+    {
+      name: 'Risotto aux champignons',
+      description: 'Diner italien',
+      prepTime: 30,
+      ingredients: [
+        { name: 'Riz arborio', amount: '100g', calories: 350 },
+        { name: 'Champignons', amount: '150g', calories: 30 },
+        { name: 'Oignon', amount: '50g', calories: 20 },
+        { name: 'Parmesan', amount: '30g', calories: 120 },
+        { name: 'Huile olive', amount: '15ml', calories: 130 },
+      ],
+      nutrition: { calories: 650, proteins: 18, carbs: 78, fats: 28 },
+    },
   ],
 }
 
@@ -749,7 +1317,7 @@ function getFallbackMeal(
   }
 
   // Choose fallback list based on complexity
-  let fallbackList: Array<{ name: string; description: string; prepTime: number; ingredients: string[] }>
+  let fallbackList: FallbackRecipe[]
   if (complexity === 'basique') {
     fallbackList = FALLBACK_BASIQUE[mealType]
   } else if (complexity === 'elabore') {
@@ -761,7 +1329,6 @@ function getFallbackMeal(
 
   // Pick random from list
   const fallback = fallbackList[Math.floor(Math.random() * fallbackList.length)]
-  const proteinRatio = mealType === 'snack' ? 0.15 : 0.25
 
   return {
     id: generateId(),
@@ -771,13 +1338,8 @@ function getFallbackMeal(
     description: fallback.description,
     prepTime: fallback.prepTime,
     servings: 1,
-    nutrition: {
-      calories: targetCalories,
-      proteins: Math.round(targetCalories * proteinRatio / 4),
-      carbs: Math.round(targetCalories * 0.45 / 4),
-      fats: Math.round(targetCalories * 0.30 / 9),
-    },
-    ingredients: fallback.ingredients.map(name => ({ name, amount: '' })),
+    nutrition: fallback.nutrition, // Use the pre-calculated nutrition from fallback
+    ingredients: fallback.ingredients.map(ing => ({ name: ing.name, amount: ing.amount, calories: ing.calories })),
     instructions: [],
     isCheatMeal: false,
     isValidated: false,
@@ -823,11 +1385,18 @@ class MealPlanAgent {
     onProgress?: (day: number, total: number) => void,
     duration: 1 | 3 | 7 = 7
   ): Promise<PlannedMealItem[]> {
-    console.log(`Generating ${duration}-day meal plan...`)
+    console.log('===========================================')
+    console.log('🍽️ MEAL PLAN GENERATION STARTED')
+    console.log('===========================================')
+    console.log(`Duration: ${duration} days`)
     console.log('Daily calorie target:', preferences.dailyCalories)
     console.log('Repas plaisir enabled:', preferences.includeCheatMeal)
     console.log('Recipe complexity:', preferences.complexity || 'mix')
     console.log('Cooking level:', preferences.cookingLevel || 'intermediate')
+    console.log('Meal source preference:', preferences.mealSourcePreference || 'balanced')
+    console.log('Goal:', preferences.goal || 'maintain')
+    console.log('Diet type:', preferences.dietType || 'none')
+    console.log('Allergies:', preferences.allergies?.join(', ') || 'none')
 
     const meals: PlannedMealItem[] = []
     const usedRecipeNames: string[] = []
@@ -930,7 +1499,9 @@ class MealPlanAgent {
       }
     }
 
-    console.log(`\nGenerated ${meals.length} meals total`)
+    console.log('===========================================')
+    console.log(`✅ MEAL PLAN COMPLETE: ${meals.length} meals generated`)
+    console.log('===========================================')
     return meals
   }
 

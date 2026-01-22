@@ -69,16 +69,15 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     bgColor: '#ECFDF5',
     description: 'Scanner le code-barres d\'un produit'
   },
-  // TEMPORARILY HIDDEN - AI meal generation disabled until more reliable
-  // {
-  //   id: 'ai-meal',
-  //   label: 'Repas IA',
-  //   labelShort: 'IA',
-  //   iconName: 'Sparkles',
-  //   color: '#F59E0B',
-  //   bgColor: '#FFFBEB',
-  //   description: 'Générer un repas personnalisé par l\'IA'
-  // },
+  {
+    id: 'ai-meal',
+    label: 'Plan IA',
+    labelShort: 'Plan',
+    iconName: 'Sparkles',
+    color: '#F59E0B',
+    bgColor: '#FFFBEB',
+    description: 'Générer un plan repas personnalisé'
+  },
   {
     id: 'discover-recipes',
     label: 'Découvrir',

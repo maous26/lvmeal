@@ -137,14 +137,22 @@ export default function WeeklyPlanScreen() {
   }, [currentPlan?.shoppingList?.items])
 
   const generateWeekPlan = async () => {
+    console.log('===========================================')
+    console.log('🚀 GENERATE WEEK PLAN BUTTON PRESSED')
+    console.log('===========================================')
+    console.log('Profile:', profile ? 'exists' : 'null')
+    console.log('NutritionGoals:', nutritionGoals ? 'exists' : 'null')
+
     if (!nutritionGoals || !profile) {
+      console.log('❌ Profile or nutritionGoals missing!')
       Alert.alert(
         'Profil incomplet',
-        'Configure tes objectifs nutritionnels dans les parametres.'
+        'Configure tes objectifs nutritionnels dans les paramètres.'
       )
       return
     }
 
+    console.log('✅ Profile and goals OK, starting generation...')
     setIsGenerating(true)
     setGenerationProgress({ day: 0, total: planDuration })
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -174,6 +182,8 @@ export default function WeeklyPlanScreen() {
           cookingTimeWeekend: weekendTime,
           complexity, // Recipe complexity level
           cookingLevel: profile.cookingPreferences?.level || 'intermediate',
+          mealSourcePreference: profile.mealSourcePreference, // User's preferred food sources
+          goal: profile.goal, // weight_loss, muscle_gain, health - affects source selection
         },
         (day, total) => {
           setGenerationProgress({ day, total })
@@ -195,11 +205,11 @@ export default function WeeklyPlanScreen() {
       }
 
       setPlan(newPlan)
-      addXP(planDuration === 7 ? 50 : planDuration === 3 ? 25 : 10, `Plan ${planDuration}j genere`)
+      addXP(planDuration === 7 ? 50 : planDuration === 3 ? 25 : 10, `Plan ${planDuration}j généré`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (error) {
       console.error('Error generating plan:', error)
-      Alert.alert('Erreur', 'Impossible de generer le plan. Reessayez.')
+      Alert.alert('Erreur', 'Impossible de générer le plan. Réessayez.')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
     } finally {
       setIsGenerating(false)
@@ -282,7 +292,7 @@ export default function WeeklyPlanScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (error) {
       console.error('Shopping list error:', error)
-      Alert.alert('Erreur', 'Impossible de generer la liste.')
+      Alert.alert('Erreur', 'Impossible de générer la liste.')
     } finally {
       setIsGeneratingList(false)
     }
@@ -326,10 +336,10 @@ export default function WeeklyPlanScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     savePlan()
-    addXP(50, 'Plan de repas enregistre')
+    addXP(50, 'Plan de repas enregistré')
     Alert.alert(
-      'Plan enregistre',
-      `${validatedMeals.length} repas valides ont ete enregistres dans ton plan.`,
+      'Plan enregistré',
+      `${validatedMeals.length} repas validés ont été enregistrés dans ton plan.`,
       [{ text: 'Super!' }]
     )
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -706,15 +716,15 @@ export default function WeeklyPlanScreen() {
                 <Sparkles size={32} color={colors.warning} />
               </View>
               <Text style={styles.generateTitle}>
-                Plan repas {planDuration}j{calorieReduction ? ' economie' : ''}
+                Plan repas {planDuration}j{calorieReduction ? ' économie' : ''}
               </Text>
               <Text style={styles.generateDescription}>
-                LymIA va generer un plan de {planDuration} jour{planDuration > 1 ? 's' : ''} adapte a tes objectifs.
+                LymIA va générer un plan de {planDuration} jour{planDuration > 1 ? 's' : ''} adapté à tes objectifs.
                 {calorieReduction ? '\n-10% de calories pour alimenter ton Solde Plaisir.' : ''}
               </Text>
               <Text style={styles.generateSourceHint}>
                 Sources: Gustar.io, OFF, Ciqual.{'\n'}
-                Modifiable dans Profil → Parametres → Sources repas
+                Modifiable dans Profil → Paramètres → Sources repas
               </Text>
               <Button
                 variant="primary"
@@ -733,7 +743,7 @@ export default function WeeklyPlanScreen() {
                 ) : (
                   <>
                     <Sparkles size={20} color="#FFFFFF" />
-                    <Text style={styles.buttonText}>Generer mon plan</Text>
+                    <Text style={styles.buttonText}>Générer mon plan</Text>
                   </>
                 )}
               </Button>
@@ -756,7 +766,7 @@ export default function WeeklyPlanScreen() {
               <View style={styles.progressHeader}>
                 <Text style={styles.progressTitle}>Progression</Text>
                 <Text style={styles.progressValue}>
-                  {progress.validated}/{progress.total} repas valides
+                  {progress.validated}/{progress.total} repas validés
                 </Text>
               </View>
               <View style={styles.progressBar}>
@@ -768,7 +778,7 @@ export default function WeeklyPlanScreen() {
                 <View style={styles.cheatMealBanner}>
                   <PartyPopper size={16} color={colors.warning} />
                   <Text style={styles.cheatMealText}>
-                    Bravo ! Tu as debloque un repas plaisir !
+                    Bravo ! Tu as débloqué un repas plaisir !
                   </Text>
                 </View>
               )}
@@ -871,7 +881,7 @@ export default function WeeklyPlanScreen() {
                 <>
                   <ShoppingCart size={20} color={colors.accent.primary} />
                   <Text style={styles.shoppingButtonText}>
-                    {currentPlan.shoppingList ? 'Voir la liste de courses' : 'Generer la liste de courses'}
+                    {currentPlan.shoppingList ? 'Voir la liste de courses' : 'Générer la liste de courses'}
                   </Text>
                 </>
               )}

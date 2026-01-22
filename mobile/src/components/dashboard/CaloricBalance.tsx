@@ -97,7 +97,7 @@ export function CaloricBalance({
               <Gift size={20} color={colors.accent.primary} />
               <View style={styles.setupText}>
                 <Text style={[styles.setupTitle, { color: colors.text.primary }]}>Ton cycle plaisir commence !</Text>
-                <Text style={[styles.setupSubtitle, { color: colors.text.tertiary }]}>Economise 200 kcal pour debloquer un bonus repas des le jour 3</Text>
+                <Text style={[styles.setupSubtitle, { color: colors.text.tertiary }]}>Économise 200 kcal pour débloquer un bonus repas dès le jour 3</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -154,9 +154,9 @@ export function CaloricBalance({
             <Gift size={16} color="#FFFFFF" />
           </View>
           <View style={styles.infoBoxContent}>
-            <Text style={[styles.infoBoxTitle, { color: colors.text.primary }]}>1 a 2 repas plaisir par semaine</Text>
+            <Text style={[styles.infoBoxTitle, { color: colors.text.primary }]}>1 à 2 repas plaisir par semaine</Text>
             <Text style={[styles.infoBoxText, { color: colors.text.secondary }]}>
-              Des le jour 3 avec 200 kcal economisees, ajoute jusqu'a +600 kcal bonus sur un repas.
+              Dès le jour 3 avec 200 kcal économisées, ajoute jusqu'à +600 kcal bonus sur un repas.
             </Text>
           </View>
         </View>
@@ -211,11 +211,11 @@ export function CaloricBalance({
                 <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Le principe</Text>
               </View>
               <Text style={[styles.modalSectionText, { color: colors.text.secondary }]}>
-                Economise des calories au quotidien et debloque jusqu'a 2 bonus repas par semaine !
+                Économise des calories au quotidien et débloque jusqu'à 2 bonus repas par semaine !
               </Text>
               <View style={[styles.modalExample, { backgroundColor: colors.bg.tertiary }]}>
                 <Text style={[styles.modalExampleText, { color: colors.text.tertiary }]}>
-                  Des 200 kcal economisees (a partir du jour 3), ajoute jusqu'a
+                  Dès 200 kcal économisées (à partir du jour 3), ajoute jusqu'à
                   <Text style={[styles.modalExampleHighlight, { color: colors.success }]}> +600 kcal bonus</Text> sur un repas de ton choix.
                 </Text>
               </View>
@@ -225,20 +225,20 @@ export function CaloricBalance({
             <View style={[styles.modalSection, { backgroundColor: colors.bg.secondary }]}>
               <View style={styles.modalSectionHeader}>
                 <TrendingUp size={20} color={colors.success} />
-                <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Comment ca marche</Text>
+                <Text style={[styles.modalSectionTitle, { color: colors.text.primary }]}>Comment ça marche</Text>
               </View>
               <View style={styles.stepsList}>
                 <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
                   <Text style={[styles.stepNumber, { color: colors.success }]}>1. </Text>
-                  Mange legerement sous ton objectif pour accumuler des calories
+                  Mange légèrement sous ton objectif pour accumuler des calories
                 </Text>
                 <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
                   <Text style={[styles.stepNumber, { color: colors.success }]}>2. </Text>
-                  A partir du jour 3 et 200 kcal economisees : bonus debloque !
+                  À partir du jour 3 et 200 kcal économisées : bonus débloqué !
                 </Text>
                 <Text style={[styles.stepItem, { color: colors.text.secondary }]}>
                   <Text style={[styles.stepNumber, { color: colors.success }]}>3. </Text>
-                  Ajoute jusqu'a +600 kcal sur un repas, jusqu'a 2 fois par semaine
+                  Ajoute jusqu'à +600 kcal sur un repas, jusqu'à 2 fois par semaine
                 </Text>
               </View>
             </View>

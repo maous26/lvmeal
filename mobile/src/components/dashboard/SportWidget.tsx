@@ -124,7 +124,7 @@ export function SportWidget({ onPress }: SportWidgetProps) {
         ) : (
           <View style={styles.noProgram}>
             <Text style={styles.noProgramText}>
-              Clique pour generer ton programme
+              Clique pour générer ton programme
             </Text>
           </View>
         )}

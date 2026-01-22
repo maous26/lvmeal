@@ -34,8 +34,10 @@ export interface PasswordResetResult {
 // Storage key for cached email user
 const EMAIL_USER_STORAGE_KEY = 'lym_email_user'
 
-// Backend URL for auth redirects
-const AUTH_REDIRECT_BASE = 'https://lym1-production.up.railway.app'
+// Deep link scheme for auth redirects (opens the app directly)
+// Using the app's custom URL scheme instead of a web URL
+// This ensures the email verification link opens the app directly on the device
+const AUTH_REDIRECT_BASE = 'presence:/'
 
 // ============================================================================
 // Email Authentication Functions

@@ -165,13 +165,13 @@ export interface Achievement {
 export const ACHIEVEMENTS: Achievement[] = [
   // Streaks (4)
   { id: 'streak_7', name: 'Semaine parfaite', description: '7 jours consecutifs', icon: '🔥', xpReward: 100, condition: { type: 'streak', target: 7 } },
-  { id: 'streak_30', name: 'Mois engage', description: '30 jours consecutifs', icon: '⚡', xpReward: 500, condition: { type: 'streak', target: 30 } },
-  { id: 'streak_100', name: 'Centenaire', description: '100 jours consecutifs', icon: '🏆', xpReward: 2000, condition: { type: 'streak', target: 100 } },
+  { id: 'streak_30', name: 'Mois engagé', description: '30 jours consécutifs', icon: '⚡', xpReward: 500, condition: { type: 'streak', target: 30 } },
+  { id: 'streak_100', name: 'Centenaire', description: '100 jours consécutifs', icon: '🏆', xpReward: 2000, condition: { type: 'streak', target: 100 } },
 
   // Meals (3)
-  { id: 'meals_10', name: 'Regulier', description: '10 repas enregistres', icon: '🍽️', xpReward: 50, condition: { type: 'count', target: 10, metric: 'meals_logged' } },
-  { id: 'meals_100', name: 'Gourmet', description: '100 repas enregistres', icon: '👨‍🍳', xpReward: 300, condition: { type: 'count', target: 100, metric: 'meals_logged' } },
-  { id: 'meals_500', name: 'Chef', description: '500 repas enregistres', icon: '⭐', xpReward: 1000, condition: { type: 'count', target: 500, metric: 'meals_logged' } },
+  { id: 'meals_10', name: 'Régulier', description: '10 repas enregistrés', icon: '🍽️', xpReward: 50, condition: { type: 'count', target: 10, metric: 'meals_logged' } },
+  { id: 'meals_100', name: 'Gourmet', description: '100 repas enregistrés', icon: '👨‍🍳', xpReward: 300, condition: { type: 'count', target: 100, metric: 'meals_logged' } },
+  { id: 'meals_500', name: 'Chef', description: '500 repas enregistrés', icon: '⭐', xpReward: 1000, condition: { type: 'count', target: 500, metric: 'meals_logged' } },
 
   // Goals (3)
   { id: 'goals_7', name: 'Sur la bonne voie', description: '7 objectifs atteints', icon: '🎯', xpReward: 100, condition: { type: 'count', target: 7, metric: 'goals_reached' } },

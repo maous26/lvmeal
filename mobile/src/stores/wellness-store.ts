@@ -140,7 +140,7 @@ export const useWellnessStore = create<WellnessState>()(
         })
 
         const gamification = useGamificationStore.getState()
-        gamification.addXP(XP_REWARDS.LOG_SLEEP, 'Sommeil enregistre')
+        gamification.addXP(XP_REWARDS.LOG_SLEEP, 'Sommeil enregistré')
         if (hours >= 7) {
           gamification.addXP(XP_REWARDS.GOOD_SLEEP_7H, '7h+ de sommeil')
         }

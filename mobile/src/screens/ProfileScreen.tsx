@@ -558,7 +558,7 @@ export default function ProfileScreen() {
 
           {/* Meal Input Settings */}
           <TouchableOpacity
-            style={styles.settingItem}
+            style={[styles.settingItem, styles.settingItemBorder, { borderBottomColor: colors.border.light }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
               navigation.navigate('MealInputSettings')
@@ -572,6 +572,27 @@ export default function ProfileScreen() {
               <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Ajouter un repas</Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
                 {pinnedMethodsLabels} ({pinnedMethods.length}/4)
+              </Text>
+            </View>
+            <ChevronRight size={20} color={colors.text.tertiary} />
+          </TouchableOpacity>
+
+          {/* Meal Source Settings */}
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              navigation.navigate('MealSourceSettings')
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.settingIconContainer, { backgroundColor: 'rgba(122, 158, 126, 0.1)' }]}>
+              <Database size={20} color={colors.accent.primary} />
+            </View>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.settingLabel, { color: colors.text.primary }]}>Sources de repas</Text>
+              <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
+                {mealSourceLabels[profile?.mealSourcePreference || 'balanced'].label}
               </Text>
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />

@@ -218,7 +218,7 @@ export default function NotificationSettingsScreen() {
                 Celebrations
               </Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
-                Series, badges debloques et objectifs atteints
+                Séries, badges débloqués et objectifs atteints
               </Text>
             </View>
             <Switch
@@ -241,8 +241,8 @@ export default function NotificationSettingsScreen() {
               </Text>
               <Text style={[styles.notificationDescription, { color: colors.text.tertiary }]}>
                 {hasFasting
-                  ? 'Rappels adaptes a ta fenetre de jeune intermittent'
-                  : 'Rappels pour petit-dej, dejeuner, gouter et diner'}
+                  ? 'Rappels adaptés à ta fenêtre de jeûne intermittent'
+                  : 'Rappels pour petit-déj, déjeuner, goûter et dîner'}
               </Text>
             </View>
             <Switch

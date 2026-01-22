@@ -586,6 +586,7 @@ export default function AddMealScreen() {
     // Convert to MealItems
     // IMPORTANT: For standard foods, nutrition values are per 100g, so multiplier must be grams/100
     // For custom recipes (source === 'recipe'), nutrition is per portion, so multiplier = quantity directly
+    // For photo meals (source === 'photo'), nutrition is ABSOLUTE for the detected portion, so multiplier = 1
     const mealItems: MealItem[] = selectedFoods.map(({ food, quantity, unit }) => {
       // Special handling for custom recipes - their nutrition is already per portion
       if (food.source === 'recipe' || food.isRecipe) {
@@ -593,6 +594,17 @@ export default function AddMealScreen() {
           id: generateId(),
           food,
           quantity: quantity, // For recipes, quantity = number of portions
+        }
+      }
+
+      // Special handling for photo-detected meals - nutrition is ABSOLUTE for the detected portion
+      // The AI already calculated calories for the estimated weight shown in the photo
+      // So we use quantity = 1 to represent "1 complete meal as detected"
+      if (food.source === 'photo') {
+        return {
+          id: generateId(),
+          food,
+          quantity: 1, // Photo meals: nutrition is already the total, no multiplier needed
         }
       }
 
@@ -615,12 +627,14 @@ export default function AddMealScreen() {
 
     console.log('[AddMealScreen] Saving meal with items:', mealItems.map(m => ({
       name: m.food.name,
+      source: m.food.source,
       quantity: m.quantity,
-      calories: m.food.nutrition.calories * m.quantity
+      nutritionCalories: m.food.nutrition.calories,
+      finalCalories: Math.round(m.food.nutrition.calories * m.quantity)
     })))
 
     addMeal(selectedMealType, mealItems)
-    addXP(15, 'Repas enregistre')
+    addXP(15, 'Repas enregistré')
 
     // Track meal logged
     const totalCalories = mealItems.reduce((sum, item) => {
@@ -867,7 +881,7 @@ export default function AddMealScreen() {
 
           Alert.alert(
             `Plan ${planDuration} jour${planDuration > 1 ? 's' : ''} genere`,
-            `${totalMeals} repas crees\n\nSources utilisees:\n${sourceInfo}\n\nCalories totales: ${result.totalNutrition.calories} kcal`,
+            `${totalMeals} repas créés\n\nSources utilisées:\n${sourceInfo}\n\nCalories totales: ${result.totalNutrition.calories} kcal`,
             [
               { text: 'Voir le plan', onPress: () => {
                 setShowAIRecipeModal(false)
@@ -878,7 +892,7 @@ export default function AddMealScreen() {
             ]
           )
         } else {
-          toast.error('Impossible de generer le plan repas')
+          toast.error('Impossible de générer le plan repas')
         }
       }
     } catch (error) {
@@ -1009,7 +1023,7 @@ export default function AddMealScreen() {
     // Save the rating
     rateAIRecipe(selectedRecipe.id, userRating, userComment)
 
-    toast.success('Note enregistree !')
+    toast.success('Note enregistrée !')
   }
 
   // Add recipe to meal
@@ -2000,8 +2014,8 @@ export default function AddMealScreen() {
                 </View>
                 <Text style={styles.aiDescription}>
                   {generationMode === 'suggestion'
-                    ? 'LymIA te suggere un repas adapte a ton profil et tes besoins caloriques du moment.'
-                    : 'LymIA genere un plan repas complet adapte a ton profil nutritionnel.'}
+                    ? 'LymIA te suggère un repas adapté à ton profil et tes besoins caloriques du moment.'
+                    : 'LymIA génère un plan repas complet adapté à ton profil nutritionnel.'}
                 </Text>
 
                 {/* Plan Duration Selector (only for plan mode) */}
@@ -2116,7 +2130,7 @@ export default function AddMealScreen() {
                       <Text style={styles.generateButtonText}>
                         {generationMode === 'suggestion'
                           ? 'Suggerer un repas'
-                          : `Generer ${planDuration} jour${planDuration > 1 ? 's' : ''} de repas`}
+                          : `Générer ${planDuration} jour${planDuration > 1 ? 's' : ''} de repas`}
                       </Text>
                     </>
                   )}

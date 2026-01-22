@@ -508,96 +508,8 @@ export default function HomeScreen() {
           <UnifiedCoachBubble />
         </View>
 
-        {/* Main Calories Widget - Glassmorphism + LiquidProgress */}
-        <GlassCard style={styles.caloriesSection} variant="elevated" delay={100}>
-          <View style={styles.caloriesHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Aujourd'hui</Text>
-            <View style={[styles.calorieBadge, { backgroundColor: colors.accent.light }]}>
-              <Sparkles size={12} color={colors.accent.primary} />
-              <Text style={[styles.calorieBadgeText, { color: colors.accent.primary }]}>
-                {Math.round((totals.calories / goals.calories) * 100)}% atteint
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.caloriesContentCentered}>
-            <LiquidProgress
-              value={totals.calories}
-              max={goals.calories}
-              size={200}
-              strokeWidth={16}
-            />
-          </View>
-
-          {/* Condensed stats row */}
-          <View style={styles.caloriesStatsRow}>
-            <View style={styles.calorieStatChip}>
-              <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
-              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
-                {formatNumber(totals.calories)} consommées
-              </Text>
-            </View>
-            <View style={styles.calorieStatChip}>
-              <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
-              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
-                {formatNumber(goals.calories)} objectif
-              </Text>
-            </View>
-            {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
-              <View style={styles.calorieStatChip}>
-                <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
-                <Text style={[styles.calorieStatChipText, { color: colors.warning }]}>
-                  +{baseGoals.sportCaloriesBonus} sport
-                </Text>
-              </View>
-            )}
-          </View>
-        </GlassCard>
-
-        {/* Macros Widget - Glassmorphism avec gradients organiques */}
-        <GlassCard style={styles.macrosSection} delay={200}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
-            Macronutriments
-          </Text>
-
-          <MacroProgressBar
-            label="Protéines"
-            current={totals.proteins}
-            target={goals.proteins}
-            color={colors.nutrients.proteins}
-            gradientColors={['#5C7A52', '#4A6741']}
-            icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
-            delay={100}
-          />
-
-          <MacroProgressBar
-            label="Glucides"
-            current={totals.carbs}
-            target={goals.carbs}
-            color={colors.nutrients.carbs}
-            gradientColors={['#E3BE91', '#D4A574']}
-            icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
-            delay={200}
-          />
-
-          <MacroProgressBar
-            label="Lipides"
-            current={totals.fats}
-            target={goals.fats}
-            color={colors.nutrients.fats}
-            gradientColors={['#B8A0CC', '#9B7BB8']}
-            icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
-            delay={300}
-          />
-        </GlassCard>
-
-        {/* Hydration Widget */}
-        <View style={styles.hydrationWidgetContainer}>
-          <HydrationWidget />
-        </View>
-
-        {/* Meals Section - GlassCard */}
-        <GlassCard style={styles.mealsSection} delay={300}>
+        {/* Meals Section - GlassCard (moved above Aujourd'hui) */}
+        <GlassCard style={styles.mealsSection} delay={100}>
           <View style={styles.mealsSectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Journal des repas</Text>
             <View style={styles.dateSelector}>
@@ -700,6 +612,94 @@ export default function HomeScreen() {
             )
           })}
         </GlassCard>
+
+        {/* Main Calories Widget - Glassmorphism + LiquidProgress */}
+        <GlassCard style={styles.caloriesSection} variant="elevated" delay={200}>
+          <View style={styles.caloriesHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Aujourd'hui</Text>
+            <View style={[styles.calorieBadge, { backgroundColor: colors.accent.light }]}>
+              <Sparkles size={12} color={colors.accent.primary} />
+              <Text style={[styles.calorieBadgeText, { color: colors.accent.primary }]}>
+                {Math.round((totals.calories / goals.calories) * 100)}% atteint
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.caloriesContentCentered}>
+            <LiquidProgress
+              value={totals.calories}
+              max={goals.calories}
+              size={200}
+              strokeWidth={16}
+            />
+          </View>
+
+          {/* Condensed stats row */}
+          <View style={styles.caloriesStatsRow}>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(totals.calories)} consommées
+              </Text>
+            </View>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(goals.calories)} objectif
+              </Text>
+            </View>
+            {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
+              <View style={styles.calorieStatChip}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
+                <Text style={[styles.calorieStatChipText, { color: colors.warning }]}>
+                  +{baseGoals.sportCaloriesBonus} sport
+                </Text>
+              </View>
+            )}
+          </View>
+        </GlassCard>
+
+        {/* Macros Widget - Glassmorphism avec gradients organiques */}
+        <GlassCard style={styles.macrosSection} delay={300}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
+            Macronutriments
+          </Text>
+
+          <MacroProgressBar
+            label="Protéines"
+            current={totals.proteins}
+            target={goals.proteins}
+            color={colors.nutrients.proteins}
+            gradientColors={['#5C7A52', '#4A6741']}
+            icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
+            delay={100}
+          />
+
+          <MacroProgressBar
+            label="Glucides"
+            current={totals.carbs}
+            target={goals.carbs}
+            color={colors.nutrients.carbs}
+            gradientColors={['#E3BE91', '#D4A574']}
+            icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
+            delay={200}
+          />
+
+          <MacroProgressBar
+            label="Lipides"
+            current={totals.fats}
+            target={goals.fats}
+            color={colors.nutrients.fats}
+            gradientColors={['#B8A0CC', '#9B7BB8']}
+            icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
+            delay={300}
+          />
+        </GlassCard>
+
+        {/* Hydration Widget */}
+        <View style={styles.hydrationWidgetContainer}>
+          <HydrationWidget />
+        </View>
 
         {/* Meal Suggestions - Gustar recipes based on profile and time of day */}
         <MealSuggestions

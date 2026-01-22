@@ -41,9 +41,9 @@ const durationConfig = {
 }
 
 const complexityConfig: Record<RecipeComplexity, { label: string; description: string }> = {
-  basique: { label: 'Basique', description: '≤4 ingredients, rapide' },
-  elabore: { label: 'Elabore', description: '+5 ingredients' },
-  mix: { label: 'Mix', description: 'Varie' },
+  basique: { label: 'Basique', description: '≤4 ingrédients, rapide' },
+  elabore: { label: 'Élaboré', description: '+5 ingrédients' },
+  mix: { label: 'Mix', description: 'Varié' },
 }
 
 export default function QuickActionsWidget({
@@ -203,7 +203,7 @@ export default function QuickActionsWidget({
         >
           <Sparkles size={18} color="#FFFFFF" />
           <Text style={styles.generateText}>
-            Generer mon plan {selectedDuration}j
+            Générer mon plan {selectedDuration}j
             {calorieReduction ? ' (-10%)' : ''}
           </Text>
           <ChevronRight size={18} color="#FFFFFF" />

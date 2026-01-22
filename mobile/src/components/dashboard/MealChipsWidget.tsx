@@ -64,7 +64,7 @@ export default function MealChipsWidget({ meals, onMealPress, onNavigateToMeals 
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Elabore tes repas</Text>
+        <Text style={styles.title}>Élabore tes repas</Text>
         <View style={styles.summaryRow}>
           {filledCount > 0 ? (
             <>
@@ -81,7 +81,7 @@ export default function MealChipsWidget({ meals, onMealPress, onNavigateToMeals 
             </>
           ) : (
             <Text style={styles.summaryTextEmpty}>
-              Aucun repas enregistre
+              Aucun repas enregistré
             </Text>
           )}
         </View>

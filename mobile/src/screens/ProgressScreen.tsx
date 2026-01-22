@@ -42,6 +42,9 @@ export default function ProgressScreen() {
   const [showAddWeight, setShowAddWeight] = useState(false)
   const [newWeight, setNewWeight] = useState('')
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30)
+
+  // Check if store is hydrated to prevent crashes on first render
+  const isStoreHydrated = useUserStore((s) => s._hasHydrated)
   const { profile, nutritionGoals, weightHistory, addWeightEntry } = useUserStore()
   const { dailyData } = useMealsStore()
   const {
@@ -245,6 +248,17 @@ export default function ProgressScreen() {
       .slice(-7)
     return sortedAsc
   }, [weightHistory])
+
+  // Don't render until store is hydrated to prevent crashes
+  if (!isStoreHydrated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Progrès</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>

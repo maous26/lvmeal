@@ -382,19 +382,27 @@ export async function calculatePersonalizedNeeds(
   const remainingForCarbs = baseCalories - proteinCalories - fatCalories
   const baseCarbs = Math.max(80, Math.round(remainingForCarbs / 4)) // Minimum 80g for brain function
 
-  console.log('[LymIABrain] Base calculation (Mifflin-St Jeor + ISSN/ANSES g/kg):', {
-    bmr: Math.round(bmr),
-    tdee: Math.round(tdee),
-    baseCalories,
-    goal: profile.goal,
+  console.log('===========================================')
+  console.log('[LymIABrain] CALORIE CALCULATION DEBUG')
+  console.log('===========================================')
+  console.log('Input profile:', {
+    weight: profile.weight,
+    height: profile.height,
+    age: profile.age,
+    gender: profile.gender,
     activityLevel: profile.activityLevel,
-    weight,
-    proteinPerKg,
-    fatPerKg,
-    proteins: baseProteins,
-    carbs: baseCarbs,
-    fats: baseFats,
+    goal: profile.goal,
   })
+  console.log('Calculation steps:')
+  console.log('  1. BMR (Mifflin-St Jeor):', Math.round(bmr))
+  console.log('  2. TDEE (BMR × activity):', Math.round(tdee))
+  console.log('  3. Goal adjustment:', profile.goal === 'weight_loss' ? '-400' : profile.goal === 'muscle_gain' ? '+300' : '0')
+  console.log('  4. Final calories (rounded):', baseCalories)
+  console.log('Macros (g/kg method):')
+  console.log('  - Proteins:', baseProteins, 'g (', proteinPerKg, 'g/kg)')
+  console.log('  - Fats:', baseFats, 'g (', fatPerKg, 'g/kg)')
+  console.log('  - Carbs:', baseCarbs, 'g (remaining)')
+  console.log('===========================================')
 
   // ==========================================================================
   // STEP 2: CONTEXTUAL ADJUSTMENTS (optional, based on wellness data)

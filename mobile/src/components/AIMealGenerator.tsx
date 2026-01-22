@@ -187,7 +187,7 @@ export default function AIMealGenerator({
             ) : (
               <>
                 <Sparkles size={20} color="#FFFFFF" />
-                <Text style={styles.buttonText}>Generer une recette</Text>
+                <Text style={styles.buttonText}>Générer une recette</Text>
               </>
             )}
           </Button>
@@ -241,7 +241,7 @@ export default function AIMealGenerator({
             </View>
 
             {/* Ingredients */}
-            <Text style={styles.subTitle}>Ingredients</Text>
+            <Text style={styles.subTitle}>Ingrédients</Text>
             {generatedRecipe.ingredients.map((ing, index) => (
               <View key={index} style={styles.ingredientRow}>
                 <Text style={styles.ingredientName}>{ing.name}</Text>
@@ -270,7 +270,7 @@ export default function AIMealGenerator({
               style={styles.actionButton}
             >
               <Sparkles size={18} color={colors.accent.primary} />
-              <Text style={styles.outlineButtonText}>Regenerer</Text>
+              <Text style={styles.outlineButtonText}>Régénérer</Text>
             </Button>
             <Button
               variant="primary"

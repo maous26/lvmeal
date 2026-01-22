@@ -157,9 +157,9 @@ export default function BackupSettingsScreen() {
       const result = await triggerSync()
       if (result.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        toast.success('Synchronisation terminee')
+        toast.success('Synchronisation terminée')
       } else {
-        toast.error(result.error || 'Erreur de sync, reessayez')
+        toast.error(result.error || 'Erreur de sync, réessayez')
       }
     } finally {
       setIsLoading(false)
@@ -178,9 +178,9 @@ export default function BackupSettingsScreen() {
           title: 'LYM Backup',
         })
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        toast.success('Sauvegarde creee')
+        toast.success('Sauvegarde créée')
       } else {
-        toast.error(result.error || 'Impossible de creer la sauvegarde')
+        toast.error(result.error || 'Impossible de créer la sauvegarde')
       }
     } finally {
       setIsLoading(false)

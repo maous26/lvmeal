@@ -295,10 +295,12 @@ export default function CoachScreen() {
 
   // Auto-mark welcome as seen for returning users (restored from cloud)
   // This prevents the welcome card from showing again after reinstall/reconnect
+  // We check for syncStatus !== 'syncing' to ensure cloud restore has completed (success, error, or idle)
   useEffect(() => {
-    if (isStoreHydrated && syncStatus === 'success' && userId && !hasSeenCoachWelcome && profile?.firstName) {
-      // User was restored from cloud - they're not a new user
-      console.log('[CoachScreen] Returning user detected, auto-marking welcome as seen')
+    if (isStoreHydrated && syncStatus !== 'syncing' && userId && !hasSeenCoachWelcome && profile?.firstName) {
+      // User has a profile and is authenticated - they've completed onboarding before
+      // Mark welcome as seen to prevent showing it again
+      console.log('[CoachScreen] Returning user detected (syncStatus:', syncStatus, '), auto-marking welcome as seen')
       setHasSeenCoachWelcome(true)
     }
   }, [isStoreHydrated, syncStatus, userId, hasSeenCoachWelcome, profile?.firstName, setHasSeenCoachWelcome])
