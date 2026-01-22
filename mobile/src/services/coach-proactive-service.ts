@@ -237,7 +237,9 @@ function addToMessageCenter(
   title: string,
   body: string,
   dedupKey: string,
-  emoji?: string
+  emoji?: string,
+  actionRoute?: string,
+  actionLabel?: string
 ): void {
   const config = mapToMessageCenterConfig(notifType)
   const messageCenter = useMessageCenter.getState()
@@ -252,7 +254,8 @@ function addToMessageCenter(
     reason: `Coach proactif: ${notifType}`,
     confidence: 0.8,
     dedupKey,
-    actionRoute: 'Coach',
+    actionRoute: actionRoute || 'Coach',
+    actionLabel,
   })
 }
 
@@ -283,7 +286,7 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
     triggerDate.setHours(summaryHour, 0, 0, 0)
 
     const title = getRandomMessage(COACH_MESSAGES.evening_summary.titles)
-    const body = 'Consulte le resume de ta journee nutrition.'
+    const body = 'Consulte tes progrès du jour dans l\'onglet Progrès.'
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
@@ -292,7 +295,7 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
         data: {
           type: 'coach_proactive',
           subtype: 'evening_summary',
-          deepLink: 'lym://home',
+          deepLink: 'lym://progress',
         },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.DEFAULT,
@@ -303,9 +306,9 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
       },
     })
 
-    // Add to MessageCenter so it appears in Coach screen
+    // Add to MessageCenter so it appears in Coach screen with action to Progress
     const today = new Date().toDateString()
-    addToMessageCenter('evening_summary', title, body, `evening-summary-${today}`, '📊')
+    addToMessageCenter('evening_summary', title, body, `evening-summary-${today}`, '📊', 'Progress', 'Voir mes progrès')
 
     // Save notification ID
     const existingIds = await getScheduledNotificationIds()
