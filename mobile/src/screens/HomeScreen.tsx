@@ -59,8 +59,10 @@ import { useGamificationStore } from '../stores/gamification-store'
 import { useCaloricBankStore } from '../stores/caloric-bank-store'
 import { useOnboardingStore, FEATURE_DISCOVERY_MESSAGES } from '../stores/onboarding-store'
 import FeatureDiscoveryModal from '../components/onboarding/FeatureDiscoveryModal'
+import PhotoFoodScanner from '../components/PhotoFoodScanner'
+import BarcodeScanner from '../components/BarcodeScanner'
 import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/utils'
-import type { MealType } from '../types'
+import type { MealType, FoodItem } from '../types'
 
 const { width } = Dimensions.get('window')
 
@@ -237,7 +239,7 @@ export default function HomeScreen() {
   const { colors, isDark } = useTheme()
   const mealConfig = getMealConfig(colors)
   const { profile, nutritionGoals, recalculateNutritionGoals } = useUserStore()
-  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal } = useMealsStore()
+  const { getTodayData, getMealsByType, currentDate, setCurrentDate, removeItemFromMeal, addMeal } = useMealsStore()
   const { checkAndUpdateStreak, currentStreak, currentLevel } = useGamificationStore()
   const {
     dailyBalances,
@@ -257,6 +259,8 @@ export default function HomeScreen() {
   } = useOnboardingStore()
 
   const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set())
+  const [showPhotoScanner, setShowPhotoScanner] = useState(false)
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
   const [discoveryModalVisible, setDiscoveryModalVisible] = useState(false)
   const [currentDiscoveryFeature, setCurrentDiscoveryFeature] = useState<{
     feature: string
@@ -412,6 +416,33 @@ export default function HomeScreen() {
     })
   }
 
+  // Handler for foods detected by photo/barcode scanner
+  const handleFoodsDetected = (foods: FoodItem[]) => {
+    if (foods.length === 0) return
+
+    // Determine meal type based on current time
+    const hour = new Date().getHours()
+    let mealType: MealType = 'snack'
+    if (hour >= 5 && hour < 11) mealType = 'breakfast'
+    else if (hour >= 11 && hour < 15) mealType = 'lunch'
+    else if (hour >= 18 && hour < 22) mealType = 'dinner'
+
+    // Convert FoodItem[] to MealItem[]
+    const mealItems = foods.map(food => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      food,
+      quantity: 1,
+    }))
+
+    addMeal(mealType, mealItems)
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+  }
+
+  // Handler for barcode product found
+  const handleBarcodeProduct = (product: FoodItem) => {
+    handleFoodsDetected([product])
+  }
+
   // Navigation handlers
   const handleNavigateToAchievements = () => {
     // @ts-ignore
@@ -469,20 +500,7 @@ export default function HomeScreen() {
       >
         {/* Premium Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <LinearGradient
-              colors={[colors.accent.primary, colors.accent.secondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.avatarGradient}
-            >
-              <Text style={styles.avatarText}>{userInitials}</Text>
-            </LinearGradient>
-            <View style={styles.headerTextContainer}>
-              <Text style={[styles.greeting, { color: colors.text.tertiary }]}>{greeting}</Text>
-              <Text style={[styles.userName, { color: colors.text.primary }]}>{userName}</Text>
-            </View>
-          </View>
+          <Text style={[styles.greeting, { color: colors.text.tertiary }]}>{greeting}</Text>
           <TouchableOpacity
             style={[styles.headerIconButton, { backgroundColor: colors.accent.light }]}
             onPress={handleNavigateToCalendar}
@@ -615,99 +633,101 @@ export default function HomeScreen() {
           })}
         </GlassCard>
 
-        {/* Combined Widgets Card - Calories + Macros + Quick Actions */}
-        <GlassCard style={styles.widgetsCard} variant="elevated" delay={200}>
-          {/* Section Header */}
-          <View style={styles.widgetsHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Widgets</Text>
-            <Text style={[styles.widgetsSubtitle, { color: colors.text.secondary }]}>Comment ajouter ?</Text>
+        {/* Main Calories Widget - Glassmorphism + LiquidProgress */}
+        <GlassCard style={styles.caloriesSection} variant="elevated" delay={200}>
+          <View style={styles.caloriesHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Aujourd'hui</Text>
+            <View style={styles.quickActionsRow}>
+              <TouchableOpacity
+                style={[styles.quickActionBtnSmall, { backgroundColor: colors.accent.light }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  setShowPhotoScanner(true)
+                }}
+              >
+                <Camera size={18} color={colors.accent.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickActionBtnSmall, { backgroundColor: colors.accent.light }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                  setShowBarcodeScanner(true)
+                }}
+              >
+                <ScanBarcode size={18} color={colors.accent.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Main Content Row */}
-          <View style={styles.widgetsContent}>
-            {/* Left: Calories Circle */}
-            <View style={styles.caloriesCircleContainer}>
-              <LiquidProgress
-                value={totals.calories}
-                max={goals.calories}
-                size={120}
-                strokeWidth={10}
-              />
-              <Text style={[styles.caloriesLabel, { color: colors.text.secondary }]}>
-                Calories rest...
+          <View style={styles.caloriesContentCentered}>
+            <LiquidProgress
+              value={totals.calories}
+              max={goals.calories}
+              size={200}
+              strokeWidth={16}
+            />
+          </View>
+
+          {/* Condensed stats row */}
+          <View style={styles.caloriesStatsRow}>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(totals.calories)} consommées
               </Text>
             </View>
-
-            {/* Center: Macros */}
-            <View style={styles.macrosCompact}>
-              <View style={styles.macroCompactRow}>
-                <Flame size={14} color={colors.nutrients.proteins} />
-                <View style={styles.macroCompactInfo}>
-                  <Text style={[styles.macroCompactValue, { color: colors.text.primary }]}>
-                    {Math.max(0, goals.proteins - totals.proteins)}g
-                  </Text>
-                  <Text style={[styles.macroCompactLabel, { color: colors.text.secondary }]}>
-                    Protéines restants
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.macroCompactRow}>
-                <Wheat size={14} color={colors.nutrients.carbs} />
-                <View style={styles.macroCompactInfo}>
-                  <Text style={[styles.macroCompactValue, { color: colors.text.primary }]}>
-                    {Math.max(0, goals.carbs - totals.carbs)}g
-                  </Text>
-                  <Text style={[styles.macroCompactLabel, { color: colors.text.secondary }]}>
-                    Glucides restants
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.macroCompactRow}>
-                <Droplets size={14} color={colors.nutrients.fats} />
-                <View style={styles.macroCompactInfo}>
-                  <Text style={[styles.macroCompactValue, { color: colors.text.primary }]}>
-                    {Math.max(0, goals.fats - totals.fats)}g
-                  </Text>
-                  <Text style={[styles.macroCompactLabel, { color: colors.text.secondary }]}>
-                    Lipides restants
-                  </Text>
-                </View>
-              </View>
+            <View style={styles.calorieStatChip}>
+              <View style={[styles.calorieStatDot, { backgroundColor: colors.success }]} />
+              <Text style={[styles.calorieStatChipText, { color: colors.text.secondary }]}>
+                {formatNumber(goals.calories)} objectif
+              </Text>
             </View>
-
-            {/* Right: Quick Actions */}
-            <View style={styles.quickActions}>
-              <TouchableOpacity
-                style={[styles.quickActionBtn, { backgroundColor: colors.bg.secondary, borderColor: colors.border.light }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                  // @ts-ignore
-                  navigation.navigate('AddMeal', { inputMethod: 'camera' })
-                }}
-              >
-                <Camera size={22} color={colors.text.secondary} />
-                <Text style={[styles.quickActionLabel, { color: colors.text.secondary }]} numberOfLines={1}>
-                  Scanner u...
+            {baseGoals.sportCaloriesBonus && baseGoals.sportCaloriesBonus > 0 && (
+              <View style={styles.calorieStatChip}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.warning }]} />
+                <Text style={[styles.calorieStatChipText, { color: colors.warning }]}>
+                  +{baseGoals.sportCaloriesBonus} sport
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionBtn, { backgroundColor: colors.bg.secondary, borderColor: colors.border.light }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                  // @ts-ignore
-                  navigation.navigate('AddMeal', { inputMethod: 'barcode' })
-                }}
-              >
-                <ScanBarcode size={22} color={colors.text.secondary} />
-                <Text style={[styles.quickActionLabel, { color: colors.text.secondary }]} numberOfLines={1}>
-                  Code-barr...
-                </Text>
-              </TouchableOpacity>
-            </View>
+              </View>
+            )}
           </View>
+        </GlassCard>
+
+        {/* Macros Widget - Glassmorphism avec gradients organiques */}
+        <GlassCard style={styles.macrosSection} delay={300}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
+            Macronutriments
+          </Text>
+
+          <MacroProgressBar
+            label="Protéines"
+            current={totals.proteins}
+            target={goals.proteins}
+            color={colors.nutrients.proteins}
+            gradientColors={['#5C7A52', '#4A6741']}
+            icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
+            delay={100}
+          />
+
+          <MacroProgressBar
+            label="Glucides"
+            current={totals.carbs}
+            target={goals.carbs}
+            color={colors.nutrients.carbs}
+            gradientColors={['#E3BE91', '#D4A574']}
+            icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
+            delay={200}
+          />
+
+          <MacroProgressBar
+            label="Lipides"
+            current={totals.fats}
+            target={goals.fats}
+            color={colors.nutrients.fats}
+            gradientColors={['#B8A0CC', '#9B7BB8']}
+            icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
+            delay={300}
+          />
         </GlassCard>
 
         {/* Hydration Widget */}
@@ -765,6 +785,20 @@ export default function HomeScreen() {
           onClose={handleDiscoveryDismiss}
         />
       )}
+
+      {/* Photo Food Scanner Modal */}
+      <PhotoFoodScanner
+        visible={showPhotoScanner}
+        onClose={() => setShowPhotoScanner(false)}
+        onFoodsDetected={handleFoodsDetected}
+      />
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScanner
+        visible={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onFoodFound={handleBarcodeProduct}
+      />
     </SafeAreaView>
   )
 }
@@ -868,6 +902,18 @@ const styles = StyleSheet.create({
   },
   calorieBadgeText: {
     ...typography.captionMedium,
+  },
+  // Quick actions row for camera/barcode shortcuts
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  quickActionBtnSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // New centered layout for LiquidProgress
   caloriesContentCentered: {
