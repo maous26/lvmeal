@@ -1,11 +1,12 @@
 import React, { useMemo, useEffect, useState } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
-import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, ChefHat } from 'lucide-react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Share, Alert } from 'react-native'
+import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, ChefHat, Share2 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
+import { useGamificationStore, XP_REWARDS } from '../../stores/gamification-store'
 import {
   loadStaticRecipes,
   getStaticRecipesByMealType,
@@ -244,6 +245,45 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     onSuggestionPress?.(suggestion)
   }
 
+  // Handle recipe sharing with LYM tag
+  const handleShare = async (suggestion: SuggestedMeal, event: any) => {
+    // Prevent triggering the card press
+    event.stopPropagation()
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    const gamification = useGamificationStore.getState()
+
+    // Build share message with LYM tag
+    const shareMessage = `🍽️ ${suggestion.name}\n\n` +
+      `📊 ${suggestion.calories} kcal | ${suggestion.proteins}g protéines\n` +
+      `⏱️ ${suggestion.prepTime} min de préparation\n\n` +
+      `${suggestion.isGustar ? '👨‍🍳 Recette Gustar' : suggestion.isAI ? '✨ Recette IA' : '📝 Ma recette'}\n\n` +
+      `#LYM #NutritionSaine #Recette`
+
+    try {
+      const result = await Share.share({
+        message: shareMessage,
+        title: `Recette LYM: ${suggestion.name}`,
+      })
+
+      if (result.action === Share.sharedAction) {
+        // User shared successfully - award XP
+        gamification.addXP(XP_REWARDS.SHARE_RECIPE || 20, 'Recette partagée')
+        gamification.incrementMetric('recipes_shared')
+
+        // Show success feedback
+        Alert.alert(
+          '🎉 Recette partagée !',
+          `+${XP_REWARDS.SHARE_RECIPE || 20} XP gagnés pour le partage`,
+          [{ text: 'Super !' }]
+        )
+      }
+    } catch (error) {
+      console.log('[MealSuggestions] Share error:', error)
+    }
+  }
+
   if (suggestions.length === 0) {
     return null
   }
@@ -345,6 +385,16 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
               <Text style={styles.reason} numberOfLines={1}>
                 {suggestion.reason}
               </Text>
+
+              {/* Share Button */}
+              <TouchableOpacity
+                style={styles.shareButton}
+                onPress={(e) => handleShare(suggestion, e)}
+                activeOpacity={0.7}
+              >
+                <Share2 size={14} color={colors.accent.primary} />
+                <Text style={styles.shareButtonText}>Partager #LYM</Text>
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
@@ -511,6 +561,25 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text.muted,
     fontStyle: 'italic',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(74, 103, 65, 0.1)',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.accent.light,
+  },
+  shareButtonText: {
+    ...typography.caption,
+    color: colors.accent.primary,
+    fontWeight: '600',
+    fontSize: 11,
   },
   moreCard: {
     width: 100,

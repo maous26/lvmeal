@@ -83,6 +83,12 @@ export const XP_REWARDS = {
   MEDITATION_SESSION_COMPLETED: 40,
   MEDITATION_FIRST_SESSION: 50,
   MEDITATION_PROGRAM_COMPLETED: 200,
+
+  // Social - Partage de recettes
+  SHARE_RECIPE: 20,
+  FIRST_RECIPE_SHARED: 50,
+  SHARE_5_RECIPES: 100,
+  SHARE_10_RECIPES: 250,
 } as const
 
 // =============================================================================
@@ -187,6 +193,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'meditation_first', name: 'Première méditation', description: 'Compléter ta première méditation guidée', icon: '🧘', xpReward: 50, condition: { type: 'count', target: 1, metric: 'meditation_sessions' } },
   { id: 'meditation_4', name: 'Mi-parcours', description: '4 méditations guidées complétées', icon: '🌙', xpReward: 100, condition: { type: 'count', target: 4, metric: 'meditation_sessions' } },
   { id: 'meditation_8', name: 'Maître Zen', description: 'Programme de 8 méditations complété', icon: '🪷', xpReward: 300, condition: { type: 'count', target: 8, metric: 'meditation_sessions' } },
+
+  // Social - Partage de recettes (3)
+  { id: 'share_first', name: 'Partage Culinaire', description: 'Partage ta première recette', icon: '📤', xpReward: 50, condition: { type: 'count', target: 1, metric: 'recipes_shared' } },
+  { id: 'share_5', name: 'Influenceur', description: '5 recettes partagées', icon: '📱', xpReward: 100, condition: { type: 'count', target: 5, metric: 'recipes_shared' } },
+  { id: 'share_10', name: 'Ambassadeur LYM', description: '10 recettes partagées', icon: '🌟', xpReward: 250, condition: { type: 'count', target: 10, metric: 'recipes_shared' } },
 ]
 
 // =============================================================================
