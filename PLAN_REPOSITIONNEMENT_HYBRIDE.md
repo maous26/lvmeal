@@ -1,249 +1,297 @@
-# Plan de Repositionnement LYM
-## "Le Coach IA qui te comprend vraiment"
+# Plan de Repositionnement LYM (Révisé)
+## Version Honnête et Réaliste
 
 ---
 
-## Vision Stratégique
+## Analyse Critique : Ce que LYM Peut et Ne Peut Pas Faire
 
-**Positionnement cible** : Coach IA bienveillant avec expertise visible
+### Ce que LYM FAIT Bien
 
-> *"LYM n'est pas un tracker. C'est un coach nutritionnel IA qui comprend POURQUOI tu manges comme tu manges, et t'accompagne pour changer en douceur."*
+| Capacité | Niveau | Preuve |
+|----------|--------|--------|
+| Calcul nutritionnel personnalisé | ✅ Excellent | Mifflin-St Jeor + ANSES |
+| Messages 100% IA (pas de templates) | ✅ Récent | `generatePersonalizedMessage()` |
+| Détection patterns numériques | ✅ Bon | Sommeil ↔ calories, stress ↔ alimentation |
+| Planification repas contrainte | ✅ Bon | 7 jours, allergies, objectifs |
+| Base scientifique RAG | ✅ Bon | ANSES, INSERM, HAS |
+| UX bienveillante | ✅ Bon | Ton, pas de culpabilisation |
 
-**Différenciateurs clés** :
-- Bienveillance en surface (ton, messages)
-- Expertise en profondeur (visible sur demande)
-- Personnalisation prouvée (données utilisateur)
-- Sources scientifiques (ANSES, INSERM)
+### Ce que LYM NE PEUT PAS Faire
+
+| Promesse | Réalité | Manque |
+|----------|---------|--------|
+| "Comprend POURQUOI tu manges" | ❌ Non | Pas de contexte émotionnel |
+| "Coach comportemental" | ❌ Non | Pas de questionnement socratique |
+| "Analyse psychologique" | ❌ Non | Pas de données psycho collectées |
+| "Causalité réelle" | ❌ Non | Seulement corrélations numériques |
+
+### La Vérité
+
+> **LYM observe tes données et détecte des patterns. Il ne comprend pas les causes profondes.**
+
+Exemple :
+- LYM voit : "Sommeil 4h → Calories +500"
+- LYM dit : "Quand tu dors peu, tu manges plus"
+- Un vrai coach dirait : "Pourquoi as-tu mal dormi ? Qu'est-ce qui s'est passé ?"
 
 ---
 
-## Phase 1 : Visibilité de l'IA (Sprint 1 - 2 semaines)
+## Nouveau Positionnement : Honnête et Différenciant
 
-### Objectif
-L'utilisateur VOIT que LYM est différent des autres apps.
+### Ancien (Trop Ambitieux) ❌
 
-### Tâches
+> *"LYM comprend POURQUOI tu manges comme tu manges"*
 
-#### 1.1 Badge "✨ Conseil IA" sur les messages
-- [ ] Créer composant `AIBadge` réutilisable
-- [ ] Ajouter sur tous les messages du Coach
-- [ ] Design subtil mais visible (étoile + texte)
+### Nouveau (Réaliste) ✅
 
-**Fichiers à modifier** :
-- `mobile/src/components/coach/CoachMessageCard.tsx`
-- `mobile/src/screens/CoachScreen.tsx`
+> **"LYM : La nutrition intelligente qui s'adapte à toi."**
 
-#### 1.2 Indicateur de personnalisation
-- [ ] Afficher "Basé sur tes X repas analysés" sous les conseils
-- [ ] Ajouter "Confiance : XX%" (optionnel, en footer)
+Ou variantes :
+- "LYM : Ton compagnon nutrition, intelligent et bienveillant"
+- "LYM : La nutrition personnalisée par l'IA"
+- "LYM : Plus qu'un tracker, un vrai accompagnement"
 
-**Fichiers à modifier** :
-- `mobile/src/services/lymia-brain.ts` (retourner metadata)
-- `mobile/src/components/coach/CoachMessageCard.tsx`
+### Ce qu'on PEUT promettre honnêtement
+
+| Promesse | Justification |
+|----------|---------------|
+| "Messages personnalisés par l'IA" | ✅ `generatePersonalizedMessage()` - 100% IA |
+| "Détecte les liens entre sommeil et alimentation" | ✅ Agent Coordinator fait ça |
+| "Conseils basés sur TES données" | ✅ Contexte utilisateur dans tous les prompts |
+| "Jamais culpabilisant" | ✅ Ton bienveillant dans les prompts |
+| "Sources scientifiques" | ✅ RAG avec ANSES, INSERM |
+| "S'adapte à ton jeûne intermittent" | ✅ Fasting context intégré |
+
+### Ce qu'on NE DOIT PAS promettre
+
+- ❌ "Comprend pourquoi tu manges"
+- ❌ "Coach comportemental"
+- ❌ "Thérapie nutritionnelle"
+- ❌ "Analyse tes émotions"
+
+---
+
+## Différenciateurs Réels vs Concurrence
+
+| Feature | Cal AI | YAZIO | Lifesum | **LYM** |
+|---------|--------|-------|---------|---------|
+| Photo tracking | ✅ | ✅ | ✅ | ✅ |
+| Messages IA personnalisés | ❌ Templates | ❌ Templates | ⚠️ Basique | **✅ 100% IA** |
+| Corrélations sommeil/nutrition | ❌ | ❌ | ❌ | **✅** |
+| Sources scientifiques citées | ❌ | ❌ | ❌ | **✅ ANSES** |
+| Jeûne intelligent | Basique | ✅ | ✅ | **✅ Adaptatif** |
+| Ton bienveillant garanti | ❌ Neutre | ❌ Neutre | ❌ Gamifié | **✅** |
+
+**Nos vrais différenciateurs :**
+1. **Messages 100% IA** (jamais de template)
+2. **Corrélations cross-domaines** (sommeil ↔ nutrition ↔ stress)
+3. **Sources scientifiques visibles** (ANSES, INSERM)
+4. **Bienveillance garantie** (dans chaque prompt IA)
+
+---
+
+## Plan d'Exécution Révisé
+
+### Phase 1 : Visibilité des Vrais Atouts (2 semaines)
+
+**Objectif** : Montrer ce que LYM fait VRAIMENT de différent.
+
+#### 1.1 Badge "✨ Conseil IA personnalisé"
+- [ ] Créer composant `AIBadge.tsx`
+- [ ] Afficher sur chaque message du Coach
+- [ ] Texte : "Personnalisé pour toi" (pas "comprend pourquoi")
+
+```tsx
+// mobile/src/components/ai/AIBadge.tsx
+<View style={styles.badge}>
+  <Text>✨ Personnalisé pour toi</Text>
+</View>
+```
+
+#### 1.2 Afficher les données utilisées
+- [ ] "Basé sur tes X repas"
+- [ ] "Analyse de tes Y derniers jours"
+- [ ] Montrer que c'est personnalisé avec PREUVES
 
 #### 1.3 Sources scientifiques visibles
-- [ ] Ajouter ligne "Source : ANSES" sous conseils pertinents
-- [ ] Créer bouton "En savoir plus" → explication
+- [ ] Ajouter "Source : ANSES" sous les conseils pertinents
+- [ ] Créer lien "En savoir plus" → explication
 
-**Fichiers à modifier** :
-- `mobile/src/services/lymia-brain.ts` (inclure sources dans response)
-- `mobile/src/components/coach/CoachMessageCard.tsx`
+#### 1.4 Corrélations détectées (écran simple)
+- [ ] Créer `InsightsScreen.tsx` minimaliste
+- [ ] Montrer : "On a détecté que quand tu dors < 6h, tu consommes +15% de calories"
+- [ ] Pas de "pourquoi", juste les FAITS observés
 
-#### 1.4 Écran "Mes Insights IA" (nouveau)
-- [ ] Créer `AIInsightsScreen.tsx`
-- [ ] Afficher les patterns détectés (corrélations)
-- [ ] Montrer l'historique des conseils IA
-
-**Fichiers à créer** :
-- `mobile/src/screens/AIInsightsScreen.tsx`
-- `mobile/src/components/insights/PatternCard.tsx`
-- `mobile/src/components/insights/CorrelationGraph.tsx`
+**Fichiers à créer/modifier :**
+- `mobile/src/components/ai/AIBadge.tsx` (nouveau)
+- `mobile/src/components/ai/SourceFooter.tsx` (nouveau)
+- `mobile/src/screens/InsightsScreen.tsx` (nouveau, simple)
+- `mobile/src/components/coach/CoachMessageCard.tsx` (modifier)
 
 ---
 
-## Phase 2 : Coaching Conversationnel (Sprint 2-3 - 4 semaines)
+### Phase 2 : Améliorer la Personnalisation Réelle (3 semaines)
 
-### Objectif
-L'utilisateur RESSENT une relation avec son coach.
+**Objectif** : Rendre la personnalisation plus profonde SANS mentir.
 
-### Tâches
+#### 2.1 Enrichir le contexte des messages IA
+- [ ] Ajouter `mealsAnalyzedCount` dans le prompt
+- [ ] Ajouter `daysTracked` dans le prompt
+- [ ] Ajouter `topPatterns` détectés dans le prompt
 
-#### 2.1 Historique de conversation Coach
-- [ ] Transformer le coach en vue "chat"
-- [ ] Garder l'historique des 30 derniers jours
-- [ ] Permettre de "répondre" aux conseils
+#### 2.2 Historique Coach (pas conversation)
+- [ ] Garder historique des 30 derniers conseils
+- [ ] Permettre de marquer "utile / pas utile"
+- [ ] Feedback → améliore les futurs conseils
 
-**Fichiers à modifier** :
-- `mobile/src/screens/CoachScreen.tsx`
-- `mobile/src/stores/coach-store.ts`
+#### 2.3 Améliorer les corrélations existantes
+- [ ] Affiner la détection sommeil ↔ alimentation
+- [ ] Ajouter corrélation stress ↔ grignotage
+- [ ] Ajouter corrélation weekend ↔ patterns différents
 
-#### 2.2 Parcours de changement (14 jours)
-- [ ] Créer système de "Défis" avec suivi
-- [ ] Ex: "Améliorer mes protéines en 14 jours"
-- [ ] Messages quotidiens de suivi personnalisés
+#### 2.4 Onboarding repositionné
+- [ ] "Je suis LYM, ton compagnon nutrition intelligent"
+- [ ] Pas de promesse de "comprendre pourquoi"
+- [ ] Focus sur : personnalisé, bienveillant, scientifique
 
-**Fichiers à créer** :
-- `mobile/src/features/challenges/`
-- `mobile/src/stores/challenges-store.ts`
-- `mobile/src/screens/ChallengeDetailScreen.tsx`
-
-#### 2.3 Check-ins de suivi
-- [ ] "Comment s'est passé le conseil d'hier ?"
-- [ ] Feedback utilisateur → améliore les conseils futurs
-- [ ] Créer boucle d'apprentissage
-
-**Fichiers à modifier** :
-- `mobile/src/services/coach-proactive-service.ts`
-- `mobile/src/stores/feedback-store.ts`
-
-#### 2.4 Écran "Mon Profil IA"
-- [ ] Ce que LYM a appris sur l'utilisateur
-- [ ] Patterns détectés (visuels)
-- [ ] "Ton type de mangeur" (catégorisation)
-
-**Fichiers à créer** :
-- `mobile/src/screens/AIProfileScreen.tsx`
-- `mobile/src/components/profile/EatingTypeCard.tsx`
+**Fichiers à modifier :**
+- `mobile/src/services/lymia-brain.ts` (enrichir contexte)
+- `mobile/src/stores/coach-store.ts` (historique + feedback)
+- `mobile/src/screens/OnboardingScreen.tsx` (nouveau discours)
 
 ---
 
-## Phase 3 : Différenciation Marché (Sprint 4-5 - 4 semaines)
+### Phase 3 : Collecte de Données Optionnelles (4 semaines)
 
-### Objectif
-Le marché RECONNAÎT LYM comme le coach IA de référence.
+**Objectif** : Commencer à collecter le "pourquoi" SANS promettre qu'on le comprend.
 
-### Tâches
+#### 3.1 Champ "Note rapide" après chaque repas (optionnel)
+- [ ] "Comment te sens-tu ?" (1 tap : 😊 😐 😔 😫)
+- [ ] "Une note ?" (optionnel, texte libre)
+- [ ] Stocker mais NE PAS analyser encore
 
-#### 3.1 Intégration Apple Watch
-- [ ] Données sommeil automatiques
-- [ ] Données stress (HRV)
-- [ ] Notifications sur la montre
+#### 3.2 Check-in wellness amélioré
+- [ ] Ajouter "Raison du stress" (optionnel) : Travail / Famille / Santé / Autre
+- [ ] Stocker pour future analyse
 
-**Fichiers à créer** :
-- `mobile/src/services/apple-watch-service.ts`
+#### 3.3 Préparer l'infrastructure (sans activer)
+- [ ] Stocker les notes textuelles
+- [ ] Préparer le schema pour analyse future
+- [ ] Ne PAS promettre qu'on analyse
 
-#### 3.2 Widget iOS "Conseil du jour"
-- [ ] Widget avec message IA personnalisé
-- [ ] Mise à jour quotidienne
-
-**Fichiers à créer** :
-- Configuration Expo widget
-
-#### 3.3 Marketing "Coach Certifié"
-- [ ] Landing page repositionnée
-- [ ] Témoignages changement comportemental
-- [ ] Comparatif vs trackers classiques
-
-#### 3.4 Onboarding repositionné
-- [ ] "Bienvenue, je suis ton coach IA"
-- [ ] Quiz personnalité alimentaire
-- [ ] Premier conseil personnalisé immédiat
-
-**Fichiers à modifier** :
-- `mobile/src/screens/OnboardingScreen.tsx`
-- `mobile/src/components/onboarding/`
+**Note importante** : Cette phase collecte des données pour le FUTUR. On ne promet pas encore de les analyser.
 
 ---
 
-## Métriques de Succès
+### Phase 4 : Évaluation et Décision (2 semaines)
 
-| Métrique | Baseline | Cible Phase 1 | Cible Phase 3 |
-|----------|----------|---------------|---------------|
-| Retention J7 | À mesurer | 35% | 50% |
-| Messages Coach lus | À mesurer | 60% | 85% |
-| Conversion Free→Paid | À mesurer | 5% | 10% |
-| NPS | À mesurer | +20 | +45 |
-| "L'app me comprend" (survey) | À mesurer | 60% | 80% |
+**Objectif** : Décider si on peut aller plus loin.
+
+#### 4.1 Analyser les données collectées
+- [ ] Combien d'utilisateurs remplissent les notes ?
+- [ ] Y a-t-il des patterns dans les raisons de stress ?
+- [ ] Les feedbacks "utile/pas utile" montrent quoi ?
+
+#### 4.2 Décision Go/No-Go
+- Si données riches → Phase 5 (analyse comportementale)
+- Si données pauvres → Rester sur positionnement actuel
 
 ---
 
-## Modifications Techniques Requises
+## Ce qu'on NE FAIT PAS (et pourquoi)
 
-### Services à améliorer
+| Feature Envisagée | Pourquoi Non |
+|-------------------|--------------|
+| "Je comprends pourquoi tu manges" | Mensonge - on n'a pas les données |
+| Questionnement socratique | Trop complexe, risque de mal faire |
+| Analyse psychologique | Pas qualifiés, risque éthique |
+| Coaching comportemental | Nécessite formation professionnelle |
+| Promesse de changement | On accompagne, on ne garantit pas |
 
-1. **lymia-brain.ts**
-   - Ajouter `confidence` score à tous les retours
-   - Inclure `sources` dans les réponses
-   - Tracker `dataPointsUsed` (nombre de repas analysés)
+---
 
-2. **coach-proactive-service.ts** ✅ (déjà fait)
-   - Messages 100% IA (plus de templates)
-   - Flag `isAIGenerated` dans metadata
+## Métriques de Succès Révisées
 
-3. **behavior-analysis-agent.ts**
-   - Exposer les patterns détectés à l'UI
-   - Créer API pour "Mes Insights"
+| Métrique | Cible Phase 1 | Cible Phase 3 |
+|----------|---------------|---------------|
+| % utilisateurs qui voient badge IA | 100% | 100% |
+| % qui cliquent "En savoir plus" (sources) | 10% | 15% |
+| % messages Coach lus | 50% | 70% |
+| Feedback "utile" sur conseils | - | 60% |
+| Retention J7 | 30% | 40% |
+| NPS | +15 | +30 |
 
-4. **agent-coordinator.ts**
-   - Exposer les corrélations cross-domaines
-   - Historiser les insights générés
+---
 
-### Nouveaux composants UI
+## Messaging Marketing Révisé
+
+### Page App Store
+
+**Avant (trop ambitieux) :**
+> "LYM comprend pourquoi tu manges et t'aide à changer"
+
+**Après (honnête) :**
+> "LYM : La nutrition intelligente qui s'adapte à toi.
+>
+> ✨ Conseils personnalisés par l'IA - jamais de messages génériques
+> 📊 Détecte les liens entre ton sommeil et ton alimentation
+> 🔬 Basé sur les recommandations ANSES
+> 💚 Bienveillant - jamais culpabilisant"
+
+### Onboarding
+
+**Écran 1 :**
+> "Salut ! Je suis LYM, ton compagnon nutrition.
+> Je vais apprendre à te connaître pour te donner des conseils vraiment adaptés à toi."
+
+**Écran 2 :**
+> "Plus tu m'utilises, plus je deviens pertinent.
+> Chaque repas que tu enregistres m'aide à mieux te conseiller."
+
+**Écran 3 :**
+> "Je ne suis pas un coach humain, mais je suis toujours là, bienveillant, et basé sur la science."
+
+---
+
+## Calendrier Révisé
 
 ```
-mobile/src/components/
-├── ai/
-│   ├── AIBadge.tsx           # Badge "✨ Conseil IA"
-│   ├── ConfidenceIndicator.tsx
-│   └── SourceFooter.tsx
-├── insights/
-│   ├── PatternCard.tsx
-│   ├── CorrelationGraph.tsx
-│   └── InsightTimeline.tsx
-├── challenges/
-│   ├── ChallengeCard.tsx
-│   ├── DayProgress.tsx
-│   └── ChallengeComplete.tsx
-└── profile/
-    ├── EatingTypeCard.tsx
-    ├── AILearningsCard.tsx
-    └── DataPointsCounter.tsx
-```
-
-### Nouveaux écrans
-
-```
-mobile/src/screens/
-├── AIInsightsScreen.tsx      # Phase 1
-├── AIProfileScreen.tsx       # Phase 2
-├── ChallengeDetailScreen.tsx # Phase 2
-└── ChallengeListScreen.tsx   # Phase 2
-```
-
----
-
-## Risques et Mitigations
-
-| Risque | Impact | Mitigation |
-|--------|--------|------------|
-| Surcharge cognitive (trop d'infos IA) | Moyen | Design progressif, info sur demande |
-| Coûts OpenAI augmentent | Élevé | Cache agressif, rate limiting |
-| Users trouvent l'IA "creepy" | Moyen | Opt-in pour insights détaillés |
-| Délais de développement | Moyen | MVP par phase, itérations |
-
----
-
-## Calendrier Proposé
-
-```
-Semaine 1-2  : Phase 1 (Visibilité IA)
-Semaine 3-6  : Phase 2 (Coaching conversationnel)
-Semaine 7-10 : Phase 3 (Différenciation marché)
-Semaine 11   : Tests utilisateurs
-Semaine 12   : Launch repositionné
+Semaine 1-2  : Phase 1 - Visibilité des vrais atouts
+Semaine 3-5  : Phase 2 - Améliorer personnalisation réelle
+Semaine 6-9  : Phase 3 - Collecte données optionnelles
+Semaine 10-11: Phase 4 - Évaluation et décision
+Semaine 12   : Go/No-Go pour évolution future
 ```
 
 ---
 
 ## Prochaines Actions Immédiates
 
-1. [ ] Créer composant `AIBadge`
-2. [ ] Modifier `CoachMessageCard` pour afficher le badge
-3. [ ] Ajouter sources ANSES/INSERM visibles
-4. [ ] Créer écran `AIInsightsScreen` (MVP)
-5. [ ] Mettre à jour onboarding avec "Je suis ton coach IA"
+1. [ ] Créer `AIBadge.tsx` avec texte "Personnalisé pour toi"
+2. [ ] Ajouter badge sur `CoachMessageCard.tsx`
+3. [ ] Créer `SourceFooter.tsx` pour afficher "Source : ANSES"
+4. [ ] Modifier onboarding : retirer toute promesse de "comprendre"
+5. [ ] Créer écran `InsightsScreen.tsx` simple (corrélations factuelles)
 
 ---
 
-*Document créé le 24/01/2026*
+## Engagement Éthique
+
+**Ce que LYM s'engage à faire :**
+- ✅ Être honnête sur ses capacités
+- ✅ Ne jamais culpabiliser
+- ✅ Citer ses sources
+- ✅ Personnaliser vraiment (pas de templates)
+- ✅ Protéger les données utilisateur
+
+**Ce que LYM s'engage à NE PAS faire :**
+- ❌ Prétendre comprendre la psychologie
+- ❌ Donner des conseils médicaux
+- ❌ Promettre des résultats
+- ❌ Mentir sur ses capacités IA
+
+---
+
+*Document révisé le 24/01/2026*
 *Branche : feature/hybride-repositionnement*
+*Principe : Promettre moins, délivrer plus.*
