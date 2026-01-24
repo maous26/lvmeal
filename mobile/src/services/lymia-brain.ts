@@ -1766,6 +1766,197 @@ function generateStaticConnectedInsights(context: UserContext): ConnectedInsight
   return insights.slice(0, 3) // Max 3 insights
 }
 
+// ============= PERSONALIZED MESSAGE GENERATION =============
+
+/**
+ * Message types for proactive notifications
+ */
+export type ProactiveMessageType =
+  | 'macro_alert'
+  | 'encouragement'
+  | 'evening_summary'
+  | 'fasting_tip'
+  | 'goal_reminder'
+
+export interface PersonalizedMessageContext {
+  profile: UserProfile
+  todayNutrition: NutritionInfo
+  targetNutrition: NutritionInfo
+  streak: number
+  todayMealsCount: number
+  wellnessData?: {
+    sleepHours?: number
+    stressLevel?: number
+    energyLevel?: number
+  }
+  fastingContext?: {
+    schedule: string
+    isInEatingWindow: boolean
+    eatingWindowStart?: number
+    eatingWindowEnd?: number
+  }
+  specificContext?: Record<string, unknown>
+}
+
+export interface PersonalizedMessage {
+  title: string
+  body: string
+  emoji: string
+  isAIGenerated: boolean
+  confidence: number
+}
+
+/**
+ * Generate a truly personalized message using AI
+ * NO templates - every message is unique and contextual
+ */
+export async function generatePersonalizedMessage(
+  messageType: ProactiveMessageType,
+  context: PersonalizedMessageContext
+): Promise<PersonalizedMessage | null> {
+  const { profile, todayNutrition, targetNutrition, streak, todayMealsCount, wellnessData, fastingContext, specificContext } = context
+
+  // Calculate percentages
+  const caloriePercent = targetNutrition.calories > 0
+    ? Math.round((todayNutrition.calories / targetNutrition.calories) * 100)
+    : 0
+  const proteinPercent = targetNutrition.proteins > 0
+    ? Math.round((todayNutrition.proteins / targetNutrition.proteins) * 100)
+    : 0
+
+  const currentHour = new Date().getHours()
+  const firstName = profile.firstName || 'toi'
+
+  // Build context-specific prompt based on message type
+  let typeSpecificPrompt = ''
+  let defaultEmoji = ''
+
+  switch (messageType) {
+    case 'macro_alert':
+      const alertType = specificContext?.alertType as string
+      typeSpecificPrompt = `
+TYPE: Alerte nutrition douce
+SITUATION: ${alertType === 'low_protein' ? `Protéines basses (${todayNutrition.proteins}g sur ${targetNutrition.proteins}g objectif)` :
+               alertType === 'low_calories' ? `Calories basses (${todayNutrition.calories} kcal sur ${targetNutrition.calories} kcal objectif)` :
+               alertType === 'high_carbs' ? `Beaucoup de glucides aujourd'hui (${todayNutrition.carbs}g)` :
+               'Déséquilibre macro détecté'}
+OBJECTIF DU MESSAGE: Suggérer gentiment un ajustement pour le prochain repas, sans culpabiliser
+TON: Bienveillant, comme un ami qui conseille`
+      defaultEmoji = '🍽️'
+      break
+
+    case 'encouragement':
+      const milestoneType = specificContext?.milestoneType as string
+      const days = specificContext?.days as number
+      typeSpecificPrompt = `
+TYPE: Célébration / Encouragement
+SITUATION: ${milestoneType === 'streak' ? `Série de ${days} jours consécutifs` :
+               milestoneType === 'level' ? `Passage au niveau ${specificContext?.level}` :
+               'Progression remarquable'}
+OBJECTIF DU MESSAGE: Célébrer la réussite et motiver à continuer
+TON: Enthousiaste mais sincère, pas exagéré`
+      defaultEmoji = '🎉'
+      break
+
+    case 'evening_summary':
+      typeSpecificPrompt = `
+TYPE: Bilan de fin de journée
+SITUATION:
+- ${todayMealsCount} repas trackés
+- ${caloriePercent}% de l'objectif calorique atteint (${todayNutrition.calories}/${targetNutrition.calories} kcal)
+- ${proteinPercent}% de l'objectif protéines (${todayNutrition.proteins}/${targetNutrition.proteins}g)
+- Série actuelle: ${streak} jours
+${wellnessData?.sleepHours ? `- Sommeil nuit dernière: ${wellnessData.sleepHours}h` : ''}
+${wellnessData?.stressLevel ? `- Niveau de stress: ${wellnessData.stressLevel}/10` : ''}
+OBJECTIF DU MESSAGE: Récapituler la journée positivement, identifier les points forts, donner envie de continuer demain
+TON: Chaleureux, comme un coach qui fait le point en fin de séance`
+      defaultEmoji = caloriePercent >= 85 && caloriePercent <= 115 ? '🎉' : caloriePercent < 70 ? '💪' : '📊'
+      break
+
+    case 'fasting_tip':
+      const tipType = specificContext?.tipType as string
+      typeSpecificPrompt = `
+TYPE: Conseil jeûne intermittent
+SITUATION: ${tipType === 'fasting_period' ? `En période de jeûne (fenêtre alimentaire: ${fastingContext?.eatingWindowStart}h-${fastingContext?.eatingWindowEnd}h)` :
+               tipType === 'eating_window_start' ? `Début de la fenêtre alimentaire (${fastingContext?.eatingWindowStart}h)` :
+               tipType === 'eating_window_end' ? `Fin de fenêtre alimentaire proche (${fastingContext?.eatingWindowEnd}h)` :
+               'Pratique du jeûne intermittent'}
+OBJECTIF DU MESSAGE: Accompagner l'utilisateur dans sa pratique du jeûne avec un conseil adapté au moment
+TON: Supportif et informatif`
+      defaultEmoji = '🧘'
+      break
+
+    case 'goal_reminder':
+      typeSpecificPrompt = `
+TYPE: Rappel d'objectif motivant
+SITUATION:
+- Objectif: ${profile.goal === 'weight_loss' ? 'Perte de poids' : profile.goal === 'muscle_gain' ? 'Prise de muscle' : 'Maintien'}
+- Progression calories: ${caloriePercent}%
+- Progression protéines: ${proteinPercent}%
+OBJECTIF DU MESSAGE: Rappeler gentiment l'objectif et motiver pour la suite de la journée
+TON: Encourageant sans pression`
+      defaultEmoji = '🎯'
+      break
+  }
+
+  const prompt = `Tu es LymIA, coach nutrition bienveillant de l'app LYM. Génère un message de notification personnalisé.
+
+UTILISATEUR:
+- Prénom: ${firstName}
+- Objectif: ${profile.goal}
+- Streak: ${streak} jours
+
+${typeSpecificPrompt}
+
+RÈGLES CRITIQUES:
+1. Tutoie TOUJOURS l'utilisateur
+2. Message COURT: titre (5 mots max) + corps (2 phrases max)
+3. JAMAIS de culpabilisation - toujours positif ou neutre
+4. Personnalise avec les données réelles (chiffres, prénom si naturel)
+5. Sois authentique, pas robotique
+6. Évite les clichés et phrases bateau
+
+Réponds en JSON:
+{
+  "title": "Titre court et accrocheur",
+  "body": "Message personnalisé avec les données de l'utilisateur",
+  "emoji": "Un emoji adapté"
+}`
+
+  try {
+    const aiResult = await executeAICall(
+      'coach_insight',
+      [
+        { role: 'system', content: LYMIA_SYSTEM_PROMPT },
+        { role: 'user', content: prompt }
+      ],
+      {
+        temperature: 0.7,
+        responseFormat: { type: 'json_object' },
+        context: { messageType, hour: currentHour },
+      }
+    )
+
+    if (!aiResult) {
+      console.log('[LymIA] AI not available for personalized message')
+      return null
+    }
+
+    const result = JSON.parse(aiResult.content || '{}')
+
+    return {
+      title: result.title || 'LymIA',
+      body: result.body || '',
+      emoji: result.emoji || defaultEmoji,
+      isAIGenerated: true,
+      confidence: 0.9,
+    }
+  } catch (error) {
+    console.error('[LymIA] Error generating personalized message:', error)
+    return null
+  }
+}
+
 // ============= EXPORTS =============
 
 export const LymIABrain = {
@@ -1782,6 +1973,9 @@ export const LymIABrain = {
 
   // Connected Insights (NEW - Key for cohesive UX)
   generateConnectedInsights,
+
+  // Personalized Messages (NO templates - pure AI)
+  generatePersonalizedMessage,
 }
 
 export default LymIABrain

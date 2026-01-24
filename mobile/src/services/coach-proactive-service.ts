@@ -14,7 +14,13 @@
 
 import * as Notifications from 'expo-notifications'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { buildFastingContext, isInEatingWindow } from './lymia-brain'
+import {
+  buildFastingContext,
+  isInEatingWindow,
+  generatePersonalizedMessage,
+  type ProactiveMessageType,
+  type PersonalizedMessageContext,
+} from './lymia-brain'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -46,123 +52,19 @@ const NOTIFICATION_TIMES = {
   encouragement: 12,   // Midi - encouragement
 }
 
-// Messages Coach par type (tutoiement, bienveillant)
-const COACH_MESSAGES: Record<CoachNotificationType, {
-  titles: string[]
-  bodies: Record<string, string[]>
-}> = {
-  macro_alert: {
-    titles: [
-      'Un petit ajustement ?',
-      'Conseil nutrition',
-      'LYM te conseille',
-    ],
-    bodies: {
-      low_protein: [
-        'Tes proteines sont un peu basses aujourd\'hui. Un yaourt grec ou des oeufs pourraient t\'aider a atteindre tes objectifs.',
-        'Pense a ajouter une source de proteines a ton prochain repas pour rester en forme !',
-      ],
-      high_carbs: [
-        'Tu as consomme pas mal de glucides. Pour le prochain repas, privilegie les proteines et les legumes.',
-        'Les glucides sont importants, mais equilibrer avec des proteines t\'aidera a tenir plus longtemps.',
-      ],
-      low_calories: [
-        'Tu n\'as pas encore mange beaucoup aujourd\'hui. N\'oublie pas de te nourrir correctement !',
-        'Ton corps a besoin d\'energie. Prends le temps de bien manger.',
-      ],
-      high_fats: [
-        'Ta consommation de lipides est elevee. Privilegie des options plus legeres pour le reste de la journee.',
-      ],
-    },
-  },
-  goal_reminder: {
-    titles: [
-      'Tu y es presque !',
-      'Objectif en vue',
-      'Continue comme ca',
-    ],
-    bodies: {
-      calories: [
-        'Plus que {remaining} kcal pour atteindre ton objectif du jour. Tu geres !',
-        'Tu as deja atteint {percent}% de ton objectif calorique. Bravo !',
-      ],
-      protein: [
-        'Plus que {remaining}g de proteines pour atteindre ton objectif. Une collation proteunee ?',
-      ],
-    },
-  },
-  encouragement: {
-    titles: [
-      'Bravo !',
-      'Super progres',
-      'Continue !',
-    ],
-    bodies: {
-      serie: [
-        'Wow, {days} jours d\'affilee ! Ta regularite est impressionnante.',
-        '{days} jours consecutifs ! Ta constance paie, continue comme ca.',
-        'Bravo, ca fait {days} jours que tu tiens le cap !',
-      ],
-      consistency: [
-        'Tu as tracke tous tes repas cette semaine. Excellent travail !',
-        'Ta regularite est exemplaire. Les resultats vont suivre.',
-      ],
-      milestone: [
-        'Tu as atteint {xp} XP ! Chaque action compte.',
-        'Niveau {level} atteint ! Tu progresses super bien.',
-      ],
-    },
-  },
-  fasting_tip: {
-    titles: [
-      'Conseil jeune',
-      'Ton jeune',
-      'Hydratation',
-    ],
-    bodies: {
-      fasting_period: [
-        'Tu es en periode de jeune. Reste bien hydrate avec de l\'eau ou du the sans sucre.',
-        'Pendant ton jeune, n\'oublie pas de boire regulierement. Le cafe noir est aussi autorise !',
-      ],
-      eating_window_start: [
-        'Ta fenetre alimentaire commence ! C\'est le moment de bien te nourrir.',
-        'Debut de ta fenetre alimentaire. Privilegie un repas riche en proteines pour bien demarrer.',
-      ],
-      eating_window_end: [
-        'Ta fenetre alimentaire se termine bientot. As-tu atteint tes objectifs nutritionnels ?',
-      ],
-    },
-  },
-  evening_summary: {
-    titles: [
-      'Resume du jour',
-      'Ta journee',
-      'Bilan nutrition',
-    ],
-    bodies: {
-      good_day: [
-        'Belle journee ! Tu as atteint {percent}% de tes objectifs. Repose-toi bien.',
-        'Journee reussie avec {calories} kcal consommees. A demain !',
-      ],
-      room_for_improvement: [
-        'Tu as consomme {calories} kcal sur {target}. Demain est un nouveau jour !',
-        'Journee a {percent}% de tes objectifs. Chaque jour est une nouvelle opportunite.',
-      ],
-      missed_tracking: [
-        'Tu n\'as pas beaucoup tracke aujourd\'hui. N\'oublie pas, chaque repas compte !',
-      ],
-    },
-  },
-}
+// NOTE: Templates supprimés - TOUS les messages sont maintenant générés par l'IA
+// via generatePersonalizedMessage() dans lymia-brain.ts
+// Cela garantit des messages 100% personnalisés et uniques
 
 /**
  * Analyse la nutrition du jour et determine si une alerte est necessaire
+ * Retourne seulement le type d'alerte - le message est genere par l'IA
  */
 function analyzeNutrition(
   consumed: NutritionInfo,
   target: NutritionInfo,
   currentHour: number
-): { type: string; message: string } | null {
+): { type: string } | null {
   // Ne pas alerter trop tot dans la journee
   if (currentHour < 12) return null
 
@@ -171,18 +73,12 @@ function analyzeNutrition(
 
   // Si on est l'apres-midi et les proteines sont tres basses
   if (currentHour >= 14 && proteinPercent < 30) {
-    return {
-      type: 'low_protein',
-      message: getRandomMessage(COACH_MESSAGES.macro_alert.bodies.low_protein),
-    }
+    return { type: 'low_protein' }
   }
 
   // Si on est l'apres-midi et les calories sont tres basses
   if (currentHour >= 14 && caloriePercent < 25) {
-    return {
-      type: 'low_calories',
-      message: getRandomMessage(COACH_MESSAGES.macro_alert.bodies.low_calories),
-    }
+    return { type: 'low_calories' }
   }
 
   // Si les glucides sont trop eleves (> 60% des macros)
@@ -190,21 +86,11 @@ function analyzeNutrition(
   if (totalMacros > 0) {
     const carbRatio = consumed.carbs / totalMacros
     if (carbRatio > 0.65 && consumed.carbs > 100) {
-      return {
-        type: 'high_carbs',
-        message: getRandomMessage(COACH_MESSAGES.macro_alert.bodies.high_carbs),
-      }
+      return { type: 'high_carbs' }
     }
   }
 
   return null
-}
-
-/**
- * Get random message from array
- */
-function getRandomMessage(messages: string[]): string {
-  return messages[Math.floor(Math.random() * messages.length)]
 }
 
 /**
@@ -618,21 +504,37 @@ export async function checkAndSendMacroAlert(): Promise<boolean> {
     }
 
     const currentHour = new Date().getHours()
-    const alert = analyzeNutrition(consumed, target, currentHour)
+    const alertType = analyzeNutrition(consumed, target, currentHour)
 
-    if (!alert) return false
+    if (!alertType) return false
 
-    // Send notification
-    const title = getRandomMessage(COACH_MESSAGES.macro_alert.titles)
+    // Generate AI-personalized message (NO templates)
+    const messageContext: PersonalizedMessageContext = {
+      profile,
+      todayNutrition: consumed,
+      targetNutrition: target,
+      streak: useGamificationStore.getState().currentStreak || 0,
+      todayMealsCount: todayData?.meals?.length || 0,
+      specificContext: { alertType: alertType.type },
+    }
+
+    const aiMessage = await generatePersonalizedMessage('macro_alert', messageContext)
+
+    // Use AI message or minimal fallback (never templates)
+    const title = aiMessage?.title || 'Conseil nutrition'
+    const body = aiMessage?.body || `Pense à équilibrer ton prochain repas 🍽️`
+    const emoji = aiMessage?.emoji || '🥗'
+
     await Notifications.scheduleNotificationAsync({
       content: {
-        title,
-        body: alert.message,
+        title: `${emoji} ${title}`,
+        body,
         data: {
           type: 'coach_proactive',
           subtype: 'macro_alert',
-          alertType: alert.type,
+          alertType: alertType.type,
           deepLink: 'lym://home',
+          isAIGenerated: aiMessage?.isAIGenerated || false,
         },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.DEFAULT,
@@ -641,10 +543,10 @@ export async function checkAndSendMacroAlert(): Promise<boolean> {
     })
 
     // Add to MessageCenter for Coach screen
-    addToMessageCenter('macro_alert', title, alert.message, `macro-alert-${alert.type}-${today}`, '🥗')
+    addToMessageCenter('macro_alert', title, body, `macro-alert-${alertType.type}-${today}`, emoji)
 
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_MACRO_ALERT_DATE, today)
-    console.log('[CoachProactive] Sent macro alert:', alert.type)
+    console.log('[CoachProactive] Sent AI-personalized macro alert:', alertType.type, aiMessage?.isAIGenerated ? '(AI)' : '(fallback)')
     return true
   } catch (error) {
     console.error('[CoachProactive] Error checking macros:', error)
@@ -669,39 +571,72 @@ export async function sendEncouragementIfDeserved(): Promise<boolean> {
     if (status !== 'granted') return false
 
     const gamificationState = useGamificationStore.getState()
+    const userState = useUserStore.getState()
+    const mealsState = useMealsStore.getState()
+
     const streak = gamificationState.currentStreak || 0
     const level = gamificationState.currentLevel || 1
     const xp = gamificationState.totalXP || 0
+    const profile = userState.profile as UserProfile | null
 
     // Determine if encouragement is deserved
-    let message: string | null = null
-    let title: string = getRandomMessage(COACH_MESSAGES.encouragement.titles)
+    let milestoneType: 'streak' | 'level' | null = null
+    let days = streak
 
     // Milestones de jours consecutifs: 3, 7, 14, 21, 30, etc.
     const serieMilestones = [3, 7, 14, 21, 30, 60, 90]
     if (serieMilestones.includes(streak)) {
-      const template = getRandomMessage(COACH_MESSAGES.encouragement.bodies.serie)
-      message = template.replace('{days}', streak.toString())
+      milestoneType = 'streak'
     }
 
     // Level up celebration
-    if (level > 1 && xp % 1000 < 100) { // Recently leveled up
-      const template = getRandomMessage(COACH_MESSAGES.encouragement.bodies.milestone)
-      message = template
-        .replace('{level}', level.toString())
-        .replace('{xp}', xp.toString())
+    if (level > 1 && xp % 1000 < 100) {
+      milestoneType = 'level'
     }
 
-    if (!message) return false
+    if (!milestoneType || !profile) return false
+
+    // Get today's nutrition for context
+    const todayStr = new Date().toISOString().split('T')[0]
+    const todayData = mealsState.dailyData[todayStr]
+    const todayNutrition: NutritionInfo = todayData?.meals?.reduce(
+      (acc, meal) => ({
+        calories: acc.calories + (meal.totalNutrition?.calories || 0),
+        proteins: acc.proteins + (meal.totalNutrition?.proteins || 0),
+        carbs: acc.carbs + (meal.totalNutrition?.carbs || 0),
+        fats: acc.fats + (meal.totalNutrition?.fats || 0),
+      }),
+      { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    ) || { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+
+    const targetNutrition = profile.nutritionalNeeds || { calories: 2000, proteins: 100, carbs: 250, fats: 70 }
+
+    // Generate AI-personalized encouragement (NO templates)
+    const messageContext: PersonalizedMessageContext = {
+      profile,
+      todayNutrition,
+      targetNutrition,
+      streak,
+      todayMealsCount: todayData?.meals?.length || 0,
+      specificContext: { milestoneType, days, level, xp },
+    }
+
+    const aiMessage = await generatePersonalizedMessage('encouragement', messageContext)
+
+    // Use AI message or minimal fallback
+    const title = aiMessage?.title || 'Bravo !'
+    const body = aiMessage?.body || `${days} jours de suite, continue comme ça !`
+    const emoji = aiMessage?.emoji || '🎉'
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title,
-        body: message,
+        title: `${emoji} ${title}`,
+        body,
         data: {
           type: 'coach_proactive',
           subtype: 'encouragement',
           deepLink: 'lym://home',
+          isAIGenerated: aiMessage?.isAIGenerated || false,
         },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -710,10 +645,10 @@ export async function sendEncouragementIfDeserved(): Promise<boolean> {
     })
 
     // Add to MessageCenter for Coach screen
-    addToMessageCenter('encouragement', title, message, `encouragement-${today}`, '🎉')
+    addToMessageCenter('encouragement', title, body, `encouragement-${today}`, emoji)
 
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_ENCOURAGEMENT_DATE, today)
-    console.log('[CoachProactive] Sent encouragement:', message)
+    console.log('[CoachProactive] Sent AI-personalized encouragement:', milestoneType, aiMessage?.isAIGenerated ? '(AI)' : '(fallback)')
     return true
   } catch (error) {
     console.error('[CoachProactive] Error sending encouragement:', error)
@@ -740,38 +675,77 @@ export async function sendFastingTip(profile: UserProfile): Promise<boolean> {
     const windowEnd = fastingConfig.eatingWindowEnd ?? 20
 
     let tipType: string | null = null
-    let messages: string[] = []
 
     // Near eating window start (within 30 minutes)
     if (currentHour === windowStart) {
       tipType = 'eating_window_start'
-      messages = COACH_MESSAGES.fasting_tip.bodies.eating_window_start
     }
     // Near eating window end (1 hour before)
     else if (currentHour === windowEnd - 1) {
       tipType = 'eating_window_end'
-      messages = COACH_MESSAGES.fasting_tip.bodies.eating_window_end
     }
     // During fasting period (mid-morning for 16:8)
     else if (currentHour === 10 && !isInEatingWindow(windowStart, windowEnd)) {
       tipType = 'fasting_period'
-      messages = COACH_MESSAGES.fasting_tip.bodies.fasting_period
     }
 
-    if (!tipType || messages.length === 0) return false
+    if (!tipType) return false
 
-    const title = getRandomMessage(COACH_MESSAGES.fasting_tip.titles)
-    const body = getRandomMessage(messages)
+    // Get today's nutrition for context
+    const mealsState = useMealsStore.getState()
+    const gamificationState = useGamificationStore.getState()
+    const todayStr = new Date().toISOString().split('T')[0]
+    const todayData = mealsState.dailyData[todayStr]
+
+    const todayNutrition: NutritionInfo = todayData?.meals?.reduce(
+      (acc, meal) => ({
+        calories: acc.calories + (meal.totalNutrition?.calories || 0),
+        proteins: acc.proteins + (meal.totalNutrition?.proteins || 0),
+        carbs: acc.carbs + (meal.totalNutrition?.carbs || 0),
+        fats: acc.fats + (meal.totalNutrition?.fats || 0),
+      }),
+      { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    ) || { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+
+    const targetNutrition = profile.nutritionalNeeds || { calories: 2000, proteins: 100, carbs: 250, fats: 70 }
+
+    // Generate AI-personalized fasting tip (NO templates)
+    const messageContext: PersonalizedMessageContext = {
+      profile,
+      todayNutrition,
+      targetNutrition,
+      streak: gamificationState.currentStreak || 0,
+      todayMealsCount: todayData?.meals?.length || 0,
+      fastingContext: {
+        schedule: fastingConfig.schedule,
+        isInEatingWindow: isInEatingWindow(windowStart, windowEnd),
+        eatingWindowStart: windowStart,
+        eatingWindowEnd: windowEnd,
+      },
+      specificContext: { tipType },
+    }
+
+    const aiMessage = await generatePersonalizedMessage('fasting_tip', messageContext)
+
+    // Use AI message or minimal fallback
+    const title = aiMessage?.title || 'Conseil jeûne'
+    const body = aiMessage?.body || (tipType === 'eating_window_start'
+      ? 'Ta fenêtre alimentaire commence !'
+      : tipType === 'eating_window_end'
+        ? 'Ta fenêtre se termine bientôt'
+        : 'Reste bien hydraté pendant le jeûne')
+    const emoji = aiMessage?.emoji || '🧘'
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title,
+        title: `${emoji} ${title}`,
         body,
         data: {
           type: 'coach_proactive',
           subtype: 'fasting_tip',
           tipType,
           deepLink: 'lym://home',
+          isAIGenerated: aiMessage?.isAIGenerated || false,
         },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.DEFAULT,
@@ -781,9 +755,9 @@ export async function sendFastingTip(profile: UserProfile): Promise<boolean> {
 
     // Add to MessageCenter for Coach screen
     const today = new Date().toDateString()
-    addToMessageCenter('fasting_tip', title, body, `fasting-tip-${tipType}-${today}`, '🧘')
+    addToMessageCenter('fasting_tip', title, body, `fasting-tip-${tipType}-${today}`, emoji)
 
-    console.log('[CoachProactive] Sent fasting tip:', tipType)
+    console.log('[CoachProactive] Sent AI-personalized fasting tip:', tipType, aiMessage?.isAIGenerated ? '(AI)' : '(fallback)')
     return true
   } catch (error) {
     console.error('[CoachProactive] Error sending fasting tip:', error)
