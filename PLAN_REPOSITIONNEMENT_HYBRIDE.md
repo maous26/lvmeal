@@ -13,8 +13,11 @@
 | Messages 100% IA (pas de templates) | ✅ Récent | `generatePersonalizedMessage()` |
 | Détection patterns numériques | ✅ Bon | Sommeil ↔ calories, stress ↔ alimentation |
 | Planification repas contrainte | ✅ Bon | 7 jours, allergies, objectifs |
-| Base scientifique RAG | ✅ Bon | ANSES, INSERM, HAS |
+| Base scientifique RAG | ✅ Bon | ANSES, INSERM, HAS, OMS |
 | UX bienveillante | ✅ Bon | Ton, pas de culpabilisation |
+| **Wellness intégré** | ✅ Excellent | Sommeil, stress, énergie, humeur corrélés à nutrition |
+| **Programme Boost Métabolisme** | ✅ Unique | 4 phases progressives, évaluation IA |
+| **Connexion montres/appareils** | ✅ Bon | Apple Watch, sync automatique pas |
 
 ### Ce que LYM NE PEUT PAS Faire
 
@@ -56,11 +59,15 @@ Ou variantes :
 | Promesse | Justification |
 |----------|---------------|
 | "Messages personnalisés par l'IA" | ✅ `generatePersonalizedMessage()` - 100% IA |
-| "Détecte les liens entre sommeil et alimentation" | ✅ Agent Coordinator fait ça |
+| "Détecte les liens entre sommeil et alimentation" | ✅ Agent Coordinator + Behavior Agent |
 | "Conseils basés sur TES données" | ✅ Contexte utilisateur dans tous les prompts |
 | "Jamais culpabilisant" | ✅ Ton bienveillant dans les prompts |
-| "Sources scientifiques" | ✅ RAG avec ANSES, INSERM |
+| "Sources scientifiques" | ✅ RAG avec ANSES, INSERM, HAS, OMS |
 | "S'adapte à ton jeûne intermittent" | ✅ Fasting context intégré |
+| **"Programme Boost Métabolisme progressif"** | ✅ 4 phases, évaluation IA, sync montres |
+| **"Suivi bien-être complet"** | ✅ Sommeil, stress, énergie, humeur |
+| **"Corrélations stress ↔ grignotage"** | ✅ Behavior Analysis Agent |
+| **"Connexion Apple Watch / montres"** | ✅ DevicesStore + HealthService |
 
 ### Ce qu'on NE DOIT PAS promettre
 
@@ -78,15 +85,86 @@ Ou variantes :
 | Photo tracking | ✅ | ✅ | ✅ | ✅ |
 | Messages IA personnalisés | ❌ Templates | ❌ Templates | ⚠️ Basique | **✅ 100% IA** |
 | Corrélations sommeil/nutrition | ❌ | ❌ | ❌ | **✅** |
-| Sources scientifiques citées | ❌ | ❌ | ❌ | **✅ ANSES** |
+| Sources scientifiques citées | ❌ | ❌ | ❌ | **✅ ANSES, INSERM, HAS** |
 | Jeûne intelligent | Basique | ✅ | ✅ | **✅ Adaptatif** |
 | Ton bienveillant garanti | ❌ Neutre | ❌ Neutre | ❌ Gamifié | **✅** |
+| **Tracking stress/énergie/humeur** | ❌ | ❌ | ❌ | **✅** |
+| **Programme Boost Métabolisme** | ❌ | ❌ | ❌ | **✅ 4 phases** |
+| **Connexion montres** | ⚠️ | ✅ | ✅ | **✅ + corrélations IA** |
+| **Wellness Agent (méditation, sommeil)** | ❌ | ❌ | ⚠️ Basique | **✅ RAG scientifique** |
 
-**Nos vrais différenciateurs :**
+**Nos vrais différenciateurs (MAJEURS) :**
 1. **Messages 100% IA** (jamais de template)
-2. **Corrélations cross-domaines** (sommeil ↔ nutrition ↔ stress)
-3. **Sources scientifiques visibles** (ANSES, INSERM)
+2. **Corrélations cross-domaines** (sommeil ↔ nutrition ↔ stress ↔ énergie)
+3. **Sources scientifiques visibles** (ANSES, INSERM, HAS, OMS)
 4. **Bienveillance garantie** (dans chaque prompt IA)
+5. **🔥 Programme Boost Métabolisme** - UNIQUE sur le marché
+6. **🧘 Wellness intégré** - Sommeil, stress, énergie analysés par l'IA
+
+---
+
+## Features Clés à Mettre en Avant
+
+### 🔥 Programme Boost Métabolisme (UNIQUE)
+
+**Pourquoi c'est un différenciateur majeur :**
+- Aucun concurrent n'offre un programme structuré de relance métabolique
+- Répond à un vrai problème : métabolisme ralenti par les régimes yo-yo
+- 4 phases progressives avec évaluation IA
+- Connexion montres pour suivi automatique des pas
+
+**Ce que ça fait concrètement :**
+
+| Phase | Durée | Objectif |
+|-------|-------|----------|
+| Découverte | 2 sem | Stabilisation, pas de restriction |
+| Marche Active | 3 sem | +activité douce, +100 kcal/sem |
+| Résistance Intro | 4 sem | Construction musculaire légère |
+| Programme Complet | Ongoing | Maintenance métabolique |
+
+**Comment le mettre en avant :**
+- Widget dédié sur HomeScreen (déjà présent : `MetabolicBoostWidget`)
+- Écran dédié (`MetabolicBoostScreen`)
+- Notifications de progression de phase
+- Badge "🔥 Boost Métabolisme" visible
+
+---
+
+### 🧘 Wellness Intégré (DIFFÉRENCIATEUR)
+
+**Pourquoi c'est un différenciateur :**
+- Les concurrents trackent les calories, LYM track le BIEN-ÊTRE GLOBAL
+- Corrélations IA entre stress/sommeil/énergie et alimentation
+- Conseils adaptés à ton état du jour
+
+**Ce qu'on collecte et analyse :**
+
+| Donnée | Utilisation IA |
+|--------|---------------|
+| Sommeil (heures + qualité) | "Tu as mal dormi → conseils anti-fatigue" |
+| Stress (1-5) | "Stress élevé → attention au grignotage" |
+| Énergie (1-5) | "Énergie basse → repas énergétiques suggérés" |
+| Humeur (1-5) | Contexte pour personnalisation |
+| Pas | Sync montre, objectifs adaptatifs |
+
+**Comment le mettre en avant :**
+- Widget Wellness sur HomeScreen
+- Corrélations visibles : "Quand tu dors < 6h, tu manges +300 kcal"
+- Check-in quotidien rapide (1 tap)
+
+---
+
+### ⌚ Connexion Montres (PRATIQUE)
+
+**Appareils supportés :**
+- Apple Watch (via HealthKit)
+- Montres Android (via Health Connect)
+- Sync automatique des pas
+
+**Ce que ça apporte :**
+- Pas de saisie manuelle
+- Objectifs de pas adaptatifs selon la phase
+- Corrélations activité ↔ alimentation
 
 ---
 
@@ -230,12 +308,15 @@ Ou variantes :
 **Avant (trop ambitieux) :**
 > "LYM comprend pourquoi tu manges et t'aide à changer"
 
-**Après (honnête) :**
+**Après (honnête et complet) :**
 > "LYM : La nutrition intelligente qui s'adapte à toi.
 >
 > ✨ Conseils personnalisés par l'IA - jamais de messages génériques
-> 📊 Détecte les liens entre ton sommeil et ton alimentation
-> 🔬 Basé sur les recommandations ANSES
+> 📊 Détecte les liens entre ton sommeil, ton stress et ton alimentation
+> 🔥 Programme Boost Métabolisme - relance ton métabolisme en 4 phases
+> 🧘 Suivi bien-être intégré - sommeil, stress, énergie
+> ⌚ Connecte ta montre pour un suivi automatique
+> 🔬 Basé sur ANSES, INSERM, HAS
 > 💚 Bienveillant - jamais culpabilisant"
 
 ### Onboarding
