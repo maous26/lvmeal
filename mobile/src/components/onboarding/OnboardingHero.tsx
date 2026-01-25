@@ -43,7 +43,7 @@ const { width, height } = Dimensions.get('window')
 
 // iOS color palette
 const iosColors = {
-  green: '#34C759',
+  green: '#1D1D1F',  // Black for primary actions
   purple: '#AF52DE',
   orange: '#FF9500',
   blue: '#007AFF',

@@ -322,10 +322,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.default,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.xl,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
     borderColor: colors.border.light,
-    ...shadows.sm,
   },
   methodButtonCompact: {
     width: '22%',
@@ -334,7 +333,7 @@ const styles = StyleSheet.create({
   methodIconContainer: {
     width: 52,
     height: 52,
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -357,7 +356,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: colors.accent.primary,
+    backgroundColor: '#34C759', // iOS Green
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -367,7 +366,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...typography.caption,
-    color: colors.text.inverse,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 
@@ -379,7 +378,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     padding: spacing.sm,
     backgroundColor: colors.accent.light,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
   },
   suggestionText: {
     ...typography.small,
@@ -451,7 +450,7 @@ const styles = StyleSheet.create({
   methodRowIcon: {
     width: 44,
     height: 44,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -469,7 +468,7 @@ const styles = StyleSheet.create({
   },
   pinButton: {
     padding: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
   },
   pinButtonActive: {
     backgroundColor: colors.bg.secondary,
@@ -483,7 +482,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginVertical: spacing.lg,
     backgroundColor: colors.bg.secondary,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
   },
   noteText: {
     ...typography.small,

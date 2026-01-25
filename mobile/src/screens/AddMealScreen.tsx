@@ -2535,7 +2535,7 @@ const styles = StyleSheet.create({
   headerText: {
     ...typography.h4,
     color: colors.text.primary,
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   saveButton: {
     padding: spacing.sm,
@@ -2550,35 +2550,39 @@ const styles = StyleSheet.create({
   },
   mealTypeSelector: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    backgroundColor: colors.bg.secondary,
+    borderRadius: radius.default,
+    padding: 4,
     marginBottom: spacing.xl,
   },
   mealTypeSelectorChip: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.bg.secondary,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.default - 2,
   },
   mealTypeSelectorChipActive: {
-    backgroundColor: `${colors.accent.primary}15`,
-    borderColor: colors.accent.primary,
+    backgroundColor: colors.bg.elevated,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   mealTypeSelectorEmoji: {
-    fontSize: 16,
+    fontSize: 18,
+    marginBottom: 2,
   },
   mealTypeSelectorText: {
-    ...typography.smallMedium,
-    color: colors.text.secondary,
+    ...typography.caption,
+    fontFamily: fonts.sans.medium,
+    color: colors.text.tertiary,
   },
   mealTypeSelectorTextActive: {
-    color: colors.accent.primary,
+    color: colors.text.primary,
+    fontFamily: fonts.sans.semibold,
   },
   methodsGrid: {
     flexDirection: 'row',
@@ -2591,15 +2595,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.default,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.xl,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
     borderColor: colors.border.light,
-    ...shadows.sm,
   },
   methodIconContainer: {
     width: 52,
     height: 52,
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -2617,7 +2620,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     backgroundColor: colors.bg.secondary,
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
     borderColor: colors.border.light,
     marginBottom: spacing.sm,
@@ -2741,7 +2744,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
     borderColor: colors.border.light,
   },
@@ -2793,18 +2796,18 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   sectionTitle: {
-    ...typography.smallMedium,
-    color: colors.text.tertiary,
-    marginBottom: spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.caption,
+    fontFamily: fonts.sans.semibold,
+    color: colors.text.secondary,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
   },
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
     backgroundColor: colors.bg.elevated,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border.light,
@@ -2816,14 +2819,14 @@ const styles = StyleSheet.create({
   foodImage: {
     width: 48,
     height: 48,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     marginRight: spacing.md,
     backgroundColor: colors.bg.tertiary,
   },
   foodImagePlaceholder: {
     width: 48,
     height: 48,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     marginRight: spacing.md,
     backgroundColor: colors.bg.secondary,
     justifyContent: 'center',

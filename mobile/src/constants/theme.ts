@@ -141,7 +141,7 @@ export const lightColors = {
       wellness: 'rgba(255, 45, 85, 0.08)',
       system: '#F2F2F7',
     },
-    unreadBorder: 'rgba(29, 29, 31, 0.4)',
+    unreadBorder: 'rgba(29, 29, 31, 0.3)',
     readBorder: 'rgba(0, 0, 0, 0.08)',
   },
 
@@ -213,7 +213,7 @@ export const darkColors = {
     light: '#38383A',
     default: '#48484A',
     medium: '#636366',
-    focus: '#30D158',
+    focus: '#FFFFFF',
   },
 
   // Gamification
@@ -241,7 +241,7 @@ export const darkColors = {
       wellness: 'rgba(255, 55, 95, 0.15)',
       system: '#1C1C1E',
     },
-    unreadBorder: 'rgba(48, 209, 88, 0.5)',
+    unreadBorder: 'rgba(255, 255, 255, 0.4)',
     readBorder: 'rgba(255, 255, 255, 0.1)',
   },
 

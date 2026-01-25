@@ -50,14 +50,13 @@ import { NutriScoreBadge } from '../components/ui'
 import { ShareModal, type ShareableRecipe } from '../components/social'
 import type { Recipe, MealType } from '../types'
 
-// Category configurations - Filtres pertinents et fonctionnels
-// Organic Luxury palette colors
+// Category configurations - iOS color palette
 const CATEGORIES = [
-  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#D4A574' },      // Caramel
-  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#4A6741' },       // Vert Mousse
-  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#C87863' },           // Terre Cuite
-  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#7A9E7E' },      // Sauge
-  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#9B7BB8' },     // Lavande
+  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#FF9500' },      // iOS Orange
+  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#34C759' },       // iOS Green
+  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#FF3B30' },           // iOS Red
+  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#30D158' },      // iOS Mint
+  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#AF52DE' },     // iOS Purple
 ]
 
 const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
@@ -946,7 +945,6 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F4', // Blanc cassé
   },
   searchContainer: {
     flexDirection: 'row',
@@ -959,27 +957,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
   },
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: '#1A1A1A',
+    fontFamily: fonts.sans.regular,
   },
   filterButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E5E5',
   },
   scrollView: {
     flex: 1,
@@ -1000,9 +994,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryCard: {
-    width: 140,
-    height: 80,
-    borderRadius: radius.lg,
+    width: 130,
+    height: 72,
+    borderRadius: radius.default, // iOS 8px
     overflow: 'hidden',
     marginRight: spacing.sm,
   },
@@ -1013,12 +1007,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   categoryEmoji: {
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 4,
   },
   categoryLabel: {
     ...typography.smallMedium,
-    color: '#1A1A1A',
+    fontFamily: fonts.sans.medium,
   },
   // Sections
   section: {
@@ -1033,10 +1027,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.caption,
-    color: '#6B7280',
     fontWeight: '600',
-    letterSpacing: 1,
-    fontFamily: fonts.serif.bold,
+    letterSpacing: 0.5,
+    fontFamily: fonts.sans.semibold,
   },
   viewAllText: {
     ...typography.small,
@@ -1045,17 +1038,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.default,
     gap: spacing.md,
   },
-  // Recipe Card
+  // Recipe Card - iOS style
   recipeCard: {
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     overflow: 'hidden',
     marginRight: spacing.md,
-    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   recipeImageContainer: {
     position: 'relative',
@@ -1068,7 +1060,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E5E5E5',
   },
   nutriscoreContainer: {
     position: 'absolute',
@@ -1139,7 +1130,7 @@ const styles = StyleSheet.create({
   },
   recipeTitle: {
     ...typography.smallMedium,
-    fontFamily: fonts.serif.semibold,
+    fontFamily: fonts.sans.semibold,
     lineHeight: 18,
   },
   noResultsText: {
@@ -1194,8 +1185,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
+    borderTopLeftRadius: radius.lg, // iOS 12px
+    borderTopRightRadius: radius.lg,
     paddingHorizontal: spacing.default,
     paddingTop: spacing.lg,
     paddingBottom: spacing['3xl'],
@@ -1213,7 +1204,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...typography.h3,
     fontWeight: '600',
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.semibold,
   },
   modalCloseButton: {
     width: 36,
@@ -1246,7 +1237,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
   },
   filterOptionText: {
@@ -1263,21 +1254,23 @@ const styles = StyleSheet.create({
   resetButton: {
     flex: 1,
     paddingVertical: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     borderWidth: 1,
     alignItems: 'center',
   },
   resetButtonText: {
     ...typography.bodyMedium,
+    fontFamily: fonts.sans.medium,
   },
   applyButton: {
     flex: 2,
     paddingVertical: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // iOS 8px
     alignItems: 'center',
   },
   applyButtonText: {
     ...typography.bodyMedium,
+    fontFamily: fonts.sans.semibold,
     color: '#FFFFFF',
     fontWeight: '600',
   },

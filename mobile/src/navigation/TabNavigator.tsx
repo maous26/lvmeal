@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import {
   Home,
-  Bot,
+  Sparkles,
   Layers,
   User,
   BookOpen,
@@ -145,7 +145,7 @@ export default function TabNavigator() {
         options={{
           tabBarLabel: 'Coach',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon Icon={Bot} focused={focused} color={color} badge={coachBadgeCount} />
+            <TabIcon Icon={Sparkles} focused={focused} color={color} badge={coachBadgeCount} />
           ),
         }}
       />

@@ -41,16 +41,16 @@ export function MockHomePreview() {
       {/* Stats Cards */}
       <View style={styles.statsRow}>
         <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
-          <View style={[styles.statIcon, { backgroundColor: '#34C759' + '20' }]}>
-            <Target size={16} color="#34C759" />
+          <View style={[styles.statIcon, { backgroundColor: '#1D1D1F' + '20' }]}>
+            <Target size={16} color="#1D1D1F" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>1 850</Text>
           <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kcal/jour</Text>
         </View>
 
         <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
-          <View style={[styles.statIcon, { backgroundColor: '#34C759' + '20' }]}>
-            <TrendingUp size={16} color="#34C759" />
+          <View style={[styles.statIcon, { backgroundColor: '#1D1D1F' + '20' }]}>
+            <TrendingUp size={16} color="#1D1D1F" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>-2.3</Text>
           <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kg ce mois</Text>
@@ -78,7 +78,7 @@ export function MockHomePreview() {
         <Text style={[styles.tagsTitle, { color: colors.text.tertiary }]}>Tes préférences</Text>
         <View style={styles.tagsRow}>
           {[
-            { label: 'Sans lactose', color: '#34C759' },
+            { label: 'Sans lactose', color: '#1D1D1F' },
             { label: 'Végétarien', color: purple },
             { label: '15 min', color: '#FF9500' },
           ].map((tag, i) => (
@@ -100,7 +100,7 @@ export function MockHomePreview() {
             <View key={i} style={styles.dayCol}>
               <View style={[
                 styles.dayCircle,
-                { backgroundColor: i < 5 ? '#34C759' : colors.border.light }
+                { backgroundColor: i < 5 ? '#1D1D1F' : colors.border.light }
               ]}>
                 {i < 5 && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
               </View>
