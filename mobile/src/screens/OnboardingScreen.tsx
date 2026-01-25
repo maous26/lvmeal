@@ -21,6 +21,7 @@ import {
 } from '../components/onboarding'
 import { useMetabolicBoostStore } from '../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../stores/wellness-program-store'
+import { useWellnessStore } from '../stores/wellness-store'
 import { useUserStore } from '../stores/user-store'
 import { useOnboardingStore } from '../stores/onboarding-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -102,7 +103,9 @@ const isExpoGo = Constants.appOwnership === 'expo'
 // Flow: welcome (marketing) → setup-choice → basic-info → ... → analysis → cloud-sync
 // Quick mode: welcome → setup-choice → quick-setup (no cloud-sync)
 // Note: cloud-sync is now enabled in Expo Go for testing
-const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'diet', 'cooking', 'metabolism', 'lifestyle', 'analysis', 'cloud-sync']
+// Flow réorganisé: metabolism après goal pour contextualiser plus tôt les questions sur le métabolisme
+// Cela permet d'adapter diet/cooking selon le profil métabolique détecté
+const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'metabolism', 'diet', 'cooking', 'lifestyle', 'analysis', 'cloud-sync']
 
 // Calculate nutritional needs based on profile (with adaptive metabolism support)
 // IMPORTANT: Cette formule DOIT être synchronisée avec user-store.ts calculateNutritionalNeeds
@@ -273,13 +276,13 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
   // Program stores for enrollment and reset
   const { enroll: enrollMetabolicBoost, reset: resetMetabolicBoost } = useMetabolicBoostStore()
   const { enroll: enrollWellnessProgram, reset: resetWellnessProgram } = useWellnessProgramStore()
+  const { initializeFromLifestyle } = useWellnessStore()
 
   // Build steps dynamically based on user profile
   // ORDRE DE PRIORITÉ:
-  // 0. health-priorities: si goal = health (après goal)
-  // 1. Diagnostic métabolisme d'ABORD (après cooking)
-  // 2. metabolic-program: si métabolisme adaptatif détecté (après metabolism)
-  // 3. wellness-program: proposé à TOUS sauf si métabo accepté
+  // 0. health-priorities: si goal = health (après goal, avant metabolism)
+  // 1. metabolic-program: si métabolisme adaptatif détecté (après metabolism)
+  // 2. wellness-program: proposé à TOUS (complémentaire, pas exclusif)
   const steps = useMemo(() => {
     let dynamicSteps = [...baseSteps]
 
@@ -297,28 +300,24 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
       dynamicSteps = [...dynamicSteps.slice(0, metabolismIndex), 'metabolic-program' as OnboardingStep, ...dynamicSteps.slice(metabolismIndex)]
     }
 
-    // 2. Wellness-program: proposé à TOUS sauf si métabo accepté
-    const shouldProposeWellness = profile.metabolismProfile !== 'adaptive' || profile.wantsMetabolicProgram === false
+    // 2. Wellness-program: proposé à TOUS (complémentaire au métabo, pas exclusif)
+    // Inséré après metabolic-program si présent, sinon après metabolism
+    const metabolicIndex = dynamicSteps.indexOf('metabolic-program')
+    const metabolismIndex = dynamicSteps.indexOf('metabolism')
 
-    if (shouldProposeWellness) {
-      const metabolicIndex = dynamicSteps.indexOf('metabolic-program')
-      const metabolismIndex = dynamicSteps.indexOf('metabolism')
+    let insertAfter = -1
+    if (metabolicIndex !== -1) {
+      insertAfter = metabolicIndex
+    } else if (metabolismIndex !== -1) {
+      insertAfter = metabolismIndex
+    }
 
-      // Trouver le bon point d'insertion (après metabolic-program > après metabolism)
-      let insertAfter = -1
-      if (metabolicIndex !== -1) {
-        insertAfter = metabolicIndex
-      } else if (metabolismIndex !== -1) {
-        insertAfter = metabolismIndex
-      }
-
-      if (insertAfter !== -1) {
-        dynamicSteps = [...dynamicSteps.slice(0, insertAfter + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(insertAfter + 1)]
-      }
+    if (insertAfter !== -1) {
+      dynamicSteps = [...dynamicSteps.slice(0, insertAfter + 1), 'wellness-program' as OnboardingStep, ...dynamicSteps.slice(insertAfter + 1)]
     }
 
     return dynamicSteps
-  }, [profile.goal, profile.metabolismProfile, profile.wantsMetabolicProgram])
+  }, [profile.goal, profile.metabolismProfile])
 
   const stepIndex = steps.indexOf(currentStep)
   const config = stepConfig[currentStep]
@@ -411,6 +410,11 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     setStoreProfile(finalProfile)
     setOnboarded(true)
 
+    // Initialize wellness targets from lifestyle habits (water goal, sleep goal)
+    if (profile.lifestyleHabits) {
+      initializeFromLifestyle(profile.lifestyleHabits)
+    }
+
     // Initialize the 7-day trial (signup date for progressive unlock)
     setSignupDate()
 
@@ -438,7 +442,7 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
 
     setLoading(false)
     onComplete()
-  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, resetMetabolicBoost, resetWellnessProgram, onComplete, setSignupDate, isAuthenticated, triggerSync])
+  }, [profile, aiCalculatedNeeds, onboardingStartTime, setStoreProfile, setOnboarded, startTrial, enrollMetabolicBoost, enrollWellnessProgram, resetMetabolicBoost, resetWellnessProgram, onComplete, setSignupDate, isAuthenticated, triggerSync, initializeFromLifestyle])
 
   const handleNext = useCallback(async () => {
     // Analysis step: go to cloud-sync

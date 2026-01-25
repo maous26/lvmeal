@@ -93,6 +93,7 @@ export interface CoachContext {
   // From wellness
   sleepHours?: number
   sleepQuality?: number
+  sleepQualityPerception?: 'poor' | 'average' | 'good' | 'excellent' // From onboarding lifestyle
   stressLevel?: number
   energyLevel?: number
   // From activity
@@ -246,6 +247,33 @@ function generateItemsFromContext(context: CoachContext): CoachItem[] {
       priority: 'high',
       source: 'inserm',
       data: { sleepHours: context.sleepHours },
+      isRead: false,
+      createdAt: now.toISOString(),
+    })
+  }
+
+  // Conseil personnalisé basé sur la qualité de sommeil perçue (onboarding)
+  if (context.sleepQualityPerception === 'poor' && hour >= 20 && hour <= 23) {
+    items.push({
+      id: generateId(),
+      type: 'tip',
+      category: 'sleep',
+      title: 'Sommeil',
+      message: `Tu as indiqué avoir un sommeil difficile. Un dîner léger (pas trop gras ni trop sucré) et éviter les écrans 1h avant le coucher peuvent améliorer ta qualité de sommeil.`,
+      priority: 'medium',
+      source: 'inserm',
+      isRead: false,
+      createdAt: now.toISOString(),
+    })
+  } else if (context.sleepQualityPerception === 'average' && hour >= 21) {
+    items.push({
+      id: generateId(),
+      type: 'tip',
+      category: 'sleep',
+      title: 'Sommeil',
+      message: `Pour améliorer ton sommeil, essaie une tisane relaxante (camomille, verveine) et garde une température fraîche dans ta chambre.`,
+      priority: 'low',
+      source: 'inserm',
       isRead: false,
       createdAt: now.toISOString(),
     })

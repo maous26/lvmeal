@@ -78,6 +78,8 @@ export function useAgentTriggers() {
           level,
           xp,
           daysTracked: Object.keys(dailyData).length,
+          // Lifestyle habits from onboarding
+          sleepQualityPerception: profile?.lifestyleHabits?.sleepQualityPerception,
         })
 
         // Lancer l'analyse coordonnée

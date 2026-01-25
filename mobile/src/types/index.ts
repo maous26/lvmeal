@@ -60,6 +60,9 @@ export interface LifestyleHabits {
   stressLevelDaily: 'low' | 'moderate' | 'high' | 'very_high'
   waterIntakeDaily: number // in liters
   fasting?: FastingConfig  // Intermittent fasting settings
+  // Sleep schedule for optimized reminders
+  wakeUpTime?: number  // Hour (0-23), e.g. 7 for 7am
+  bedTime?: number     // Hour (0-23), e.g. 23 for 11pm
 }
 
 export interface MetabolismFactors {

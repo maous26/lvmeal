@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { WellnessEntry, WellnessTargets, WellnessStreaks } from '../types'
+import type { WellnessEntry, WellnessTargets, WellnessStreaks, LifestyleHabits } from '../types'
 import { useGamificationStore, XP_REWARDS } from './gamification-store'
 
 function getTodayString(): string {
@@ -25,6 +25,7 @@ interface WellnessState {
   logSteps: (steps: number) => void
   logWater: (liters: number) => void
   setTargets: (targets: Partial<WellnessTargets>) => void
+  initializeFromLifestyle: (habits: LifestyleHabits) => void
   updateStreaks: () => void
 
   // Getters
@@ -208,6 +209,36 @@ export const useWellnessStore = create<WellnessState>()(
         set((state) => ({
           targets: { ...state.targets, ...targets },
         }))
+      },
+
+      initializeFromLifestyle: (habits) => {
+        // Personnaliser les objectifs selon les habitudes de l'utilisateur
+        const personalizedTargets: Partial<WellnessTargets> = {}
+
+        // Objectif eau basé sur waterIntakeDaily de l'onboarding
+        if (habits.waterIntakeDaily) {
+          // Objectif = +0.5L par rapport à la consommation actuelle (pour encourager)
+          // Mais minimum 2L, maximum 3L
+          const waterGoal = Math.min(3, Math.max(2, habits.waterIntakeDaily + 0.5))
+          personalizedTargets.waterLiters = waterGoal
+          personalizedTargets.waterMl = waterGoal * 1000
+        }
+
+        // Objectif sommeil basé sur averageSleepHours
+        if (habits.averageSleepHours) {
+          // Si l'utilisateur dort déjà 7h+, on garde 7h
+          // Sinon objectif = actuel + 0.5h (progressif)
+          const sleepGoal = habits.averageSleepHours >= 7
+            ? 7
+            : Math.min(7, habits.averageSleepHours + 0.5)
+          personalizedTargets.sleepHours = sleepGoal
+        }
+
+        if (Object.keys(personalizedTargets).length > 0) {
+          set((state) => ({
+            targets: { ...state.targets, ...personalizedTargets },
+          }))
+        }
       },
 
       updateStreaks: () => {

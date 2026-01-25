@@ -17,12 +17,23 @@ import {
   User,
   Scale,
   ChevronRight,
-  Info,
   ArrowLeft,
+  TrendingDown,
+  Dumbbell,
+  Heart,
+  Activity,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, shadows } from '../../constants/theme'
-import type { UserProfile, Gender } from '../../types'
+import type { UserProfile, Gender, Goal } from '../../types'
+
+// Goal options for quick setup
+const GOAL_OPTIONS: { value: Goal; label: string; emoji: string; icon: any }[] = [
+  { value: 'weight_loss', label: 'Perdre du poids', emoji: '🎯', icon: TrendingDown },
+  { value: 'muscle_gain', label: 'Prendre du muscle', emoji: '💪', icon: Dumbbell },
+  { value: 'maintenance', label: 'Maintenir', emoji: '⚖️', icon: Activity },
+  { value: 'health', label: 'Mieux manger', emoji: '🥗', icon: Heart },
+]
 
 interface StepQuickSetupProps {
   onComplete: (profile: Partial<UserProfile>) => void
@@ -38,8 +49,9 @@ export function StepQuickSetup({ onComplete, onBack, onSwitchToFull }: StepQuick
   const [gender, setGender] = useState<Gender | null>(null)
   const [age, setAge] = useState('')
   const [weight, setWeight] = useState('')
+  const [goal, setGoal] = useState<Goal | null>(null)
 
-  const isValid = firstName.trim() && gender && age && weight
+  const isValid = firstName.trim() && gender && age && weight && goal
 
   const handleComplete = () => {
     if (!isValid) return
@@ -56,7 +68,7 @@ export function StepQuickSetup({ onComplete, onBack, onSwitchToFull }: StepQuick
       height: gender === 'female' ? 165 : 175, // Moyenne française
       targetWeight: parseFloat(weight), // Maintenance par défaut
       activityLevel: 'moderate',
-      goal: 'maintenance',
+      goal: goal,
       dietType: 'omnivore',
       cookingPreferences: {
         level: 'intermediate',
@@ -220,6 +232,44 @@ export function StepQuickSetup({ onComplete, onBack, onSwitchToFull }: StepQuick
                 </View>
               </View>
             </View>
+
+            {/* Goal Selection */}
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.text.secondary }]}>
+                Ton objectif principal
+              </Text>
+              <View style={styles.goalGrid}>
+                {GOAL_OPTIONS.map((option) => {
+                  const isSelected = goal === option.value
+                  const IconComponent = option.icon
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.goalOption,
+                        { backgroundColor: colors.bg.elevated, borderColor: colors.border.light },
+                        isSelected && { backgroundColor: colors.accent.light, borderColor: colors.accent.primary },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                        setGoal(option.value)
+                      }}
+                    >
+                      <IconComponent
+                        size={20}
+                        color={isSelected ? colors.accent.primary : colors.text.tertiary}
+                      />
+                      <Text style={[
+                        styles.goalText,
+                        { color: isSelected ? colors.accent.primary : colors.text.secondary }
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+            </View>
           </View>
 
           {/* Warning Card - Important */}
@@ -227,15 +277,15 @@ export function StepQuickSetup({ onComplete, onBack, onSwitchToFull }: StepQuick
             <View style={styles.warningHeader}>
               <Text style={styles.warningEmoji}>⚠️</Text>
               <Text style={[styles.warningTitle, { color: colors.warning }]}>
-                Recommandations moins précises
+                Recommandations approximatives
               </Text>
             </View>
             <Text style={[styles.warningText, { color: colors.text.primary }]}>
-              Sans ton objectif, régime alimentaire et niveau d'activité, les calories calculées seront approximatives et les recommandations moins adaptées à tes besoins.
+              Sans ton régime alimentaire et niveau d'activité, les calories calculées seront moins précises.
             </Text>
             <View style={styles.warningBullets}>
               <Text style={[styles.warningBullet, { color: colors.text.secondary }]}>
-                • Calories basées sur des moyennes générales
+                • Activité physique estimée "modérée"
               </Text>
               <Text style={[styles.warningBullet, { color: colors.text.secondary }]}>
                 • Pas de prise en compte des allergies
@@ -400,6 +450,25 @@ const styles = StyleSheet.create({
   rowFields: {
     flexDirection: 'row',
     gap: spacing.md,
+  },
+  goalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  goalOption: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    gap: spacing.sm,
+  },
+  goalText: {
+    ...typography.smallMedium,
+    flex: 1,
   },
   warningCard: {
     padding: spacing.default,

@@ -46,6 +46,22 @@ const fastingOptions: { value: FastingSchedule; label: string; emoji: string; de
   { value: 'interested', label: 'Curieux', emoji: '🤔', description: "J'aimerais essayer" },
 ]
 
+const wakeUpOptions = [
+  { value: 5, label: '5h', emoji: '🌅' },
+  { value: 6, label: '6h', emoji: '🌄' },
+  { value: 7, label: '7h', emoji: '☀️' },
+  { value: 8, label: '8h', emoji: '🌞' },
+  { value: 9, label: '9h+', emoji: '😴' },
+]
+
+const bedTimeOptions = [
+  { value: 21, label: '21h', emoji: '🌙' },
+  { value: 22, label: '22h', emoji: '🌜' },
+  { value: 23, label: '23h', emoji: '🌃' },
+  { value: 0, label: 'Minuit', emoji: '🦉' },
+  { value: 1, label: '1h+', emoji: '🌌' },
+]
+
 export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
   const { colors } = useTheme()
   const sleepAccent = colors.accent.primary
@@ -268,6 +284,79 @@ export function StepLifestyle({ data, onChange }: StepLifestyleProps) {
           })}
         </View>
       </View>
+
+      {/* Sleep Schedule - Optional */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionIcon}>⏰</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>
+            Ton rythme de sommeil (optionnel)
+          </Text>
+        </View>
+        <Text style={[styles.scheduleHint, { color: colors.text.tertiary }]}>
+          Pour des rappels au bon moment
+        </Text>
+
+        {/* Wake up time */}
+        <View style={styles.scheduleRow}>
+          <Text style={[styles.scheduleLabel, { color: colors.text.secondary }]}>Réveil</Text>
+          <View style={styles.optionsRow}>
+            {wakeUpOptions.map((option) => {
+              const isSelected = habits.wakeUpTime === option.value
+
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => updateHabits({ wakeUpTime: option.value })}
+                  style={[
+                    styles.timeChip,
+                    {
+                      backgroundColor: colors.bg.elevated,
+                      borderColor: isSelected ? sleepAccent : colors.border.light,
+                    },
+                    isSelected && { backgroundColor: `${sleepAccent}15` },
+                  ]}
+                >
+                  <Text style={styles.timeEmoji}>{option.emoji}</Text>
+                  <Text style={[styles.timeLabel, { color: isSelected ? sleepAccent : colors.text.primary }]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+
+        {/* Bed time */}
+        <View style={styles.scheduleRow}>
+          <Text style={[styles.scheduleLabel, { color: colors.text.secondary }]}>Coucher</Text>
+          <View style={styles.optionsRow}>
+            {bedTimeOptions.map((option) => {
+              const isSelected = habits.bedTime === option.value
+
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => updateHabits({ bedTime: option.value })}
+                  style={[
+                    styles.timeChip,
+                    {
+                      backgroundColor: colors.bg.elevated,
+                      borderColor: isSelected ? sleepAccent : colors.border.light,
+                    },
+                    isSelected && { backgroundColor: `${sleepAccent}15` },
+                  ]}
+                >
+                  <Text style={styles.timeEmoji}>{option.emoji}</Text>
+                  <Text style={[styles.timeLabel, { color: isSelected ? sleepAccent : colors.text.primary }]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+      </View>
     </View>
   )
 }
@@ -397,6 +486,33 @@ const styles = StyleSheet.create({
   },
   fastingDescription: {
     ...typography.caption,
+  },
+  scheduleHint: {
+    ...typography.small,
+    marginBottom: spacing.md,
+  },
+  scheduleRow: {
+    marginBottom: spacing.md,
+  },
+  scheduleLabel: {
+    ...typography.smallMedium,
+    marginBottom: spacing.sm,
+  },
+  timeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    gap: spacing.xs,
+  },
+  timeEmoji: {
+    fontSize: 14,
+  },
+  timeLabel: {
+    ...typography.small,
+    fontWeight: '500',
   },
 })
 
