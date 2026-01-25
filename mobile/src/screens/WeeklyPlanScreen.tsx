@@ -43,7 +43,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { Card, Button } from '../components/ui'
-import { colors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
+import { colors, spacing, typography, radius, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useMealPlanStore, type PlannedMealItem, type ShoppingList } from '../stores/meal-plan-store'
@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
   headerText: {
     ...typography.h4,
     color: colors.text.primary,
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   headerRight: {
     width: 40,
@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   generateDescription: {
     ...typography.body,
@@ -1336,7 +1336,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...typography.h4,
     color: colors.text.primary,
-    fontFamily: fonts.serif.semibold,
+    fontFamily: fonts.sans.semibold,
   },
   moveMealName: {
     ...typography.bodyMedium,
@@ -1426,7 +1426,7 @@ const styles = StyleSheet.create({
   shoppingTitle: {
     ...typography.h4,
     color: colors.text.primary,
-    fontFamily: fonts.serif.semibold,
+    fontFamily: fonts.sans.semibold,
   },
   shoppingContent: {
     flex: 1,

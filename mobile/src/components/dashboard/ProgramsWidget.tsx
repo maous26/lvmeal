@@ -1,6 +1,6 @@
 /**
  * ProgramsWidget - Widget compact récapitulatif des programmes actifs
- * Design: Organic Luxury - Vert Mousse & Terre Cuite
+ * Design: iOS-style minimaliste
  * Affiche uniquement si l'utilisateur est inscrit à au moins un programme
  */
 
@@ -101,10 +101,10 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
           </View>
 
           <View style={styles.right}>
-            {/* Progress indicators with organic colors */}
+            {/* Progress indicators with iOS colors */}
             <View style={styles.progressBars}>
               {isMetabolicEnrolled && (
-                <View style={[styles.miniProgress, { backgroundColor: 'rgba(200, 120, 99, 0.2)' }]}>
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
                   <View
                     style={[
                       styles.miniProgressFill,
@@ -114,7 +114,7 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
                 </View>
               )}
               {isWellnessEnrolled && (
-                <View style={[styles.miniProgress, { backgroundColor: 'rgba(74, 103, 65, 0.2)' }]}>
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(52, 199, 89, 0.15)' }]}>
                   <View
                     style={[
                       styles.miniProgressFill,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    // backgroundColor set dynamically with organic colors
+    // backgroundColor set dynamically with iOS colors
     overflow: 'hidden',
   },
   miniProgressFill: {

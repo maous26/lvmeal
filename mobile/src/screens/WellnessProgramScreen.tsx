@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h3,
     color: colors.text.primary,
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   subtitle: {
     ...typography.small,
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     textAlign: 'center',
     marginBottom: spacing.sm,
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   heroSubtitle: {
     ...typography.body,
