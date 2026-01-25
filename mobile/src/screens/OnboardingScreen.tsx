@@ -511,6 +511,16 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
     }
   }, [pendingQuickProfile, finalizeQuickSetup, finalizeOnboarding])
 
+  // Handle existing user restored from cloud - skip onboarding finalization
+  // This prevents overwriting cloud data when user re-onboards with same account
+  const handleExistingUserRestored = useCallback(() => {
+    console.log('[Onboarding] ✅ Existing user restored from cloud - completing without data overwrite')
+    // Track as returning user
+    lymInsights.trackOnboardingCompleted(0, ['returning_user', 'cloud_restored'])
+    // Just complete without saving new profile data (cloud data already restored by auth-store)
+    onComplete()
+  }, [onComplete])
+
   const handleBack = useCallback(() => {
     const prevIndex = stepIndex - 1
     if (prevIndex >= 0) {
@@ -608,6 +618,7 @@ export function OnboardingScreen({ onComplete, onHaveAccount }: OnboardingScreen
         return (
           <StepCloudSync
             onComplete={handleCloudSyncComplete}
+            onExistingUserRestored={handleExistingUserRestored}
           />
         )
       default:

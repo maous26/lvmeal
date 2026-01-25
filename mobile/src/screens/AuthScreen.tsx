@@ -68,13 +68,16 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
       const result = await signInWithGoogle()
 
       if (result.success && result.user?.email && (result.accessToken || result.idToken)) {
-        // Store auth info
+        // Store auth info - this also restores cloud data if available
         await signInWithGoogleToken(result.accessToken || '', result.idToken)
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
         // Check if user has existing profile (returning user)
-        const isNewUser = !profile?.onboardingCompleted
+        // IMPORTANT: Get fresh state after restoreData() completed
+        const currentProfile = useUserStore.getState().profile
+        const isNewUser = !currentProfile?.onboardingCompleted
+        console.log('[AuthScreen] After restore - isNewUser:', isNewUser, 'onboardingCompleted:', currentProfile?.onboardingCompleted)
         onAuthenticated(isNewUser)
       } else {
         Alert.alert('Erreur', result.error || 'Connexion impossible')

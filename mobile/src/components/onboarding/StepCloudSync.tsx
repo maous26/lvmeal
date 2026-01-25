@@ -3,6 +3,9 @@
  *
  * Optional step at the end of onboarding to connect with Google
  * for cloud backup and sync across devices.
+ *
+ * IMPORTANT: If user already has cloud data (existing account), we restore
+ * their data and skip re-onboarding to prevent data loss.
  */
 
 import React, { useState } from 'react'
@@ -21,20 +24,25 @@ import * as Haptics from 'expo-haptics'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius } from '../../constants/theme'
 import { useAuthStore } from '../../stores/auth-store'
+import { useUserStore } from '../../stores/user-store'
 import { signInWithGoogle, isGoogleAuthConfigured } from '../../services/google-auth-service'
 import EmailAuthScreen from '../../screens/EmailAuthScreen'
 
 interface StepCloudSyncProps {
   onComplete: (connected: boolean) => void
+  // Called when existing user with cloud data is detected - skip onboarding finalization
+  onExistingUserRestored?: () => void
 }
 
-export function StepCloudSync({ onComplete }: StepCloudSyncProps) {
+export function StepCloudSync({ onComplete, onExistingUserRestored }: StepCloudSyncProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [showEmailAuth, setShowEmailAuth] = useState(false)
 
   // Auth store
-  const { signInWithGoogleToken } = useAuthStore()
+  const { signInWithGoogleToken, restoreData } = useAuthStore()
+  // User store to check if cloud data was restored
+  const { isOnboarded, profile } = useUserStore()
 
   const handleGooglePress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -48,13 +56,26 @@ export function StepCloudSync({ onComplete }: StepCloudSyncProps) {
       // STRICT CHECK: Must have success=true AND user with email AND (accessToken OR idToken)
       if (result.success && result.user?.email && (result.accessToken || result.idToken)) {
         console.log('[StepCloudSync] Auth successful, user:', result.user.email)
-        
-        // Store in auth store with both tokens
+
+        // Store in auth store with both tokens - this also triggers restoreData()
         const storeResult = await signInWithGoogleToken(result.accessToken || '', result.idToken)
-        
+
         if (storeResult.success) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          onComplete(true)
+
+          // Check if user had existing cloud data that was restored
+          // The restoreData() in auth-store sets isOnboarded=true if cloud profile exists
+          const userStore = useUserStore.getState()
+          const hasExistingData = userStore.isOnboarded && userStore.profile?.onboardingCompleted
+
+          if (hasExistingData && onExistingUserRestored) {
+            console.log('[StepCloudSync] ✅ Existing user detected - data restored from cloud, skipping onboarding finalization')
+            onExistingUserRestored()
+          } else {
+            // New user or incomplete profile - proceed with normal onboarding completion
+            console.log('[StepCloudSync] New user or incomplete profile - proceeding with onboarding')
+            onComplete(true)
+          }
         } else {
           console.log('[StepCloudSync] Store sync failed:', storeResult.error)
           Alert.alert('Erreur de synchronisation', storeResult.error || 'Impossible de synchroniser avec le cloud.')
@@ -79,7 +100,16 @@ export function StepCloudSync({ onComplete }: StepCloudSyncProps) {
   }
 
   const handleEmailAuthenticated = (isNewUser: boolean) => {
-    onComplete(true)
+    // Check if existing user with cloud data
+    const userStore = useUserStore.getState()
+    const hasExistingData = userStore.isOnboarded && userStore.profile?.onboardingCompleted
+
+    if (hasExistingData && !isNewUser && onExistingUserRestored) {
+      console.log('[StepCloudSync] ✅ Email user restored from cloud - skipping onboarding finalization')
+      onExistingUserRestored()
+    } else {
+      onComplete(true)
+    }
   }
 
   const googleConfigured = isGoogleAuthConfigured()
