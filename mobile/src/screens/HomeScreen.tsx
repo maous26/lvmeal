@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import {
   UIManager,
   Platform,
   Dimensions,
-  Animated,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
@@ -24,12 +23,9 @@ import {
   ChevronRight,
   Flame,
   Trophy,
-  Sparkles,
-  Beef,
-  Wheat,
-  Droplets,
   Camera,
   ScanBarcode,
+  TrendingUp,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
@@ -45,7 +41,6 @@ import { LiquidProgress } from '../components/dashboard/LiquidProgress'
 import {
   CaloricBalance,
   ProgramsWidget,
-  ProgressWidget,
   UnifiedCoachBubble,
   HydrationWidget,
   MealSuggestions,
@@ -141,96 +136,68 @@ function CircularProgress({
   )
 }
 
-// Macro Progress Bar with Gradient and Staggered Animation
-function MacroProgressBar({
+// Macro Circle Progress Component
+function MacroCircle({
   label,
   current,
   target,
   color,
-  gradientColors,
-  icon,
-  delay = 0,
+  emoji,
+  size = 90,
 }: {
   label: string
   current: number
   target: number
   color: string
-  gradientColors: readonly [string, string]
-  icon: React.ReactNode
-  delay?: number
+  emoji: string
+  size?: number
 }) {
   const { colors } = useTheme()
-  const progress = Math.min((current / target) * 100, 100)
-
-  // Animation refs
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
-  const progressAnim = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    // Staggered entrance animation
-    const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(progressAnim, {
-          toValue: progress,
-          duration: 600,
-          useNativeDriver: false,
-        }),
-      ]).start()
-    }, delay)
-
-    return () => clearTimeout(timer)
-  }, [delay, progress])
-
-  // Interpolate progress width
-  const animatedWidth = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
-  })
+  const strokeWidth = 6
+  const center = size / 2
+  const r = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * r
+  const progress = Math.min(current / target, 1)
+  const strokeDashoffset = circumference * (1 - progress)
 
   return (
-    <Animated.View
-      style={[
-        styles.macroItem,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <View style={styles.macroHeader}>
-        <View style={[styles.macroIconContainer, { backgroundColor: `${color}20` }]}>
-          {icon}
-        </View>
-        <View style={styles.macroInfo}>
-          <Text style={[styles.macroLabel, { color: colors.text.secondary }]}>{label}</Text>
-          <Text style={styles.macroValues}>
-            <Text style={[styles.macroCurrentValue, { color }]}>{Math.round(current)}g</Text>
-            <Text style={[styles.macroGoalValue, { color: colors.text.muted }]}> / {target}g</Text>
-          </Text>
-        </View>
-      </View>
-      <View style={[styles.macroProgressTrack, { backgroundColor: colors.bg.tertiary }]}>
-        <Animated.View style={{ width: animatedWidth }}>
-          <LinearGradient
-            colors={gradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.macroProgressFill, { width: '100%' }]}
+    <View style={styles.macroCircleContainer}>
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+          {/* Background circle */}
+          <Circle
+            cx={center}
+            cy={center}
+            r={r}
+            stroke={colors.border.light}
+            strokeWidth={strokeWidth}
+            fill="none"
           />
-        </Animated.View>
+          {/* Progress circle */}
+          <Circle
+            cx={center}
+            cy={center}
+            r={r}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </Svg>
+        {/* Center emoji */}
+        <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+          <Text style={styles.macroCircleEmoji}>{emoji}</Text>
+        </View>
       </View>
-    </Animated.View>
+      {/* Values below circle */}
+      <View style={[styles.macroCircleValues, { backgroundColor: `${color}15` }]}>
+        <Text style={[styles.macroCircleCurrent, { color }]}>{Math.round(current)}</Text>
+        <Text style={[styles.macroCircleTarget, { color: colors.text.muted }]}>/{target}g</Text>
+      </View>
+      <Text style={[styles.macroCircleLabel, { color: colors.text.secondary }]}>{label}</Text>
+    </View>
   )
 }
 
@@ -454,12 +421,6 @@ export default function HomeScreen() {
     navigation.navigate('Calendar')
   }
 
-  const handleNavigateToProgress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    // @ts-ignore
-    navigation.navigate('Progress')
-  }
-
   // Handle recipe suggestion press - navigate to recipe detail
   const handleSuggestionPress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -498,29 +459,51 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Premium Header */}
+        {/* Premium Header with Avatar */}
         <View style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.text.tertiary }]}>{greeting}</Text>
-          <TouchableOpacity
-            style={[styles.headerIconButton, { backgroundColor: colors.accent.light }]}
-            onPress={handleNavigateToCalendar}
-          >
-            <Calendar size={20} color={colors.accent.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerLeft}>
+            <View style={[styles.avatarGradient, { backgroundColor: colors.accent.primary }]}>
+              <Text style={styles.avatarText}>{userInitials || '👋'}</Text>
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.greetingSmall, { color: colors.text.muted }]}>{getGreeting()}</Text>
+              <Text style={[styles.userName, { color: colors.text.primary }]}>{userName || 'Bienvenue'}</Text>
+            </View>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={[styles.headerIconButton, { backgroundColor: colors.bg.elevated }]}
+              onPress={handleNavigateToCalendar}
+            >
+              <Calendar size={20} color={colors.text.secondary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Stats Row - 2 cards only */}
+        {/* Stats Row - 3 cards */}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
-            <Flame size={18} color={colors.secondary.primary} />
+            <Flame size={20} color="#FF9500" />
             <Text style={[styles.statValue, { color: colors.text.primary }]}>{currentStreak}</Text>
-            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Série</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>jours</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
-            <Trophy size={18} color={colors.warning} />
-            <Text style={[styles.statValue, { color: colors.text.primary }]}>Niv. {currentLevel}</Text>
-            <Text style={[styles.statLabel, { color: colors.text.muted }]}>Niveau</Text>
+            <Trophy size={20} color="#FFD60A" />
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>{currentLevel}</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>niveau</Text>
           </View>
+          <TouchableOpacity
+            style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              // @ts-ignore
+              navigation.navigate('Progress')
+            }}
+          >
+            <TrendingUp size={20} color="#34C759" />
+            <Text style={[styles.statValue, { color: colors.text.primary }]}>Suivi</Text>
+            <Text style={[styles.statLabel, { color: colors.text.muted }]}>progrès</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Unified Coach Bubble - Single communication point */}
@@ -693,41 +676,35 @@ export default function HomeScreen() {
           </View>
         </GlassCard>
 
-        {/* Macros Widget - Glassmorphism avec gradients organiques */}
+        {/* Macros Widget - Circles layout */}
         <GlassCard style={styles.macrosSection} delay={300}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary, marginBottom: spacing.md }]}>
             Macronutriments
           </Text>
 
-          <MacroProgressBar
-            label="Protéines"
-            current={totals.proteins}
-            target={goals.proteins}
-            color={colors.nutrients.proteins}
-            gradientColors={['#4CD964', '#34C759']}
-            icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
-            delay={100}
-          />
-
-          <MacroProgressBar
-            label="Glucides"
-            current={totals.carbs}
-            target={goals.carbs}
-            color={colors.nutrients.carbs}
-            gradientColors={['#FFD60A', '#FFCC00']}
-            icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
-            delay={200}
-          />
-
-          <MacroProgressBar
-            label="Lipides"
-            current={totals.fats}
-            target={goals.fats}
-            color={colors.nutrients.fats}
-            gradientColors={['#BF5AF2', '#AF52DE']}
-            icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
-            delay={300}
-          />
+          <View style={styles.macroCirclesRow}>
+            <MacroCircle
+              label="Protéines"
+              current={totals.proteins}
+              target={goals.proteins}
+              color="#FF6B6B"
+              emoji="🍖"
+            />
+            <MacroCircle
+              label="Glucides"
+              current={totals.carbs}
+              target={goals.carbs}
+              color="#FFB347"
+              emoji="🌾"
+            />
+            <MacroCircle
+              label="Lipides"
+              current={totals.fats}
+              target={goals.fats}
+              color="#5DADE2"
+              emoji="🥑"
+            />
+          </View>
         </GlassCard>
 
         {/* Hydration Widget */}
@@ -766,9 +743,6 @@ export default function HomeScreen() {
             onConfirmStart={confirmStartDay}
           />
         </View>
-
-        {/* Progress Widget - replaces Weight Widget */}
-        <ProgressWidget onPress={handleNavigateToProgress} />
 
         {/* Bottom Spacer */}
         <View style={styles.bottomSpacer} />
@@ -820,39 +794,49 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
+    paddingTop: spacing.sm,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   avatarGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    ...typography.h4,
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   headerTextContainer: {
     gap: 2,
   },
+  greetingSmall: {
+    ...typography.caption,
+    fontSize: 13,
+  },
   greeting: {
     ...typography.small,
   },
   userName: {
-    ...typography.h4,
+    ...typography.h3,
     fontWeight: '700',
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
   },
   headerIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -866,16 +850,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.lg,
-    gap: spacing.xs,
+    gap: 2,
   },
   statValue: {
-    ...typography.bodyMedium,
+    ...typography.body,
     fontWeight: '700',
-    fontFamily: fonts.serif.bold,
+    fontFamily: fonts.sans.bold,
+    marginTop: 2,
   },
   statLabel: {
     ...typography.caption,
+    fontSize: 11,
   },
   // Calories Section - Updated for GlassCard + LiquidProgress
   caloriesSection: {
@@ -1044,53 +1031,41 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
   },
-  // Macros Section - GlassCard handles padding & borderRadius (legacy)
+  // Macros Section - Circles layout
   macrosSection: {
     marginBottom: spacing.lg,
   },
-  macroItem: {
-    marginBottom: spacing.md,
-  },
-  macroHeader: {
+  macroCirclesRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
+    justifyContent: 'space-around',
+    alignItems: 'flex-start',
   },
-  macroIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.md,
+  macroCircleContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  macroInfo: {
     flex: 1,
+  },
+  macroCircleEmoji: {
+    fontSize: 28,
+  },
+  macroCircleValues: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+    marginTop: spacing.sm,
   },
-  macroLabel: {
-    ...typography.bodyMedium,
-  },
-  macroValues: {
-    flexDirection: 'row',
-  },
-  macroCurrentValue: {
-    ...typography.bodyMedium,
+  macroCircleCurrent: {
+    fontSize: 16,
     fontWeight: '700',
+    fontFamily: fonts.sans.bold,
   },
-  macroGoalValue: {
-    ...typography.body,
+  macroCircleTarget: {
+    fontSize: 12,
   },
-  macroProgressTrack: {
-    height: 8,
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  macroProgressFill: {
-    height: '100%',
-    borderRadius: radius.full,
+  macroCircleLabel: {
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
   // Meals Section - GlassCard handles padding & borderRadius
   mealsSection: {

@@ -18,7 +18,6 @@ import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
-import { SplashScreen } from './src/components/SplashScreen'
 import { clearFoodSearchCache } from './src/services/food-search'
 import {
   requestNotificationPermissions,
@@ -57,7 +56,6 @@ ExpoSplashScreen.preventAutoHideAsync()
 
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
-  const [showSplash, setShowSplash] = useState(true)
   const [pendingDeepLink, setPendingDeepLink] = useState<{
     action: 'reset-password' | 'callback'
     url: string
@@ -295,13 +293,8 @@ export default Sentry.wrap(function App() {
     }
   }, [appIsReady, fontsLoaded])
 
-  // Show animated splash screen while app is loading
-  if (!appIsReady || !fontsLoaded || showSplash) {
-    // Hide native splash and show our animated one
-    if (appIsReady && fontsLoaded) {
-      ExpoSplashScreen.hideAsync()
-      return <SplashScreen onFinish={() => setShowSplash(false)} />
-    }
+  // Wait for app to be ready and fonts loaded
+  if (!appIsReady || !fontsLoaded) {
     return null
   }
 

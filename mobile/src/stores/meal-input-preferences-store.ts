@@ -31,15 +31,15 @@ export interface MealInputMethodConfig {
   description: string
 }
 
-// Toutes les méthodes disponibles avec leur configuration
+// Toutes les méthodes disponibles avec leur configuration (iOS colors)
 export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
   {
     id: 'search',
     label: 'Rechercher',
     labelShort: 'Recherche',
     iconName: 'Search',
-    color: '#2563EB',
-    bgColor: '#EBF5FF',
+    color: '#007AFF', // iOS Blue
+    bgColor: '#E5F2FF',
     description: 'Rechercher un aliment par son nom'
   },
   {
@@ -47,8 +47,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Photo',
     labelShort: 'Photo',
     iconName: 'Camera',
-    color: '#E11D48',
-    bgColor: '#FFF1F2',
+    color: '#FF3B30', // iOS Red
+    bgColor: '#FFECEB',
     description: 'Scanner un repas avec la caméra'
   },
   {
@@ -56,8 +56,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Vocal',
     labelShort: 'Vocal',
     iconName: 'Mic',
-    color: '#8B5CF6',
-    bgColor: '#F3E8FF',
+    color: '#AF52DE', // iOS Purple
+    bgColor: '#F5EEFA',
     description: 'Dicte ton repas à voix haute'
   },
   {
@@ -65,8 +65,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Code-barres',
     labelShort: 'Scan',
     iconName: 'Barcode',
-    color: '#10B981',
-    bgColor: '#ECFDF5',
+    color: '#34C759', // iOS Green
+    bgColor: '#E8F8EC',
     description: 'Scanner le code-barres d\'un produit'
   },
   {
@@ -74,8 +74,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Plan IA',
     labelShort: 'Plan',
     iconName: 'Sparkles',
-    color: '#F59E0B',
-    bgColor: '#FFFBEB',
+    color: '#FF9500', // iOS Orange
+    bgColor: '#FFF4E5',
     description: 'Générer un plan repas personnalisé'
   },
   {
@@ -83,8 +83,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Découvrir',
     labelShort: 'Explorer',
     iconName: 'Globe',
-    color: '#06B6D4',
-    bgColor: '#ECFEFF',
+    color: '#5AC8FA', // iOS Teal
+    bgColor: '#E8F7FC',
     description: 'Explorer des recettes du monde entier'
   },
   {
@@ -92,8 +92,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Mes favoris',
     labelShort: 'Favoris',
     iconName: 'Heart',
-    color: '#EC4899',
-    bgColor: '#FDF2F8',
+    color: '#FF2D55', // iOS Pink
+    bgColor: '#FFEBEF',
     description: 'Accede a tes aliments et recettes favoris'
   },
   {
@@ -101,8 +101,8 @@ export const ALL_INPUT_METHODS: MealInputMethodConfig[] = [
     label: 'Ma recette',
     labelShort: 'Recette',
     iconName: 'ChefHat',
-    color: '#4A6741',
-    bgColor: '#E8F0E6',
+    color: '#8E8E93', // iOS Gray
+    bgColor: '#F2F2F7',
     description: 'Cree ta propre recette avec calcul des macros'
   },
 ]

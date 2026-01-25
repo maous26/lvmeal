@@ -67,8 +67,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       subtitle: 'FACILITÉ',
       description: 'Une photo, quelques mots, c\'est tout. Pas de calculs, pas de pesée. Tu manges, tu notes, tu avances.',
       image: require('../../../assets/photo2.jpg'),
-      accentColor: '#34C759',
-      gradient: ['#34C759', '#30B350'] as const,
+      accentColor: '#1D1D1F',
+      gradient: ['#1D1D1F', '#3C3C43'] as const,
     },
     {
       id: 'personalized',

@@ -61,11 +61,12 @@ import { useUserStore } from '../stores/user-store'
 import { useMeditationStore } from '../stores/meditation-store'
 import { WellnessAgent, type WellnessAnalysisResult } from '../services/wellness-agent'
 
+// iOS-style phase colors
 const phaseColors: Record<WellnessPhase, string> = {
-  foundations: colors.accent.primary,
-  awareness: colors.secondary.primary,
-  balance: colors.success,
-  harmony: colors.warning,
+  foundations: '#007AFF',  // iOS Blue
+  awareness: '#AF52DE',    // iOS Purple
+  balance: '#34C759',      // iOS Green
+  harmony: '#FF9500',      // iOS Orange
 }
 
 const phaseIcons: Record<WellnessPhase, React.ReactNode> = {
@@ -1026,7 +1027,7 @@ const styles = StyleSheet.create({
   },
   streakValue: {
     ...typography.h3,
-    color: colors.secondary.primary,
+    color: '#AF52DE', // iOS Purple
   },
   streakLabel: {
     ...typography.caption,

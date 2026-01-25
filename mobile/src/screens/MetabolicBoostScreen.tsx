@@ -51,11 +51,12 @@ import { useDevicesStore, DEVICE_INFO } from '../stores/devices-store'
 import { useUserStore } from '../stores/user-store'
 import type { DeviceType } from '../types'
 
+// iOS-style phase colors
 const phaseColors: Record<MetabolicPhase, string> = {
-  discovery: colors.accent.primary,
-  walking: colors.success,
-  resistance: colors.warning,
-  full_program: colors.secondary.primary,
+  discovery: '#FF9500',    // iOS Orange
+  walking: '#34C759',      // iOS Green
+  resistance: '#FF3B30',   // iOS Red
+  full_program: '#007AFF', // iOS Blue
 }
 
 const phaseIcons: Record<MetabolicPhase, React.ReactNode> = {
@@ -997,7 +998,7 @@ const styles = StyleSheet.create({
   },
   streakValue: {
     ...typography.h3,
-    color: colors.warning,
+    color: '#FF9500', // iOS Orange
   },
   streakLabel: {
     ...typography.caption,
