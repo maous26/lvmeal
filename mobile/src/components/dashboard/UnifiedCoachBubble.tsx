@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics'
 
 import { LinearGradient } from 'expo-linear-gradient'
 import { Card } from '../ui'
+import { AIBadge, DataContextBadge } from '../ai'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, typography, radius, fonts } from '../../constants/theme'
 import {
@@ -28,7 +29,6 @@ import {
   getPriorityConfig,
   PRIORITY_BEHAVIOR,
   CATEGORY_EMOJI,
-  type LymiaMessage,
 } from '../../services/message-center'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
@@ -243,9 +243,12 @@ export default function UnifiedCoachBubble({
               <Text style={styles.avatarEmoji}>{emoji}</Text>
             </View>
             <View>
-              <Text style={[styles.coachName, { color: colors.text.secondary }]}>
-                LYM
-              </Text>
+              <View style={styles.nameRow}>
+                <Text style={[styles.coachName, { color: colors.text.secondary }]}>
+                  LYM
+                </Text>
+                <AIBadge variant="inline" text="IA" size="sm" />
+              </View>
               {unreadCount > 1 && (
                 <TouchableOpacity onPress={handleSeeAll}>
                   <Text style={[styles.unreadBadge, { color: config.color }]}>
@@ -278,6 +281,11 @@ export default function UnifiedCoachBubble({
           <Text style={[styles.message, { color: colors.text.secondary }]}>
             {priorityMessage.message}
           </Text>
+
+          {/* Data context - shows how many meals analyzed */}
+          <View style={styles.contextRow}>
+            <DataContextBadge mealsCount={getTodayData().meals.length > 0 ? getTodayData().meals.length : undefined} />
+          </View>
 
           {priorityMessage.actionLabel && (
             <View style={[styles.actionButton, { backgroundColor: config.color + '15' }]}>
@@ -333,6 +341,11 @@ const styles = StyleSheet.create({
   avatarEmoji: {
     fontSize: 18,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   coachName: {
     fontSize: 14,
     fontFamily: fonts.serif.semibold,
@@ -354,6 +367,9 @@ const styles = StyleSheet.create({
   message: {
     ...typography.body,
     lineHeight: 20,
+  },
+  contextRow: {
+    marginTop: spacing.sm,
   },
   actionButton: {
     flexDirection: 'row',

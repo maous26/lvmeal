@@ -27,6 +27,7 @@ import {
   type LymiaMessage,
   type MessageType,
 } from '../../services/message-center'
+import { AIBadge, SourceBadge } from '../ai'
 
 // Type configuration for visual display
 const TYPE_CONFIG: Record<MessageType, { label: string }> = {
@@ -143,6 +144,7 @@ export function CoachMessageCard({
             <Text style={[styles.typeLabel, { color: priorityConf.color }]}>
               {typeConf.label}
             </Text>
+            <AIBadge variant="inline" text="IA" size="sm" />
             {!message.read && (
               <View style={[styles.unreadDot, { backgroundColor: priorityConf.color }]} />
             )}
@@ -166,6 +168,13 @@ export function CoachMessageCard({
       <Text style={[styles.messageText, { color: colors.text.secondary }]}>
         {message.message}
       </Text>
+
+      {/* Source scientifique */}
+      {message.source && (
+        <View style={styles.sourceRow}>
+          <SourceBadge source={message.source} />
+        </View>
+      )}
 
       {/* Transparency: Why this message (hidden by default) */}
       {showReason && message.reason && (
@@ -244,6 +253,9 @@ const styles = StyleSheet.create({
   messageText: {
     ...typography.body,
     lineHeight: 22,
+    marginBottom: spacing.sm,
+  },
+  sourceRow: {
     marginBottom: spacing.sm,
   },
   reasonContainer: {

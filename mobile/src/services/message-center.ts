@@ -47,6 +47,8 @@ export interface LymiaMessage {
   reason?: string // Pourquoi ce message est généré (ex: "8h sans repas")
   confidence?: number // 0-1, confiance dans la pertinence
   dedupKey?: string // Clé pour éviter doublons (ex: "nutrition-8h-alert")
+  // Source scientifique pour crédibilité
+  source?: 'ANSES' | 'INSERM' | 'HAS' | 'OMS' | string
 }
 
 // Priority config - behavior only (colors come from theme)
@@ -402,6 +404,7 @@ export function generateDailyMessages(
       reason: `Protéines à ${userData.proteinsPercent}% après 18h`,
       confidence: 0.8,
       dedupKey: 'nutrition-low-protein',
+      source: 'ANSES',
     })
   }
 
@@ -420,6 +423,7 @@ export function generateDailyMessages(
       reason: `Hydratation à ${userData.waterPercent}% après 14h`,
       confidence: 0.7,
       dedupKey: 'hydration-low',
+      source: 'ANSES',
     })
   }
 
@@ -450,6 +454,7 @@ export function generateDailyMessages(
       reason: `${userData.sleepHours}h de sommeil >= 7h`,
       confidence: 0.9,
       dedupKey: 'sleep-good',
+      source: 'INSERM',
     })
   }
 
@@ -481,6 +486,7 @@ export function generateDailyMessages(
       reason: 'Tip matinal entre 7h et 9h',
       confidence: 0.6,
       dedupKey: 'tip-morning-water',
+      source: 'ANSES',
     })
   }
 
@@ -496,6 +502,7 @@ export function generateDailyMessages(
       reason: `${userData.sleepHours}h de sommeil < 6h`,
       confidence: 0.7,
       dedupKey: 'sleep-bad',
+      source: 'INSERM',
     })
   }
 
@@ -581,6 +588,45 @@ export function generateDailyMessages(
       })
       break // Un seul rappel de repas à la fois
     }
+  }
+
+  // ============= SUGGESTIONS PROGRAMMES CONTEXTUELLES =============
+  // Ces suggestions apparaissent uniquement quand pertinent (stress, sommeil, etc.)
+  // Cooldown long (72h) pour ne pas être intrusif
+
+  // Suggestion Wellness si stress détecté ou fatigue
+  if (userData.sleepHours && userData.sleepHours < 6) {
+    messages.push({
+      priority: 'P3',
+      type: 'tip',
+      category: 'wellness',
+      title: 'Besoin de te ressourcer ?',
+      message: 'Le programme Bien-être t\'aide à mieux gérer ton énergie et ton stress au quotidien.',
+      emoji: '🧘',
+      actionLabel: 'Découvrir',
+      actionRoute: 'WellnessProgram',
+      reason: 'Sommeil insuffisant détecté',
+      confidence: 0.6,
+      dedupKey: 'suggest-wellness-program',
+      source: 'INSERM',
+    })
+  }
+
+  // Suggestion Boost Métabolique si streak élevé mais progression lente
+  if (userData.streak >= 14 && caloriesPercent < 80) {
+    messages.push({
+      priority: 'P3',
+      type: 'tip',
+      category: 'progress',
+      title: 'Relancer ton métabolisme ?',
+      message: 'Le programme Boost Métabolique aide à sortir des plateaux avec une approche progressive.',
+      emoji: '🚀',
+      actionLabel: 'En savoir plus',
+      actionRoute: 'MetabolicBoost',
+      reason: 'Streak de 14+ jours avec apports sous-objectif',
+      confidence: 0.5,
+      dedupKey: 'suggest-metabolic-boost',
+    })
   }
 
   return messages

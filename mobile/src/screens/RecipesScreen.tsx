@@ -34,6 +34,7 @@ import {
   X,
   Check,
   Leaf,
+  Share2,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
@@ -46,6 +47,7 @@ import {
   staticToRecipe,
 } from '../services/static-recipes'
 import { NutriScoreBadge } from '../components/ui'
+import { ShareModal, type ShareableRecipe } from '../components/social'
 import type { Recipe, MealType } from '../types'
 
 // Category configurations - Filtres pertinents et fonctionnels
@@ -150,6 +152,10 @@ export default function RecipesScreen() {
   const [difficultyFilter, setDifficultyFilter] = useState('any')
   const [dietFilters, setDietFilters] = useState<string[]>([])
   const [servingsFilter, setServingsFilter] = useState('any')
+
+  // Share modal state
+  const [shareModalVisible, setShareModalVisible] = useState(false)
+  const [recipeToShare, setRecipeToShare] = useState<ShareableRecipe | null>(null)
 
   // Daily seed for rotation (changes each day)
   const [dailySeed] = useState(() => getDailySeed())
@@ -387,6 +393,24 @@ export default function RecipesScreen() {
     )
   }
 
+  // Handle share press
+  const handleSharePress = (recipe: Recipe) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setRecipeToShare({
+      id: recipe.id,
+      name: recipe.title,
+      calories: recipe.nutritionPerServing?.calories || 0,
+      proteins: recipe.nutritionPerServing?.proteins || 0,
+      carbs: recipe.nutritionPerServing?.carbs || 0,
+      fats: recipe.nutritionPerServing?.fats || 0,
+      prepTime: recipe.prepTime || 0,
+      imageUrl: recipe.imageUrl,
+      isAI: false,
+      source: recipe.source,
+    })
+    setShareModalVisible(true)
+  }
+
   // Get health quality indicator based on score
   const getHealthQuality = (score?: number): { label: string; color: string; bgColor: string } => {
     if (!score || score < 50) return { label: 'Plaisir', color: '#DC2626', bgColor: '#FEE2E2' }
@@ -433,17 +457,25 @@ export default function RecipesScreen() {
             </View>
           )}
 
-          {/* Favorite button */}
-          <TouchableOpacity
-            style={styles.favoriteButton}
-            onPress={() => handleFavoritePress(recipe.id)}
-          >
-            <Heart
-              size={20}
-              color={isFavorite ? colors.error : '#FFFFFF'}
-              fill={isFavorite ? colors.error : 'transparent'}
-            />
-          </TouchableOpacity>
+          {/* Action buttons (favorite + share) */}
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={styles.cardActionButton}
+              onPress={() => handleSharePress(recipe)}
+            >
+              <Share2 size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cardActionButton}
+              onPress={() => handleFavoritePress(recipe.id)}
+            >
+              <Heart
+                size={18}
+                color={isFavorite ? colors.error : '#FFFFFF'}
+                fill={isFavorite ? colors.error : 'transparent'}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* Calories badge on image */}
           <View style={styles.caloriesBadge}>
@@ -900,6 +932,13 @@ export default function RecipesScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Share Modal */}
+      <ShareModal
+        visible={shareModalVisible}
+        onClose={() => setShareModalVisible(false)}
+        recipe={recipeToShare}
+      />
     </SafeAreaView>
   )
 }
@@ -1061,6 +1100,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardActions: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  cardActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',

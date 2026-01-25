@@ -1,17 +1,15 @@
 import React, { useMemo, useEffect, useState } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Share, Alert } from 'react-native'
-import { Clock, Flame, ChevronRight, Sparkles, Timer, Star, ChefHat, Share2 } from 'lucide-react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
+import { Flame, ChevronRight, Sparkles, Timer, Star, ChefHat, Share2 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useMealsStore } from '../../stores/meals-store'
 import { useRecipesStore, type AIRecipeRating } from '../../stores/recipes-store'
-import { useGamificationStore, XP_REWARDS } from '../../stores/gamification-store'
+import { ShareModal, type ShareableRecipe } from '../social'
 import {
   loadStaticRecipes,
-  getStaticRecipesByMealType,
   filterStaticRecipes,
-  staticToRecipe,
   type StaticEnrichedRecipe,
 } from '../../services/static-recipes'
 import type { MealType } from '../../types'
@@ -94,12 +92,12 @@ const staticToSuggestion = (recipe: StaticEnrichedRecipe, mealType: MealType): S
 }
 
 export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestionsProps) {
-  const { profile, nutritionGoals } = useUserStore()
+  const { nutritionGoals } = useUserStore()
   const { getTodayData } = useMealsStore()
   const { getTopRatedAIRecipes, favoriteRecipes } = useRecipesStore()
 
   const [staticSuggestions, setStaticSuggestions] = useState<SuggestedMeal[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [, setIsLoadingRecipes] = useState(true)
 
   const todayData = getTodayData()
   const totals = todayData.totalNutrition
@@ -112,7 +110,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
   // Load suggestions from enriched-recipes.json based on meal type and user profile
   useEffect(() => {
     const loadSuggestions = async () => {
-      setIsLoading(true)
+      setIsLoadingRecipes(true)
       try {
         // Load all static recipes first
         await loadStaticRecipes()
@@ -148,7 +146,7 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
         console.warn('Failed to load static suggestions:', error)
         setStaticSuggestions([])
       } finally {
-        setIsLoading(false)
+        setIsLoadingRecipes(false)
       }
     }
 
@@ -240,48 +238,36 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
     return combined
   }, [aiSuggestions, favoriteSuggestions, staticSuggestions])
 
+  // State for share modal
+  const [shareModalVisible, setShareModalVisible] = useState(false)
+  const [recipeToShare, setRecipeToShare] = useState<ShareableRecipe | null>(null)
+
   const handlePress = (suggestion: SuggestedMeal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     onSuggestionPress?.(suggestion)
   }
 
-  // Handle recipe sharing with LYM tag
-  const handleShare = async (suggestion: SuggestedMeal, event: any) => {
+  // Handle recipe sharing - opens share modal
+  const handleShare = (suggestion: SuggestedMeal, event: any) => {
     // Prevent triggering the card press
     event.stopPropagation()
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
-    const gamification = useGamificationStore.getState()
-
-    // Build share message with LYM tag
-    const shareMessage = `🍽️ ${suggestion.name}\n\n` +
-      `📊 ${suggestion.calories} kcal | ${suggestion.proteins}g protéines\n` +
-      `⏱️ ${suggestion.prepTime} min de préparation\n\n` +
-      `${suggestion.isGustar ? '👨‍🍳 Recette Gustar' : suggestion.isAI ? '✨ Recette IA' : '📝 Ma recette'}\n\n` +
-      `#LYM #NutritionSaine #Recette`
-
-    try {
-      const result = await Share.share({
-        message: shareMessage,
-        title: `Recette LYM: ${suggestion.name}`,
-      })
-
-      if (result.action === Share.sharedAction) {
-        // User shared successfully - award XP
-        gamification.addXP(XP_REWARDS.SHARE_RECIPE || 20, 'Recette partagée')
-        gamification.incrementMetric('recipes_shared')
-
-        // Show success feedback
-        Alert.alert(
-          '🎉 Recette partagée !',
-          `+${XP_REWARDS.SHARE_RECIPE || 20} XP gagnés pour le partage`,
-          [{ text: 'Super !' }]
-        )
-      }
-    } catch (error) {
-      console.log('[MealSuggestions] Share error:', error)
-    }
+    // Convert to ShareableRecipe and open modal
+    setRecipeToShare({
+      id: suggestion.id,
+      name: suggestion.name,
+      calories: suggestion.calories,
+      proteins: suggestion.proteins,
+      carbs: suggestion.carbs,
+      fats: suggestion.fats,
+      prepTime: suggestion.prepTime,
+      imageUrl: suggestion.imageUrl,
+      isAI: suggestion.isAI,
+      source: suggestion.source,
+    })
+    setShareModalVisible(true)
   }
 
   if (suggestions.length === 0) {
@@ -411,6 +397,13 @@ export function MealSuggestions({ onSuggestionPress, onViewAll }: MealSuggestion
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Share Modal */}
+      <ShareModal
+        visible={shareModalVisible}
+        onClose={() => setShareModalVisible(false)}
+        recipe={recipeToShare}
+      />
     </View>
   )
 }
