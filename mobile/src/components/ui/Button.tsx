@@ -71,7 +71,7 @@ export function Button({
         return {
           container: {
             backgroundColor: 'transparent',
-            borderWidth: 1.5,
+            borderWidth: 1,
             borderColor: colors.border.default,
           },
           text: { color: colors.text.primary },
@@ -114,7 +114,7 @@ export function Button({
           container: {
             paddingVertical: spacing.sm,
             paddingHorizontal: spacing.md,
-            borderRadius: radius.md,
+            borderRadius: radius.default, // 8px iOS-style
           },
           text: { ...typography.buttonSm, fontSize: 13 },
         }
@@ -123,7 +123,7 @@ export function Button({
           container: {
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
-            borderRadius: radius.lg,
+            borderRadius: radius.md, // 10px iOS-style
           },
           text: { ...typography.button, fontSize: 15 },
         }
@@ -132,7 +132,7 @@ export function Button({
           container: {
             paddingVertical: spacing.sm + 2,
             paddingHorizontal: spacing.md,
-            borderRadius: radius.md,
+            borderRadius: radius.default, // 8px iOS-style
           },
           text: { ...typography.button, fontSize: 14 },
         }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   View,
   Text,
@@ -8,99 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native'
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  withDelay,
-  Easing,
-} from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronLeft, Sparkles } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, typography, shadows, fonts, organicPalette } from '../../constants/theme'
-
-const { width, height } = Dimensions.get('window')
-
-// Small floating blob for onboarding background
-const OnboardingBlob = ({
-  color,
-  size,
-  top,
-  left,
-  delay = 0,
-  opacity = 0.15,
-}: {
-  color: string
-  size: number
-  top: number
-  left: number
-  delay?: number
-  opacity?: number
-}) => {
-  const scale = useSharedValue(1)
-  const translateY = useSharedValue(0)
-  const translateX = useSharedValue(0)
-
-  useEffect(() => {
-    scale.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(1.12, { duration: 7000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.92, { duration: 7000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-
-    translateY.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(-12, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(12, { duration: 8000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-
-    translateX.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(8, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-8, { duration: 9000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-  }, [])
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateY: translateY.value },
-      { translateX: translateX.value }
-    ]
-  }))
-
-  return (
-    <Animated.View
-      style={[
-        styles.blob,
-        style,
-        {
-          backgroundColor: color,
-          width: size,
-          height: size,
-          top,
-          left,
-          borderRadius: size / 2,
-          opacity,
-        }
-      ]}
-    />
-  )
-}
+import { spacing, radius, typography, fonts } from '../../constants/theme'
 
 interface OnboardingLayoutProps {
   children: React.ReactNode
@@ -146,34 +58,6 @@ export function OnboardingLayout({
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: colors.bg.primary, paddingTop: insets.top }]}
     >
-      {/* Floating blobs background - subtle */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <OnboardingBlob
-          color={organicPalette.sage}
-          size={width * 0.4}
-          top={height * 0.12}
-          left={width * 0.6}
-          delay={0}
-          opacity={0.12}
-        />
-        <OnboardingBlob
-          color={organicPalette.clay}
-          size={width * 0.35}
-          top={height * 0.45}
-          left={-width * 0.15}
-          delay={1200}
-          opacity={0.1}
-        />
-        <OnboardingBlob
-          color={organicPalette.lavender}
-          size={width * 0.3}
-          top={height * 0.7}
-          left={width * 0.65}
-          delay={600}
-          opacity={0.1}
-        />
-      </View>
-
       {/* Header */}
       <View style={styles.header}>
         {/* Back button */}
@@ -242,7 +126,7 @@ export function OnboardingLayout({
         {valueProposition && (
           <View style={[styles.valueCard, { backgroundColor: colors.accent.light }]}>
             <Sparkles size={16} color={colors.accent.primary} />
-            <Text style={[styles.valueText, { color: colors.accent.secondary }]}>
+            <Text style={[styles.valueText, { color: colors.text.secondary }]}>
               {valueProposition}
             </Text>
           </View>
@@ -261,8 +145,11 @@ export function OnboardingLayout({
             activeOpacity={0.8}
             style={[
               styles.nextButton,
-              { backgroundColor: nextDisabled ? (isDark ? '#444444' : '#CCCCCC') : colors.accent.primary },
-              !nextDisabled && shadows.glowPrimary,
+              {
+                backgroundColor: nextDisabled
+                  ? (isDark ? '#48484A' : '#D1D1D6')
+                  : colors.accent.primary,
+              },
             ]}
           >
             {loading ? (
@@ -343,7 +230,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.captionMedium,
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
   },
@@ -354,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.default, // 8px iOS-style
     marginBottom: spacing.lg,
     gap: spacing.sm,
   },
@@ -374,20 +261,16 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
+    borderRadius: radius.md, // 10px iOS-style
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
   },
   nextButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 0.3,
-  },
-  blob: {
-    position: 'absolute',
   },
 })
 

@@ -1,3 +1,13 @@
+/**
+ * OnboardingBenefits - iOS-style benefits carousel
+ *
+ * Features:
+ * - Clean iOS design with dynamic accent colors
+ * - Hybrid layout: visual top, content bottom
+ * - Smooth animations with Reanimated
+ * - Progress dots with animated width
+ */
+
 import React, { useState, useRef } from 'react'
 import {
   View,
@@ -11,18 +21,18 @@ import {
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Animated, { FadeInUp } from 'react-native-reanimated'
 import {
   Camera,
-  Mic,
   Sparkles,
   Heart,
   TrendingUp,
   ChevronRight,
+  ChevronLeft,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, typography, fonts } from '../../constants/theme'
 import { MockHomePreview } from './MockHomePreview'
-import { Button } from '../ui/Button'
 
 const { width, height } = Dimensions.get('window')
 
@@ -32,10 +42,10 @@ interface BenefitSlide {
   title: string
   subtitle: string
   description: string
-  imagePlaceholder: string
-  image?: any // Optional real image
-  useMockPreview?: boolean // Use MockHomePreview instead of image
+  image?: any
+  useMockPreview?: boolean
   accentColor: string
+  gradient: readonly [string, string]
 }
 
 interface OnboardingBenefitsProps {
@@ -48,57 +58,53 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   const insets = useSafeAreaInsets()
   const flatListRef = useRef<FlatList>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const bgColor = colors.bg.primary
-  const overlayMid = isDark ? 'rgba(26,26,26,0.5)' : 'rgba(250,249,247,0.3)'
-  const purple = colors.nutrients.fats
 
   const benefits: BenefitSlide[] = [
     {
       id: 'easy',
-      icon: <Camera size={28} color="#FFFFFF" />,
-      title: 'Simple comme bonjour.',
+      icon: <Camera size={24} color="#FFFFFF" />,
+      title: 'Simple comme bonjour',
       subtitle: 'FACILITÉ',
-      description:
-        "Une photo, quelques mots, c'est tout.\nPas de calculs, pas de pesée.\nTu manges, tu notes, tu avances.",
-      imagePlaceholder: 'Photo de quelqu\'un prenant en photo son assiette',
+      description: 'Une photo, quelques mots, c\'est tout. Pas de calculs, pas de pesée. Tu manges, tu notes, tu avances.',
       image: require('../../../assets/photo2.jpg'),
-      accentColor: colors.accent.primary,
+      accentColor: '#34C759',
+      gradient: ['#34C759', '#30B350'] as const,
     },
     {
       id: 'personalized',
-      icon: <Sparkles size={28} color="#FFFFFF" />,
-      title: 'Fait pour toi.',
+      icon: <Sparkles size={24} color="#FFFFFF" />,
+      title: 'Fait pour toi',
       subtitle: 'PERSONNALISATION',
-      description:
-        "Tes goûts, ton rythme, ta vie.\nTout est pensé autour de qui tu es vraiment, pas d'un idéal impossible.",
-      imagePlaceholder: 'Interface personnalisée',
+      description: 'Tes goûts, ton rythme, ta vie. Tout est pensé autour de qui tu es vraiment.',
       useMockPreview: true,
-      accentColor: purple,
+      accentColor: '#AF52DE',
+      gradient: ['#AF52DE', '#9B47C9'] as const,
     },
     {
       id: 'kind',
-      icon: <Heart size={28} color="#FFFFFF" />,
-      title: 'Zéro culpabilité.',
+      icon: <Heart size={24} color="#FFFFFF" />,
+      title: 'Zéro culpabilité',
       subtitle: 'BIENVEILLANCE',
-      description:
-        "Un écart ? Une pause ? C'est humain.\nIci, chaque jour est une nouvelle chance.\nOn avance ensemble, sans pression.",
-      imagePlaceholder: 'Personnes épanouies',
-      accentColor: colors.secondary.primary,
+      description: 'Un écart ? Une pause ? C\'est humain. Ici, chaque jour est une nouvelle chance.',
+      accentColor: '#007AFF',
+      gradient: ['#007AFF', '#0066D6'] as const,
     },
     {
       id: 'duration',
-      icon: <TrendingUp size={28} color="#FFFFFF" />,
-      title: 'Des résultats qui durent.',
+      icon: <TrendingUp size={24} color="#FFFFFF" />,
+      title: 'Résultats durables',
       subtitle: 'DURABILITÉ',
-      description:
-        "Fini les régimes yo-yo.\nTu construis des habitudes saines,\nà ton rythme, pour la vie.",
-      imagePlaceholder: 'Équilibre de vie',
+      description: 'Fini les régimes yo-yo. Tu construis des habitudes saines, à ton rythme, pour la vie.',
       image: require('../../../assets/photo3.jpeg'),
-      accentColor: colors.success,
+      accentColor: '#FF9500',
+      gradient: ['#FF9500', '#E68600'] as const,
     },
   ]
 
+  const currentBenefit = benefits[currentIndex]
+
   const handleNext = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     if (currentIndex < benefits.length - 1) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 })
     } else {
@@ -107,68 +113,67 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
   }
 
   const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     onComplete()
   }
 
-  const renderSlide = ({ item, index }: { item: BenefitSlide; index: number }) => (
+  const renderSlide = ({ item }: { item: BenefitSlide }) => (
     <View style={[styles.slide, { width }]}>
-      {/* Image, MockPreview, or placeholder */}
-      <View style={styles.imageContainer}>
+      {/* Visual Area - Top */}
+      <View style={styles.visualArea}>
         {item.useMockPreview ? (
-          <View style={styles.mockPreviewContainer}>
-            <MockHomePreview />
+          <View style={styles.mockPreviewWrapper}>
+            <View style={[
+              styles.mockPreviewCard,
+              {
+                backgroundColor: colors.bg.elevated,
+                borderColor: colors.border.light,
+              }
+            ]}>
+              <MockHomePreview />
+            </View>
           </View>
         ) : item.image ? (
-          <Image
-            source={item.image}
-            style={styles.slideImage}
-            resizeMode="cover"
-          />
+          <View style={styles.imageWrapper}>
+            <Image
+              source={item.image}
+              style={styles.slideImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={['transparent', isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)']}
+              style={styles.imageGradient}
+            />
+          </View>
         ) : (
           <LinearGradient
-            colors={[item.accentColor + '20', item.accentColor + '40']}
-            style={styles.imagePlaceholder}
+            colors={item.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientPlaceholder}
           >
-            <View style={styles.placeholderContent}>
-              <View style={[styles.iconCircle, { backgroundColor: item.accentColor }]}>
-                {item.icon}
-              </View>
-              <Text style={[styles.placeholderText, { color: item.accentColor }]}>
-                {item.imagePlaceholder}
-              </Text>
+            <View style={styles.iconLarge}>
+              {React.cloneElement(item.icon as React.ReactElement, { size: 48 })}
             </View>
           </LinearGradient>
         )}
-        <LinearGradient
-          colors={['transparent', overlayMid, bgColor]}
-          locations={[0, 0.5, 1]}
-          style={styles.imageOverlay}
-        />
-      </View>
-
-      {/* Content */}
-      <View style={styles.slideContent}>
-        <Text style={[styles.subtitle, { color: item.accentColor }]}>
-          {item.subtitle}
-        </Text>
-        <Text style={[styles.title, { color: colors.text.primary }]}>
-          {item.title}
-        </Text>
-        <Text style={[styles.description, { color: colors.text.secondary }]}>
-          {item.description}
-        </Text>
       </View>
     </View>
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: bgColor }]}>
-      {/* Header with skip */}
-      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={[styles.backText, { color: colors.text.tertiary }]}>← Retour</Text>
+    <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={[styles.headerButton, { backgroundColor: colors.bg.secondary }]}
+          activeOpacity={0.7}
+        >
+          <ChevronLeft size={20} color={colors.text.secondary} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+
+        <TouchableOpacity onPress={handleSkip} style={styles.skipButton} activeOpacity={0.7}>
           <Text style={[styles.skipText, { color: colors.text.tertiary }]}>Passer</Text>
         </TouchableOpacity>
       </View>
@@ -187,50 +192,65 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
           setCurrentIndex(index)
         }}
         scrollEventThrottle={16}
+        style={styles.flatList}
       />
 
-      {/* Bottom section */}
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing.xl }]}>
+      {/* Content Card - Bottom */}
+      <Animated.View
+        entering={FadeInUp.delay(100).springify()}
+        style={[styles.contentCard, { backgroundColor: colors.bg.primary }]}
+        key={currentIndex}
+      >
+        {/* Badge */}
+        <View style={[styles.badge, { backgroundColor: currentBenefit.accentColor + '15' }]}>
+          <View style={[styles.badgeIcon, { backgroundColor: currentBenefit.accentColor }]}>
+            {React.cloneElement(currentBenefit.icon as React.ReactElement, { size: 14 })}
+          </View>
+          <Text style={[styles.badgeText, { color: currentBenefit.accentColor }]}>
+            {currentBenefit.subtitle}
+          </Text>
+        </View>
+
+        {/* Title */}
+        <Text style={[styles.title, { color: colors.text.primary }]}>
+          {currentBenefit.title}
+        </Text>
+
+        {/* Description */}
+        <Text style={[styles.description, { color: colors.text.secondary }]}>
+          {currentBenefit.description}
+        </Text>
+
         {/* Progress dots */}
-        <View style={styles.dots}>
+        <View style={styles.dotsContainer}>
           {benefits.map((_, index) => (
             <View
               key={index}
               style={[
                 styles.dot,
                 {
-                  backgroundColor:
-                    index === currentIndex
-                      ? colors.accent.primary
-                      : colors.border.default,
+                  backgroundColor: index === currentIndex
+                    ? currentBenefit.accentColor
+                    : colors.border.light,
                   width: index === currentIndex ? 24 : 8,
                 },
               ]}
             />
           ))}
         </View>
+      </Animated.View>
 
+      {/* Bottom Action */}
+      <View style={[styles.bottomAction, { paddingBottom: insets.bottom + spacing.lg }]}>
         <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-            handleNext()
-          }}
-          style={{
-            backgroundColor: colors.accent.primary,
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.lg,
-            borderRadius: radius.lg,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-          }}
-          activeOpacity={0.8}
+          onPress={handleNext}
+          activeOpacity={0.9}
+          style={[styles.nextButton, { backgroundColor: currentBenefit.accentColor }]}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: fonts.sans.semibold, marginRight: spacing.sm, letterSpacing: 0.3 }}>
-            {currentIndex === benefits.length - 1 ? "C'est parti !" : 'Continuer'}
+          <Text style={styles.nextButtonText}>
+            {currentIndex === benefits.length - 1 ? "C'est parti" : 'Continuer'}
           </Text>
-          <ChevronRight size={18} color="#FFFFFF" />
+          <ChevronRight size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -246,107 +266,146 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
   },
-  backButton: {
-    padding: spacing.sm,
-  },
-  backText: {
-    ...typography.small,
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   skipButton: {
-    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   skipText: {
     ...typography.small,
+    fontFamily: fonts.sans.medium,
+  },
+  flatList: {
+    flex: 1,
   },
   slide: {
     flex: 1,
   },
-  imageContainer: {
-    height: height * 0.45,
+  visualArea: {
+    height: height * 0.5,
+    position: 'relative',
+  },
+  imageWrapper: {
+    flex: 1,
     position: 'relative',
   },
   slideImage: {
     width: '100%',
     height: '100%',
   },
-  mockPreviewContainer: {
-    flex: 1,
-    transform: [{ scale: 0.85 }],
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderContent: {
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  placeholderText: {
-    ...typography.small,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    maxWidth: 200,
-  },
-  imageOverlay: {
+  imageGradient: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100,
+    height: 120,
   },
-  slideContent: {
+  mockPreviewWrapper: {
     flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
+    padding: spacing.lg,
+    paddingTop: spacing.xl * 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  subtitle: {
+  mockPreviewCard: {
+    width: '100%',
+    height: '100%',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+    transform: [{ scale: 0.9 }],
+  },
+  gradientPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconLarge: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contentCard: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  badgeIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
     ...typography.captionMedium,
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 2,
-    marginBottom: spacing.sm,
+    letterSpacing: 1,
   },
   title: {
-    ...typography.h2,
-    fontFamily: fonts.serif.bold,
-    marginBottom: spacing.md,
+    fontSize: 28,
+    fontWeight: '700',
+    fontFamily: fonts.sans.bold,
+    marginBottom: spacing.sm,
+    letterSpacing: -0.5,
   },
   description: {
     ...typography.body,
     fontFamily: fonts.sans.regular,
-    lineHeight: 26,
+    lineHeight: 24,
+    marginBottom: spacing.lg,
   },
-  bottom: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-  },
-  dots: {
+  dotsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
+    gap: spacing.xs,
   },
   dot: {
     height: 8,
     borderRadius: 4,
+  },
+  bottomAction: {
+    paddingHorizontal: spacing.xl,
+  },
+  nextButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    gap: spacing.xs,
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
   },
 })
 

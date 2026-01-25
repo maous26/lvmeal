@@ -15,15 +15,15 @@ import { spacing, typography, radius } from '../../constants/theme'
 import { useMetabolicBoostStore } from '../../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../../stores/wellness-program-store'
 
-// Organic color palette matching ProgramsScreen
+// iOS color palette matching ProgramsScreen
 const PROGRAM_COLORS = {
   metabolic: {
-    gradient: ['#E2DCCA', '#D4A574'] as const,
-    accent: '#C87863',
+    gradient: ['#FFE5CC', '#FF9500'] as const,
+    accent: '#FF9500',
   },
   wellness: {
-    gradient: ['#EDF3EC', '#B8CBB4'] as const,
-    accent: '#4A6741',
+    gradient: ['#D4F5DC', '#34C759'] as const,
+    accent: '#34C759',
   },
 }
 

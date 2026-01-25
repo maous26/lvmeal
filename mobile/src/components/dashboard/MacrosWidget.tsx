@@ -167,7 +167,7 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
           value={proteins.value}
           max={proteins.max}
           unit="g"
-          gradientColors={['#4A6741', '#5C7A52']}  // Vert Mousse
+          gradientColors={['#34C759', '#4CD964']}  // Apple Green
           icon="🥩"
           delay={0}
         />
@@ -177,7 +177,7 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
           value={carbs.value}
           max={carbs.max}
           unit="g"
-          gradientColors={['#D4A574', '#E3BE91']}  // Caramel
+          gradientColors={['#FFCC00', '#FFD60A']}  // Apple Yellow
           icon="🌾"
           delay={100}
         />
@@ -187,7 +187,7 @@ export default function MacrosWidget({ proteins, carbs, fats }: MacrosWidgetProp
           value={fats.value}
           max={fats.max}
           unit="g"
-          gradientColors={['#9B7BB8', '#B8A0CC']}  // Lavande
+          gradientColors={['#AF52DE', '#BF5AF2']}  // Apple Purple
           icon="🥑"
           delay={200}
         />

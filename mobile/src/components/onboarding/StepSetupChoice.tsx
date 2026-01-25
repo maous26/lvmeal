@@ -1,7 +1,10 @@
 /**
- * Setup Choice Step - Premium Dark Design
+ * StepSetupChoice - iOS-style setup choice screen
  *
- * Dark background with hero image fade, white text, modern UI
+ * Features:
+ * - Clean light/dark mode support
+ * - iOS colors and styling
+ * - Hero image with gradient fade
  */
 
 import React from 'react'
@@ -17,33 +20,26 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Zap, Sparkles, Clock, ChevronRight, Shield } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
+import { useTheme } from '../../contexts/ThemeContext'
+import { spacing, radius, fonts } from '../../constants/theme'
 
-import { spacing, radius, typography, fonts } from '../../constants/theme'
+const { height } = Dimensions.get('window')
 
-const { width, height } = Dimensions.get('window')
+// iOS color palette
+const iosColors = {
+  green: '#34C759',
+  blue: '#007AFF',
+  orange: '#FF9500',
+  purple: '#AF52DE',
+}
 
 interface StepSetupChoiceProps {
   onQuickSetup: () => void
   onFullSetup: () => void
 }
 
-// Dark theme colors
-const dark = {
-  bg: '#0A0A0A',
-  card: '#1A1A1A',
-  cardBorder: '#2A2A2A',
-  cardHighlight: '#1E2A3A',
-  cardHighlightBorder: '#3B82F6',
-  text: '#FFFFFF',
-  textSecondary: '#A0A0A0',
-  textMuted: '#606060',
-  accent: '#3B82F6',
-  accentLight: '#3B82F620',
-  warning: '#D4A574',
-  warningLight: '#D4A57420',
-}
-
 export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoiceProps) {
+  const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
 
   const handleQuick = () => {
@@ -57,7 +53,7 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: dark.bg }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Hero Image with Gradient Fade */}
       <View style={styles.heroContainer}>
         <Image
@@ -66,7 +62,7 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
           resizeMode="cover"
         />
         <LinearGradient
-          colors={['transparent', 'rgba(10,10,10,0.6)', dark.bg]}
+          colors={['transparent', isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', colors.bg.primary]}
           locations={[0, 0.5, 1]}
           style={styles.heroGradient}
         />
@@ -76,10 +72,11 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
       <View style={styles.content}>
         {/* Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.welcomeTitle}>Bienvenue.</Text>
-          <Text style={styles.welcomeMessage}>
-            Ici, tu n'as rien à réussir.{'\n'}
-            Juste à avancer, à ton rythme.
+          <Text style={[styles.welcomeTitle, { color: colors.text.primary }]}>
+            Configurons ton coach.
+          </Text>
+          <Text style={[styles.welcomeMessage, { color: colors.text.secondary }]}>
+            Plus ton IA te connaît,{'\n'}mieux elle t'accompagne.
           </Text>
         </View>
 
@@ -87,58 +84,68 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
         <View style={styles.optionsContainer}>
           {/* Quick Setup */}
           <TouchableOpacity
-            style={[styles.optionCard, { backgroundColor: dark.card, borderColor: dark.cardBorder }]}
+            style={[
+              styles.optionCard,
+              {
+                backgroundColor: colors.bg.secondary,
+                borderColor: colors.border.light,
+              }
+            ]}
             onPress={handleQuick}
             activeOpacity={0.8}
           >
-            <View style={[styles.optionIcon, { backgroundColor: dark.warningLight }]}>
-              <Zap size={24} color={dark.warning} />
+            <View style={[styles.optionIcon, { backgroundColor: iosColors.orange + '15' }]}>
+              <Zap size={22} color={iosColors.orange} />
             </View>
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Express</Text>
+              <Text style={[styles.optionTitle, { color: colors.text.primary }]}>Démarrage rapide</Text>
               <View style={styles.timeRow}>
-                <Clock size={12} color={dark.textMuted} />
-                <Text style={styles.timeText}>2 min</Text>
+                <Clock size={12} color={colors.text.muted} />
+                <Text style={[styles.timeText, { color: colors.text.muted }]}>2 min</Text>
               </View>
-              <Text style={styles.optionDescription}>
-                L'essentiel pour démarrer
+              <Text style={[styles.optionDescription, { color: colors.text.tertiary }]}>
+                IA générique, conseils standards
               </Text>
             </View>
-            <ChevronRight size={20} color={dark.textMuted} />
+            <ChevronRight size={20} color={colors.text.muted} />
           </TouchableOpacity>
 
           {/* Full Setup - Recommended */}
           <TouchableOpacity
             style={[
               styles.optionCard,
-              { backgroundColor: dark.cardHighlight, borderColor: dark.cardHighlightBorder }
+              styles.optionCardRecommended,
+              {
+                backgroundColor: iosColors.green + '10',
+                borderColor: iosColors.green,
+              }
             ]}
             onPress={handleFull}
             activeOpacity={0.8}
           >
-            <View style={styles.recommendedBadge}>
+            <View style={[styles.recommendedBadge, { backgroundColor: iosColors.green }]}>
               <Text style={styles.recommendedText}>Recommandé</Text>
             </View>
-            <View style={[styles.optionIcon, { backgroundColor: dark.accentLight }]}>
-              <Sparkles size={24} color={dark.accent} />
+            <View style={[styles.optionIcon, { backgroundColor: iosColors.green + '20' }]}>
+              <Sparkles size={22} color={iosColors.green} />
             </View>
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Personnalisé</Text>
+              <Text style={[styles.optionTitle, { color: colors.text.primary }]}>Coach IA sur-mesure</Text>
               <View style={styles.timeRow}>
-                <Clock size={12} color={dark.textMuted} />
-                <Text style={styles.timeText}>5 min</Text>
+                <Clock size={12} color={colors.text.muted} />
+                <Text style={[styles.timeText, { color: colors.text.muted }]}>5 min</Text>
               </View>
-              <Text style={styles.optionDescription}>
-                Des conseils adaptés à ton profil
+              <Text style={[styles.optionDescription, { color: colors.text.tertiary }]}>
+                IA calibrée sur toi, vraiment personnalisée
               </Text>
             </View>
-            <ChevronRight size={20} color={dark.accent} />
+            <ChevronRight size={20} color={iosColors.green} />
           </TouchableOpacity>
 
           {/* Social proof */}
           <View style={styles.socialProof}>
-            <Text style={styles.socialProofText}>
-              Choisi par 87% de nos membres pour plus de précision
+            <Text style={[styles.socialProofText, { color: colors.text.muted }]}>
+              93% des utilisateurs préfèrent l'IA personnalisée
             </Text>
           </View>
         </View>
@@ -147,8 +154,8 @@ export function StepSetupChoice({ onQuickSetup, onFullSetup }: StepSetupChoicePr
       {/* Footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.footerContent}>
-          <Shield size={14} color={dark.textMuted} />
-          <Text style={styles.footerText}>
+          <Shield size={14} color={colors.text.muted} />
+          <Text style={[styles.footerText, { color: colors.text.muted }]}>
             Données privées et sécurisées
           </Text>
         </View>
@@ -162,7 +169,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroContainer: {
-    height: height * 0.35,
+    height: height * 0.38,
     position: 'relative',
   },
   heroImage: {
@@ -185,17 +192,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   welcomeTitle: {
-    fontSize: 36,
-    fontFamily: fonts.serif.bold,
-    color: dark.text,
+    fontSize: 34,
+    fontFamily: fonts.sans.bold,
     marginBottom: spacing.sm,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   welcomeMessage: {
     fontSize: 17,
     lineHeight: 26,
     fontFamily: fonts.sans.regular,
-    color: dark.textSecondary,
   },
   optionsContainer: {
     gap: spacing.md,
@@ -203,22 +208,25 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.lg,
-    borderRadius: radius.xl,
+    padding: spacing.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     gap: spacing.md,
+  },
+  optionCardRecommended: {
+    borderWidth: 2,
+    marginTop: spacing.sm,
   },
   recommendedBadge: {
     position: 'absolute',
     top: -10,
-    left: spacing.lg,
-    backgroundColor: dark.accent,
+    left: spacing.md,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: radius.sm,
   },
   recommendedText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     fontFamily: fonts.sans.semibold,
     color: '#FFFFFF',
@@ -228,7 +236,7 @@ const styles = StyleSheet.create({
   optionIcon: {
     width: 48,
     height: 48,
-    borderRadius: radius.md,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -237,8 +245,7 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 17,
-    fontFamily: fonts.serif.semibold,
-    color: dark.text,
+    fontFamily: fonts.sans.semibold,
     marginBottom: 2,
   },
   timeRow: {
@@ -250,12 +257,10 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 12,
     fontFamily: fonts.sans.regular,
-    color: dark.textMuted,
   },
   optionDescription: {
     fontSize: 13,
     fontFamily: fonts.sans.regular,
-    color: dark.textSecondary,
   },
   footer: {
     paddingHorizontal: spacing.xl,
@@ -270,16 +275,14 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     fontFamily: fonts.sans.regular,
-    color: dark.textMuted,
   },
   socialProof: {
     alignItems: 'center',
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   socialProofText: {
     fontSize: 12,
     fontFamily: fonts.sans.regular,
-    color: dark.textMuted,
     fontStyle: 'italic',
     textAlign: 'center',
   },

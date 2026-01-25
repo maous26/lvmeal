@@ -94,10 +94,10 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
   const effectiveTarget = target + sportBonus
   const remaining = Math.max(0, effectiveTarget - consumed + burned)
 
-  // Dynamic gradient colors - Organic Luxury palette (Vert Mousse)
+  // Dynamic gradient colors - iOS Green palette
   const gradientColors = isDark
-    ? ['#3D5636', '#2D4028'] as const    // Dark mode: Mousse foncé
-    : ['#4A6741', '#3D5636'] as const    // Light mode: Mousse -> Mousse foncé
+    ? ['#28C94E', '#30D158'] as const    // Dark mode: iOS Dark green
+    : ['#2CA048', '#34C759'] as const    // Light mode: Apple Green
 
   return (
     <View style={styles.container}>
@@ -181,9 +181,9 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg, // 12px iOS-style
     overflow: 'hidden',
-    ...shadows.md,
+    ...shadows.default,
   },
   gradient: {
     padding: spacing.lg,

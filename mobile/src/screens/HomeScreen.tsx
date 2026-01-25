@@ -66,12 +66,12 @@ import type { MealType, FoodItem } from '../types'
 
 const { width } = Dimensions.get('window')
 
-// Meal config function that uses dynamic organic colors
+// Meal config function that uses iOS-style colors
 const getMealConfig = (colors: typeof import('../constants/theme').lightColors): Record<MealType, { label: string; icon: string; color: string; gradient: readonly [string, string] }> => ({
-  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning, gradient: ['#E3BE91', '#D4A574'] as const },      // Caramel
-  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary, gradient: ['#5C7A52', '#4A6741'] as const },         // Mousse
-  snack: { label: 'Collation', icon: '🍎', color: colors.success, gradient: ['#7A9E7E', '#5C8A5E'] as const },               // Sauge
-  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary, gradient: ['#D09789', '#C87863'] as const },        // Terre Cuite
+  breakfast: { label: 'Petit-déjeuner', icon: '☀️', color: colors.warning, gradient: ['#FFB347', '#FF9500'] as const },      // Orange
+  lunch: { label: 'Déjeuner', icon: '🍽️', color: colors.accent.primary, gradient: ['#4CD964', '#34C759'] as const },         // Green
+  snack: { label: 'Collation', icon: '🍎', color: colors.success, gradient: ['#5AC8FA', '#007AFF'] as const },               // Blue
+  dinner: { label: 'Dîner', icon: '🌙', color: colors.secondary.primary, gradient: ['#AF52DE', '#5856D6'] as const },        // Purple
 })
 
 const mealOrder: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
@@ -704,7 +704,7 @@ export default function HomeScreen() {
             current={totals.proteins}
             target={goals.proteins}
             color={colors.nutrients.proteins}
-            gradientColors={['#5C7A52', '#4A6741']}
+            gradientColors={['#4CD964', '#34C759']}
             icon={<Beef size={16} color={colors.nutrients.proteins} strokeWidth={1.5} />}
             delay={100}
           />
@@ -714,7 +714,7 @@ export default function HomeScreen() {
             current={totals.carbs}
             target={goals.carbs}
             color={colors.nutrients.carbs}
-            gradientColors={['#E3BE91', '#D4A574']}
+            gradientColors={['#FFD60A', '#FFCC00']}
             icon={<Wheat size={16} color={colors.nutrients.carbs} strokeWidth={1.5} />}
             delay={200}
           />
@@ -724,7 +724,7 @@ export default function HomeScreen() {
             current={totals.fats}
             target={goals.fats}
             color={colors.nutrients.fats}
-            gradientColors={['#B8A0CC', '#9B7BB8']}
+            gradientColors={['#BF5AF2', '#AF52DE']}
             icon={<Droplets size={16} color={colors.nutrients.fats} strokeWidth={1.5} />}
             delay={300}
           />

@@ -1,8 +1,8 @@
 /**
- * Mock Personalized Tracking Preview for Onboarding
+ * MockHomePreview - iOS-style personalized dashboard preview
  *
- * Shows a personalized dashboard preview with user-specific data.
- * Used in onboarding "Fait pour toi" screen.
+ * Shows a clean, minimal preview of personalized features.
+ * Used in onboarding "Fait pour toi" slide.
  */
 
 import React from 'react'
@@ -10,115 +10,105 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
 } from 'react-native'
-import { Sparkles, Target, Flame, TrendingUp, Heart } from 'lucide-react-native'
+import { Sparkles, Target, TrendingUp, Flame, Check } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, typography, radius } from '../../constants/theme'
-
-const { width } = Dimensions.get('window')
+import { spacing, typography, radius, fonts } from '../../constants/theme'
 
 export function MockHomePreview() {
   const { colors } = useTheme()
-  const accent = colors.nutrients.fats
+  const purple = '#AF52DE' // Apple Purple - matches the slide
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Profile Header */}
-      <View style={[styles.profileCard, { backgroundColor: `${accent}15` }]}>
-        <View style={styles.profileHeader}>
-          <View style={[styles.avatar, { backgroundColor: accent }]}>
+      <View style={[styles.profileCard, { backgroundColor: colors.bg.secondary }]}>
+        <View style={styles.profileRow}>
+          <View style={[styles.avatar, { backgroundColor: purple }]}>
             <Text style={styles.avatarText}>M</Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={[styles.profileName, { color: colors.text.primary }]}>Marie, 28 ans</Text>
-            <Text style={[styles.profileGoal, { color: accent }]}>Objectif : Perdre 5kg</Text>
+            <Text style={[styles.profileGoal, { color: colors.text.tertiary }]}>Objectif : -5kg</Text>
           </View>
-          <View style={[styles.levelBadge, { backgroundColor: accent }]}>
-            <Sparkles size={12} color="#FFFFFF" />
-            <Text style={styles.levelText}>Pro</Text>
+          <View style={[styles.proBadge, { backgroundColor: purple }]}>
+            <Sparkles size={10} color="#FFFFFF" />
+            <Text style={styles.proText}>Pro</Text>
           </View>
         </View>
       </View>
 
-      {/* Personalized Stats */}
-      <View style={styles.statsGrid}>
-        <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
-          <View style={[styles.statIcon, { backgroundColor: colors.accent.light }]}>
-            <Target size={18} color={colors.accent.primary} />
+      {/* Stats Cards */}
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
+          <View style={[styles.statIcon, { backgroundColor: '#34C759' + '20' }]}>
+            <Target size={16} color="#34C759" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>1 850</Text>
-          <Text style={[styles.statLabel, { color: colors.text.muted }]}>kcal/jour</Text>
-          <Text style={[styles.statNote, { color: colors.accent.primary }]}>Adapté à toi</Text>
+          <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kcal/jour</Text>
         </View>
 
-        <View style={[styles.statCard, { backgroundColor: colors.bg.elevated }]}>
-          <View style={[styles.statIcon, { backgroundColor: colors.success + '20' }]}>
-            <TrendingUp size={18} color={colors.success} />
+        <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
+          <View style={[styles.statIcon, { backgroundColor: '#34C759' + '20' }]}>
+            <TrendingUp size={16} color="#34C759" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>-2.3</Text>
-          <Text style={[styles.statLabel, { color: colors.text.muted }]}>kg ce mois</Text>
-          <Text style={[styles.statNote, { color: colors.success }]}>En bonne voie</Text>
+          <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kg ce mois</Text>
         </View>
       </View>
 
-      {/* Coach AI Card */}
-      <View style={[styles.coachCard, { backgroundColor: `${accent}15`, borderColor: `${accent}30` }]}>
+      {/* AI Coach Message */}
+      <View style={[styles.coachCard, { backgroundColor: purple + '12', borderColor: purple + '30' }]}>
         <View style={styles.coachHeader}>
-          <View style={[styles.coachAvatar, { backgroundColor: accent }]}>
+          <View style={[styles.coachIcon, { backgroundColor: purple }]}>
             <Text style={styles.coachEmoji}>🤖</Text>
           </View>
-          <View style={styles.coachInfo}>
-            <Text style={[styles.coachName, { color: accent }]}>Coach LymIA</Text>
-            <Text style={[styles.coachStatus, { color: colors.text.muted }]}>Conseil personnalisé</Text>
+          <View>
+            <Text style={[styles.coachTitle, { color: purple }]}>Coach LymIA</Text>
+            <Text style={[styles.coachSub, { color: colors.text.muted }]}>Conseil personnalisé</Text>
           </View>
         </View>
-        <Text style={[styles.coachMessage, { color: colors.text.primary }]}>
-          "Marie, je vois que tu préfères les repas rapides en semaine. Voici 3 recettes de 15 min riches en protéines pour ce soir !"
+        <Text style={[styles.coachText, { color: colors.text.secondary }]}>
+          "Marie, voici 3 recettes rapides riches en protéines pour ce soir !"
         </Text>
       </View>
 
-      {/* Preferences Tags */}
-      <View style={styles.preferencesSection}>
-        <Text style={[styles.preferencesTitle, { color: colors.text.secondary }]}>Tes préférences</Text>
-        <View style={styles.tagsContainer}>
-          <View style={[styles.tag, { backgroundColor: colors.accent.light }]}>
-            <Text style={[styles.tagText, { color: colors.accent.primary }]}>Sans lactose</Text>
-          </View>
-          <View style={[styles.tag, { backgroundColor: colors.success + '20' }]}>
-            <Text style={[styles.tagText, { color: colors.success }]}>Batch cooking</Text>
-          </View>
-          <View style={[styles.tag, { backgroundColor: `${accent}20` }]}>
-            <Text style={[styles.tagText, { color: accent }]}>Végétarien</Text>
-          </View>
-          <View style={[styles.tag, { backgroundColor: colors.warning + '20' }]}>
-            <Text style={[styles.tagText, { color: colors.warning }]}>15 min max</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Weekly Progress Mini */}
-      <View style={[styles.weeklyCard, { backgroundColor: colors.bg.elevated }]}>
-        <View style={styles.weeklyHeader}>
-          <Flame size={16} color={colors.warning} />
-          <Text style={[styles.weeklyTitle, { color: colors.text.primary }]}>Cette semaine</Text>
-        </View>
-        <View style={styles.daysRow}>
-          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
-            <View key={i} style={styles.dayItem}>
-              <View style={[
-                styles.dayDot,
-                { backgroundColor: i < 5 ? colors.success : colors.border.light }
-              ]}>
-                {i < 5 && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={[styles.dayLabel, { color: colors.text.muted }]}>{day}</Text>
+      {/* Tags */}
+      <View style={styles.tagsSection}>
+        <Text style={[styles.tagsTitle, { color: colors.text.tertiary }]}>Tes préférences</Text>
+        <View style={styles.tagsRow}>
+          {[
+            { label: 'Sans lactose', color: '#34C759' },
+            { label: 'Végétarien', color: purple },
+            { label: '15 min', color: '#FF9500' },
+          ].map((tag, i) => (
+            <View key={i} style={[styles.tag, { backgroundColor: tag.color + '15' }]}>
+              <Text style={[styles.tagText, { color: tag.color }]}>{tag.label}</Text>
             </View>
           ))}
         </View>
-        <Text style={[styles.streakText, { color: colors.warning }]}>
-          🔥 5 jours consécutifs !
-        </Text>
+      </View>
+
+      {/* Weekly Progress */}
+      <View style={[styles.weekCard, { backgroundColor: colors.bg.secondary }]}>
+        <View style={styles.weekHeader}>
+          <Flame size={14} color="#FF9500" />
+          <Text style={[styles.weekTitle, { color: colors.text.primary }]}>Cette semaine</Text>
+        </View>
+        <View style={styles.daysRow}>
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
+            <View key={i} style={styles.dayCol}>
+              <View style={[
+                styles.dayCircle,
+                { backgroundColor: i < 5 ? '#34C759' : colors.border.light }
+              ]}>
+                {i < 5 && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
+              </View>
+              <Text style={[styles.dayText, { color: colors.text.muted }]}>{day}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={[styles.streakText, { color: '#FF9500' }]}>🔥 5 jours</Text>
       </View>
     </View>
   )
@@ -127,180 +117,183 @@ export function MockHomePreview() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    padding: spacing.sm,
   },
   profileCard: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.default,
+    padding: spacing.sm,
     marginBottom: spacing.sm,
   },
-  profileHeader: {
+  profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
+    fontFamily: fonts.sans.bold,
   },
   profileInfo: {
     flex: 1,
     marginLeft: spacing.sm,
   },
   profileName: {
-    ...typography.bodyMedium,
+    fontSize: 13,
+    fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
   },
   profileGoal: {
-    ...typography.caption,
-    marginTop: 2,
+    fontSize: 11,
+    fontFamily: fonts.sans.regular,
   },
-  levelBadge: {
+  proBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: radius.full,
-    gap: 4,
+    gap: 3,
   },
-  levelText: {
+  proText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
   },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.xs,
     marginBottom: spacing.sm,
   },
   statCard: {
     flex: 1,
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.default,
+    padding: spacing.sm,
     alignItems: 'center',
   },
   statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
+    fontFamily: fonts.sans.bold,
   },
   statLabel: {
-    ...typography.caption,
-  },
-  statNote: {
-    ...typography.caption,
-    fontWeight: '600',
-    marginTop: 2,
+    fontSize: 10,
+    fontFamily: fonts.sans.regular,
   },
   coachCard: {
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.default,
+    padding: spacing.sm,
     marginBottom: spacing.sm,
     borderWidth: 1,
   },
   coachHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  coachAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coachEmoji: {
-    fontSize: 16,
-  },
-  coachInfo: {
-    marginLeft: spacing.sm,
-  },
-  coachName: {
-    ...typography.captionMedium,
-  },
-  coachStatus: {
-    fontSize: 10,
-  },
-  coachMessage: {
-    ...typography.small,
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  preferencesSection: {
-    marginBottom: spacing.sm,
-  },
-  preferencesTitle: {
-    ...typography.caption,
     marginBottom: spacing.xs,
   },
-  tagsContainer: {
+  coachIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  coachEmoji: {
+    fontSize: 12,
+  },
+  coachTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
+  },
+  coachSub: {
+    fontSize: 9,
+    fontFamily: fonts.sans.regular,
+  },
+  coachText: {
+    fontSize: 11,
+    fontFamily: fonts.sans.regular,
+    lineHeight: 16,
+    fontStyle: 'italic',
+  },
+  tagsSection: {
+    marginBottom: spacing.sm,
+  },
+  tagsTitle: {
+    fontSize: 10,
+    fontFamily: fonts.sans.medium,
+    marginBottom: spacing.xs,
+  },
+  tagsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
   },
   tag: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: radius.full,
   },
   tagText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '500',
+    fontFamily: fonts.sans.medium,
   },
-  weeklyCard: {
-    borderRadius: radius.md,
-    padding: spacing.md,
+  weekCard: {
+    borderRadius: radius.default,
+    padding: spacing.sm,
   },
-  weeklyHeader: {
+  weekHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
+    gap: 4,
+    marginBottom: spacing.xs,
   },
-  weeklyTitle: {
-    ...typography.captionMedium,
+  weekTitle: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
   },
   daysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  dayItem: {
+  dayCol: {
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
-  dayDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  dayCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  dayLabel: {
-    fontSize: 10,
+  dayText: {
+    fontSize: 9,
+    fontFamily: fonts.sans.regular,
   },
   streakText: {
-    ...typography.captionMedium,
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: fonts.sans.semibold,
     textAlign: 'center',
   },
 })

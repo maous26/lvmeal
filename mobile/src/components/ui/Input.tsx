@@ -98,9 +98,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: radius.md,
-    minHeight: 52,
+    borderWidth: 1,
+    borderRadius: radius.default, // 8px iOS-style
+    minHeight: 48,
   },
   input: {
     flex: 1,

@@ -19,12 +19,12 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
   const todayEntry = getEntryForDate(today)
   const score = todayScore()
 
-  // Score color - Organic Luxury palette
+  // Score color - iOS palette
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#4A6741' // Vert Mousse - excellent
-    if (score >= 60) return '#7A9E7E' // Sauge - good
-    if (score >= 40) return '#D4A574' // Caramel - warning
-    return '#C87863' // Terre cuite - needs attention
+    if (score >= 80) return '#34C759' // Apple Green - excellent
+    if (score >= 60) return '#5AC8FA' // Apple Teal - good
+    if (score >= 40) return '#FF9500' // Apple Orange - warning
+    return '#FF3B30' // Apple Red - needs attention
   }
 
   const stressLabels = ['Zen', 'Calme', 'Ok', 'Haut', 'Max']
@@ -36,7 +36,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.iconContainer}>
-              <Sparkles size={16} color="#4A6741" />
+              <Sparkles size={16} color="#34C759" />
             </View>
             <Text style={styles.title}>Bien-etre</Text>
           </View>
@@ -69,7 +69,7 @@ export function WellnessWidget({ onPress }: WellnessWidgetProps) {
 
           {/* Stress */}
           <View style={styles.statItem}>
-            <Brain size={16} color="#C87863" />
+            <Brain size={16} color="#FF9500" />
             <Text style={styles.statValue}>
               {todayEntry?.stressLevel ? stressLabels[todayEntry.stressLevel - 1] : '--'}
             </Text>

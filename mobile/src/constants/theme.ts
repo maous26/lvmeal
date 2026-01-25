@@ -1,210 +1,219 @@
-// Love Your Meal - Design System Theme
-// Direction artistique : Organic Luxury - Nature, Bien-être, Élégance
-// Palette principale : Vert Mousse (sérénité) + Terre Cuite (chaleur)
+// Presence - Design System Theme
+// Direction artistique : iOS-Style Minimaliste
+// Palette principale : Apple Green (#34C759) + Pure White/Black
 
 // =============================================================================
-// FONTS - Organic Luxury Typography
+// FONTS - Inter Typography (iOS System Font Style)
 // =============================================================================
 export const fonts = {
-  // Sans-serif humaniste pour titres (Nunito Sans - chaleureux et accessible)
+  // Inter for headings (clean, modern)
   serif: {
-    regular: 'NunitoSans_400Regular',
-    medium: 'NunitoSans_500Medium',
-    semibold: 'NunitoSans_600SemiBold',
-    bold: 'NunitoSans_700Bold',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
   },
-  // Sans-serif humaniste pour corps de texte (Nunito Sans - cohérence totale)
+  // Inter for body text (consistency)
   sans: {
-    regular: 'NunitoSans_400Regular',
-    medium: 'NunitoSans_500Medium',
-    semibold: 'NunitoSans_600SemiBold',
-    bold: 'NunitoSans_700Bold',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
   },
 }
 
 // =============================================================================
-// ORGANIC PALETTE - Couleurs naturelles et apaisantes
+// iOS PALETTE - Clean Apple-inspired colors
 // =============================================================================
+export const iosPalette = {
+  green: '#34C759',        // Apple Green
+  blue: '#007AFF',         // Apple Blue
+  red: '#FF3B30',          // Apple Red
+  orange: '#FF9500',       // Apple Orange
+  yellow: '#FFCC00',       // Apple Yellow
+  teal: '#5AC8FA',         // Apple Teal
+  purple: '#AF52DE',       // Apple Purple
+  pink: '#FF2D55',         // Apple Pink
+  gray: '#8E8E93',         // Apple Gray
+}
+
+// Keep organicPalette for backward compatibility
 export const organicPalette = {
-  sage: '#7A9E7E',       // Vert Sauge - doux et apaisant
-  sand: '#E2DCCA',       // Sable Chaud - neutre chaleureux
-  stone: '#8B8680',      // Pierre - gris terreux
-  moss: '#4A6741',       // Mousse - vert profond luxueux
-  clay: '#B8856C',       // Argile - terre naturelle
-  ocean: '#2D7A9C',      // Bleu Océan - profond et calme
-  lavender: '#9B7BB8',   // Lavande - douceur
-  caramel: '#D4A574',    // Caramel - chaleur douce
+  sage: '#34C759',         // Now Apple Green
+  sand: '#F2F2F7',         // iOS Gray 6
+  stone: '#8E8E93',        // iOS Gray
+  moss: '#34C759',         // Now Apple Green
+  clay: '#FF9500',         // Now Apple Orange
+  ocean: '#007AFF',        // Now Apple Blue
+  lavender: '#AF52DE',     // Now Apple Purple
+  caramel: '#FF9500',      // Now Apple Orange
 }
 
 // =============================================================================
-// LIGHT THEME (Default)
+// LIGHT THEME (Default) - iOS Light Mode
 // =============================================================================
 export const lightColors = {
-  // Backgrounds - Crème chaud organique
+  // Backgrounds - Pure whites and iOS grays
   bg: {
-    primary: '#FDFCFA',      // Crème chaud
-    secondary: '#F7F5F2',    // Beige pâle
-    tertiary: '#F0EDE8',     // Sable très clair
+    primary: '#FFFFFF',           // Pure white
+    secondary: '#F2F2F7',         // iOS System Gray 6
+    tertiary: '#E5E5EA',          // iOS System Gray 5
     elevated: '#FFFFFF',
-    overlay: 'rgba(74, 103, 65, 0.6)', // Overlay vert mousse
+    overlay: 'rgba(0, 0, 0, 0.4)',
   },
 
-  // Text - Charbon doux avec teinte chaude
+  // Text - iOS Label colors
   text: {
-    primary: '#2D3A2E',      // Charbon avec teinte verte
-    secondary: '#4A5E4C',    // Gris-vert moyen
-    tertiary: '#7A8B7C',     // Gris-vert clair
-    muted: '#A8B5AA',        // Gris-vert désaturé
+    primary: '#1D1D1F',           // Apple dark label
+    secondary: '#3C3C43',         // iOS Secondary label (99% opacity)
+    tertiary: '#8E8E93',          // iOS Tertiary label
+    muted: '#AEAEB2',             // iOS System Gray 2
     inverse: '#FFFFFF',
   },
 
-  // Primary - Vert Mousse (luxe naturel)
+  // Primary - Apple Green
   accent: {
-    primary: '#4A6741',      // Vert Mousse profond
-    secondary: '#5C7A52',    // Vert Mousse clair
-    hover: '#3D5636',        // Vert Mousse foncé
-    light: '#EDF3EC',        // Vert très pâle
-    muted: '#B8CBB4',        // Vert désaturé
+    primary: '#34C759',           // Apple Green
+    secondary: '#30B350',         // Slightly darker
+    hover: '#2CA048',             // Darker for press
+    light: 'rgba(52, 199, 89, 0.12)', // Light green tint
+    muted: 'rgba(52, 199, 89, 0.3)',  // Muted green
   },
 
-  // Secondary - Terre Cuite (chaleur naturelle)
+  // Secondary - Apple Blue
   secondary: {
-    primary: '#C87863',      // Terre Cuite
-    hover: '#B56A56',        // Terre Cuite foncé
-    light: '#FBF5F3',        // Terre Cuite très pâle
-    muted: '#E5CFC9',        // Terre Cuite désaturé
+    primary: '#007AFF',           // Apple Blue
+    hover: '#0066D6',             // Darker blue
+    light: 'rgba(0, 122, 255, 0.12)', // Light blue tint
+    muted: 'rgba(0, 122, 255, 0.3)',  // Muted blue
   },
 
-  // Semantic - Ajustés pour palette organique
-  success: '#5C8A5E',        // Vert naturel
-  successLight: '#EDF5EE',
-  warning: '#D4A574',        // Caramel
-  warningLight: '#FDF8F3',
-  error: '#C75D5D',          // Rouge terre
-  errorLight: '#FDF2F2',
-  info: '#2D7A9C',           // Océan
-  infoLight: '#EEF6F9',
+  // Semantic - iOS System Colors
+  success: '#34C759',             // Apple Green
+  successLight: 'rgba(52, 199, 89, 0.12)',
+  warning: '#FF9500',             // Apple Orange
+  warningLight: 'rgba(255, 149, 0, 0.12)',
+  error: '#FF3B30',               // Apple Red
+  errorLight: 'rgba(255, 59, 48, 0.12)',
+  info: '#007AFF',                // Apple Blue
+  infoLight: 'rgba(0, 122, 255, 0.12)',
 
-  // Nutrients - Palette organique douce
+  // Nutrients - iOS-inspired vibrant colors
   nutrients: {
-    calories: '#C87863',     // Terre cuite
-    proteins: '#4A6741',     // Mousse
-    carbs: '#D4A574',        // Caramel doux
-    fats: '#9B7BB8',         // Lavande
-    fiber: '#7A9E7E',        // Sauge
-    water: '#6BA3BE',        // Océan clair
+    calories: '#FF9500',          // Orange
+    proteins: '#34C759',          // Green
+    carbs: '#FFCC00',             // Yellow
+    fats: '#AF52DE',              // Purple
+    fiber: '#34C759',             // Green
+    water: '#5AC8FA',             // Teal
   },
 
-  // Borders - Teintes chaudes
+  // Borders - iOS Separator colors
   border: {
-    light: '#EDE9E3',        // Beige très clair
-    default: '#D8D2C8',      // Sable moyen
-    medium: '#B5AFA5',       // Pierre claire
-    focus: '#4A6741',        // Vert mousse
+    light: '#E5E5E7',             // iOS Separator
+    default: '#D1D1D6',           // iOS Opaque separator
+    medium: '#C7C7CC',            // Darker separator
+    focus: '#34C759',             // Green focus
   },
 
-  // Gamification - Teintes naturelles
+  // Gamification - Metallic colors
   gamification: {
-    bronze: '#B8856C',       // Argile
-    silver: '#A8B5AA',       // Sauge désaturé
-    gold: '#D4A574',         // Caramel
-    platinum: '#E2DCCA',     // Sable
-    diamond: '#7A9E7E',      // Sauge
+    bronze: '#CD7F32',
+    silver: '#C0C0C0',
+    gold: '#FFD700',
+    platinum: '#E5E4E2',
+    diamond: '#5AC8FA',
   },
 
-  // Coach - Palette bienveillante (jamais culpabilisante)
-  // P0-P3 utilisent des teintes douces au lieu de rouges agressifs
+  // Coach - iOS-style priority colors
   coach: {
-    // Priority colors - palette douce et organique
-    urgent: '#A85C5C',       // Prune douce (P0) - alerte sans agressivité
-    action: '#8B6B61',       // Terre sienne (P1) - action chaleureuse
-    celebration: '#5C8A5E',  // Vert naturel (P2) - célébration positive
-    tip: '#6B8A9B',          // Bleu gris (P3) - conseil apaisant
-    // Category backgrounds
+    urgent: '#FF3B30',            // Red (P0)
+    action: '#FF9500',            // Orange (P1)
+    celebration: '#34C759',       // Green (P2)
+    tip: '#007AFF',               // Blue (P3)
     categoryBg: {
-      nutrition: '#F5F0E8',  // Crème chaud
-      hydration: '#EEF6F9',  // Bleu très pâle
-      sleep: '#F3F0F8',      // Lavande pâle
-      sport: '#EDF5EE',      // Vert très pâle
-      stress: '#F8F5F0',     // Beige chaud
-      progress: '#FDF8F3',   // Caramel pâle
-      wellness: '#FBF5F3',   // Rose terre pâle
-      system: '#F5F5F5',     // Gris neutre
+      nutrition: 'rgba(255, 149, 0, 0.08)',
+      hydration: 'rgba(90, 200, 250, 0.08)',
+      sleep: 'rgba(175, 82, 222, 0.08)',
+      sport: 'rgba(52, 199, 89, 0.08)',
+      stress: 'rgba(255, 59, 48, 0.08)',
+      progress: 'rgba(255, 204, 0, 0.08)',
+      wellness: 'rgba(255, 45, 85, 0.08)',
+      system: '#F2F2F7',
     },
-    // State colors
-    unreadBorder: 'rgba(74, 103, 65, 0.4)',  // Vert mousse semi-transparent
-    readBorder: 'rgba(0, 0, 0, 0.08)',       // Gris très léger
+    unreadBorder: 'rgba(52, 199, 89, 0.4)',
+    readBorder: 'rgba(0, 0, 0, 0.08)',
   },
 
-  // Organic specific
+  // iOS palette reference
   organic: organicPalette,
 }
 
 // =============================================================================
-// DARK THEME
+// DARK THEME - iOS Dark Mode
 // =============================================================================
 export const darkColors = {
-  // Backgrounds - Bleu nuit profond
+  // Backgrounds - True black for OLED
   bg: {
-    primary: '#0D1520',
-    secondary: '#151D2B',
-    tertiary: '#1E2836',
-    elevated: '#263140',
-    overlay: 'rgba(0, 0, 0, 0.75)',
+    primary: '#000000',           // True black
+    secondary: '#1C1C1E',         // iOS Dark elevated
+    tertiary: '#2C2C2E',          // iOS Dark secondary
+    elevated: '#1C1C1E',
+    overlay: 'rgba(0, 0, 0, 0.6)',
   },
 
-  // Text - Clair pour dark mode
+  // Text - iOS Dark labels
   text: {
-    primary: '#F7FAFC',
-    secondary: '#CBD5E1',
-    tertiary: '#94A3B8',
-    muted: '#64748B',
-    inverse: '#1A2B3C',
+    primary: '#FFFFFF',
+    secondary: 'rgba(235, 235, 245, 0.6)',  // iOS Dark secondary
+    tertiary: '#8E8E93',
+    muted: '#636366',
+    inverse: '#1D1D1F',
   },
 
-  // Primary - Bleu plus lumineux pour dark mode
+  // Primary - Apple Green (Dark mode adjusted)
   accent: {
-    primary: '#38BDF8',
-    secondary: '#0EA5E9',
-    hover: '#7DD3FC',
-    light: '#1E3A5F',
-    muted: '#0C4A6E',
+    primary: '#30D158',           // iOS Dark green
+    secondary: '#32D74B',
+    hover: '#28C94E',
+    light: 'rgba(48, 209, 88, 0.2)',
+    muted: 'rgba(48, 209, 88, 0.4)',
   },
 
-  // Secondary - Corail ajusté pour dark mode
+  // Secondary - Apple Blue (Dark mode)
   secondary: {
-    primary: '#FF8577',
-    hover: '#FF6B5B',
-    light: '#3D2420',
-    muted: '#7C3D35',
+    primary: '#0A84FF',           // iOS Dark blue
+    hover: '#409CFF',
+    light: 'rgba(10, 132, 255, 0.2)',
+    muted: 'rgba(10, 132, 255, 0.4)',
   },
 
-  // Semantic
-  success: '#34D399',
-  successLight: '#064E3B',
-  warning: '#FBBF24',
-  warningLight: '#78350F',
-  error: '#F87171',
-  errorLight: '#7F1D1D',
-  info: '#60A5FA',
-  infoLight: '#1E3A8A',
+  // Semantic - iOS Dark System Colors
+  success: '#30D158',
+  successLight: 'rgba(48, 209, 88, 0.2)',
+  warning: '#FF9F0A',
+  warningLight: 'rgba(255, 159, 10, 0.2)',
+  error: '#FF453A',
+  errorLight: 'rgba(255, 69, 58, 0.2)',
+  info: '#0A84FF',
+  infoLight: 'rgba(10, 132, 255, 0.2)',
 
-  // Nutrients - Ajustés pour dark mode
+  // Nutrients - Adjusted for dark mode
   nutrients: {
-    calories: '#FF8577',
-    proteins: '#38BDF8',
-    carbs: '#FBBF24',
-    fats: '#C084FC',
-    fiber: '#34D399',
-    water: '#22D3EE',
+    calories: '#FF9F0A',
+    proteins: '#30D158',
+    carbs: '#FFD60A',
+    fats: '#BF5AF2',
+    fiber: '#30D158',
+    water: '#64D2FF',
   },
 
-  // Borders
+  // Borders - iOS Dark separators
   border: {
-    light: '#1E2836',
-    default: '#334155',
-    medium: '#475569',
-    focus: '#38BDF8',
+    light: '#38383A',
+    default: '#48484A',
+    medium: '#636366',
+    focus: '#30D158',
   },
 
   // Gamification
@@ -213,33 +222,30 @@ export const darkColors = {
     silver: '#C0C0C0',
     gold: '#FFD700',
     platinum: '#E5E4E2',
-    diamond: '#B9F2FF',
+    diamond: '#64D2FF',
   },
 
-  // Coach - Dark mode palette (softer contrast)
+  // Coach - Dark mode
   coach: {
-    // Priority colors - darker tones for dark mode
-    urgent: '#D18A8A',       // Rose-prune clair (P0)
-    action: '#C9A090',       // Terre sienne clair (P1)
-    celebration: '#7DBF80',  // Vert lumineux (P2)
-    tip: '#8BB0C4',          // Bleu gris clair (P3)
-    // Category backgrounds
+    urgent: '#FF453A',
+    action: '#FF9F0A',
+    celebration: '#30D158',
+    tip: '#0A84FF',
     categoryBg: {
-      nutrition: '#2A2520',
-      hydration: '#1E2A30',
-      sleep: '#252030',
-      sport: '#1E2520',
-      stress: '#2A2825',
-      progress: '#2A2520',
-      wellness: '#2A2225',
-      system: '#202025',
+      nutrition: 'rgba(255, 159, 10, 0.15)',
+      hydration: 'rgba(100, 210, 255, 0.15)',
+      sleep: 'rgba(191, 90, 242, 0.15)',
+      sport: 'rgba(48, 209, 88, 0.15)',
+      stress: 'rgba(255, 69, 58, 0.15)',
+      progress: 'rgba(255, 214, 10, 0.15)',
+      wellness: 'rgba(255, 55, 95, 0.15)',
+      system: '#1C1C1E',
     },
-    // State colors
-    unreadBorder: 'rgba(56, 189, 248, 0.4)',
+    unreadBorder: 'rgba(48, 209, 88, 0.5)',
     readBorder: 'rgba(255, 255, 255, 0.1)',
   },
 
-  // Organic specific (same as light for consistency)
+  // iOS palette reference
   organic: organicPalette,
 }
 
@@ -247,7 +253,7 @@ export const darkColors = {
 export const colors = lightColors
 
 // =============================================================================
-// BLOB COLOR PALETTES - Thèmes visuels pour le background animé (Light mode only)
+// BLOB COLOR PALETTES - Simplified for iOS style (minimal use)
 // =============================================================================
 export type BlobPaletteId = 'default' | 'sunset' | 'ocean'
 
@@ -256,118 +262,114 @@ export interface BlobPalette {
   name: string
   description: string
   colors: {
-    topRight: string      // Top right blob
-    middleLeft: string    // Middle left blob
-    bottomRight: string   // Bottom right blob
-    topLeft: string       // Top left blob (pastel touch)
+    topRight: string
+    middleLeft: string
+    bottomRight: string
+    topLeft: string
   }
 }
 
 export const blobPalettes: Record<BlobPaletteId, BlobPalette> = {
-  // Default - Uses theme accent colors (current behavior)
   default: {
     id: 'default',
     name: 'Nature',
-    description: 'Vert mousse et terre cuite',
+    description: 'Vert Apple et bleu',
     colors: {
-      topRight: '#4A6741',     // Moss green (accent.primary)
-      middleLeft: '#C87863',   // Terracotta (secondary.primary)
-      bottomRight: '#D4A574',  // Caramel (warning)
-      topLeft: '#FFD8B1',      // Pastel orange
+      topRight: '#34C759',
+      middleLeft: '#007AFF',
+      bottomRight: '#5AC8FA',
+      topLeft: '#E8F5E9',
     },
   },
-  // Sunset - Warm coral and peach tones
   sunset: {
     id: 'sunset',
     name: 'Sunset',
-    description: 'Corail et pêche dorée',
+    description: 'Orange et rose',
     colors: {
-      topRight: '#E8A87C',     // Peach coral
-      middleLeft: '#D4788C',   // Rose pink
-      bottomRight: '#F5C77E',  // Golden yellow
-      topLeft: '#FFE4D6',      // Light peach
+      topRight: '#FF9500',
+      middleLeft: '#FF2D55',
+      bottomRight: '#FFCC00',
+      topLeft: '#FFF3E0',
     },
   },
-  // Ocean - Cool blue and turquoise tones
   ocean: {
     id: 'ocean',
     name: 'Ocean',
-    description: 'Bleu océan et turquoise',
+    description: 'Bleu et turquoise',
     colors: {
-      topRight: '#5B9AA0',     // Teal blue
-      middleLeft: '#7FB3D5',   // Sky blue
-      bottomRight: '#A8D8EA',  // Light turquoise
-      topLeft: '#E0F4F1',      // Mint cream
+      topRight: '#007AFF',
+      middleLeft: '#5AC8FA',
+      bottomRight: '#64D2FF',
+      topLeft: '#E3F2FD',
     },
   },
 }
 
 // =============================================================================
-// SHADOWS - Teintes organiques vertes/terreuses
+// SHADOWS - Subtle iOS-style shadows (no colored glow)
 // =============================================================================
 export const shadows = {
   xs: {
-    shadowColor: 'rgba(74, 103, 65, 0.06)',  // Vert mousse
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
   sm: {
-    shadowColor: 'rgba(74, 103, 65, 0.08)',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     elevation: 2,
   },
   default: {
-    shadowColor: 'rgba(74, 103, 65, 0.10)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  md: {
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.10,
     shadowRadius: 12,
     elevation: 4,
   },
-  md: {
-    shadowColor: 'rgba(74, 103, 65, 0.12)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 24,
-    elevation: 8,
-  },
   lg: {
-    shadowColor: 'rgba(74, 103, 65, 0.16)',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 1,
-    shadowRadius: 48,
-    elevation: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
   },
-  // Glow effects organiques
+  // Kept for backward compatibility - now just subtle shadows
   glowPrimary: {
-    shadowColor: '#4A6741',    // Vert mousse
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 4,
   },
   glowSecondary: {
-    shadowColor: '#C87863',    // Terre cuite
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  // Glass card shadow
   glass: {
-    shadowColor: 'rgba(74, 103, 65, 0.12)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 32,
-    elevation: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
 }
 
 // =============================================================================
-// SPACING
+// SPACING - Consistent with iOS HIG
 // =============================================================================
 export const spacing = {
   xs: 4,
@@ -382,53 +384,53 @@ export const spacing = {
 }
 
 // =============================================================================
-// BORDER RADIUS
+// BORDER RADIUS - iOS-style (flatter, less rounded)
 // =============================================================================
 export const radius = {
   xs: 4,
   sm: 6,
   default: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  '2xl': 24,
-  '3xl': 32,
+  md: 10,
+  lg: 12,
+  xl: 14,
+  '2xl': 16,
+  '3xl': 20,
   full: 9999,
 }
 
 // =============================================================================
-// TYPOGRAPHY - Organic Luxury (Playfair Display + Inter)
+// TYPOGRAPHY - Inter (iOS-style clean typography)
 // =============================================================================
 export const typography = {
-  // Display - for hero/splash screens (Serif luxueux)
+  // Display - for hero/splash screens
   display: {
     fontSize: 48,
     lineHeight: 52,
     fontWeight: '700' as const,
     fontFamily: fonts.serif.bold,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
-  // Headings (Serif luxueux)
+  // Headings
   h1: {
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 34,
+    lineHeight: 41,
     fontWeight: '700' as const,
     fontFamily: fonts.serif.bold,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   h2: {
     fontSize: 28,
     lineHeight: 34,
     fontWeight: '600' as const,
     fontFamily: fonts.serif.semibold,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
   h3: {
     fontSize: 22,
     lineHeight: 28,
     fontWeight: '600' as const,
     fontFamily: fonts.serif.semibold,
-    letterSpacing: 0,
+    letterSpacing: -0.2,
   },
   h4: {
     fontSize: 18,
@@ -437,7 +439,7 @@ export const typography = {
     fontFamily: fonts.serif.semibold,
     letterSpacing: 0,
   },
-  // Body text (Sans-serif Inter)
+  // Body text
   lg: {
     fontSize: 18,
     lineHeight: 28,
@@ -512,7 +514,7 @@ export const typography = {
     lineHeight: 18,
     fontWeight: '500' as const,
     fontFamily: fonts.sans.medium,
-    letterSpacing: 0.2,
+    letterSpacing: 0,
   },
   // Button text
   button: {
@@ -520,14 +522,14 @@ export const typography = {
     lineHeight: 20,
     fontWeight: '600' as const,
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 0.3,
+    letterSpacing: 0,
   },
   buttonSm: {
     fontSize: 14,
     lineHeight: 18,
     fontWeight: '600' as const,
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 0.2,
+    letterSpacing: 0,
   },
 }
 

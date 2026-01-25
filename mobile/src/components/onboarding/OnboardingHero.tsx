@@ -1,3 +1,13 @@
+/**
+ * OnboardingHero - iOS-style welcome screen
+ *
+ * Features:
+ * - Clean, minimal iOS design
+ * - Hero image with gradient fade
+ * - Benefits grid with iOS colors
+ * - Apple Green CTA button
+ */
+
 import React, { useEffect } from 'react'
 import {
   View,
@@ -13,8 +23,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withDelay,
-  withRepeat,
-  withSequence,
   Easing,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
@@ -29,84 +37,19 @@ import {
   Leaf,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, fonts, organicPalette } from '../../constants/theme'
+import { spacing, radius, fonts } from '../../constants/theme'
 
 const { width, height } = Dimensions.get('window')
 
-// Small floating blob for background
-const SmallBlob = ({
-  color,
-  size,
-  top,
-  left,
-  delay = 0
-}: {
-  color: string
-  size: number
-  top: number
-  left: number
-  delay?: number
-}) => {
-  const scale = useSharedValue(1)
-  const translateY = useSharedValue(0)
-  const translateX = useSharedValue(0)
-
-  useEffect(() => {
-    scale.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(1.15, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.95, { duration: 6000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-
-    translateY.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(-15, { duration: 7000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(15, { duration: 7000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-
-    translateX.value = withDelay(delay, withRepeat(
-      withSequence(
-        withTiming(10, { duration: 8000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-10, { duration: 8000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-  }, [])
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { translateY: translateY.value },
-      { translateX: translateX.value }
-    ]
-  }))
-
-  return (
-    <Animated.View
-      style={[
-        styles.smallBlob,
-        style,
-        {
-          backgroundColor: color,
-          width: size,
-          height: size,
-          top,
-          left,
-          borderRadius: size / 2,
-        }
-      ]}
-    />
-  )
+// iOS color palette
+const iosColors = {
+  green: '#34C759',
+  purple: '#AF52DE',
+  orange: '#FF9500',
+  blue: '#007AFF',
 }
 
-// Animated benefit card with reveal animation
+// Animated benefit card
 const AnimatedBenefitCard = ({
   icon,
   title,
@@ -126,36 +69,11 @@ const AnimatedBenefitCard = ({
 }) => {
   const opacity = useSharedValue(0)
   const translateY = useSharedValue(20)
-  const iconScale = useSharedValue(1)
-  const iconTranslateY = useSharedValue(0)
 
   useEffect(() => {
-    // Cascade delay - 100ms between each card
-    const baseDelay = 300 + index * 100
-
-    // Fade in and slide up (reveal effect)
-    opacity.value = withDelay(baseDelay, withTiming(1, { duration: 450, easing: Easing.out(Easing.cubic) }))
-    translateY.value = withDelay(baseDelay, withTiming(0, { duration: 450, easing: Easing.out(Easing.cubic) }))
-
-    // Icon float animation - subtle continuous movement
-    iconTranslateY.value = withDelay(baseDelay + 300, withRepeat(
-      withSequence(
-        withTiming(-3, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(3, { duration: 1500, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
-
-    // Icon subtle pulse
-    iconScale.value = withDelay(baseDelay + 300, withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    ))
+    const baseDelay = 200 + index * 80
+    opacity.value = withDelay(baseDelay, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
+    translateY.value = withDelay(baseDelay, withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) }))
   }, [])
 
   const cardStyle = useAnimatedStyle(() => ({
@@ -163,18 +81,11 @@ const AnimatedBenefitCard = ({
     transform: [{ translateY: translateY.value }]
   }))
 
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: iconScale.value },
-      { translateY: iconTranslateY.value }
-    ]
-  }))
-
   return (
     <Animated.View style={[styles.benefitCard, cardStyle]}>
-      <Animated.View style={[styles.benefitIconContainer, iconStyle, { backgroundColor: color + '15' }]}>
+      <View style={[styles.benefitIconContainer, { backgroundColor: color + '15' }]}>
         {icon}
-      </Animated.View>
+      </View>
       <Text style={[styles.benefitTitle, { color: textColor }]}>
         {title}
       </Text>
@@ -194,16 +105,15 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   const { colors, isDark } = useTheme()
   const insets = useSafeAreaInsets()
   const bgColor = colors.bg.primary
-  const safeBottom = Math.min(insets.bottom, 8)
-  const footerHeight = 44 + safeBottom
+  const safeBottom = Math.max(insets.bottom, 16)
 
   // Main content animation
   const mainOpacity = useSharedValue(0)
   const mainTranslateY = useSharedValue(20)
 
   useEffect(() => {
-    mainOpacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) })
-    mainTranslateY.value = withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) })
+    mainOpacity.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) })
+    mainTranslateY.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) })
   }, [])
 
   const mainStyle = useAnimatedStyle(() => ({
@@ -213,68 +123,43 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
   const benefits = [
     {
-      id: 'easy',
-      icon: <Camera size={18} color={organicPalette.moss} strokeWidth={1.5} />,
-      title: 'Simple',
-      description: 'Photo, voix ou scan',
-      color: organicPalette.moss,
+      id: 'smart',
+      icon: <Brain size={20} color={iosColors.purple} strokeWidth={2} />,
+      title: 'Coach IA',
+      description: 'Qui te comprend vraiment',
+      color: iosColors.purple,
     },
     {
       id: 'personalized',
-      icon: <Sparkles size={18} color={organicPalette.lavender} strokeWidth={1.5} />,
-      title: 'Sur-mesure',
-      description: 'Adapté à toi',
-      color: organicPalette.lavender,
+      icon: <Sparkles size={20} color={iosColors.blue} strokeWidth={2} />,
+      title: 'Personnalisé',
+      description: 'Conseils uniques pour toi',
+      color: iosColors.blue,
     },
     {
       id: 'kind',
-      icon: <Heart size={18} color={organicPalette.clay} strokeWidth={1.5} />,
+      icon: <Heart size={20} color={iosColors.orange} strokeWidth={2} />,
       title: 'Bienveillant',
-      description: 'Sans culpabilité',
-      color: organicPalette.clay,
+      description: 'Zéro jugement, jamais',
+      color: iosColors.orange,
     },
     {
-      id: 'smart',
-      icon: <Brain size={18} color={organicPalette.ocean} strokeWidth={1.5} />,
-      title: 'Intelligent',
-      description: 'Coach IA personnel',
-      color: organicPalette.ocean,
+      id: 'easy',
+      icon: <Camera size={20} color={iosColors.green} strokeWidth={2} />,
+      title: 'Simple',
+      description: 'Photo et c\'est tout',
+      color: iosColors.green,
     },
   ]
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
-      {/* Floating blobs background - smaller than main screens */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <SmallBlob
-          color={organicPalette.sage}
-          size={width * 0.35}
-          top={height * 0.08}
-          left={width * 0.65}
-          delay={0}
-        />
-        <SmallBlob
-          color={organicPalette.clay}
-          size={width * 0.28}
-          top={height * 0.55}
-          left={-width * 0.1}
-          delay={1500}
-        />
-        <SmallBlob
-          color={organicPalette.lavender}
-          size={width * 0.25}
-          top={height * 0.75}
-          left={width * 0.7}
-          delay={800}
-        />
-      </View>
-
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: footerHeight + spacing.xl }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 160 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Image with premium overlay */}
+        {/* Hero Image */}
         <View style={styles.imageContainer}>
           <Image
             source={require('../../../assets/Photo1.jpg')}
@@ -282,41 +167,30 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['transparent', isDark ? 'rgba(26,26,26,0.2)' : 'rgba(250,249,247,0.2)', isDark ? 'rgba(26,26,26,0.8)' : 'rgba(250,249,247,0.8)', bgColor]}
-            locations={[0, 0.4, 0.7, 1]}
+            colors={['transparent', isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)', bgColor]}
+            locations={[0, 0.5, 1]}
             style={styles.imageOverlay}
-          />
-          <LinearGradient
-            colors={['rgba(0,0,0,0.1)', 'transparent', 'transparent']}
-            style={styles.vignetteTop}
           />
         </View>
 
         {/* Content */}
         <Animated.View style={[styles.content, mainStyle]}>
-          {/* Brand with leaf accent */}
+          {/* Brand */}
           <View style={styles.brandContainer}>
-            <Leaf size={14} color={colors.accent.primary} strokeWidth={1.5} />
-            <Text style={[styles.brandName, { color: colors.accent.primary }]}>
+            <Brain size={14} color={iosColors.purple} strokeWidth={2} />
+            <Text style={[styles.brandName, { color: iosColors.purple }]}>
               LYM
             </Text>
           </View>
 
           {/* Main headline */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
-            Retrouve le plaisir{'\n'}de bien manger
+            Ton coach nutrition{'\n'}vraiment intelligent
           </Text>
-
-          {/* Elegant divider */}
-          <View style={styles.dividerContainer}>
-            <View style={[styles.dividerLine, { backgroundColor: colors.accent.primary + '40' }]} />
-            <View style={[styles.dividerDot, { backgroundColor: colors.accent.primary }]} />
-            <View style={[styles.dividerLine, { backgroundColor: colors.accent.primary + '40' }]} />
-          </View>
 
           {/* Subheadline */}
           <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
-            Un compagnon qui s'adapte à toi,{'\n'}sans pression, sans jugement.
+            Une IA qui te comprend, s'adapte à toi{'\n'}et t'accompagne sans jamais juger.
           </Text>
 
           {/* Benefits Grid - 2x2 */}
@@ -330,7 +204,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
                 color={benefit.color}
                 index={index}
                 textColor={colors.text.primary}
-                textColorMuted={colors.text.secondary}
+                textColorMuted={colors.text.tertiary}
               />
             ))}
           </View>
@@ -339,31 +213,18 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
       {/* CTA footer */}
       <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: bgColor }]}>
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.03)']}
-          style={styles.footerShadow}
-        />
-
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
             onGetStarted()
           }}
           activeOpacity={0.9}
+          style={[styles.ctaButton, { backgroundColor: iosColors.green }]}
         >
-          <LinearGradient
-            colors={[organicPalette.moss, '#3A5A32']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaButton}
-          >
-            <Text style={styles.ctaText}>
-              Commencer mon parcours
-            </Text>
-            <View style={styles.ctaIconContainer}>
-              <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-            </View>
-          </LinearGradient>
+          <Text style={styles.ctaText}>
+            Découvrir mon coach IA
+          </Text>
+          <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
 
         {onHaveAccount && (
@@ -395,14 +256,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  // Small blobs
-  smallBlob: {
-    position: 'absolute',
-    opacity: 0.25,
-  },
   // Image
   imageContainer: {
-    height: Math.min(height * 0.38, 320),
+    height: Math.min(height * 0.42, 360),
     position: 'relative',
   },
   heroImage: {
@@ -414,93 +270,67 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 150,
-  },
-  vignetteTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 80,
+    height: 180,
   },
   // Content
   content: {
     paddingHorizontal: spacing.xl,
-    paddingTop: 0,
-    marginTop: -spacing.md,
+    marginTop: -spacing.lg,
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   brandName: {
     fontSize: 13,
-    fontFamily: fonts.serif.semibold,
+    fontFamily: fonts.sans.semibold,
     letterSpacing: 3,
     textTransform: 'uppercase',
   },
   headline: {
-    fontSize: 34,
-    lineHeight: 42,
-    fontFamily: fonts.serif.bold,
+    fontSize: 32,
+    lineHeight: 40,
+    fontFamily: fonts.sans.bold,
     letterSpacing: -0.5,
-    marginBottom: spacing.sm,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  dividerLine: {
-    height: 1,
-    width: 32,
-  },
-  dividerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    marginBottom: spacing.md,
   },
   subheadline: {
     fontSize: 16,
     fontFamily: fonts.sans.regular,
     lineHeight: 24,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   // Benefits Grid
   benefitsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: spacing.sm,
-    marginHorizontal: -spacing.xs,
+    marginHorizontal: -spacing.sm,
   },
   benefitCard: {
     width: '50%',
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.lg,
   },
   benefitIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
   benefitTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 0.2,
     marginBottom: 2,
   },
   benefitDescription: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.sans.regular,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   // Footer
   footer: {
@@ -509,46 +339,29 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xs,
-  },
-  footerShadow: {
-    position: 'absolute',
-    top: -20,
-    left: 0,
-    right: 0,
-    height: 20,
+    paddingTop: spacing.md,
   },
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     gap: spacing.sm,
-    shadowColor: organicPalette.moss,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   ctaText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: fonts.sans.semibold,
-    letterSpacing: 0.3,
-  },
-  ctaIconContainer: {
-    marginLeft: spacing.xs,
   },
   haveAccountButton: {
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
   },
   haveAccountText: {
     fontSize: 14,
     fontFamily: fonts.sans.medium,
-    letterSpacing: 0.2,
   },
 })
 

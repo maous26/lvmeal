@@ -78,7 +78,7 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.default, // 8px iOS-style
     overflow: 'hidden',
   },
   pressed: {
