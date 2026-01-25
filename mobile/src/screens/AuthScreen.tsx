@@ -6,11 +6,11 @@
  * - Returning users who need to re-authenticate
  *
  * Options:
+ * - Continue with Apple (iOS only)
  * - Continue with Google (native sign-in)
- * - Continue with Email (email/password auth)
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -20,8 +20,9 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native'
-import { Mail } from 'lucide-react-native'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
@@ -30,29 +31,69 @@ import {
   signInWithGoogle,
   isGoogleAuthConfigured,
 } from '../services/google-auth-service'
+import {
+  signInWithApple,
+  isAppleAuthAvailable,
+} from '../services/apple-auth-service'
 import { useAuthStore } from '../stores/auth-store'
 import { useUserStore } from '../stores/user-store'
-import EmailAuthScreen from './EmailAuthScreen'
-import EmailVerificationScreen from './EmailVerificationScreen'
-import PasswordResetScreen from './PasswordResetScreen'
-
-type AuthView = 'main' | 'email' | 'verification' | 'reset'
 
 interface AuthScreenProps {
   onAuthenticated: (isNewUser: boolean) => void
-  isReturningUser?: boolean // True when user clicked "J'ai déjà un compte"
+  isReturningUser?: boolean
   onRestartOnboarding?: () => void
 }
 
 export default function AuthScreen({ onAuthenticated, isReturningUser = false, onRestartOnboarding }: AuthScreenProps) {
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingMethod, setLoadingMethod] = useState<'google' | 'email' | null>(null)
-  const [currentView, setCurrentView] = useState<AuthView>('main')
-  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
+  const [loadingMethod, setLoadingMethod] = useState<'google' | 'apple' | null>(null)
+  const [appleAvailable, setAppleAvailable] = useState(false)
 
-  const { signInWithGoogleToken, signOut } = useAuthStore()
-  const { profile, resetAllData } = useUserStore()
+  const { signInWithGoogleToken, signInWithAppleToken, signOut } = useAuthStore()
+  const { resetAllData } = useUserStore()
+
+  // Check Apple auth availability on mount
+  useEffect(() => {
+    const checkAppleAuth = async () => {
+      const available = await isAppleAuthAvailable()
+      setAppleAvailable(available)
+    }
+    checkAppleAuth()
+  }, [])
+
+  const handleAppleSignIn = async () => {
+    setIsLoading(true)
+    setLoadingMethod('apple')
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    try {
+      const result = await signInWithApple()
+
+      if (result.success && result.identityToken) {
+        // Store auth info - this also restores cloud data if available
+        await signInWithAppleToken(result.identityToken)
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+        // Check if user has existing profile (returning user)
+        const currentProfile = useUserStore.getState().profile
+        const isNewUser = !currentProfile?.onboardingCompleted
+        console.log('[AuthScreen] After Apple restore - isNewUser:', isNewUser)
+        onAuthenticated(isNewUser)
+      } else if (result.error === 'Connexion annulée') {
+        // User cancelled, do nothing
+      } else {
+        Alert.alert('Erreur', result.error || 'Connexion impossible')
+      }
+    } catch (error: any) {
+      console.error('[AuthScreen] Apple sign-in error:', error)
+      Alert.alert('Erreur', error?.message || 'Une erreur est survenue')
+    } finally {
+      setIsLoading(false)
+      setLoadingMethod(null)
+    }
+  }
 
   const handleGoogleSignIn = async () => {
     if (!isGoogleAuthConfigured()) {
@@ -74,10 +115,9 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
         // Check if user has existing profile (returning user)
-        // IMPORTANT: Get fresh state after restoreData() completed
         const currentProfile = useUserStore.getState().profile
         const isNewUser = !currentProfile?.onboardingCompleted
-        console.log('[AuthScreen] After restore - isNewUser:', isNewUser, 'onboardingCompleted:', currentProfile?.onboardingCompleted)
+        console.log('[AuthScreen] After Google restore - isNewUser:', isNewUser)
         onAuthenticated(isNewUser)
       } else {
         Alert.alert('Erreur', result.error || 'Connexion impossible')
@@ -89,23 +129,6 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
       setIsLoading(false)
       setLoadingMethod(null)
     }
-  }
-
-  const handleEmailSignIn = () => {
-    setCurrentView('email')
-  }
-
-  const handleNeedsVerification = (email: string) => {
-    setPendingVerificationEmail(email)
-    setCurrentView('verification')
-  }
-
-  const handleVerified = () => {
-    onAuthenticated(true)
-  }
-
-  const handleForgotPassword = () => {
-    setCurrentView('reset')
   }
 
   const handleUseAnotherAccount = () => {
@@ -124,8 +147,6 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
               await signOut()
               // Reset ALL local data (all stores) so the flow restarts cleanly
               await resetAllData()
-              setCurrentView('main')
-              setPendingVerificationEmail('')
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
               // Ask RootNavigator to show onboarding again
               onRestartOnboarding?.()
@@ -142,43 +163,6 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
 
   const googleConfigured = isGoogleAuthConfigured()
 
-  // Render email auth screen
-  if (currentView === 'email') {
-    return (
-      <EmailAuthScreen
-        onBack={() => setCurrentView('main')}
-        onAuthenticated={onAuthenticated}
-        onNeedsVerification={handleNeedsVerification}
-        onForgotPassword={handleForgotPassword}
-        initialEmail={pendingVerificationEmail}
-        // Default to sign-in (user can still switch to sign-up from the screen)
-        forceSignIn
-      />
-    )
-  }
-
-  // Render verification screen
-  if (currentView === 'verification') {
-    return (
-      <EmailVerificationScreen
-        email={pendingVerificationEmail}
-        onBack={() => setCurrentView('email')}
-        onVerified={handleVerified}
-      />
-    )
-  }
-
-  // Render password reset screen
-  if (currentView === 'reset') {
-    return (
-      <PasswordResetScreen
-        onBack={() => setCurrentView('email')}
-        initialEmail={pendingVerificationEmail}
-      />
-    )
-  }
-
-  // Render main auth screen
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       {/* Logo */}
@@ -205,6 +189,25 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
 
       {/* Auth Options */}
       <View style={styles.authOptions}>
+        {/* Apple Sign-In Button (iOS only) */}
+        {Platform.OS === 'ios' && appleAvailable && (
+          <TouchableOpacity
+            style={[styles.authButton, styles.appleButton]}
+            onPress={handleAppleSignIn}
+            disabled={isLoading}
+            activeOpacity={0.8}
+          >
+            {loadingMethod === 'apple' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={styles.appleIconText}></Text>
+                <Text style={styles.appleButtonText}>Continuer avec Apple</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
         {/* Google Sign-In Button */}
         {googleConfigured ? (
           <TouchableOpacity
@@ -232,25 +235,6 @@ export default function AuthScreen({ onAuthenticated, isReturningUser = false, o
             </Text>
           </View>
         )}
-
-        {/* Email Sign-In Button */}
-        <TouchableOpacity
-          style={[styles.authButton, styles.emailButton, { backgroundColor: colors.bg.elevated, borderColor: colors.border.default }]}
-          onPress={handleEmailSignIn}
-          disabled={isLoading}
-          activeOpacity={0.8}
-        >
-          {loadingMethod === 'email' ? (
-            <ActivityIndicator color={colors.text.primary} size="small" />
-          ) : (
-            <>
-              <Mail size={20} color={colors.text.primary} />
-              <Text style={[styles.emailButtonText, { color: colors.text.primary }]}>
-                Continuer avec Email
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
 
       {/* Switch account */}
@@ -337,6 +321,17 @@ const styles = StyleSheet.create({
     minHeight: 52,
     ...shadows.sm,
   },
+  appleButton: {
+    backgroundColor: '#000000',
+  },
+  appleIconText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+  },
+  appleButtonText: {
+    ...typography.bodyMedium,
+    color: '#FFFFFF',
+  },
   googleButton: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -349,12 +344,6 @@ const styles = StyleSheet.create({
   googleButtonText: {
     ...typography.bodyMedium,
     color: '#3C4043',
-  },
-  emailButton: {
-    borderWidth: 1,
-  },
-  emailButtonText: {
-    ...typography.bodyMedium,
   },
   unavailableBanner: {
     paddingVertical: spacing.md,

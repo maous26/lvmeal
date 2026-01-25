@@ -21,7 +21,9 @@
       "associatedDomains": [
         "applinks:lym1-production.up.railway.app"
       ],
+      "usesAppleSignIn": true,
       "entitlements": {
+        "com.apple.developer.applesignin": ["Default"],
         "com.apple.developer.healthkit": true,
         "com.apple.developer.healthkit.access": [],
         "com.apple.developer.healthkit.background-delivery": true
@@ -87,6 +89,7 @@
       ]
     },
     "plugins": [
+      "expo-apple-authentication",
       "expo-camera",
       [
         "expo-notifications",

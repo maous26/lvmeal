@@ -71,13 +71,13 @@ export const lightColors = {
     inverse: '#FFFFFF',
   },
 
-  // Primary - Apple Green
+  // Primary - Black (iOS-style)
   accent: {
-    primary: '#34C759',           // Apple Green
-    secondary: '#30B350',         // Slightly darker
-    hover: '#2CA048',             // Darker for press
-    light: 'rgba(52, 199, 89, 0.12)', // Light green tint
-    muted: 'rgba(52, 199, 89, 0.3)',  // Muted green
+    primary: '#1D1D1F',           // Black
+    secondary: '#3C3C43',         // Dark gray
+    hover: '#000000',             // Pure black for press
+    light: 'rgba(29, 29, 31, 0.08)', // Light black tint
+    muted: 'rgba(29, 29, 31, 0.2)',  // Muted black
   },
 
   // Secondary - Apple Blue
@@ -113,7 +113,7 @@ export const lightColors = {
     light: '#E5E5E7',             // iOS Separator
     default: '#D1D1D6',           // iOS Opaque separator
     medium: '#C7C7CC',            // Darker separator
-    focus: '#34C759',             // Green focus
+    focus: '#1D1D1F',             // Black focus
   },
 
   // Gamification - Metallic colors
@@ -141,7 +141,7 @@ export const lightColors = {
       wellness: 'rgba(255, 45, 85, 0.08)',
       system: '#F2F2F7',
     },
-    unreadBorder: 'rgba(52, 199, 89, 0.4)',
+    unreadBorder: 'rgba(29, 29, 31, 0.4)',
     readBorder: 'rgba(0, 0, 0, 0.08)',
   },
 
@@ -171,13 +171,13 @@ export const darkColors = {
     inverse: '#1D1D1F',
   },
 
-  // Primary - Apple Green (Dark mode adjusted)
+  // Primary - White (Dark mode)
   accent: {
-    primary: '#30D158',           // iOS Dark green
-    secondary: '#32D74B',
-    hover: '#28C94E',
-    light: 'rgba(48, 209, 88, 0.2)',
-    muted: 'rgba(48, 209, 88, 0.4)',
+    primary: '#FFFFFF',           // White
+    secondary: 'rgba(255, 255, 255, 0.8)',
+    hover: '#F5F5F7',
+    light: 'rgba(255, 255, 255, 0.12)',
+    muted: 'rgba(255, 255, 255, 0.3)',
   },
 
   // Secondary - Apple Blue (Dark mode)

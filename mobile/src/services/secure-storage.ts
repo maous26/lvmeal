@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 // Keys for secure storage
 export const SECURE_KEYS = {
   GOOGLE_USER: 'lym_google_user',
+  APPLE_USER: 'lym_apple_user',
   ACCESS_TOKEN: 'lym_access_token',
   ID_TOKEN: 'lym_id_token',
   USER_ID: 'lym_user_id',

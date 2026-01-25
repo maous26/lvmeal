@@ -1,0 +1,19 @@
+# Meal Planner Backend Dependencies
+
+# Core
+pydantic>=2.0.0
+httpx>=0.24.0
+
+# API Server
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Optimization (pour version avancée)
+# ortools>=9.7.0  # Uncomment si besoin de solveur LP/MIP
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Development
+python-dotenv>=1.0.0

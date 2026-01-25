@@ -33,6 +33,14 @@ import {
   isGoogleAuthConfigured,
   type GoogleAuthResult,
 } from '../services/google-auth-service'
+import {
+  signInWithApple as signInWithAppleService,
+  signInWithAppleToken as signInWithAppleTokenService,
+  signOutApple,
+  getCachedAppleUser,
+  isAppleAuthAvailable,
+  type AppleAuthResult,
+} from '../services/apple-auth-service'
 import { useUserStore } from './user-store'
 
 // ============================================================================
@@ -77,6 +85,8 @@ export interface AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signInWithGoogleToken: (accessToken: string, idToken?: string) => Promise<{ success: boolean; error?: string }>
+  signInWithAppleToken: (identityToken: string) => Promise<{ success: boolean; error?: string }>
+  isAppleAvailable: () => Promise<boolean>
   signOut: () => Promise<void>
   enableSync: () => Promise<void>
   disableSync: () => void
@@ -153,13 +163,26 @@ export const useAuthStore = create<AuthState>()(
                 avatarUrl: cachedGoogle.avatar || null,
               })
             } else {
-              // Check for anonymous user ID
-              const anonId = await getCloudUserId()
-              if (anonId) {
+              // Check for cached Apple user
+              const cachedApple = await getCachedAppleUser()
+              if (cachedApple) {
                 set({
-                  userId: anonId,
-                  authMethod: 'anonymous',
+                  isAuthenticated: true,
+                  authMethod: 'apple',
+                  userId: cachedApple.id,
+                  email: cachedApple.email || null,
+                  displayName: cachedApple.name || null,
+                  avatarUrl: null,
                 })
+              } else {
+                // Check for anonymous user ID
+                const anonId = await getCloudUserId()
+                if (anonId) {
+                  set({
+                    userId: anonId,
+                    authMethod: 'anonymous',
+                  })
+                }
               }
             }
           }
@@ -365,6 +388,82 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // ========================================
+      // Sign in with Apple identity token
+      // ========================================
+      signInWithAppleToken: async (identityToken: string) => {
+        set({ syncStatus: 'syncing', lastError: null })
+
+        try {
+          const result = await signInWithAppleTokenService(identityToken)
+
+          if (result.success && result.user) {
+            set({
+              isAuthenticated: true,
+              authMethod: 'apple',
+              userId: result.user.id,
+              email: result.user.email || null,
+              displayName: result.user.name || null,
+              avatarUrl: null,
+              syncStatus: 'success',
+              syncEnabled: true,
+            })
+
+            // ANTI-ABUSE: Double verification - account AND device
+            const accountTrialStatus = await checkTrialStatus()
+            const deviceTrialStatus = await checkDeviceTrialStatus()
+            const { useGamificationStore } = await import('./gamification-store')
+
+            if (accountTrialStatus.hasUsedTrial && accountTrialStatus.trialStartDate) {
+              // Account already used trial
+              console.log('[AuthStore] Apple account already used trial:', accountTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(accountTrialStatus.trialStartDate)
+              await registerDeviceForUser(result.user.id, false)
+            } else if (deviceTrialStatus.hasUsedTrial && deviceTrialStatus.trialStartDate) {
+              // Device already used trial with different account
+              console.log('[AuthStore] Device already used trial:', deviceTrialStatus.trialStartDate)
+              useGamificationStore.getState().setTrialStartDate(deviceTrialStatus.trialStartDate)
+              await startTrialInCloud()
+              await registerDeviceForUser(result.user.id, false)
+            } else {
+              // New user AND new device - start fresh trial
+              const deviceResult = await registerDeviceForUser(result.user.id, true)
+              if (deviceResult.success && deviceResult.trialStartDate) {
+                console.log('[AuthStore] Started new Apple trial:', deviceResult.trialStartDate)
+                useGamificationStore.getState().setTrialStartDate(deviceResult.trialStartDate)
+                await startTrialInCloud()
+              } else if (deviceResult.error) {
+                console.warn('[AuthStore] Device blocked:', deviceResult.error)
+                const expiredDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                useGamificationStore.getState().setTrialStartDate(expiredDate)
+              }
+            }
+
+            // Auto-restore from cloud on first sign-in
+            await get().restoreData()
+
+            return { success: true }
+          } else {
+            set({
+              syncStatus: 'error',
+              lastError: result.error || 'Erreur de connexion Apple',
+            })
+            return { success: false, error: result.error }
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Erreur inconnue'
+          set({ syncStatus: 'error', lastError: message })
+          return { success: false, error: message }
+        }
+      },
+
+      // ========================================
+      // Check if Apple Sign-In is available
+      // ========================================
+      isAppleAvailable: async () => {
+        return await isAppleAuthAvailable()
+      },
+
+      // ========================================
       // Sign out
       // ========================================
       signOut: async () => {
@@ -374,6 +473,8 @@ export const useAuthStore = create<AuthState>()(
           // Sign out from appropriate service
           if (authMethod === 'google') {
             await signOutGoogle()
+          } else if (authMethod === 'apple') {
+            await signOutApple()
           } else {
             await supabase.auth.signOut()
           }
