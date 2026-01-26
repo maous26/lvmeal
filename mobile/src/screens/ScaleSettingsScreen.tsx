@@ -29,6 +29,7 @@ import { spacing, typography, radius } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import {
   isHealthAvailable,
+  getHealthModuleDiagnostics,
   requestHealthPermissions,
   getWeightDataFromScale,
   getCompatibleScales,
@@ -58,16 +59,26 @@ export default function ScaleSettingsScreen() {
     const available = await isHealthAvailable()
     setIsAvailable(available)
 
-    // If available, check if we already have permissions
-    if (available) {
-      try {
-        const result = await requestHealthPermissions()
-        console.log('[ScaleSettings] Initial permission check:', JSON.stringify(result))
-        setPermissions(result)
-      } catch (error) {
-        console.log('[ScaleSettings] Initial permission check failed:', error)
-      }
-    }
+    // Don't request permissions automatically on mount.
+    // iOS prompts should be user-initiated (button press) to avoid being suppressed.
+  }
+
+  const showHealthDiagnostics = async () => {
+    const diag = getHealthModuleDiagnostics()
+    const available = await isHealthAvailable()
+    Alert.alert(
+      'Diagnostic Santé',
+      [
+        `Plateforme: ${diag.platform}`,
+        `Modules natifs dispo: ${diag.nativeModulesAvailable}`,
+        `HealthKit module: ${diag.hasAppleHealthKit}`,
+        `initHealthKit: ${diag.hasInitHealthKit}`,
+        `Constants: ${diag.hasHealthKitConstants}`,
+        `Permissions constants: ${diag.hasHealthKitPermissionsConstants}`,
+        `Health disponible (runtime): ${available}`,
+      ].join('\n'),
+      [{ text: 'OK' }]
+    )
   }
 
   const handleConnect = async () => {
@@ -80,8 +91,11 @@ export default function ScaleSettingsScreen() {
       if (!available) {
         Alert.alert(
           'Apple Santé non disponible',
-          'Vérifie que l\'app Santé est installée et activée sur ton iPhone.',
-          [{ text: 'OK' }]
+          "LYM ne peut pas accéder à Santé dans cette build (souvent: build sans HealthKit / Expo Go / entitlement manquant).\n\nAppuie sur 'Diagnostic' pour voir la cause.",
+          [
+            { text: 'Diagnostic', onPress: showHealthDiagnostics },
+            { text: 'OK' },
+          ]
         )
         setIsLoading(false)
         return
@@ -106,7 +120,10 @@ export default function ScaleSettingsScreen() {
         Alert.alert(
           'Permissions requises',
           'Pour synchroniser ton poids, va dans Réglages > Santé > Accès aux données > LYM et active "Poids".',
-          [{ text: 'OK' }]
+          [
+            { text: 'Diagnostic', onPress: showHealthDiagnostics },
+            { text: 'OK' },
+          ]
         )
       }
     } catch (error) {
@@ -255,6 +272,19 @@ export default function ScaleSettingsScreen() {
                     </>
                   )}
                 </TouchableOpacity>
+              )}
+
+              {isAvailable === false && (
+                <View style={{ marginTop: spacing.md }}>
+                  <Text style={[styles.infoDisclaimer, { color: colors.text.tertiary, textAlign: 'center' }]}> 
+                    Santé n'est pas disponible dans cette build. Utilise une build TestFlight/EAS avec HealthKit activé.
+                  </Text>
+                  <TouchableOpacity onPress={showHealthDiagnostics} style={{ marginTop: spacing.sm }}>
+                    <Text style={{ color: colors.accent.primary, textAlign: 'center', fontWeight: '600' }}>
+                      Voir le diagnostic
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               )}
 
               {lastSync && (

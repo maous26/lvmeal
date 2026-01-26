@@ -32,6 +32,16 @@ let SdkAvailabilityStatus: any = { SDK_AVAILABLE: 1 }
 // Flag to track if native modules are available
 let nativeModulesAvailable = false
 
+export interface HealthModuleDiagnostics {
+  platform: 'ios' | 'android' | 'other'
+  nativeModulesAvailable: boolean
+  hasAppleHealthKit: boolean
+  hasInitHealthKit: boolean
+  hasHealthKitConstants: boolean
+  hasHealthKitPermissionsConstants: boolean
+  hasHealthConnect: boolean
+}
+
 try {
   // Dynamic imports to prevent crashes when modules aren't linked
   if (Platform.OS === 'ios') {
@@ -52,6 +62,19 @@ try {
 } catch (error) {
   console.log('[HealthService] Native health modules not available (expected in Expo Go)')
   nativeModulesAvailable = false
+}
+
+export function getHealthModuleDiagnostics(): HealthModuleDiagnostics {
+  const platform = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'other'
+  return {
+    platform,
+    nativeModulesAvailable,
+    hasAppleHealthKit: !!AppleHealthKit,
+    hasInitHealthKit: !!AppleHealthKit?.initHealthKit,
+    hasHealthKitConstants: !!AppleHealthKit?.Constants,
+    hasHealthKitPermissionsConstants: !!AppleHealthKit?.Constants?.Permissions,
+    hasHealthConnect: !!initializeHealthConnect,
+  }
 }
 
 // Types
