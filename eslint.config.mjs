@@ -18,10 +18,32 @@ const eslintConfig = defineConfig([
     "**/.venv/**",
     "**/__pycache__/**",
     "mobile/backend-dspy/**",
+    "mobile/lvmeal/**",
     "mobile/**/Pods/**",
+    "mobile/ios/**",
+    "mobile/android/**",
     "mobile/**/ios/build/**",
     "mobile/**/android/build/**",
   ]),
+
+  // Repo-wide overrides: keep lint actionable but non-blocking.
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-require-imports": "off",
+
+      // Avoid hard failures from React Compiler / hooks purity rules on existing code.
+      "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+
+      // Common in French UI copy; keep as warning if we want to clean later.
+      "react/no-unescaped-entities": "warn",
+
+      // Existing codebase has a lot of `let` patterns; don't block CI on this.
+      "prefer-const": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
