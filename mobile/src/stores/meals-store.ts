@@ -41,6 +41,58 @@ const createEmptyDailyData = (date: string): DailyData => ({
   totalNutrition: { calories: 0, proteins: 0, carbs: 0, fats: 0 },
 })
 
+// Ensure nutrition object is valid (fixes corrupted data from storage)
+const ensureValidNutrition = (nutrition: unknown): NutritionInfo => {
+  if (!nutrition || typeof nutrition !== 'object') {
+    return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+  }
+  const n = nutrition as Record<string, unknown>
+  return {
+    calories: typeof n.calories === 'number' ? n.calories : 0,
+    proteins: typeof n.proteins === 'number' ? n.proteins : 0,
+    carbs: typeof n.carbs === 'number' ? n.carbs : 0,
+    fats: typeof n.fats === 'number' ? n.fats : 0,
+  }
+}
+
+// Clean corrupted daily data entries (null totalNutrition, invalid meals, etc.)
+const cleanDailyData = (dailyData: Record<string, unknown>): Record<string, DailyData> => {
+  if (!dailyData || typeof dailyData !== 'object') {
+    return {}
+  }
+
+  const cleaned: Record<string, DailyData> = {}
+
+  for (const [date, data] of Object.entries(dailyData)) {
+    if (!data || typeof data !== 'object') {
+      cleaned[date] = createEmptyDailyData(date)
+      continue
+    }
+
+    const d = data as Record<string, unknown>
+    const meals = Array.isArray(d.meals) ? d.meals : []
+
+    // Clean each meal's totalNutrition
+    const cleanedMeals = meals.map((meal: unknown) => {
+      if (!meal || typeof meal !== 'object') return null
+      const m = meal as Record<string, unknown>
+      return {
+        ...m,
+        totalNutrition: ensureValidNutrition(m.totalNutrition),
+      }
+    }).filter(Boolean) as Meal[]
+
+    cleaned[date] = {
+      date: typeof d.date === 'string' ? d.date : date,
+      meals: cleanedMeals,
+      hydration: typeof d.hydration === 'number' ? d.hydration : 0,
+      totalNutrition: ensureValidNutrition(d.totalNutrition),
+    }
+  }
+
+  return cleaned
+}
+
 const calculateMealNutrition = (items: MealItem[]): NutritionInfo => {
   return items.reduce(
     (acc, item) => ({
@@ -55,12 +107,19 @@ const calculateMealNutrition = (items: MealItem[]): NutritionInfo => {
 
 const calculateDailyTotals = (meals: Meal[]): NutritionInfo => {
   return meals.reduce(
-    (acc, meal) => ({
-      calories: acc.calories + meal.totalNutrition.calories,
-      proteins: acc.proteins + meal.totalNutrition.proteins,
-      carbs: acc.carbs + meal.totalNutrition.carbs,
-      fats: acc.fats + meal.totalNutrition.fats,
-    }),
+    (acc, meal) => {
+      // Safety check for corrupted meal data where totalNutrition might be null
+      const nutrition = meal.totalNutrition
+      if (!nutrition || typeof nutrition !== 'object') {
+        return acc
+      }
+      return {
+        calories: acc.calories + (nutrition.calories || 0),
+        proteins: acc.proteins + (nutrition.proteins || 0),
+        carbs: acc.carbs + (nutrition.carbs || 0),
+        fats: acc.fats + (nutrition.fats || 0),
+      }
+    },
     { calories: 0, proteins: 0, carbs: 0, fats: 0 }
   )
 }
@@ -305,7 +364,17 @@ export const useMealsStore = create<MealsState>()(
         const { dailyData } = get()
         const dayData = dailyData[targetDate]
         if (!dayData) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
-        return dayData.totalNutrition
+        // Safety check for corrupted data where totalNutrition might be null
+        const nutrition = dayData.totalNutrition
+        if (!nutrition || typeof nutrition !== 'object') {
+          return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+        }
+        return {
+          calories: nutrition.calories || 0,
+          proteins: nutrition.proteins || 0,
+          carbs: nutrition.carbs || 0,
+          fats: nutrition.fats || 0,
+        }
       },
 
       getMealsForDate: (date) => {
@@ -320,7 +389,17 @@ export const useMealsStore = create<MealsState>()(
         const { dailyData } = get()
         const dayData = dailyData[targetDate]
         if (!dayData) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
-        return dayData.totalNutrition
+        // Safety check for corrupted data where totalNutrition might be null
+        const nutrition = dayData.totalNutrition
+        if (!nutrition || typeof nutrition !== 'object') {
+          return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+        }
+        return {
+          calories: nutrition.calories || 0,
+          proteins: nutrition.proteins || 0,
+          carbs: nutrition.carbs || 0,
+          fats: nutrition.fats || 0,
+        }
       },
 
       getHydration: (date) => {
@@ -335,8 +414,34 @@ export const useMealsStore = create<MealsState>()(
       name: 'presence-meals-storage',
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
-        console.log('[MealsStore] Hydrated, dailyData dates:', state?.dailyData ? Object.keys(state.dailyData) : 'none')
-        useMealsStore.setState({ _hasHydrated: true })
+        console.log('[MealsStore] Hydrating, dailyData dates:', state?.dailyData ? Object.keys(state.dailyData) : 'none')
+
+        // Clean corrupted data on hydration
+        if (state?.dailyData) {
+          const cleanedData = cleanDailyData(state.dailyData as Record<string, unknown>)
+          const originalKeys = Object.keys(state.dailyData)
+          const cleanedKeys = Object.keys(cleanedData)
+
+          if (originalKeys.length !== cleanedKeys.length) {
+            console.log('[MealsStore] Cleaned corrupted entries:', originalKeys.length - cleanedKeys.length)
+          }
+
+          // Check if any data was actually corrupted and fixed
+          let fixedCount = 0
+          for (const key of cleanedKeys) {
+            const original = (state.dailyData as Record<string, unknown>)[key] as Record<string, unknown> | undefined
+            if (original && (!original.totalNutrition || typeof original.totalNutrition !== 'object')) {
+              fixedCount++
+            }
+          }
+          if (fixedCount > 0) {
+            console.log('[MealsStore] Fixed', fixedCount, 'entries with null/invalid totalNutrition')
+          }
+
+          useMealsStore.setState({ dailyData: cleanedData, _hasHydrated: true })
+        } else {
+          useMealsStore.setState({ _hasHydrated: true })
+        }
       },
     }
   )

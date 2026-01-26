@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -29,6 +29,19 @@ import type { WeightEntry } from '../types'
 
 const { width } = Dimensions.get('window')
 
+// Utility to safely extract nutrition data from potentially corrupted dailyData
+const safeNutrition = (data: unknown): { calories: number; proteins: number; carbs: number; fats: number } => {
+  const defaultNutrition = { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+  if (!data || typeof data !== 'object') return defaultNutrition
+  const d = data as Record<string, unknown>
+  return {
+    calories: typeof d.calories === 'number' ? d.calories : 0,
+    proteins: typeof d.proteins === 'number' ? d.proteins : 0,
+    carbs: typeof d.carbs === 'number' ? d.carbs : 0,
+    fats: typeof d.fats === 'number' ? d.fats : 0,
+  }
+}
+
 type TabType = 'progress' | 'gamification'
 type TrendPeriod = 30 | 60 | 90
 
@@ -43,54 +56,81 @@ export default function ProgressScreen() {
   const [newWeight, setNewWeight] = useState('')
   const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30)
 
-  // Check if store is hydrated to prevent crashes on first render
-  const isStoreHydrated = useUserStore((s) => s._hasHydrated)
-  const { profile, nutritionGoals, weightHistory, addWeightEntry } = useUserStore()
-  const { dailyData } = useMealsStore()
-  const {
-    totalXP,
-    currentStreak,
-    weeklyXP,
-    getTier,
-    getNextTier,
-    getTierProgress,
-    getWeeklyRank,
-    getStreakInfo,
-    getAchievements,
-    getAICreditsRemaining,
-  } = useGamificationStore()
+  // Check if stores are hydrated to prevent crashes on first render
+  const isUserStoreHydrated = useUserStore((s) => s._hasHydrated)
+  const isGamificationStoreHydrated = useGamificationStore((s) => s._hasHydrated)
+  const isMealsStoreHydrated = useMealsStore((s) => s._hasHydrated)
+  const isStoreHydrated = isUserStoreHydrated && isGamificationStoreHydrated && isMealsStoreHydrated
+
+  // Get store data - only safe to use after hydration check
+  const profile = useUserStore((s) => s.profile)
+  const nutritionGoals = useUserStore((s) => s.nutritionGoals)
+  const weightHistory = useUserStore((s) => s.weightHistory) || []
+  const addWeightEntry = useUserStore((s) => s.addWeightEntry)
+  const dailyData = useMealsStore((s) => s.dailyData) || {}
+  const totalXP = useGamificationStore((s) => s.totalXP)
+  const currentStreak = useGamificationStore((s) => s.currentStreak)
+  const weeklyXP = useGamificationStore((s) => s.weeklyXP)
+
+  // Don't render anything until stores are hydrated
+  if (!isStoreHydrated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Progrès</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  // Now safe to call store methods that depend on state
+  // Wrap in try-catch to handle any unexpected errors in production
+  let tier: ReturnType<typeof useGamificationStore.getState>['getTier'] extends () => infer R ? R : never
+  let nextTier: ReturnType<typeof useGamificationStore.getState>['getNextTier'] extends () => infer R ? R : never
+  let tierProgress = { current: 0, needed: 100, percentage: 0 }
+  let rank = { percentile: 50, rank: 1, xpThisWeek: 0 }
+  let streakInfo = { current: 0, longest: 0, isActive: false, bonus: 0 }
+  let achievements: Array<{ achievement: { id: string; name: string; icon: string }; unlocked: boolean }> = []
+  let aiCredits = 0
+
+  try {
+    const gamificationStore = useGamificationStore.getState()
+    tier = gamificationStore.getTier()
+    nextTier = gamificationStore.getNextTier()
+    tierProgress = gamificationStore.getTierProgress()
+    rank = gamificationStore.getWeeklyRank()
+    streakInfo = gamificationStore.getStreakInfo()
+    achievements = gamificationStore.getAchievements()
+    aiCredits = gamificationStore.getAICreditsRemaining()
+  } catch (error) {
+    console.error('[ProgressScreen] Error getting gamification data:', error)
+    // Use TIERS fallback (bronze is the default/lowest tier)
+    tier = TIERS.bronze
+    nextTier = TIERS.silver
+  }
 
   // Weight calculations
-  const sortedWeights = useMemo(() => {
-    return [...weightHistory].sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-  }, [weightHistory])
+  const sortedWeights = [...weightHistory].sort((a, b) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
 
   const currentWeight = sortedWeights[0]?.weight || profile?.weight || null
   const targetWeight = profile?.targetWeight
 
   // Weight stats
-  const weightStats = useMemo(() => {
-    const current = sortedWeights[0]?.weight || profile?.weight || 0
-    const target = profile?.targetWeight
-    const start = profile?.weight || current
-
-    // Weekly change
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    const weekAgoEntry = sortedWeights.find(w => new Date(w.date) <= weekAgo)
-    const weeklyChange = weekAgoEntry ? +(current - weekAgoEntry.weight).toFixed(1) : null
-
-    // Progress towards goal
-    const totalToLose = start - (target || start)
-    const lost = start - current
-    const progress = totalToLose !== 0 ? Math.min(100, Math.max(0, (lost / totalToLose) * 100)) : 0
-
-    return { current, target, start, weeklyChange, progress }
-  }, [sortedWeights, profile])
+  const current = sortedWeights[0]?.weight || profile?.weight || 0
+  const target = profile?.targetWeight
+  const start = profile?.weight || current
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const weekAgoEntry = sortedWeights.find(w => new Date(w.date) <= weekAgo)
+  const weeklyChange = weekAgoEntry ? +(current - weekAgoEntry.weight).toFixed(1) : null
+  const totalToLose = start - (target || start)
+  const lost = start - current
+  const progressPercent = totalToLose !== 0 ? Math.min(100, Math.max(0, (lost / totalToLose) * 100)) : 0
+  const weightStats = { current, target, start, weeklyChange, progress: progressPercent }
 
   // Add weight handler
-  const handleAddWeight = useCallback(() => {
+  const handleAddWeight = () => {
     const weight = parseFloat(newWeight)
     if (isNaN(weight) || weight < 30 || weight > 300) {
       toast.error('Poids invalide (30-300 kg)')
@@ -107,16 +147,9 @@ export default function ProgressScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     setNewWeight('')
     setShowAddWeight(false)
-  }, [newWeight, addWeightEntry, toast])
+  }
 
   const goals = nutritionGoals || { calories: 2000, proteins: 100, carbs: 250, fats: 67 }
-  const tier = getTier()
-  const nextTier = getNextTier()
-  const tierProgress = getTierProgress()
-  const rank = getWeeklyRank()
-  const streakInfo = getStreakInfo()
-  const achievements = getAchievements()
-  const aiCredits = getAICreditsRemaining()
 
   // Calculate weekly averages
   const getLast7Days = () => {
@@ -130,11 +163,8 @@ export default function ProgressScreen() {
   }
 
   const last7Days = getLast7Days()
-  const weeklyData = last7Days.map((date) => dailyData[date]?.totalNutrition || {
-    calories: 0,
-    proteins: 0,
-    carbs: 0,
-    fats: 0,
+  const weeklyData = last7Days.map((date) => {
+    return safeNutrition(dailyData[date]?.totalNutrition)
   })
 
   const averageCalories = Math.round(
@@ -155,79 +185,77 @@ export default function ProgressScreen() {
   ).length
 
   // Calculate trends for selected period (30/60/90 days)
-  const trendStats = useMemo(() => {
-    const getDaysData = (numDays: number) => {
-      const days = []
-      for (let i = numDays - 1; i >= 0; i--) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        days.push(getDateKey(date))
+  const getDaysData = (numDays: number) => {
+    const days = []
+    for (let i = numDays - 1; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      days.push(getDateKey(date))
+    }
+    return days
+  }
+
+  const trendCurrentDays = getDaysData(trendPeriod)
+  const trendPreviousDays = getDaysData(trendPeriod * 2).slice(0, trendPeriod)
+
+  const calculatePeriodStats = (days: string[]) => {
+    let totalCalories = 0
+    let totalProteins = 0
+    let totalCarbs = 0
+    let totalFats = 0
+    let daysWithData = 0
+
+    days.forEach(date => {
+      const nutrition = safeNutrition(dailyData[date]?.totalNutrition)
+      if (nutrition.calories > 0) {
+        totalCalories += nutrition.calories
+        totalProteins += nutrition.proteins
+        totalCarbs += nutrition.carbs
+        totalFats += nutrition.fats
+        daysWithData++
       }
-      return days
-    }
+    })
 
-    const currentDays = getDaysData(trendPeriod)
-    const previousDays = getDaysData(trendPeriod * 2).slice(0, trendPeriod)
-
-    const calculatePeriodStats = (days: string[]) => {
-      let totalCalories = 0
-      let totalProteins = 0
-      let totalCarbs = 0
-      let totalFats = 0
-      let daysWithData = 0
-
-      days.forEach(date => {
-        const dayData = dailyData[date]?.totalNutrition
-        if (dayData && dayData.calories > 0) {
-          totalCalories += dayData.calories
-          totalProteins += dayData.proteins || 0
-          totalCarbs += dayData.carbs || 0
-          totalFats += dayData.fats || 0
-          daysWithData++
-        }
-      })
-
-      if (daysWithData === 0) return null
-
-      return {
-        avgCalories: Math.round(totalCalories / daysWithData),
-        avgProteins: Math.round(totalProteins / daysWithData),
-        avgCarbs: Math.round(totalCarbs / daysWithData),
-        avgFats: Math.round(totalFats / daysWithData),
-        daysTracked: daysWithData,
-      }
-    }
-
-    const current = calculatePeriodStats(currentDays)
-    const previous = calculatePeriodStats(previousDays)
-
-    // Weight evolution over period
-    const periodStart = new Date()
-    periodStart.setDate(periodStart.getDate() - trendPeriod)
-    const startWeight = sortedWeights.find(w => new Date(w.date) <= periodStart)?.weight
-    const currentWeightValue = sortedWeights[0]?.weight
-    const weightChange = startWeight && currentWeightValue
-      ? +(currentWeightValue - startWeight).toFixed(1)
-      : null
-
-    // Calculate evolution percentages
-    const getEvolution = (currentVal: number | undefined, previousVal: number | undefined) => {
-      if (!currentVal || !previousVal || previousVal === 0) return null
-      return Math.round(((currentVal - previousVal) / previousVal) * 100)
-    }
+    if (daysWithData === 0) return null
 
     return {
-      current,
-      previous,
-      weightChange,
-      evolution: current && previous ? {
-        calories: getEvolution(current.avgCalories, previous.avgCalories),
-        proteins: getEvolution(current.avgProteins, previous.avgProteins),
-        carbs: getEvolution(current.avgCarbs, previous.avgCarbs),
-        fats: getEvolution(current.avgFats, previous.avgFats),
-      } : null,
+      avgCalories: Math.round(totalCalories / daysWithData),
+      avgProteins: Math.round(totalProteins / daysWithData),
+      avgCarbs: Math.round(totalCarbs / daysWithData),
+      avgFats: Math.round(totalFats / daysWithData),
+      daysTracked: daysWithData,
     }
-  }, [trendPeriod, dailyData, sortedWeights])
+  }
+
+  const trendCurrent = calculatePeriodStats(trendCurrentDays)
+  const trendPrevious = calculatePeriodStats(trendPreviousDays)
+
+  // Weight evolution over period
+  const trendPeriodStart = new Date()
+  trendPeriodStart.setDate(trendPeriodStart.getDate() - trendPeriod)
+  const trendStartWeight = sortedWeights.find(w => new Date(w.date) <= trendPeriodStart)?.weight
+  const trendCurrentWeightValue = sortedWeights[0]?.weight
+  const trendWeightChange = trendStartWeight && trendCurrentWeightValue
+    ? +(trendCurrentWeightValue - trendStartWeight).toFixed(1)
+    : null
+
+  // Calculate evolution percentages
+  const getEvolution = (currentVal: number | undefined, previousVal: number | undefined) => {
+    if (!currentVal || !previousVal || previousVal === 0) return null
+    return Math.round(((currentVal - previousVal) / previousVal) * 100)
+  }
+
+  const trendStats = {
+    current: trendCurrent,
+    previous: trendPrevious,
+    weightChange: trendWeightChange,
+    evolution: trendCurrent && trendPrevious ? {
+      calories: getEvolution(trendCurrent.avgCalories, trendPrevious.avgCalories),
+      proteins: getEvolution(trendCurrent.avgProteins, trendPrevious.avgProteins),
+      carbs: getEvolution(trendCurrent.avgCarbs, trendPrevious.avgCarbs),
+      fats: getEvolution(trendCurrent.avgFats, trendPrevious.avgFats),
+    } : null,
+  }
 
   const handlePeriodChange = (period: TrendPeriod) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -242,23 +270,9 @@ export default function ProgressScreen() {
   const unlockedCount = achievements.filter(a => a.unlocked).length
 
   // Mini weight chart data (last 7 entries max)
-  const miniChartData = useMemo(() => {
-    const sortedAsc = [...weightHistory]
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(-7)
-    return sortedAsc
-  }, [weightHistory])
-
-  // Don't render until store is hydrated to prevent crashes
-  if (!isStoreHydrated) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text.primary }]}>Progrès</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
+  const miniChartData = [...weightHistory]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(-7)
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
