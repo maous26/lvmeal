@@ -49,14 +49,25 @@ export default function ScaleSettingsScreen() {
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [syncedCount, setSyncedCount] = useState(0)
 
-  // Check availability on mount
+  // Check availability and existing permissions on mount
   useEffect(() => {
-    checkAvailability()
+    checkAvailabilityAndPermissions()
   }, [])
 
-  const checkAvailability = async () => {
+  const checkAvailabilityAndPermissions = async () => {
     const available = await isHealthAvailable()
     setIsAvailable(available)
+
+    // If available, check if we already have permissions
+    if (available) {
+      try {
+        const result = await requestHealthPermissions()
+        console.log('[ScaleSettings] Initial permission check:', JSON.stringify(result))
+        setPermissions(result)
+      } catch (error) {
+        console.log('[ScaleSettings] Initial permission check failed:', error)
+      }
+    }
   }
 
   const handleConnect = async () => {

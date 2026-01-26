@@ -36,15 +36,17 @@ try {
   // Dynamic imports to prevent crashes when modules aren't linked
   if (Platform.OS === 'ios') {
     const healthModule = require('react-native-health')
-    AppleHealthKit = healthModule.default
+    // Some RN modules export either as default or as the module object depending on bundler interop.
+    AppleHealthKit = healthModule?.default ?? healthModule
     nativeModulesAvailable = !!AppleHealthKit?.initHealthKit
   } else if (Platform.OS === 'android') {
     const healthConnectModule = require('react-native-health-connect')
-    initializeHealthConnect = healthConnectModule.initialize
-    requestHealthConnectPermission = healthConnectModule.requestPermission
-    readHealthConnectRecords = healthConnectModule.readRecords
-    getSdkStatus = healthConnectModule.getSdkStatus
-    SdkAvailabilityStatus = healthConnectModule.SdkAvailabilityStatus
+    const hc = healthConnectModule?.default ?? healthConnectModule
+    initializeHealthConnect = hc.initialize
+    requestHealthConnectPermission = hc.requestPermission
+    readHealthConnectRecords = hc.readRecords
+    getSdkStatus = hc.getSdkStatus
+    SdkAvailabilityStatus = hc.SdkAvailabilityStatus
     nativeModulesAvailable = !!initializeHealthConnect
   }
 } catch (error) {

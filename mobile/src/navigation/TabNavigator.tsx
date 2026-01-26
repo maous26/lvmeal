@@ -1,8 +1,9 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import React, { Component, ErrorInfo, ReactNode, useEffect, useRef } from 'react'
 import { StyleSheet, View, Platform, Text, ScrollView } from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   Home,
   Sparkles,
@@ -19,8 +20,10 @@ import ProfileScreen from '../screens/ProfileScreen'
 
 import { colors, shadows } from '../constants/theme'
 import { useMessageCenter } from '../services/message-center'
+import { requestHealthPermissions, isHealthAvailable } from '../services/health-service'
 
 const Tab = createBottomTabNavigator()
+const HEALTH_PERMISSIONS_REQUESTED_KEY = 'lym_health_permissions_requested'
 
 // Error Boundary to catch and display crashes
 interface ErrorBoundaryState {
@@ -101,11 +104,57 @@ const TabIcon = ({
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
+  const healthPermissionsRequested = useRef(false)
 
   // Le CoachScreen n'affiche QUE les messages du MessageCenter
   // Donc le badge doit refléter uniquement ces messages (pas le vieux CoachStore)
   const messages = useMessageCenter((state) => state.messages)
   const coachBadgeCount = messages.filter((m) => !m.read && !m.dismissed && (!m.expiresAt || new Date(m.expiresAt) > new Date())).length
+
+  // Request HealthKit/Health Connect permissions once on first app launch
+  // This makes LYM appear in iOS Health settings automatically
+  useEffect(() => {
+    const requestHealthPermissionsOnce = async () => {
+      // Prevent multiple requests in the same session
+      if (healthPermissionsRequested.current) return
+      healthPermissionsRequested.current = true
+
+      try {
+        // Check if we've already requested permissions
+        const alreadyRequested = await AsyncStorage.getItem(HEALTH_PERMISSIONS_REQUESTED_KEY)
+        if (alreadyRequested === 'true') {
+          console.log('[TabNavigator] Health permissions already requested previously')
+          return
+        }
+
+        // Check if health services are available
+        const available = await isHealthAvailable()
+        if (!available) {
+          console.log('[TabNavigator] Health services not available on this device')
+          return
+        }
+
+        // Request permissions - this will show the HealthKit prompt on iOS
+        console.log('[TabNavigator] Requesting health permissions...')
+        const result = await requestHealthPermissions()
+        console.log('[TabNavigator] Health permissions result:', result)
+
+        // Mark as requested only after a successful init.
+        // If we mark it too early, we might never prompt (e.g. native module missing, user cancelled, init error).
+        if (result.isAvailable) {
+          await AsyncStorage.setItem(HEALTH_PERMISSIONS_REQUESTED_KEY, 'true')
+        } else {
+          console.log('[TabNavigator] Not marking permissions as requested (init failed)')
+        }
+      } catch (error) {
+        console.log('[TabNavigator] Error requesting health permissions:', error)
+      }
+    }
+
+    // Small delay to let the app fully load before showing the permission dialog
+    const timer = setTimeout(requestHealthPermissionsOnce, 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <Tab.Navigator
