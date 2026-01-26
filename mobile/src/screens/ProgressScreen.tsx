@@ -67,10 +67,31 @@ export default function ProgressScreen() {
   const nutritionGoals = useUserStore((s) => s.nutritionGoals)
   const weightHistory = useUserStore((s) => s.weightHistory) || []
   const addWeightEntry = useUserStore((s) => s.addWeightEntry)
-  const dailyData = useMealsStore((s) => s.dailyData) || {}
+  const rawDailyData = useMealsStore((s) => s.dailyData) || {}
   const totalXP = useGamificationStore((s) => s.totalXP)
   const currentStreak = useGamificationStore((s) => s.currentStreak)
   const weeklyXP = useGamificationStore((s) => s.weeklyXP)
+
+  // CRITICAL: Clean dailyData at render time to handle corrupted data
+  // This is a defensive measure against null/undefined totalNutrition
+  const dailyData = React.useMemo(() => {
+    const cleaned: typeof rawDailyData = {}
+    for (const [date, dayData] of Object.entries(rawDailyData)) {
+      if (!dayData) continue
+      cleaned[date] = {
+        ...dayData,
+        totalNutrition: dayData.totalNutrition && typeof dayData.totalNutrition === 'object'
+          ? {
+              calories: typeof dayData.totalNutrition.calories === 'number' ? dayData.totalNutrition.calories : 0,
+              proteins: typeof dayData.totalNutrition.proteins === 'number' ? dayData.totalNutrition.proteins : 0,
+              carbs: typeof dayData.totalNutrition.carbs === 'number' ? dayData.totalNutrition.carbs : 0,
+              fats: typeof dayData.totalNutrition.fats === 'number' ? dayData.totalNutrition.fats : 0,
+            }
+          : { calories: 0, proteins: 0, carbs: 0, fats: 0 },
+      }
+    }
+    return cleaned
+  }, [rawDailyData])
 
   // Don't render anything until stores are hydrated
   if (!isStoreHydrated) {
@@ -164,7 +185,10 @@ export default function ProgressScreen() {
 
   const last7Days = getLast7Days()
   const weeklyData = last7Days.map((date) => {
-    return safeNutrition(dailyData[date]?.totalNutrition)
+    // Double protection: use safeNutrition AND ensure dailyData[date] exists
+    const dayData = dailyData[date]
+    if (!dayData) return { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+    return safeNutrition(dayData.totalNutrition)
   })
 
   const averageCalories = Math.round(
@@ -561,7 +585,7 @@ export default function ProgressScreen() {
                         <Text style={[styles.trendValue, { color: colors.text.primary }]}>
                           {formatNumber(trendStats.current.avgCalories)}
                         </Text>
-                        {trendStats.evolution?.calories !== null && (
+                        {trendStats.evolution && trendStats.evolution.calories != null && (
                           <View style={[styles.evolutionBadge, { backgroundColor: trendStats.evolution.calories <= 0 ? colors.success + '20' : colors.warning + '20' }]}>
                             {trendStats.evolution.calories <= 0 ? (
                               <TrendingDown size={10} color={colors.success} />
@@ -593,7 +617,7 @@ export default function ProgressScreen() {
                       <View style={[styles.macroDot, { backgroundColor: colors.nutrients.proteins }]} />
                       <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>P</Text>
                       <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgProteins}g</Text>
-                      {trendStats.evolution?.proteins !== null && (
+                      {trendStats.evolution && trendStats.evolution.proteins != null && (
                         <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.proteins >= 0 ? colors.success : colors.warning }]}>
                           {trendStats.evolution.proteins >= 0 ? '+' : ''}{trendStats.evolution.proteins}%
                         </Text>
@@ -603,7 +627,7 @@ export default function ProgressScreen() {
                       <View style={[styles.macroDot, { backgroundColor: colors.nutrients.carbs }]} />
                       <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>G</Text>
                       <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgCarbs}g</Text>
-                      {trendStats.evolution?.carbs !== null && (
+                      {trendStats.evolution && trendStats.evolution.carbs != null && (
                         <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.carbs <= 0 ? colors.success : colors.warning }]}>
                           {trendStats.evolution.carbs > 0 ? '+' : ''}{trendStats.evolution.carbs}%
                         </Text>
@@ -613,7 +637,7 @@ export default function ProgressScreen() {
                       <View style={[styles.macroDot, { backgroundColor: colors.nutrients.fats }]} />
                       <Text style={[styles.trendMacroLabel, { color: colors.text.muted }]}>L</Text>
                       <Text style={[styles.trendMacroValue, { color: colors.text.primary }]}>{trendStats.current.avgFats}g</Text>
-                      {trendStats.evolution?.fats !== null && (
+                      {trendStats.evolution && trendStats.evolution.fats != null && (
                         <Text style={[styles.trendMacroEvolution, { color: trendStats.evolution.fats <= 0 ? colors.success : colors.warning }]}>
                           {trendStats.evolution.fats > 0 ? '+' : ''}{trendStats.evolution.fats}%
                         </Text>
