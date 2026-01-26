@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { View, Text, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import TabNavigator from './TabNavigator'
 import { OnboardingScreen } from '../screens/OnboardingScreen'
@@ -14,7 +16,119 @@ import MeditationPlayerScreen from '../screens/MeditationPlayerScreen'
 import EditProfileScreen from '../screens/EditProfileScreen'
 import CalendarScreen from '../screens/CalendarScreen'
 import WeightScreen from '../screens/WeightScreen'
-import ProgressScreen from '../screens/ProgressScreen'
+import ProgressScreenBase from '../screens/ProgressScreen'
+
+// Error Boundary for ProgressScreen to catch and display crashes
+interface ProgressErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+  errorInfo: ErrorInfo | null
+}
+
+class ProgressErrorBoundary extends Component<{ children: ReactNode }, ProgressErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null, errorInfo: null }
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ProgressErrorBoundaryState> {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[ProgressErrorBoundary] Crash caught:', error.message)
+    console.error('[ProgressErrorBoundary] Stack:', error.stack)
+    console.error('[ProgressErrorBoundary] Component stack:', errorInfo.componentStack)
+    this.setState({ errorInfo })
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#FFF5F5', padding: 20, paddingTop: 60 }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#C53030', marginBottom: 10 }}>
+            Erreur Progress Screen
+          </Text>
+          <Text style={{ fontSize: 14, color: '#742A2A', marginBottom: 10 }}>
+            {this.state.error?.message}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+            style={{ backgroundColor: '#C53030', padding: 12, borderRadius: 8, marginBottom: 10 }}
+          >
+            <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600' }}>Réessayer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                'Réparer les données',
+                'Cela va nettoyer les données corrompues. Vos repas seront conservés mais les totaux seront recalculés.',
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  {
+                    text: 'Réparer',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        // Get current meals data
+                        const mealsData = await AsyncStorage.getItem('presence-meals-storage')
+                        if (mealsData) {
+                          const parsed = JSON.parse(mealsData)
+                          if (parsed.state?.dailyData) {
+                            // Clean each day's totalNutrition
+                            for (const date of Object.keys(parsed.state.dailyData)) {
+                              const day = parsed.state.dailyData[date]
+                              if (!day.totalNutrition || typeof day.totalNutrition !== 'object') {
+                                day.totalNutrition = { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+                              }
+                              // Also clean each meal
+                              if (Array.isArray(day.meals)) {
+                                day.meals = day.meals.map((meal: Record<string, unknown>) => ({
+                                  ...meal,
+                                  totalNutrition: meal.totalNutrition && typeof meal.totalNutrition === 'object'
+                                    ? meal.totalNutrition
+                                    : { calories: 0, proteins: 0, carbs: 0, fats: 0 }
+                                }))
+                              }
+                            }
+                            await AsyncStorage.setItem('presence-meals-storage', JSON.stringify(parsed))
+                          }
+                        }
+                        // Reset error state and retry
+                        this.setState({ hasError: false, error: null, errorInfo: null })
+                      } catch (e) {
+                        Alert.alert('Erreur', 'Impossible de réparer les données')
+                      }
+                    }
+                  }
+                ]
+              )
+            }}
+            style={{ backgroundColor: '#2D3748', padding: 12, borderRadius: 8, marginBottom: 10 }}
+          >
+            <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600' }}>Réparer les données</Text>
+          </TouchableOpacity>
+          <ScrollView style={{ flex: 1, backgroundColor: '#FED7D7', borderRadius: 8, padding: 10 }}>
+            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#742A2A' }}>
+              {this.state.error?.stack}
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#742A2A', marginTop: 10 }}>
+              {this.state.errorInfo?.componentStack}
+            </Text>
+          </ScrollView>
+        </View>
+      )
+    }
+    return this.props.children
+  }
+}
+
+// Wrap ProgressScreen with error boundary
+const ProgressScreen = () => (
+  <ProgressErrorBoundary>
+    <ProgressScreenBase />
+  </ProgressErrorBoundary>
+)
 import PaywallScreen from '../screens/PaywallScreen'
 import MealSourceSettingsScreen from '../screens/MealSourceSettingsScreen'
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen'

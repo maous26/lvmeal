@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.presence.nutrition",
-      "buildNumber": "43",
+      "buildNumber": "45",
       "associatedDomains": [
         "applinks:lym1-production.up.railway.app"
       ],
@@ -115,7 +115,13 @@
       ],
       "react-native-health-connect",
       "./plugins/withHealthConnect.js",
-      "./plugins/withHealthKit.js",
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "LYM accède à vos données de santé (pas, sommeil, poids) pour personnaliser vos recommandations nutritionnelles.",
+          "healthUpdatePermission": "LYM peut enregistrer vos données nutritionnelles dans Apple Santé."
+        }
+      ],
       "@react-native-google-signin/google-signin"
     ],
     "extra": {
