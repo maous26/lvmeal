@@ -12,6 +12,15 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+
+    // Repo-specific ignores (avoid OOM / huge vendored outputs)
+    "**/venv/**",
+    "**/.venv/**",
+    "**/__pycache__/**",
+    "mobile/backend-dspy/**",
+    "mobile/**/Pods/**",
+    "mobile/**/ios/build/**",
+    "mobile/**/android/build/**",
   ]),
 ]);
 

@@ -1,10 +1,11 @@
 'use server'
 
 import OpenAI from 'openai'
-import { MEAL_PLANNER_SYSTEM_PROMPT, MEAL_TYPE_GUIDELINES, SIMPLE_RECIPE_GUIDELINES } from '@/lib/ai/prompts'
+import { z } from 'zod'
+import { MEAL_TYPE_GUIDELINES, SIMPLE_RECIPE_GUIDELINES } from '@/lib/ai/prompts'
 import { getRandomTheme, getSeasonalTheme } from '@/lib/ai/themes'
 import { generateUserProfileContext } from '@/lib/ai/user-context'
-import type { UserProfile, FastingSchedule } from '@/types/user'
+import type { UserProfile, FastingSchedule, MealSourcePreference } from '@/types/user'
 
 // OpenAI client (initialized lazily)
 let openaiClient: OpenAI | null = null
@@ -26,6 +27,173 @@ function isOpenAIAvailable(): boolean {
 
 function cleanJsonResponse(text: string): string {
   return text.replace(/```json\n?|\n?```/g, '').trim()
+}
+
+function extractFirstJsonValue(text: string): string | null {
+  const cleaned = cleanJsonResponse(text)
+  // Fast path
+  if (cleaned.startsWith('{') || cleaned.startsWith('[')) {
+    return cleaned
+  }
+
+  const firstBrace = cleaned.indexOf('{')
+  const firstBracket = cleaned.indexOf('[')
+  const start =
+    firstBrace === -1 ? firstBracket :
+    firstBracket === -1 ? firstBrace :
+    Math.min(firstBrace, firstBracket)
+
+  if (start === -1) return null
+
+  const openChar = cleaned[start]
+  const closeChar = openChar === '{' ? '}' : ']'
+  let depth = 0
+  let inString = false
+  let escape = false
+
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (inString) {
+      if (escape) {
+        escape = false
+      } else if (ch === '\\') {
+        escape = true
+      } else if (ch === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (ch === '"') {
+      inString = true
+      continue
+    }
+
+    if (ch === openChar) depth++
+    if (ch === closeChar) depth--
+
+    if (depth === 0) {
+      return cleaned.slice(start, i + 1)
+    }
+  }
+
+  return null
+}
+
+const zCoercedNumber = (min: number, max: number) =>
+  z.preprocess(
+    (v) => {
+      if (typeof v === 'string' && v.trim() !== '') return Number(v)
+      return v
+    },
+    z.number().finite().min(min).max(max)
+  )
+
+const AiIngredientSchema = z.object({
+  name: z.string().min(1),
+  amount: zCoercedNumber(0, 5000),
+  unit: z.string().optional().default(''),
+})
+
+const AiMealRecipeSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional().nullable(),
+  calories: zCoercedNumber(0, 6000),
+  proteins: zCoercedNumber(0, 400),
+  carbs: zCoercedNumber(0, 600),
+  fats: zCoercedNumber(0, 300),
+  prepTime: zCoercedNumber(0, 240),
+  ingredients: z.array(AiIngredientSchema).optional().default([]),
+}).passthrough()
+
+const AiCheatMealSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional().nullable(),
+  calories: zCoercedNumber(0, 6000),
+  proteins: zCoercedNumber(0, 400),
+  carbs: zCoercedNumber(0, 600),
+  fats: zCoercedNumber(0, 300),
+  prepTime: zCoercedNumber(0, 240),
+  mealType: z.enum(['breakfast', 'lunch', 'snack', 'dinner']).optional().default('dinner'),
+}).passthrough()
+
+const AiShoppingListSchema = z.object({
+  categories: z.array(z.object({
+    name: z.string().min(1),
+    items: z.array(z.object({
+      name: z.string().min(1),
+      quantity: z.string().min(1),
+      priceEstimate: zCoercedNumber(0, 1000),
+    })).optional().default([]),
+    subtotal: zCoercedNumber(0, 10000).optional(),
+  })).optional().default([]),
+  totalEstimate: zCoercedNumber(0, 100000).optional(),
+  savingsTips: z.array(z.string()).optional().default([]),
+}).passthrough()
+
+const AiRecipeDetailsSchema = z.object({
+  ingredients: z.array(z.object({
+    name: z.string().min(1),
+    quantity: z.string().min(1),
+    unit: z.string().optional().default(''),
+  })).min(3),
+  instructions: z.array(z.string().min(1)).min(3),
+  tips: z.array(z.string().min(1)).optional().default([]),
+}).passthrough()
+
+function normalizeMealRecipe(
+  recipe: z.infer<typeof AiMealRecipeSchema>,
+  calorieTarget: number,
+  maxCookingTime: number
+): z.infer<typeof AiMealRecipeSchema> {
+  const target = Math.max(0, Math.round(calorieTarget))
+  const normalizedPrep = Math.min(Math.round(recipe.prepTime), Math.max(0, Math.round(maxCookingTime)))
+
+  let calories = Math.round(recipe.calories)
+  if (target > 0) {
+    const minOk = Math.round(target * 0.75)
+    const maxOk = Math.round(target * 1.25)
+    if (calories < minOk || calories > maxOk) {
+      calories = target
+    }
+  }
+
+  // If macros are missing/near-zero, fill with a reasonable default split.
+  const p = Math.round(recipe.proteins)
+  const c = Math.round(recipe.carbs)
+  const f = Math.round(recipe.fats)
+  const macroEnergy = p * 4 + c * 4 + f * 9
+
+  if (calories > 0 && macroEnergy < calories * 0.25) {
+    const proteinCalories = Math.round(calories * 0.25)
+    const carbCalories = Math.round(calories * 0.45)
+    const fatCalories = Math.max(0, calories - proteinCalories - carbCalories)
+    return {
+      ...recipe,
+      calories,
+      proteins: Math.max(0, Math.round(proteinCalories / 4)),
+      carbs: Math.max(0, Math.round(carbCalories / 4)),
+      fats: Math.max(0, Math.round(fatCalories / 9)),
+      prepTime: normalizedPrep,
+    }
+  }
+
+  return {
+    ...recipe,
+    calories,
+    proteins: Math.max(0, p),
+    carbs: Math.max(0, c),
+    fats: Math.max(0, f),
+    prepTime: normalizedPrep,
+  }
+}
+
+function parseJsonOrThrow(textContent: string): unknown {
+  const jsonCandidate = extractFirstJsonValue(textContent)
+  if (!jsonCandidate) {
+    throw new Error('No JSON found in AI response')
+  }
+  return JSON.parse(jsonCandidate)
 }
 
 // Gustar API configuration
@@ -59,6 +227,7 @@ export interface WeeklyPlanPreferences {
   fastingSchedule?: FastingSchedule
   weeklyBudget?: number
   pricePreference?: 'economy' | 'balanced' | 'premium'
+  mealSourcePreference?: MealSourcePreference
 }
 
 export interface MealPlanDay {
@@ -276,17 +445,34 @@ async function getMealSuggestions(
 
   const allSuggestions: MealPlanMeal[] = []
 
-  // 1. First try Gustar API
-  const gustarResults = await searchGustarRecipes(randomQuery, preferences.dietType, maxPrepTime, 3)
-  allSuggestions.push(...gustarResults)
+  const sourcePreference: MealSourcePreference = preferences.mealSourcePreference || 'balanced'
+  const preferredOrder: Array<'gustar' | 'ciqual' | 'openfoodfacts'> = (() => {
+    switch (sourcePreference) {
+      case 'fresh':
+        return ['ciqual', 'gustar', 'openfoodfacts']
+      case 'recipes':
+        return ['gustar', 'ciqual', 'openfoodfacts']
+      case 'quick':
+        return ['openfoodfacts', 'ciqual', 'gustar']
+      default:
+        return ['gustar', 'ciqual', 'openfoodfacts']
+    }
+  })()
 
-  // 2. Then Ciqual
-  const ciqualResults = await searchCiqualFoods(randomQuery, 3)
-  allSuggestions.push(...ciqualResults)
-
-  // 3. Then Open Food Facts
-  const offResults = await searchOpenFoodFacts(randomQuery, 2)
-  allSuggestions.push(...offResults)
+  for (const source of preferredOrder) {
+    if (source === 'gustar') {
+      const gustarResults = await searchGustarRecipes(randomQuery, preferences.dietType, maxPrepTime, 3)
+      allSuggestions.push(...gustarResults)
+    }
+    if (source === 'ciqual') {
+      const ciqualResults = await searchCiqualFoods(randomQuery, 3)
+      allSuggestions.push(...ciqualResults)
+    }
+    if (source === 'openfoodfacts') {
+      const offResults = await searchOpenFoodFacts(randomQuery, 2)
+      allSuggestions.push(...offResults)
+    }
+  }
 
   // Filter out already used meals
   return allSuggestions
@@ -364,13 +550,53 @@ Réponds UNIQUEMENT en JSON:
       throw new Error('No response from AI')
     }
 
-    const jsonStr = cleanJsonResponse(textContent)
-    const recipe = JSON.parse(jsonStr)
+    let parsed: unknown
+    try {
+      parsed = parseJsonOrThrow(textContent)
+    } catch (parseError) {
+      // One repair attempt (common failure: extra text, trailing commas, wrong types)
+      const repairPrompt = `Corrige la sortie suivante pour qu'elle devienne un JSON STRICTEMENT valide (aucun texte autour), conforme au schéma attendu.
+
+SORTIE À CORRIGER:
+${textContent}
+
+RAPPEL DU SCHÉMA:
+{
+  "title": "Nom du plat",
+  "description": "Description en 1 phrase",
+  "calories": ${Math.round(mealType.calorieTarget)},
+  "proteins": 25,
+  "carbs": 35,
+  "fats": 12,
+  "prepTime": ${Math.min(maxCookingTime, 25)},
+  "ingredients": [
+    { "name": "ingrédient", "amount": 100, "unit": "g" }
+  ]
+}
+`
+
+      const repaired = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 600,
+        temperature: 0,
+        messages: [{ role: 'user', content: repairPrompt }],
+      })
+
+      const repairedText = repaired.choices[0]?.message?.content
+      if (!repairedText) throw parseError
+      parsed = parseJsonOrThrow(repairedText)
+    }
+
+    const recipe = normalizeMealRecipe(
+      AiMealRecipeSchema.parse(parsed),
+      mealType.calorieTarget,
+      maxCookingTime
+    )
 
     return {
       type: mealType.type,
       name: recipe.title,
-      description: recipe.description,
+      description: recipe.description ?? undefined,
       calories: recipe.calories,
       proteins: recipe.proteins,
       carbs: recipe.carbs,
@@ -787,8 +1013,40 @@ Réponds UNIQUEMENT en JSON:
       throw new Error('No response from AI')
     }
 
-    const jsonStr = cleanJsonResponse(textContent)
-    const repasPlaisir = JSON.parse(jsonStr)
+    let parsed: unknown
+    try {
+      parsed = parseJsonOrThrow(textContent)
+    } catch (parseError) {
+      const repairPrompt = `Corrige la sortie suivante pour qu'elle devienne un JSON STRICTEMENT valide (aucun texte autour) conforme au schéma attendu.
+
+SORTIE À CORRIGER:
+${textContent}
+
+RAPPEL DU SCHÉMA:
+{
+  "title": "Nom fun et gourmand du plat",
+  "description": "Description appétissante",
+  "calories": ${repasPlaisirCalories},
+  "proteins": 45,
+  "carbs": 90,
+  "fats": 50,
+  "prepTime": 35,
+  "mealType": "dinner"
+}
+`
+
+      const repaired = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 400,
+        temperature: 0,
+        messages: [{ role: 'user', content: repairPrompt }],
+      })
+      const repairedText = repaired.choices[0]?.message?.content
+      if (!repairedText) throw parseError
+      parsed = parseJsonOrThrow(repairedText)
+    }
+
+    const repasPlaisir = AiCheatMealSchema.parse(parsed)
 
     // Update the plan with the repas plaisir
     const updatedDays = currentPlan.days.map((dayPlan, index) => {
@@ -1121,29 +1379,53 @@ Réponds UNIQUEMENT avec ce JSON:
       throw new Error('No response from AI')
     }
 
-    const jsonStr = cleanJsonResponse(textContent)
-    let shoppingList
-
+    let parsed: unknown
     try {
-      shoppingList = JSON.parse(jsonStr)
-    } catch {
-      const jsonMatch = textContent.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        shoppingList = JSON.parse(jsonMatch[0])
-      } else {
-        throw new Error('Could not parse shopping list JSON')
-      }
+      parsed = parseJsonOrThrow(textContent)
+    } catch (parseError) {
+      const repairPrompt = `Corrige la sortie suivante pour qu'elle devienne un JSON STRICTEMENT valide (aucun texte autour) conforme au schéma attendu.
+
+SORTIE À CORRIGER:
+${textContent}
+
+RAPPEL DU SCHÉMA:
+{
+  "categories": [
+    {
+      "name": "Fruits & Légumes",
+      "items": [
+        { "name": "Tomates grappe", "quantity": "1 kg", "priceEstimate": 3.50 }
+      ],
+      "subtotal": 6.50
     }
+  ],
+  "totalEstimate": 75.50,
+  "savingsTips": [
+    "Achetez les légumes de saison pour économiser"
+  ]
+}
+`
+
+      const repaired = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 1200,
+        temperature: 0,
+        messages: [{ role: 'user', content: repairPrompt }],
+      })
+      const repairedText = repaired.choices[0]?.message?.content
+      if (!repairedText) throw parseError
+      parsed = parseJsonOrThrow(repairedText)
+    }
+
+    const shoppingList = AiShoppingListSchema.parse(parsed)
 
     // Recalculate totals
     let total = 0
-    shoppingList.categories?.forEach((cat: { items?: { priceEstimate?: number }[]; subtotal?: number }) => {
+    shoppingList.categories.forEach((cat) => {
       let catTotal = 0
-      if (cat.items && Array.isArray(cat.items)) {
-        cat.items.forEach((item) => {
-          catTotal += item.priceEstimate || 0
-        })
-      }
+      cat.items.forEach((item) => {
+        catTotal += item.priceEstimate || 0
+      })
       cat.subtotal = Math.round(catTotal * 100) / 100
       total += catTotal
     })
@@ -1258,16 +1540,41 @@ Réponds UNIQUEMENT avec ce JSON:
       throw new Error('No response from AI')
     }
 
-    const jsonStr = cleanJsonResponse(textContent)
-    const recipe = JSON.parse(jsonStr)
+    let parsed: unknown
+    try {
+      parsed = parseJsonOrThrow(textContent)
+    } catch (parseError) {
+      const repairPrompt = `Corrige la sortie suivante pour qu'elle devienne un JSON STRICTEMENT valide (aucun texte autour) conforme au schéma attendu.
 
-    if (!recipe.ingredients || recipe.ingredients.length < 3) {
-      throw new Error('Recette incomplète')
-    }
-    if (!recipe.instructions || recipe.instructions.length < 3) {
-      throw new Error('Instructions incomplètes')
+SORTIE À CORRIGER:
+${textContent}
+
+RAPPEL DU SCHÉMA:
+{
+  "ingredients": [
+    { "name": "Poulet (filet)", "quantity": "150", "unit": "g" }
+  ],
+  "instructions": [
+    "Étape 1...",
+    "Étape 2..."
+  ],
+  "tips": [
+    "Astuce 1..."
+  ]
+}
+`
+      const repaired = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 1200,
+        temperature: 0,
+        messages: [{ role: 'user', content: repairPrompt }],
+      })
+      const repairedText = repaired.choices[0]?.message?.content
+      if (!repairedText) throw parseError
+      parsed = parseJsonOrThrow(repairedText)
     }
 
+    const recipe = AiRecipeDetailsSchema.parse(parsed)
     return { success: true, recipe }
   } catch (error) {
     console.error('Error generating recipe details:', error)

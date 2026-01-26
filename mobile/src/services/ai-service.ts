@@ -10,6 +10,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { z } from 'zod'
 import {
   FOOD_ANALYSIS_PROMPT,
   FOOD_DESCRIPTION_PROMPT,
@@ -21,7 +22,7 @@ import {
 import { getFoodDataForPrompt } from './food-data-rag'
 import { generateUserProfileContext, generateRemainingNutritionContext } from '../lib/ai/user-context'
 import { getThemedPrompt } from '../lib/ai/themes'
-import type { UserProfile, NutritionInfo, FoodItem } from '../types'
+import type { UserProfile, NutritionInfo } from '../types'
 
 // ============= TYPES =============
 
@@ -195,12 +196,84 @@ async function callOpenAI(
 }
 
 function extractJSON<T = Record<string, unknown>>(text: string): T {
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
+  const cleaned = text.replace(/```json\n?|\n?```/g, '').trim()
+  if (cleaned.startsWith('{') || cleaned.startsWith('[')) {
+    return JSON.parse(cleaned) as T
+  }
+
+  const firstBrace = cleaned.indexOf('{')
+  const firstBracket = cleaned.indexOf('[')
+  const start =
+    firstBrace === -1 ? firstBracket :
+    firstBracket === -1 ? firstBrace :
+    Math.min(firstBrace, firstBracket)
+
+  if (start === -1) {
     throw new Error('Could not parse AI response')
   }
-  return JSON.parse(jsonMatch[0]) as T
+
+  const openChar = cleaned[start]
+  const closeChar = openChar === '{' ? '}' : ']'
+  let depth = 0
+  let inString = false
+  let escape = false
+
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (inString) {
+      if (escape) {
+        escape = false
+      } else if (ch === '\\') {
+        escape = true
+      } else if (ch === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (ch === '"') {
+      inString = true
+      continue
+    }
+
+    if (ch === openChar) depth++
+    if (ch === closeChar) depth--
+    if (depth === 0) {
+      return JSON.parse(cleaned.slice(start, i + 1)) as T
+    }
+  }
+
+  throw new Error('Could not parse AI response')
 }
+
+const zCoercedNumber = (min: number, max: number) =>
+  z.preprocess(
+    (v) => {
+      if (typeof v === 'string' && v.trim() !== '') return Number(v)
+      return v
+    },
+    z.number().finite().min(min).max(max)
+  )
+
+const AiRecipeSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional().default(''),
+  ingredients: z.array(z.object({
+    name: z.string().min(1),
+    amount: z.string().min(1),
+    calories: zCoercedNumber(0, 5000),
+  })).min(3),
+  instructions: z.array(z.string().min(1)).min(3),
+  nutrition: z.object({
+    calories: zCoercedNumber(0, 6000),
+    proteins: zCoercedNumber(0, 400),
+    carbs: zCoercedNumber(0, 600),
+    fats: zCoercedNumber(0, 300),
+  }),
+  prepTime: zCoercedNumber(0, 240),
+  servings: zCoercedNumber(1, 20).optional().default(1),
+  imageUrl: z.string().nullable().optional(),
+}).passthrough()
 
 // ============= FOOD ANALYSIS =============
 
@@ -917,14 +990,11 @@ export async function generatePlanMeal(params: {
 
     const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 
-    // Build user profile context
-    const dietContext: string[] = []
-    if (userProfile.dietType && userProfile.dietType !== 'omnivore') {
-      dietContext.push(`Regime alimentaire: ${userProfile.dietType}`)
-    }
-    if (userProfile.allergies?.length) {
-      dietContext.push(`Allergies/intolerance: ${userProfile.allergies.join(', ')}`)
-    }
+    // Build user profile context (onboarding + préférences)
+    const profileContext = generateUserProfileContext(userProfile)
+    const preferenceHint = userProfile.mealSourcePreference
+      ? `Preference de style (non stricte): ${userProfile.mealSourcePreference} (fresh=produits bruts, recipes=recettes, quick=rapide, balanced=mix)`
+      : ''
 
     // Meal type specific constraints - based on French RAG knowledge
     const mealConstraints: Record<string, { description: string; minCal: number; maxCal: number; examples: string }> = {
@@ -969,7 +1039,9 @@ REGLES STRICTES:
 - PAS de plats industriels, pre-emballes, surgeles ou fast-food
 - PAS de soupes en boite, conserves preparees, ou plats a rechauffer
 - Calories totales: exactement ${clampedCalories} kcal (+-50 kcal)
-${dietContext.length > 0 ? `- ${dietContext.join('\n- ')}` : ''}
+
+${profileContext}
+${preferenceHint}
 
 Type: ${constraint.description}
 Exemples acceptes: ${constraint.examples}
@@ -995,16 +1067,48 @@ Reponds UNIQUEMENT en JSON valide:
       timeout: 45000,
     })
 
-    const recipe = extractJSON<AIRecipe>(response)
+    let parsed: unknown
+    try {
+      parsed = extractJSON(response)
+    } catch {
+      const repairPrompt = `Corrige la sortie suivante pour qu'elle devienne un JSON STRICTEMENT valide (aucun texte autour) conforme au schema attendu.
 
-    // Validate and fix calories if way off
-    if (recipe && recipe.nutrition) {
-      const diff = Math.abs(recipe.nutrition.calories - clampedCalories)
-      if (diff > clampedCalories * 0.5) {
-        // Calories are way off, use target instead
-        recipe.nutrition.calories = clampedCalories
-      }
+SORTIE A CORRIGER:
+${response}
+
+SCHEMA:
+{
+  "title": "Nom du plat",
+  "description": "Description courte",
+  "ingredients": [
+    {"name": "ingredient", "amount": "quantite avec unite", "calories": 123}
+  ],
+  "instructions": ["etape 1", "etape 2"],
+  "nutrition": {"calories": ${clampedCalories}, "proteins": 30, "carbs": 40, "fats": 15},
+  "prepTime": 20,
+  "servings": 1
+}
+`
+      const repaired = await callOpenAI([{ role: 'user', content: repairPrompt }], {
+        maxTokens: 900,
+        temperature: 0,
+        timeout: 45000,
+      })
+      parsed = extractJSON(repaired)
     }
+
+    const recipe = AiRecipeSchema.parse(parsed) as AIRecipe
+
+    // Normalize nutrition sanity
+    const diff = Math.abs(recipe.nutrition.calories - clampedCalories)
+    if (diff > clampedCalories * 0.25) {
+      recipe.nutrition.calories = clampedCalories
+    }
+    recipe.nutrition.proteins = Math.max(0, Math.round(recipe.nutrition.proteins))
+    recipe.nutrition.carbs = Math.max(0, Math.round(recipe.nutrition.carbs))
+    recipe.nutrition.fats = Math.max(0, Math.round(recipe.nutrition.fats))
+    recipe.prepTime = Math.max(0, Math.round(recipe.prepTime))
+    recipe.servings = 1
 
     return {
       success: true,
@@ -1019,7 +1123,7 @@ Reponds UNIQUEMENT en JSON valide:
   }
 }
 
-export default {
+const aiService = {
   // API Key
   setOpenAIApiKey,
   getOpenAIApiKey,
@@ -1039,3 +1143,5 @@ export default {
   generateShoppingList,
   generatePlanMeal,
 }
+
+export default aiService

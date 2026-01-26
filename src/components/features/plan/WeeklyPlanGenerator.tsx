@@ -36,7 +36,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { generateWeeklyPlanWithDetails, regenerateDayPlan, generateShoppingList, generateRecipeDetails, proposeCheatMealDay } from '@/app/actions/weekly-planner'
-import type { WeeklyPlanPreferences, WeeklyPlan, MealPlanDay, MealPlanMeal, ConsumedMealsContext } from '@/app/actions/weekly-planner'
+import type { WeeklyPlanPreferences, WeeklyPlan, MealPlanMeal, ConsumedMealsContext } from '@/app/actions/weekly-planner'
 import { useUserStore } from '@/stores/user-store'
 import { useMealsStore } from '@/stores/meals-store'
 
@@ -67,7 +67,7 @@ interface RecipeDetails {
 
 export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGeneratorProps) {
   const { profile } = useUserStore()
-  const { meals, getDailyNutrition, recentFoods } = useMealsStore()
+  const { meals, getDailyNutrition } = useMealsStore()
   const nutritionalNeeds = profile?.nutritionalNeeds
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -229,6 +229,7 @@ export function WeeklyPlanGenerator({ onPlanGenerated, className }: WeeklyPlanGe
       fastingSchedule: profile?.fastingSchedule,
       weeklyBudget: profile?.weeklyBudget,
       pricePreference: profile?.pricePreference,
+      mealSourcePreference: profile?.mealSourcePreference,
     }
   }
 

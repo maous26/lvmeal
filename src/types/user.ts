@@ -6,6 +6,9 @@ export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'ath
 export type Goal = 'weight_loss' | 'muscle_gain' | 'maintenance' | 'health' | 'energy'
 export type DietType = 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'paleo'
 
+// Meal source preference (RAG/IA style)
+export type MealSourcePreference = 'fresh' | 'recipes' | 'quick' | 'balanced'
+
 // Religious dietary restrictions (can be combined with DietType)
 export type ReligiousDiet = 'halal' | 'casher' | null
 export type CookingSkillLevel = 'beginner' | 'intermediate' | 'advanced'
@@ -160,6 +163,7 @@ export interface UserProfile {
   preferredCuisines?: string[]
   weeklyBudget?: number // euros per week
   pricePreference?: 'economy' | 'balanced' | 'premium'
+  mealSourcePreference?: MealSourcePreference
 
   // Metabolism & Wellness (NEW)
   metabolismProfile?: MetabolismProfile
