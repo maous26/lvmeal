@@ -45,7 +45,6 @@ import {
   ExternalLink,
   Calendar,
   CalendarDays,
-  CalendarRange,
   Percent,
   RefreshCw,
 } from 'lucide-react-native'
@@ -260,7 +259,7 @@ export default function AddMealScreen() {
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [suggestedRecipe, setSuggestedRecipe] = useState<AIRecipe | null>(null)
   const [generationMode, setGenerationMode] = useState<'suggestion' | 'plan'>('suggestion')
-  const [planDuration, setPlanDuration] = useState<1 | 3 | 7>(1)
+  const [planDuration, setPlanDuration] = useState<1 | 3>(1)
   const [calorieReduction, setCalorieReduction] = useState(false)
   const [lastMealSource, setLastMealSource] = useState<{ source: MealSource; label: string; confidence: number } | null>(null)
   const [excludedRecipeIds, setExcludedRecipeIds] = useState<string[]>([]) // For "Autre suggestion" feature
@@ -2023,9 +2022,9 @@ export default function AddMealScreen() {
                   <>
                     <Text style={styles.mealTypeLabel}>Duree du plan</Text>
                     <View style={styles.mealTypeRow}>
-                      {([1, 3, 7] as const).map((duration) => {
-                        const icons = { 1: Calendar, 3: CalendarDays, 7: CalendarRange }
-                        const labels = { 1: '1 jour', 3: '3 jours', 7: '7 jours' }
+                      {([1, 3] as const).map((duration) => {
+                        const icons = { 1: Calendar, 3: CalendarDays }
+                        const labels = { 1: '1 jour', 3: '3 jours' }
                         const Icon = icons[duration]
                         const isSelected = planDuration === duration
                         return (
