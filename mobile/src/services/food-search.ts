@@ -84,34 +84,49 @@ interface CacheEntry<T> {
 
 // ============= CACHE =============
 
-const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+// Cache configuration
+const CACHE_TTL_MEMORY = 30 * 60 * 1000 // 30 minutes for memory cache (session)
+const CACHE_TTL_STORAGE = 24 * 60 * 60 * 1000 // 24 hours for AsyncStorage (persistent)
 const CACHE_KEY_PREFIX = 'food_search_'
+const MAX_MEMORY_ENTRIES = 100 // Increase max memory entries
+const MAX_STORAGE_ENTRIES = 500 // Max entries in AsyncStorage
 
 class FoodSearchCache {
   private memoryCache = new Map<string, CacheEntry<any[]>>()
+  private hitCount = 0
+  private missCount = 0
 
   async get(key: string): Promise<any[] | null> {
-    // Check memory first
+    // Check memory first (fastest)
     const memEntry = this.memoryCache.get(key)
-    if (memEntry && Date.now() - memEntry.timestamp < CACHE_TTL) {
+    if (memEntry && Date.now() - memEntry.timestamp < CACHE_TTL_MEMORY) {
+      this.hitCount++
+      logger.log(`[FoodSearchCache] Memory HIT for "${key}" (${this.hitCount} hits, ${this.missCount} misses)`)
       return memEntry.data
     }
 
-    // Check AsyncStorage
+    // Check AsyncStorage (persistent cache with longer TTL)
     try {
       const stored = await AsyncStorage.getItem(CACHE_KEY_PREFIX + key)
       if (stored) {
         const entry: CacheEntry<any[]> = JSON.parse(stored)
-        if (Date.now() - entry.timestamp < CACHE_TTL) {
-          // Refresh memory cache
+        if (Date.now() - entry.timestamp < CACHE_TTL_STORAGE) {
+          // Refresh memory cache with storage data
           this.memoryCache.set(key, entry)
+          this.hitCount++
+          logger.log(`[FoodSearchCache] Storage HIT for "${key}" (${this.hitCount} hits, ${this.missCount} misses)`)
           return entry.data
+        } else {
+          // Expired, remove from storage
+          AsyncStorage.removeItem(CACHE_KEY_PREFIX + key).catch(() => {})
         }
       }
     } catch (e) {
       // Ignore cache errors
     }
 
+    this.missCount++
+    logger.log(`[FoodSearchCache] MISS for "${key}" (${this.hitCount} hits, ${this.missCount} misses)`)
     return null
   }
 
@@ -124,21 +139,67 @@ class FoodSearchCache {
     // Set memory cache
     this.memoryCache.set(key, entry)
 
-    // Set AsyncStorage (async, don't wait)
+    // Set AsyncStorage (async, don't wait) for persistence across app restarts
     AsyncStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(entry)).catch(() => {})
 
     // Clean old entries if too many
-    if (this.memoryCache.size > 50) {
+    if (this.memoryCache.size > MAX_MEMORY_ENTRIES) {
       this.cleanOldEntries()
     }
   }
 
   private cleanOldEntries() {
     const now = Date.now()
+    // Remove expired entries first
     for (const [key, entry] of this.memoryCache.entries()) {
-      if (now - entry.timestamp > CACHE_TTL) {
+      if (now - entry.timestamp > CACHE_TTL_MEMORY) {
         this.memoryCache.delete(key)
       }
+    }
+
+    // If still too many, remove oldest entries
+    if (this.memoryCache.size > MAX_MEMORY_ENTRIES) {
+      const entries = Array.from(this.memoryCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp)
+
+      // Remove oldest 20%
+      const toRemove = Math.ceil(entries.length * 0.2)
+      for (let i = 0; i < toRemove; i++) {
+        this.memoryCache.delete(entries[i][0])
+      }
+    }
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getStats() {
+    return {
+      memoryEntries: this.memoryCache.size,
+      hitCount: this.hitCount,
+      missCount: this.missCount,
+      hitRate: this.hitCount + this.missCount > 0
+        ? Math.round((this.hitCount / (this.hitCount + this.missCount)) * 100)
+        : 0,
+    }
+  }
+
+  /**
+   * Clear all cache entries
+   */
+  async clearAll(): Promise<void> {
+    this.memoryCache.clear()
+    this.hitCount = 0
+    this.missCount = 0
+
+    try {
+      const allKeys = await AsyncStorage.getAllKeys()
+      const cacheKeys = allKeys.filter(k => k.startsWith(CACHE_KEY_PREFIX))
+      if (cacheKeys.length > 0) {
+        await AsyncStorage.multiRemove(cacheKeys)
+      }
+    } catch (e) {
+      logger.warn('[FoodSearchCache] Error clearing storage cache:', e)
     }
   }
 }
@@ -777,8 +838,10 @@ export async function searchFoods(options: SearchFoodsOptions): Promise<SearchFo
   // Always search custom recipes first (not cached, always fresh) for 'all' source
   const customRecipes = source === 'all' ? searchCustomRecipes(query, 5) : []
 
-  // Check cache for other sources
-  const cacheKey = `${query.toLowerCase()}-${limit}-${source}`
+  // Normalize query for cache key (lowercase, no accents, trimmed)
+  // This ensures "thon", "Thon", "THON" all use the same cache entry
+  const normalizedCacheQuery = normalizeQuery(query)
+  const cacheKey = `${normalizedCacheQuery}-${limit}-${source}`
   const cached = await cache.get(cacheKey)
   if (cached) {
     // Prepend custom recipes to cached results
@@ -862,20 +925,15 @@ export async function preloadCiqual(): Promise<void> {
  * Clear the food search cache (useful after code updates)
  */
 export async function clearFoodSearchCache(): Promise<void> {
-  // Clear memory cache
-  cache['memoryCache'].clear()
+  await cache.clearAll()
+  logger.log('[FoodSearch] Cache cleared')
+}
 
-  // Clear AsyncStorage cache
-  try {
-    const allKeys = await AsyncStorage.getAllKeys()
-    const cacheKeys = allKeys.filter(k => k.startsWith(CACHE_KEY_PREFIX))
-    if (cacheKeys.length > 0) {
-      await AsyncStorage.multiRemove(cacheKeys)
-      logger.log(`[FoodSearch] Cleared ${cacheKeys.length} cached entries`)
-    }
-  } catch (e) {
-    logger.warn('[FoodSearch] Error clearing cache:', e)
-  }
+/**
+ * Get cache statistics for debugging/monitoring
+ */
+export function getFoodSearchCacheStats() {
+  return cache.getStats()
 }
 
 // Re-export cooking conversion utilities for convenience
@@ -891,5 +949,6 @@ export default {
   lookupBarcode,
   lookupBarcodeSimple,
   clearFoodSearchCache,
+  getFoodSearchCacheStats,
   preloadCiqual,
 }
