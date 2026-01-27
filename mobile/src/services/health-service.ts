@@ -14,8 +14,7 @@
  * are only available in development builds, NOT in Expo Go.
  */
 
-import { Platform } from 
-
+import { Platform } from 'react-native'
 
 // Types for native modules (imported dynamically to avoid crashes in Expo Go)
 type HealthValue = { value: number; startDate: string; endDate: string }

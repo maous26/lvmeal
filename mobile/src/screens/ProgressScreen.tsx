@@ -11,7 +11,6 @@ import {
 } from 'react-native'
 import { useToast } from '../components/ui/Toast'
 import { TrendingUp, TrendingDown, Minus, Award, Flame, Target, Trophy, Zap, Sparkles, Scale, Plus, Bluetooth } from 'lucide-react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Path, Circle, Defs, LinearGradient as SvgGradient, Stop, Line, Text as SvgText } from 'react-native-svg'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
@@ -340,12 +339,9 @@ export default function ProgressScreen() {
             <View style={[styles.compactCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
-                  <LinearGradient
-                    colors={[colors.accent.primary, colors.secondary.primary]}
-                    style={styles.iconGradient}
-                  >
-                    <Scale size={16} color="#FFFFFF" />
-                  </LinearGradient>
+                  <View style={[styles.iconBox, { backgroundColor: colors.accent.light }]}>
+                    <Scale size={16} color={colors.accent.primary} />
+                  </View>
                   <Text style={[styles.cardTitle, { color: colors.text.primary }]}>Poids</Text>
                 </View>
                 <View style={styles.cardHeaderButtons}>
@@ -471,8 +467,8 @@ export default function ProgressScreen() {
             <View style={[styles.compactCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
-                  <View style={[styles.iconGradient, { backgroundColor: colors.nutrients.calories }]}>
-                    <Flame size={16} color="#FFFFFF" />
+                  <View style={[styles.iconBox, { backgroundColor: colors.nutrients.calories + '20' }]}>
+                    <Flame size={16} color={colors.nutrients.calories} />
                   </View>
                   <Text style={[styles.cardTitle, { color: colors.text.primary }]}>Cette semaine</Text>
                 </View>
@@ -543,8 +539,8 @@ export default function ProgressScreen() {
             <View style={[styles.compactCard, { backgroundColor: colors.bg.elevated }, shadows.sm]}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
-                  <View style={[styles.iconGradient, { backgroundColor: colors.secondary.primary }]}>
-                    <TrendingUp size={16} color="#FFFFFF" />
+                  <View style={[styles.iconBox, { backgroundColor: colors.secondary.light }]}>
+                    <TrendingUp size={16} color={colors.secondary.primary} />
                   </View>
                   <Text style={[styles.cardTitle, { color: colors.text.primary }]}>Tendances</Text>
                 </View>
@@ -897,7 +893,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
   },
-  iconGradient: {
+  iconBox: {
     width: 28,
     height: 28,
     borderRadius: radius.sm,
