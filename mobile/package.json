@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "enrich-recipes": "npx ts-node scripts/enrich-recipes.ts",
-    "generate-meditations": "npx ts-node --transpile-only scripts/generate-meditation-audios.ts"
+    "generate-meditations": "npx ts-node --transpile-only scripts/generate-meditation-audios.ts",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@amplitude/analytics-react-native": "^1.5.32",

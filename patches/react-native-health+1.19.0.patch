@@ -1,0 +1,122 @@
+diff --git a/node_modules/react-native-health/index.js b/node_modules/react-native-health/index.js
+--- a/node_modules/react-native-health/index.js
++++ b/node_modules/react-native-health/index.js
+@@ -1,14 +1,99 @@
+ import { Activities, Observers, Permissions, Units } from './src/constants'
++import { NativeModules, Platform } from 'react-native'
+ 
+-const { AppleHealthKit } = require('react-native').NativeModules
++// Lazy getter to handle New Architecture's lazy-loaded modules
++const getAppleHealthKit = () => {
++  if (Platform.OS !== 'ios') return null
++  return NativeModules.AppleHealthKit
++}
+ 
+-export const HealthKit = Object.assign({}, AppleHealthKit, {
+-  Constants: {
+-    Activities,
+-    Observers,
+-    Permissions,
+-    Units,
+-  },
+-})
++// Create proxy that lazily accesses the native module
++const createHealthKitProxy = () => {
++  const methodNames = [
++    'initHealthKit',
++    'isAvailable',
++    'getAuthStatus',
++    'getBiologicalSex',
++    'getBloodType',
++    'getDateOfBirth',
++    'getLatestWeight',
++    'getWeightSamples',
++    'saveWeight',
++    'getLatestHeight',
++    'getHeightSamples',
++    'saveHeight',
++    'getLatestBmi',
++    'getBmiSamples',
++    'saveBmi',
++    'getLatestBodyFatPercentage',
++    'getBodyFatPercentageSamples',
++    'saveBodyFatPercentage',
++    'getLatestLeanBodyMass',
++    'getLeanBodyMassSamples',
++    'saveLeanBodyMass',
++    'getStepCount',
++    'getSamples',
++    'getDailyStepCountSamples',
++    'getDistanceWalkingRunning',
++    'getDailyDistanceWalkingRunningSamples',
++    'getDistanceCycling',
++    'getDailyDistanceCyclingSamples',
++    'getFlightsClimbed',
++    'getDailyFlightsClimbedSamples',
++    'getHeartRateSamples',
++    'getRestingHeartRate',
++    'getWalkingHeartRateAverage',
++    'getActiveEnergyBurned',
++    'getBasalEnergyBurned',
++    'getAppleExerciseTime',
++    'getAppleStandTime',
++    'getVo2Max',
++    'getBodyTemperatureSamples',
++    'getBloodPressureSamples',
++    'getRespiratoryRateSamples',
++    'getHeartRateVariabilitySamples',
++    'getOxygenSaturationSamples',
++    'getElectrocardiogramSamples',
++    'getRestingHeartRateSamples',
++    'getWalkingHeartRateAverageSamples',
++    'getEnvironmentalAudioExposureSamples',
++    'getHeadphoneAudioExposureSamples',
++    'getSleepSamples',
++    'getInfo',
++    'getMindfulSession',
++    'saveMindfulSession',
++    'saveWorkout',
++    'getWorkoutRouteSamples',
++    'setObserver',
++    'getActivitySummary',
++    'getWaterSamples',
++    'saveWater',
++    'getInsulinDeliverySamples',
++    'saveInsulinDelivery',
++    'getBloodGlucoseSamples',
++    'saveBloodGlucose',
++    'getCarbohydratesSamples',
++    'saveCarbohydrates',
++  ]
++
++  const proxy = {
++    Constants: {
++      Activities,
++      Observers,
++      Permissions,
++      Units,
++    },
++  }
++
++  // Create lazy method bindings
++  methodNames.forEach((method) => {
++    proxy[method] = (...args) => {
++      const kit = getAppleHealthKit()
++      if (!kit || !kit[method]) {
++        console.warn(`[react-native-health] Method ${method} not available`)
++        const callback = args[args.length - 1]
++        if (typeof callback === 'function') {
++          callback(new Error('HealthKit not available'), null)
++        }
++        return
++      }
++      return kit[method](...args)
++    }
++  })
++
++  return proxy
++}
++
++export const HealthKit = Platform.OS === 'ios' ? createHealthKitProxy() : { Constants: { Activities, Observers, Permissions, Units } }
+ 
+ module.exports = HealthKit

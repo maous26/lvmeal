@@ -14,7 +14,8 @@
  * are only available in development builds, NOT in Expo Go.
  */
 
-import { Platform } from 'react-native'
+import { Platform } from 
+
 
 // Types for native modules (imported dynamically to avoid crashes in Expo Go)
 type HealthValue = { value: number; startDate: string; endDate: string }
@@ -500,7 +501,7 @@ export async function getWeightDataFromScale(
  */
 async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWeightData[]> {
   try {
-    // Get weight samples
+    // Get weight samples - specify unit as kilogram to avoid pounds
     const weightSamples = await new Promise<any[]>((resolve) => {
       AppleHealthKit.getWeightSamples(
         {
@@ -508,6 +509,7 @@ async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWe
           endDate: endDate.toISOString(),
           ascending: false,
           limit: 100,
+          unit: 'kilogram',
         },
         (error: any, results: any) => {
           if (error || !results) {
