@@ -29,6 +29,9 @@ import {
   Pin,
   Database,
   TrendingUp,
+  Crown,
+  Ruler,
+  Trash2,
 } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -47,6 +50,8 @@ import {
   ALL_INPUT_METHODS,
 } from '../stores/meal-input-preferences-store'
 import { useAuthStore } from '../stores/auth-store'
+import { useOnboardingStore } from '../stores/onboarding-store'
+import { useGamificationStore } from '../stores/gamification-store'
 import type { MealSourcePreference } from '../types'
 
 // Labels for meal source preferences
@@ -139,6 +144,50 @@ export default function ProfileScreen() {
   // Get email from auth store (Google login stores email there, not in profile)
   const { email: authEmail } = useAuthStore()
 
+  // Subscription status
+  const { isSubscribed } = useOnboardingStore()
+  const { isPremium } = useGamificationStore()
+
+  // Calculate BMI (IMC)
+  const calculateBMI = (): { value: number; category: string; color: string } | null => {
+    const weight = profile?.weight
+    const height = profile?.height
+    if (!weight || !height) return null
+
+    const heightInMeters = height / 100
+    const bmi = weight / (heightInMeters * heightInMeters)
+
+    let category: string
+    let color: string
+    if (bmi < 18.5) {
+      category = 'Insuffisance pondérale'
+      color = colors.warning
+    } else if (bmi < 25) {
+      category = 'Poids normal'
+      color = colors.success
+    } else if (bmi < 30) {
+      category = 'Surpoids'
+      color = colors.warning
+    } else {
+      category = 'Obésité'
+      color = colors.error
+    }
+
+    return { value: Math.round(bmi * 10) / 10, category, color }
+  }
+
+  const bmiData = calculateBMI()
+
+  // Subscription type label
+  const getSubscriptionLabel = (): { label: string; color: string } => {
+    if (isPremium || isSubscribed) {
+      return { label: 'Premium', color: colors.warning }
+    }
+    return { label: 'Gratuit', color: colors.text.tertiary }
+  }
+
+  const subscriptionInfo = getSubscriptionLabel()
+
   // Program exclusion rules
   // - Metabolic: disabled if Wellness is active (exclusive program)
   // - Wellness: disabled if Metabolic is active
@@ -202,6 +251,41 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: () => {
             resetStore()
+          },
+        },
+      ]
+    )
+  }
+
+  const handleDeleteAccount = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+    Alert.alert(
+      'Supprimer mon compte',
+      'Cette action supprimera définitivement ton compte et toutes tes données. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            // Confirmation supplémentaire pour éviter les suppressions accidentelles
+            Alert.alert(
+              'Confirmer la suppression',
+              'Es-tu vraiment sûr ? Toutes tes données seront perdues à jamais.',
+              [
+                { text: 'Non, annuler', style: 'cancel' },
+                {
+                  text: 'Oui, supprimer',
+                  style: 'destructive',
+                  onPress: async () => {
+                    // TODO: Appeler l'API de suppression de compte quand elle sera implémentée
+                    // Pour l'instant, on réinitialise toutes les données locales
+                    resetStore()
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                  },
+                },
+              ]
+            )
           },
         },
       ]
@@ -362,6 +446,57 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
+        {/* Subscription Card */}
+        <TouchableOpacity
+          style={[
+            styles.subscriptionCard,
+            {
+              backgroundColor: isPremium || isSubscribed
+                ? 'rgba(245, 158, 11, 0.1)'
+                : colors.bg.elevated,
+              borderColor: isPremium || isSubscribed
+                ? colors.warning
+                : colors.border.light,
+            },
+          ]}
+          onPress={() => {
+            if (!(isPremium || isSubscribed)) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+              navigation.navigate('Paywall')
+            }
+          }}
+          activeOpacity={isPremium || isSubscribed ? 1 : 0.7}
+        >
+          <View style={[
+            styles.subscriptionIcon,
+            {
+              backgroundColor: isPremium || isSubscribed
+                ? 'rgba(245, 158, 11, 0.2)'
+                : colors.bg.secondary,
+            },
+          ]}>
+            <Crown size={24} color={isPremium || isSubscribed ? colors.warning : colors.text.tertiary} />
+          </View>
+          <View style={styles.subscriptionInfo}>
+            <Text style={[
+              styles.subscriptionTitle,
+              { color: isPremium || isSubscribed ? colors.warning : colors.text.primary },
+            ]}>
+              {isPremium || isSubscribed ? 'Premium' : 'Gratuit'}
+            </Text>
+            <Text style={[styles.subscriptionSubtitle, { color: colors.text.tertiary }]}>
+              {isPremium || isSubscribed
+                ? 'Accès illimité à toutes les fonctionnalités'
+                : 'Passez en Premium pour débloquer tout'}
+            </Text>
+          </View>
+          {!(isPremium || isSubscribed) && (
+            <View style={[styles.upgradeButton, { backgroundColor: colors.warning }]}>
+              <Text style={styles.upgradeButtonText}>Upgrade</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
         {/* Current Goals */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Mes objectifs</Text>
@@ -394,6 +529,21 @@ export default function ProfileScreen() {
               </Text>
             </View>
           </View>
+
+          {/* IMC */}
+          {bmiData && (
+            <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
+              <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
+                <Ruler size={20} color={bmiData.color} />
+              </View>
+              <View style={styles.goalInfo}>
+                <Text style={[styles.goalLabel, { color: colors.text.tertiary }]}>IMC</Text>
+                <Text style={[styles.goalValue, { color: colors.text.primary }]}>
+                  {bmiData.value} <Text style={{ color: bmiData.color, fontSize: 14 }}>({bmiData.category})</Text>
+                </Text>
+              </View>
+            </View>
+          )}
 
           <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
             <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
@@ -644,7 +794,14 @@ export default function ProfileScreen() {
             Déconnexion
           </Button>
           <TouchableOpacity onPress={handleResetData}>
-            <Text style={[styles.resetText, { color: colors.error }]}>Réinitialiser les données</Text>
+            <Text style={[styles.resetText, { color: colors.text.tertiary }]}>Réinitialiser les données</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDeleteAccount}
+            style={styles.deleteAccountButton}
+          >
+            <Trash2 size={16} color={colors.error} />
+            <Text style={[styles.deleteAccountText, { color: colors.error }]}>Supprimer mon compte</Text>
           </TouchableOpacity>
         </View>
 
@@ -877,6 +1034,56 @@ const styles = StyleSheet.create({
   },
   resetText: {
     ...typography.small,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  deleteAccountText: {
+    ...typography.small,
+    fontWeight: '500',
+  },
+  // Subscription Card
+  subscriptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    gap: spacing.md,
+  },
+  subscriptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subscriptionInfo: {
+    flex: 1,
+  },
+  subscriptionTitle: {
+    ...typography.bodyMedium,
+    fontWeight: '700',
+  },
+  subscriptionSubtitle: {
+    ...typography.small,
+    marginTop: 2,
+  },
+  upgradeButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  upgradeButtonText: {
+    ...typography.smallMedium,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   version: {
     ...typography.caption,

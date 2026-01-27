@@ -176,7 +176,7 @@ export type RootStackParamList = {
   WellnessCheckin: undefined
   SportSession: { sessionId?: string }
   Plan: undefined
-  WeeklyPlan: { duration?: 1 | 3 | 7; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
+  WeeklyPlan: { duration?: 1 | 3; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
   MetabolicBoost: undefined
   WellnessProgram: undefined
   MeditationList: undefined

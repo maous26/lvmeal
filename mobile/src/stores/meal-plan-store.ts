@@ -1,9 +1,10 @@
 /**
- * Meal Plan Store - 7-day meal planning with persistence
+ * Meal Plan Store - Meal planning with persistence (1-3 days)
  *
  * Features:
- * - Persist weekly meal plans
+ * - Persist meal plans (1-day suggestion or 3-day plan)
  * - Move meals between days/types
+ * - Duplicate meals to other days/types
  * - Delete individual meals
  * - Track shopping list
  * - Integration with Gustar.io and AI recipes
@@ -77,6 +78,7 @@ interface MealPlanState {
   updateMeal: (mealId: string, updates: Partial<PlannedMealItem>) => void
   deleteMeal: (mealId: string) => void
   moveMeal: (mealId: string, newDayIndex: number, newMealType: MealType) => void
+  duplicateMeal: (mealId: string, targetDayIndex: number, targetMealType: MealType) => PlannedMealItem | null
   swapMeals: (mealId1: string, mealId2: string) => void
   toggleMealValidation: (mealId: string) => void
   regenerateMeal: (mealId: string, newMeal: PlannedMealItem) => void
@@ -217,6 +219,49 @@ export const useMealPlanStore = create<MealPlanState>()(
             },
           }
         })
+      },
+
+      duplicateMeal: (mealId, targetDayIndex, targetMealType) => {
+        const state = get()
+        if (!state.currentPlan) return null
+
+        const originalMeal = state.currentPlan.meals.find((m) => m.id === mealId)
+        if (!originalMeal) return null
+
+        // Check if target slot already has a meal
+        const existingMeal = state.currentPlan.meals.find(
+          (m) => m.dayIndex === targetDayIndex && m.mealType === targetMealType
+        )
+
+        // Create duplicated meal with new ID
+        const duplicatedMeal: PlannedMealItem = {
+          ...originalMeal,
+          id: generateId(),
+          dayIndex: targetDayIndex,
+          mealType: targetMealType,
+          isValidated: false, // Reset validation for the copy
+          isCheatMeal: false, // Reset cheat meal flag for the copy
+        }
+
+        set((currentState) => {
+          if (!currentState.currentPlan) return currentState
+
+          let newMeals = currentState.currentPlan.meals
+
+          // If there's an existing meal in the target slot, replace it
+          if (existingMeal) {
+            newMeals = newMeals.filter((m) => m.id !== existingMeal.id)
+          }
+
+          return {
+            currentPlan: {
+              ...currentState.currentPlan,
+              meals: [...newMeals, duplicatedMeal],
+            },
+          }
+        })
+
+        return duplicatedMeal
       },
 
       swapMeals: (mealId1, mealId2) => {

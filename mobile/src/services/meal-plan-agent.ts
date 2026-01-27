@@ -1,6 +1,16 @@
 /**
- * Meal Plan Agent - Smart 7-day meal planning
+ * Meal Plan Agent - Smart meal planning (1-day suggestion or 3-day plan)
  * Adapted from webapp: src/app/actions/weekly-planner.ts
+ *
+ * Supported durations:
+ * - 1 day: Daily meal suggestion (single day generation)
+ * - 3 days: Short-term plan with light variety link between days
+ *
+ * Design principles:
+ * - Independent day generation
+ * - Light link between days: leftovers consideration, variety, no strict repetition
+ * - "Sliding" plan capability: Day 1 becomes history, regenerate Day 3
+ * - Implicit UX: user feels freedom while being guided
  *
  * Priority for meal sourcing:
  * 1. Gustar.io (German recipes via RapidAPI)
@@ -389,27 +399,30 @@ function mapDietToGustar(dietType?: string): DietaryPreference | undefined {
 
 /**
  * Calculate daily calorie targets based on repas plaisir settings
+ * Supports 1-day and 3-day plans
  */
 function calculateDailyCalorieTargets(
   baseCalories: number,
   includeRepasPlaisir: boolean,
-  repasPlaisirDay: number = 5
+  repasPlaisirDay: number = 2,
+  totalDays: number = 3
 ): { dailyTargets: number[]; repasPlaisirBonus: number } {
   const dailyTargets: number[] = []
 
-  if (!includeRepasPlaisir) {
-    for (let i = 0; i < 7; i++) {
+  if (!includeRepasPlaisir || repasPlaisirDay < 0) {
+    for (let i = 0; i < totalDays; i++) {
       dailyTargets.push(baseCalories)
     }
     return { dailyTargets, repasPlaisirBonus: 0 }
   }
 
+  // For 3-day plan: save 10% on days before repas plaisir, add bonus on repas plaisir day
   const savingsPercentage = 0.10
   const savedPerDay = Math.round(baseCalories * savingsPercentage)
-  const daysToSave = repasPlaisirDay
+  const daysToSave = Math.min(repasPlaisirDay, totalDays - 1)
   const totalSavings = savedPerDay * daysToSave
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < totalDays; i++) {
     if (i < repasPlaisirDay) {
       dailyTargets.push(baseCalories - savedPerDay)
     } else if (i === repasPlaisirDay) {
@@ -1378,12 +1391,15 @@ class MealPlanAgent {
   }
 
   /**
-   * Generate meal plan for specified duration (1, 3, or 7 days)
+   * Generate meal plan for specified duration (1 or 3 days)
+   *
+   * - duration: 1 = Daily suggestion (single day)
+   * - duration: 3 = 3-day plan with variety between days
    */
   async generateWeekPlan(
     preferences: WeeklyPlanPreferences,
     onProgress?: (day: number, total: number) => void,
-    duration: 1 | 3 | 7 = 7
+    duration: 1 | 3 = 3
   ): Promise<PlannedMealItem[]> {
     console.log('===========================================')
     console.log('🍽️ MEAL PLAN GENERATION STARTED')
@@ -1402,23 +1418,23 @@ class MealPlanAgent {
     const usedRecipeNames: string[] = []
     const mealTypes: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner']
 
-    // Only include repas plaisir for 7-day plans on Saturday
-    const repasPlaisirDayIndex = duration === 7 ? 5 : -1
+    // Repas plaisir: included on day 3 (last day) for 3-day plans if enabled
+    const repasPlaisirDayIndex = duration === 3 && preferences.includeCheatMeal ? 2 : -1
 
     const { dailyTargets } = calculateDailyCalorieTargets(
       preferences.dailyCalories,
       preferences.includeCheatMeal || false,
-      repasPlaisirDayIndex
+      repasPlaisirDayIndex,
+      duration
     )
 
-    // Limit daily targets to requested duration
-    const limitedTargets = dailyTargets.slice(0, duration)
-    console.log(`Daily targets (${duration} days):`, limitedTargets)
+    console.log(`Daily targets (${duration} days):`, dailyTargets)
 
     for (let dayIndex = 0; dayIndex < duration; dayIndex++) {
       const day = DAYS[dayIndex]
-      const isWeekend = dayIndex >= 5 && duration === 7
-      const dailyCalorieTarget = limitedTargets[dayIndex]
+      // For 3-day plans, consider day 3 as "weekend-like" (more time for cooking)
+      const isWeekend = duration === 3 && dayIndex === 2
+      const dailyCalorieTarget = dailyTargets[dayIndex]
       const isRepasPlaisirDay = preferences.includeCheatMeal && dayIndex === repasPlaisirDayIndex
 
       console.log(`\nGenerating ${day} (${dailyCalorieTarget} kcal)...`)

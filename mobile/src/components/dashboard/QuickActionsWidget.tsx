@@ -2,7 +2,7 @@
  * QuickActionsWidget - Professional quick action buttons for meal plans
  *
  * Features:
- * - 3 plan duration options (1j, 3j, 7j)
+ * - 2 plan duration options (1j = daily suggestion, 3j = short-term plan)
  * - Optional -10% calorie reduction for savings (Solde Plaisir)
  * - Modern pill/chip design
  * - AI generation indicator
@@ -16,11 +16,11 @@ import {
   Pressable,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Sparkles, Percent, ChevronRight, Calendar, CalendarDays, CalendarRange, ChefHat } from 'lucide-react-native'
+import { Sparkles, Percent, ChevronRight, Calendar, CalendarDays, ChefHat } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius, shadows } from '../../constants/theme'
 
-export type PlanDuration = 1 | 3 | 7
+export type PlanDuration = 1 | 3
 export type RecipeComplexity = 'basique' | 'elabore' | 'mix'
 
 export interface PlanOptions {
@@ -35,9 +35,8 @@ interface QuickActionsWidgetProps {
 }
 
 const durationConfig = {
-  1: { icon: Calendar, label: '1j', description: 'Aujourd\'hui' },
-  3: { icon: CalendarDays, label: '3j', description: 'Court terme' },
-  7: { icon: CalendarRange, label: '7j', description: 'Semaine' },
+  1: { icon: Calendar, label: '1j', description: 'Suggestion du jour' },
+  3: { icon: CalendarDays, label: '3j', description: 'Plan court terme' },
 }
 
 const complexityConfig: Record<RecipeComplexity, { label: string; description: string }> = {
@@ -50,7 +49,7 @@ export default function QuickActionsWidget({
   onPlanPress,
   savedCaloriesThisWeek = 0
 }: QuickActionsWidgetProps) {
-  const [selectedDuration, setSelectedDuration] = useState<PlanDuration>(7)
+  const [selectedDuration, setSelectedDuration] = useState<PlanDuration>(3)
   const [calorieReduction, setCalorieReduction] = useState(false)
   const [complexity, setComplexity] = useState<RecipeComplexity>('mix')
 
@@ -91,7 +90,7 @@ export default function QuickActionsWidget({
 
       {/* Duration Pills */}
       <View style={styles.durationRow}>
-        {([1, 3, 7] as PlanDuration[]).map((duration) => {
+        {([1, 3] as PlanDuration[]).map((duration) => {
           const config = durationConfig[duration]
           const Icon = config.icon
           const isSelected = selectedDuration === duration

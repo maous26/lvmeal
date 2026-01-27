@@ -11,6 +11,7 @@ import {
   Dimensions,
   Animated,
   Easing,
+  TextInput,
 } from 'react-native'
 import { CameraView, useCameraPermissions, CameraType } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
@@ -745,7 +746,8 @@ export default function PhotoFoodScanner({
         }, [] as AnalyzedFood[])
 
         setAnalyzedFoods(uniqueFoods)
-        setMealTitle(combinedMealTitle || `Repas (${base64Images.length} photos)`)
+        // Don't auto-set title - let user input it manually
+        setMealTitle('')
         setSelectedFoods(new Set(uniqueFoods.map((_, i) => i)))
         setShowResults(true)
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
@@ -999,9 +1001,15 @@ export default function PhotoFoodScanner({
                         <Sparkles size={20} color="#10B981" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.resultsTitle}>
-                          {mealTitle || 'Repas analysé'}
-                        </Text>
+                        <TextInput
+                          style={styles.mealTitleInput}
+                          value={mealTitle || ''}
+                          onChangeText={setMealTitle}
+                          placeholder="Nom du repas..."
+                          placeholderTextColor={colors.text.muted}
+                          autoCapitalize="sentences"
+                          returnKeyType="done"
+                        />
                         <Text style={styles.resultsSubtitle}>
                           {analyzedFoods.length} ingrédient{analyzedFoods.length > 1 ? 's' : ''} détecté{analyzedFoods.length > 1 ? 's' : ''}
                         </Text>
@@ -1725,6 +1733,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: PASTEL.text,
+  },
+  mealTitleInput: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: PASTEL.text,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   resultsSubtitle: {
     fontSize: 14,

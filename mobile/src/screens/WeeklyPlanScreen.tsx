@@ -33,6 +33,7 @@ import {
   PartyPopper,
   Trash2,
   Move,
+  Copy,
   X,
   CheckCircle,
   Circle,
@@ -62,8 +63,8 @@ const mealTypeLabels: Record<MealType, { label: string; icon: string }> = {
   dinner: { label: 'Diner', icon: '🌙' },
 }
 
-// Plan duration type
-type PlanDuration = 1 | 3 | 7
+// Plan duration type (1 = daily suggestion, 3 = short-term plan)
+type PlanDuration = 1 | 3
 type RecipeComplexity = 'basique' | 'elabore' | 'mix'
 
 export default function WeeklyPlanScreen() {
@@ -74,7 +75,7 @@ export default function WeeklyPlanScreen() {
 
   // Get params from navigation
   const params = route.params as { duration?: PlanDuration; calorieReduction?: boolean; complexity?: RecipeComplexity } | undefined
-  const planDuration: PlanDuration = params?.duration || 7
+  const planDuration: PlanDuration = params?.duration || 3
   const calorieReduction = params?.calorieReduction || false
   const complexity: RecipeComplexity = params?.complexity || 'mix'
 
@@ -85,6 +86,7 @@ export default function WeeklyPlanScreen() {
     clearPlan,
     deleteMeal,
     moveMeal,
+    duplicateMeal,
     toggleMealValidation,
     setShoppingList,
     toggleShoppingItem,
@@ -107,6 +109,12 @@ export default function WeeklyPlanScreen() {
   const [mealToMove, setMealToMove] = useState<PlannedMealItem | null>(null)
   const [targetDay, setTargetDay] = useState(0)
   const [targetMealType, setTargetMealType] = useState<MealType>('breakfast')
+
+  // Duplicate modal state
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [mealToDuplicate, setMealToDuplicate] = useState<PlannedMealItem | null>(null)
+  const [duplicateTargetDay, setDuplicateTargetDay] = useState(0)
+  const [duplicateTargetMealType, setDuplicateTargetMealType] = useState<MealType>('breakfast')
 
   // Shopping list modal state
   const [showShoppingModal, setShowShoppingModal] = useState(false)
@@ -177,7 +185,7 @@ export default function WeeklyPlanScreen() {
           fats: Math.round(nutritionGoals.fats * (calorieReduction ? 0.9 : 1)),
           dietType: profile.dietType,
           allergies: profile.allergies,
-          includeCheatMeal: planDuration === 7, // Only for 7-day plans
+          includeCheatMeal: planDuration === 3, // For 3-day plans, repas plaisir on day 3
           cookingTimeWeekday: weekdayTime,
           cookingTimeWeekend: weekendTime,
           complexity, // Recipe complexity level
@@ -205,7 +213,7 @@ export default function WeeklyPlanScreen() {
       }
 
       setPlan(newPlan)
-      addXP(planDuration === 7 ? 50 : planDuration === 3 ? 25 : 10, `Plan ${planDuration}j généré`)
+      addXP(planDuration === 3 ? 25 : 10, `Plan ${planDuration}j généré`)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     } catch (error) {
       console.error('Error generating plan:', error)
@@ -258,6 +266,31 @@ export default function WeeklyPlanScreen() {
     setShowMoveModal(false)
     setMealToMove(null)
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+  }
+
+  const handleDuplicateMeal = (meal: PlannedMealItem) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    setMealToDuplicate(meal)
+    // Default to next day, same meal type
+    const nextDay = (meal.dayIndex + 1) % planDuration
+    setDuplicateTargetDay(nextDay)
+    setDuplicateTargetMealType(meal.mealType)
+    setShowDuplicateModal(true)
+  }
+
+  const confirmDuplicateMeal = () => {
+    if (!mealToDuplicate) return
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    const duplicated = duplicateMeal(mealToDuplicate.id, duplicateTargetDay, duplicateTargetMealType)
+    setShowDuplicateModal(false)
+    setMealToDuplicate(null)
+
+    if (duplicated) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    } else {
+      Alert.alert('Erreur', 'Impossible de dupliquer le repas.')
+    }
   }
 
   const handleToggleValidation = (mealId: string) => {
@@ -377,6 +410,12 @@ export default function WeeklyPlanScreen() {
             )}
           </View>
           <View style={styles.mealActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDuplicateMeal(meal)}
+            >
+              <Copy size={16} color={colors.secondary.primary} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => handleMoveMeal(meal)}
@@ -575,6 +614,93 @@ export default function WeeklyPlanScreen() {
           >
             <Move size={20} color="#FFFFFF" />
             <Text style={styles.confirmButtonText}>Deplacer</Text>
+          </Button>
+        </View>
+      </View>
+    </Modal>
+  )
+
+  const renderDuplicateModal = () => (
+    <Modal
+      visible={showDuplicateModal}
+      animationType="slide"
+      transparent
+      onRequestClose={() => setShowDuplicateModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Dupliquer le repas</Text>
+            <TouchableOpacity onPress={() => setShowDuplicateModal(false)}>
+              <X size={24} color={colors.text.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {mealToDuplicate && (
+            <Text style={styles.moveMealName}>"{mealToDuplicate.name}"</Text>
+          )}
+
+          {/* Day selector - only show days within plan duration */}
+          <Text style={styles.sectionLabel}>Jour de destination</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.dayPicker}
+          >
+            {DAYS.slice(0, planDuration).map((day, index) => (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayOption,
+                  duplicateTargetDay === index && styles.dayOptionActive,
+                ]}
+                onPress={() => setDuplicateTargetDay(index)}
+              >
+                <Text style={[
+                  styles.dayOptionText,
+                  duplicateTargetDay === index && styles.dayOptionTextActive,
+                ]}>
+                  {day}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* Meal type selector */}
+          <Text style={styles.sectionLabel}>Type de repas</Text>
+          <View style={styles.mealTypePicker}>
+            {MEAL_TYPES.map((type) => {
+              const config = mealTypeLabels[type]
+              return (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.mealTypeOption,
+                    duplicateTargetMealType === type && styles.mealTypeOptionActive,
+                  ]}
+                  onPress={() => setDuplicateTargetMealType(type)}
+                >
+                  <Text style={styles.mealTypeEmoji}>{config.icon}</Text>
+                  <Text style={[
+                    styles.mealTypeOptionText,
+                    duplicateTargetMealType === type && styles.mealTypeOptionTextActive,
+                  ]}>
+                    {config.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={confirmDuplicateMeal}
+            style={styles.confirmButton}
+          >
+            <Copy size={20} color="#FFFFFF" />
+            <Text style={styles.confirmButtonText}>Dupliquer</Text>
           </Button>
         </View>
       </View>
@@ -928,6 +1054,7 @@ export default function WeeklyPlanScreen() {
 
       {/* Modals */}
       {renderMoveModal()}
+      {renderDuplicateModal()}
       {renderShoppingModal()}
     </SafeAreaView>
   )
