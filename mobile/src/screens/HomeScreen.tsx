@@ -26,6 +26,7 @@ import {
   Camera,
   ScanBarcode,
   TrendingUp,
+  Copy,
 } from 'lucide-react-native'
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 
@@ -383,6 +384,123 @@ export default function HomeScreen() {
     })
   }
 
+  // Helper to get date options for duplication
+  const getDateOptions = () => {
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const dayAfter = new Date(today)
+    dayAfter.setDate(dayAfter.getDate() + 2)
+
+    return [
+      { text: "📅 Aujourd'hui", date: getDateKey(today) },
+      { text: '📅 Demain', date: getDateKey(tomorrow) },
+      { text: '📅 Après-demain', date: getDateKey(dayAfter) },
+    ]
+  }
+
+  // Helper to add meal to a specific date
+  const addMealToDate = (targetDate: string, mealType: MealType, items: { food: FoodItem; quantity: number }[]) => {
+    const originalDate = currentDate
+    setCurrentDate(targetDate)
+    const newItems = items.map(item => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      food: item.food,
+      quantity: item.quantity,
+    }))
+    addMeal(mealType, newItems)
+    // Restore original date
+    setCurrentDate(originalDate)
+  }
+
+  // Handler to duplicate a single food item - first choose day, then meal
+  const handleDuplicateItem = (item: { food: FoodItem; quantity: number }, fromMealType: MealType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+    const dateOptions = getDateOptions()
+
+    // First: choose the day
+    Alert.alert(
+      'Dupliquer vers quel jour ?',
+      `"${item.food.name}"`,
+      [
+        ...dateOptions.map(dateOpt => ({
+          text: dateOpt.text,
+          onPress: () => {
+            // Then: choose the meal type
+            const mealOptions: { text: string; mealType: MealType }[] = [
+              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' },
+              { text: '🍽️ Déjeuner', mealType: 'lunch' },
+              { text: '🍎 Collation', mealType: 'snack' },
+              { text: '🌙 Dîner', mealType: 'dinner' },
+            ].filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
+
+            Alert.alert(
+              'Vers quel repas ?',
+              dateOpt.text.replace('📅 ', ''),
+              [
+                ...mealOptions.map(opt => ({
+                  text: opt.text,
+                  onPress: () => {
+                    addMealToDate(dateOpt.date, opt.mealType, [item])
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                  },
+                })),
+                { text: 'Annuler', style: 'cancel' },
+              ]
+            )
+          },
+        })),
+        { text: 'Annuler', style: 'cancel' },
+      ]
+    )
+  }
+
+  // Handler to duplicate an entire meal - first choose day, then meal type
+  const handleDuplicateMeal = (meals: { items: { food: FoodItem; quantity: number }[] }[], fromMealType: MealType) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    const allItems = meals.flatMap(m => m.items)
+    if (allItems.length === 0) return
+
+    const dateOptions = getDateOptions()
+
+    // First: choose the day
+    Alert.alert(
+      'Dupliquer vers quel jour ?',
+      `${allItems.length} aliment${allItems.length > 1 ? 's' : ''}`,
+      [
+        ...dateOptions.map(dateOpt => ({
+          text: dateOpt.text,
+          onPress: () => {
+            // Then: choose the meal type
+            const mealOptions: { text: string; mealType: MealType }[] = [
+              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' },
+              { text: '🍽️ Déjeuner', mealType: 'lunch' },
+              { text: '🍎 Collation', mealType: 'snack' },
+              { text: '🌙 Dîner', mealType: 'dinner' },
+            ].filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
+
+            Alert.alert(
+              'Vers quel repas ?',
+              dateOpt.text.replace('📅 ', ''),
+              [
+                ...mealOptions.map(opt => ({
+                  text: opt.text,
+                  onPress: () => {
+                    addMealToDate(dateOpt.date, opt.mealType, allItems)
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                  },
+                })),
+                { text: 'Annuler', style: 'cancel' },
+              ]
+            )
+          },
+        })),
+        { text: 'Annuler', style: 'cancel' },
+      ]
+    )
+  }
+
   // Handler for foods detected by photo/barcode scanner
   const handleFoodsDetected = (foods: FoodItem[]) => {
     if (foods.length === 0) return
@@ -592,23 +710,40 @@ export default function HomeScreen() {
                                 {formatNumber(item.food.nutrition.calories * item.quantity)} kcal
                               </Text>
                             </View>
-                            <TouchableOpacity
-                              style={[styles.deleteItemButton, { backgroundColor: `${colors.error}15` }]}
-                              onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
-                            >
-                              <X size={14} color={colors.error} />
-                            </TouchableOpacity>
+                            <View style={styles.foodItemActions}>
+                              <TouchableOpacity
+                                style={[styles.itemActionButton, { backgroundColor: `${colors.secondary.primary}15` }]}
+                                onPress={() => handleDuplicateItem(item, type)}
+                              >
+                                <Copy size={14} color={colors.secondary.primary} />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={[styles.itemActionButton, { backgroundColor: `${colors.error}15` }]}
+                                onPress={() => handleRemoveItem(meal.id, item.id, item.food.name)}
+                              >
+                                <X size={14} color={colors.error} />
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         ))}
                       </View>
                     ))}
-                    <TouchableOpacity
-                      style={[styles.addMoreButton, { backgroundColor: colors.accent.light }]}
-                      onPress={() => handleAddMeal(type)}
-                    >
-                      <Plus size={14} color={colors.accent.primary} />
-                      <Text style={[styles.addMoreText, { color: colors.accent.primary }]}>Ajouter un aliment</Text>
-                    </TouchableOpacity>
+                    <View style={styles.mealActionsRow}>
+                      <TouchableOpacity
+                        style={[styles.addMoreButton, { backgroundColor: colors.accent.light, flex: 1 }]}
+                        onPress={() => handleAddMeal(type)}
+                      >
+                        <Plus size={14} color={colors.accent.primary} />
+                        <Text style={[styles.addMoreText, { color: colors.accent.primary }]}>Ajouter</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.duplicateMealButton, { backgroundColor: `${colors.secondary.primary}15` }]}
+                        onPress={() => handleDuplicateMeal(meals, type)}
+                      >
+                        <Copy size={14} color={colors.secondary.primary} />
+                        <Text style={[styles.addMoreText, { color: colors.secondary.primary }]}>Dupliquer repas</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
               </View>
@@ -1187,13 +1322,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  foodItemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  itemActionButton: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mealActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
   addMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.sm,
-    marginTop: spacing.sm,
+    borderRadius: radius.md,
+  },
+  duplicateMealButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
   },
   addMoreText: {

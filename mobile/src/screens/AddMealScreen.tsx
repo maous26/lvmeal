@@ -1985,6 +1985,7 @@ export default function AddMealScreen() {
                     Suggestion
                   </Text>
                 </TouchableOpacity>
+                {/* Plan repas tab - HIDDEN for now
                 <TouchableOpacity
                   style={[styles.modeTab, generationMode === 'plan' && styles.modeTabActive]}
                   onPress={() => {
@@ -1998,6 +1999,7 @@ export default function AddMealScreen() {
                     Plan repas
                   </Text>
                 </TouchableOpacity>
+                */}
               </View>
 
               {/* AI Suggestion Card */}

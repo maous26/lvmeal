@@ -497,9 +497,9 @@ export default function ProfileScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Current Goals */}
+        {/* Mes informations */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Mes objectifs</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.secondary }]}>Mes informations</Text>
           <TouchableOpacity onPress={handleEditProfile} style={[styles.sectionEditButton, { backgroundColor: colors.accent.light }]}>
             <Edit3 size={16} color={colors.accent.primary} />
           </TouchableOpacity>
@@ -530,7 +530,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* IMC */}
+          {/* IMC - information calculée */}
           {bmiData && (
             <View style={[styles.goalItem, { borderBottomColor: colors.border.light }]}>
               <View style={[styles.goalIcon, { backgroundColor: colors.bg.secondary }]}>
@@ -727,7 +727,7 @@ export default function ProfileScreen() {
             <ChevronRight size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
 
-          {/* Meal Source Settings */}
+          {/* Meal Source Settings - HIDDEN for now
           <TouchableOpacity
             style={styles.settingItem}
             onPress={() => {
@@ -747,6 +747,7 @@ export default function ProfileScreen() {
             </View>
             <ChevronRight size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
+          */}
         </Card>
 
         {/* App Settings */}
