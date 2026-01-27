@@ -123,6 +123,7 @@
       ],
       "react-native-health-connect",
       "./plugins/withHealthConnect.js",
+      "./plugins/withHealthKit.js",
       [
         "react-native-health",
         {
