@@ -1,11 +1,10 @@
 import "./global.css"
 
 import * as Sentry from '@sentry/react-native'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import * as ExpoSplashScreen from 'expo-splash-screen'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 import { PlayfairDisplay_400Regular, PlayfairDisplay_500Medium, PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display'
 import { Lora_400Regular, Lora_500Medium, Lora_600SemiBold, Lora_700Bold } from '@expo-google-fonts/lora'
@@ -16,7 +15,6 @@ import { RootNavigator } from './src/navigation'
 import { linkingConfig, isAuthDeepLink, getAuthAction } from './src/navigation/linking'
 import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
-import { AnimatedSplash } from './src/components/AnimatedSplash'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
 import { clearFoodSearchCache } from './src/services/food-search'
@@ -52,12 +50,9 @@ Sentry.init({
   enabled: !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true',
 })
 
-// Keep native splash screen visible while loading fonts
-ExpoSplashScreen.preventAutoHideAsync()
 
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
-  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true)
   const [pendingDeepLink, setPendingDeepLink] = useState<{
     action: 'reset-password' | 'callback'
     url: string
@@ -289,23 +284,14 @@ export default Sentry.wrap(function App() {
     }
   }, [pendingDeepLink])
 
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady && fontsLoaded) {
-      await ExpoSplashScreen.hideAsync()
-    }
-  }, [appIsReady, fontsLoaded])
-
+  
   // Wait for app to be ready and fonts loaded
   if (!appIsReady || !fontsLoaded) {
     return null
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      {/* Animated splash overlay */}
-      {showAnimatedSplash && (
-        <AnimatedSplash onAnimationComplete={() => setShowAnimatedSplash(false)} />
-      )}
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <ToastProvider>
