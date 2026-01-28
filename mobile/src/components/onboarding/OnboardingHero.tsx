@@ -6,10 +6,10 @@
  * - Hero image with gradient fade
  * - Airy benefits grid with uniform icons
  * - High-contrast green CTA button with reassurance text
- * - Social proof section with testimonial and trust badges
+ * - Auto-scrolling testimonials carousel
  */
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withDelay,
+  withRepeat,
+  withSequence,
   Easing,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
@@ -37,11 +39,12 @@ import {
   Leaf,
   Star,
   Shield,
+  Quote,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, fonts } from '../../constants/theme'
 
-const { height } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
 // Color palette with stronger CTA
 const brandColors = {
@@ -51,6 +54,45 @@ const brandColors = {
   blue: '#007AFF',
   trust: '#6B7280',
 }
+
+// Testimonials data
+const testimonials = [
+  {
+    id: 1,
+    text: "Enfin une app qui ne me culpabilise pas. Je comprends mieux mon corps.",
+    author: "Marie",
+    age: 34,
+    rating: 5,
+  },
+  {
+    id: 2,
+    text: "J'ai perdu 8kg en 3 mois sans me priver. L'IA comprend vraiment mes besoins.",
+    author: "Thomas",
+    age: 28,
+    rating: 5,
+  },
+  {
+    id: 3,
+    text: "Le programme métabolisme a changé ma vie. Plus d'effet yo-yo !",
+    author: "Sophie",
+    age: 41,
+    rating: 5,
+  },
+  {
+    id: 4,
+    text: "Simple, efficace, bienveillant. Exactement ce que je cherchais.",
+    author: "Lucas",
+    age: 32,
+    rating: 5,
+  },
+  {
+    id: 5,
+    text: "Les conseils personnalisés sont incroyables. On sent que l'app nous connaît.",
+    author: "Emma",
+    age: 26,
+    rating: 5,
+  },
+]
 
 // Animated benefit card - more airy design
 const AnimatedBenefitCard = ({
@@ -101,6 +143,121 @@ const AnimatedBenefitCard = ({
   )
 }
 
+// Single testimonial card
+const TestimonialCard = ({
+  testimonial,
+  bgColor,
+  textColor,
+  textColorMuted,
+}: {
+  testimonial: typeof testimonials[0]
+  bgColor: string
+  textColor: string
+  textColorMuted: string
+}) => (
+  <View style={[styles.testimonialCard, { backgroundColor: bgColor }]}>
+    <View style={styles.testimonialHeader}>
+      <Quote size={16} color={brandColors.purple} strokeWidth={2} />
+      <View style={styles.testimonialStars}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Star key={i} size={12} color="#FFB800" fill="#FFB800" />
+        ))}
+      </View>
+    </View>
+    <Text style={[styles.testimonialText, { color: textColor }]} numberOfLines={3}>
+      "{testimonial.text}"
+    </Text>
+    <Text style={[styles.testimonialAuthor, { color: textColorMuted }]}>
+      — {testimonial.author}, {testimonial.age} ans
+    </Text>
+  </View>
+)
+
+// Auto-scrolling testimonials carousel
+const TestimonialsCarousel = ({
+  bgColor,
+  textColor,
+  textColorMuted,
+}: {
+  bgColor: string
+  textColor: string
+  textColorMuted: string
+}) => {
+  const scrollRef = useRef<Animated.ScrollView>(null)
+  const currentIndex = useRef(0)
+
+  // Card width + gap
+  const cardWidth = width * 0.75
+  const cardGap = spacing.md
+
+  useEffect(() => {
+    // Auto-scroll every 4 seconds
+    const interval = setInterval(() => {
+      currentIndex.current = (currentIndex.current + 1) % testimonials.length
+      scrollRef.current?.scrollTo({
+        x: currentIndex.current * (cardWidth + cardGap),
+        animated: true,
+      })
+    }, 4000)
+
+    return () => clearInterval(interval)
+  }, [cardWidth])
+
+  // Fade in animation
+  const carouselOpacity = useSharedValue(0)
+  const carouselTranslateY = useSharedValue(20)
+
+  useEffect(() => {
+    carouselOpacity.value = withDelay(600, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }))
+    carouselTranslateY.value = withDelay(600, withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) }))
+  }, [])
+
+  const carouselStyle = useAnimatedStyle(() => ({
+    opacity: carouselOpacity.value,
+    transform: [{ translateY: carouselTranslateY.value }]
+  }))
+
+  return (
+    <Animated.View style={[styles.carouselContainer, carouselStyle]}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={cardWidth + cardGap}
+        decelerationRate="fast"
+        contentContainerStyle={[
+          styles.carouselContent,
+          { paddingHorizontal: (width - cardWidth) / 2 }
+        ]}
+      >
+        {testimonials.map((testimonial) => (
+          <View key={testimonial.id} style={{ width: cardWidth, marginRight: cardGap }}>
+            <TestimonialCard
+              testimonial={testimonial}
+              bgColor={bgColor}
+              textColor={textColor}
+              textColorMuted={textColorMuted}
+            />
+          </View>
+        ))}
+      </Animated.ScrollView>
+
+      {/* Dots indicator */}
+      <View style={styles.dotsContainer}>
+        {testimonials.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              { backgroundColor: index === 0 ? brandColors.purple : brandColors.trust + '40' }
+            ]}
+          />
+        ))}
+      </View>
+    </Animated.View>
+  )
+}
+
 interface OnboardingHeroProps {
   onGetStarted: () => void
   onHaveAccount?: () => void
@@ -124,6 +281,23 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
   const mainStyle = useAnimatedStyle(() => ({
     opacity: mainOpacity.value,
     transform: [{ translateY: mainTranslateY.value }]
+  }))
+
+  // Floating animation for brand badge
+  const floatY = useSharedValue(0)
+  useEffect(() => {
+    floatY.value = withRepeat(
+      withSequence(
+        withTiming(-4, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    )
+  }, [])
+
+  const brandFloatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }]
   }))
 
   const benefits = [
@@ -180,13 +354,13 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
         {/* Content */}
         <Animated.View style={[styles.content, mainStyle]}>
-          {/* Brand badge */}
-          <View style={[styles.brandContainer, { backgroundColor: brandColors.purple + '12' }]}>
+          {/* Brand badge with floating animation */}
+          <Animated.View style={[styles.brandContainer, { backgroundColor: brandColors.purple + '12' }, brandFloatStyle]}>
             <Brain size={14} color={brandColors.purple} strokeWidth={2} />
             <Text style={[styles.brandName, { color: brandColors.purple }]}>
               LYM
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Main headline - LARGER for visual hierarchy */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
@@ -213,38 +387,30 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
               />
             ))}
           </View>
-
-          {/* Social Proof - Testimonial */}
-          <View style={[styles.testimonialContainer, { backgroundColor: colors.bg.secondary }]}>
-            <View style={styles.testimonialStars}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} size={14} color="#FFB800" fill="#FFB800" />
-              ))}
-            </View>
-            <Text style={[styles.testimonialText, { color: colors.text.secondary }]}>
-              "Enfin une app qui ne me culpabilise pas. Je comprends mieux mon corps."
-            </Text>
-            <Text style={[styles.testimonialAuthor, { color: colors.text.muted }]}>
-              — Marie, 34 ans
-            </Text>
-          </View>
-
-          {/* Trust badges */}
-          <View style={styles.trustBadges}>
-            <View style={styles.trustBadge}>
-              <Shield size={14} color={brandColors.trust} strokeWidth={2} />
-              <Text style={[styles.trustText, { color: brandColors.trust }]}>
-                Données sécurisées
-              </Text>
-            </View>
-            <View style={[styles.trustDivider, { backgroundColor: colors.border.light }]} />
-            <View style={styles.trustBadge}>
-              <Text style={[styles.trustText, { color: brandColors.trust }]}>
-                Recommandé par des nutritionnistes
-              </Text>
-            </View>
-          </View>
         </Animated.View>
+
+        {/* Auto-scrolling testimonials carousel */}
+        <TestimonialsCarousel
+          bgColor={colors.bg.secondary}
+          textColor={colors.text.secondary}
+          textColorMuted={colors.text.muted}
+        />
+
+        {/* Trust badges */}
+        <View style={[styles.trustBadges, { marginTop: spacing.lg }]}>
+          <View style={styles.trustBadge}>
+            <Shield size={14} color={brandColors.trust} strokeWidth={2} />
+            <Text style={[styles.trustText, { color: brandColors.trust }]}>
+              Données sécurisées
+            </Text>
+          </View>
+          <View style={[styles.trustDivider, { backgroundColor: colors.border.light }]} />
+          <View style={styles.trustBadge}>
+            <Text style={[styles.trustText, { color: brandColors.trust }]}>
+              Recommandé par des nutritionnistes
+            </Text>
+          </View>
+        </View>
       </ScrollView>
 
       {/* CTA footer - enhanced with green button and reassurance */}
@@ -303,7 +469,7 @@ const styles = StyleSheet.create({
   },
   // Image - slightly taller for more impact
   imageContainer: {
-    height: Math.min(height * 0.38, 320),
+    height: Math.min(height * 0.35, 300),
     position: 'relative',
   },
   heroImage: {
@@ -330,7 +496,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radius.full,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   brandName: {
     fontSize: 12,
@@ -340,30 +506,30 @@ const styles = StyleSheet.create({
   },
   // Headline - LARGER (36px vs 32px)
   headline: {
-    fontSize: 36,
-    lineHeight: 44,
+    fontSize: 34,
+    lineHeight: 42,
     fontFamily: fonts.sans.bold,
     letterSpacing: -0.8,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   // Subheadline - smaller (15px vs 16px) for contrast
   subheadline: {
     fontSize: 15,
     fontFamily: fonts.sans.regular,
     lineHeight: 22,
-    marginBottom: spacing.xl + spacing.sm,
+    marginBottom: spacing.lg,
   },
   // Benefits Grid - more airy
   benefitsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -spacing.xs,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   benefitCard: {
     width: '50%',
     paddingHorizontal: spacing.xs,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
@@ -389,27 +555,50 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans.regular,
     lineHeight: 16,
   },
-  // Testimonial
-  testimonialContainer: {
+  // Testimonials Carousel
+  carouselContainer: {
+    marginBottom: spacing.md,
+  },
+  carouselContent: {
+    paddingVertical: spacing.xs,
+  },
+  testimonialCard: {
     padding: spacing.md,
     borderRadius: radius.lg,
-    marginBottom: spacing.md,
+    minHeight: 120,
+  },
+  testimonialHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   testimonialStars: {
     flexDirection: 'row',
     gap: 2,
-    marginBottom: spacing.xs,
   },
   testimonialText: {
     fontSize: 14,
     fontFamily: fonts.sans.regular,
     fontStyle: 'italic',
     lineHeight: 20,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   testimonialAuthor: {
     fontSize: 12,
     fontFamily: fonts.sans.medium,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.sm,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   // Trust badges
   trustBadges: {
@@ -417,6 +606,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
   },
   trustBadge: {
     flexDirection: 'row',
