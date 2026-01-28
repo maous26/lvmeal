@@ -132,6 +132,9 @@ const healthConnectPermissions = [
   { accessType: 'read', recordType: 'BodyFat' },
 ] as const
 
+// Track if HealthKit has been initialized this session
+let healthKitInitialized = false
+
 /**
  * Check if health services are available on this device
  */
@@ -162,6 +165,50 @@ export async function isHealthAvailable(): Promise<boolean> {
     }
   }
   return false
+}
+
+/**
+ * Ensure HealthKit is initialized before reading data
+ * This must be called before any data fetch operations
+ */
+async function ensureHealthKitInitialized(): Promise<boolean> {
+  if (Platform.OS !== 'ios' || !nativeModulesAvailable) {
+    return false
+  }
+
+  // Already initialized this session
+  if (healthKitInitialized) {
+    console.log('[HealthService] HealthKit already initialized')
+    return true
+  }
+
+  return new Promise((resolve) => {
+    try {
+      const permissions = getHealthKitPermissions()
+      console.log('[HealthService] Initializing HealthKit with permissions...')
+
+      if (!AppleHealthKit?.initHealthKit) {
+        console.log('[HealthService] initHealthKit not available')
+        resolve(false)
+        return
+      }
+
+      AppleHealthKit.initHealthKit(permissions, (error: any) => {
+        if (error) {
+          console.log('[HealthService] HealthKit init error:', error)
+          resolve(false)
+          return
+        }
+
+        console.log('[HealthService] HealthKit initialized successfully')
+        healthKitInitialized = true
+        resolve(true)
+      })
+    } catch (e) {
+      console.log('[HealthService] ensureHealthKitInitialized exception:', e)
+      resolve(false)
+    }
+  })
 }
 
 /**
@@ -484,15 +531,41 @@ export async function getWeightDataFromScale(
   endDate: Date = new Date()
 ): Promise<ScaleWeightData[]> {
   const isAvailable = await isHealthAvailable()
-  if (!isAvailable) return []
+  if (!isAvailable) {
+    console.log('[HealthService] getWeightDataFromScale: Health not available')
+    return []
+  }
 
   if (Platform.OS === 'ios') {
+    // Ensure HealthKit is initialized before reading
+    const initialized = await ensureHealthKitInitialized()
+    if (!initialized) {
+      console.log('[HealthService] getWeightDataFromScale: Failed to initialize HealthKit')
+      return []
+    }
     return getWeightDataIOS(startDate, endDate)
   } else if (Platform.OS === 'android') {
     return getWeightDataAndroid(startDate, endDate)
   }
 
   return []
+}
+
+/**
+ * Convert pounds to kg if needed
+ * HealthKit sometimes returns pounds even when kg is requested
+ */
+function normalizeWeightToKg(value: number): number {
+  // If value is > 150, it's likely in pounds (no human weighs 150+ kg normally)
+  // 150 kg = 330 lbs, so if we get 150+, assume it's pounds
+  // Typical adult range: 40-150 kg or 88-330 lbs
+  if (value > 150) {
+    // Convert pounds to kg
+    const kg = value / 2.20462
+    console.log(`[HealthService] Converted ${value} lbs to ${kg.toFixed(1)} kg`)
+    return Math.round(kg * 10) / 10
+  }
+  return Math.round(value * 10) / 10
 }
 
 /**
@@ -516,6 +589,7 @@ async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWe
             resolve([])
             return
           }
+          console.log('[HealthService] Raw weight samples:', JSON.stringify(results.slice(0, 3)))
           resolve(results)
         }
       )
@@ -550,15 +624,25 @@ async function getWeightDataIOS(startDate: Date, endDate: Date): Promise<ScaleWe
         return bfDate === sampleDate
       })
 
+      // Normalize weight to kg (HealthKit may return pounds despite unit setting)
+      const normalizedWeight = normalizeWeightToKg(sample.value)
+
       return {
-        weight: sample.value,
+        weight: normalizedWeight,
         bodyFatPercent: matchingBodyFat?.value,
         date: sample.startDate,
         sourceName: sample.sourceName || 'Apple Health',
       }
     })
 
-    return weightData
+    // Filter out any remaining aberrant values (outside 30-200 kg range)
+    const validWeightData = weightData.filter(d => d.weight >= 30 && d.weight <= 200)
+
+    if (validWeightData.length !== weightData.length) {
+      console.log(`[HealthService] Filtered out ${weightData.length - validWeightData.length} aberrant weight entries`)
+    }
+
+    return validWeightData
   } catch (error) {
     console.log('[HealthService] iOS weight error:', error)
     return []
@@ -677,6 +761,121 @@ export function getScaleSetupInstructions(): string[] {
   return ["L'intégration santé n'est pas disponible sur cette plateforme."]
 }
 
+/**
+ * Get weekly health summary (7 days average for steps and sleep)
+ */
+export interface WeeklyHealthSummary {
+  avgSteps: number
+  avgSleepHours: number | null
+  daysWithSteps: number
+  daysWithSleep: number
+}
+
+export async function getWeeklyHealthSummary(): Promise<WeeklyHealthSummary | null> {
+  console.log('[HealthService] getWeeklyHealthSummary called')
+  const isAvailable = await isHealthAvailable()
+  console.log('[HealthService] isHealthAvailable:', isAvailable)
+  if (!isAvailable) {
+    console.log('[HealthService] Health not available, returning null')
+    return null
+  }
+
+  // Ensure HealthKit is initialized before reading data
+  if (Platform.OS === 'ios') {
+    const initialized = await ensureHealthKitInitialized()
+    console.log('[HealthService] HealthKit initialized:', initialized)
+    if (!initialized) {
+      console.log('[HealthService] Failed to initialize HealthKit, returning null')
+      return null
+    }
+  }
+
+  const now = new Date()
+  const summary: WeeklyHealthSummary = {
+    avgSteps: 0,
+    avgSleepHours: null,
+    daysWithSteps: 0,
+    daysWithSleep: 0,
+  }
+
+  // Collect daily data for past 7 days
+  const stepsData: number[] = []
+  const sleepData: number[] = []
+
+  console.log('[HealthService] Starting to fetch 7 days of data...')
+  for (let i = 0; i < 7; i++) {
+    const dayEnd = new Date(now)
+    dayEnd.setDate(dayEnd.getDate() - i)
+    dayEnd.setHours(23, 59, 59, 999)
+
+    const dayStart = new Date(dayEnd)
+    dayStart.setHours(0, 0, 0, 0)
+
+    // Get steps for this day
+    const steps = await getStepsForDateRange(dayStart, dayEnd)
+    console.log(`[HealthService] Day ${i}: steps = ${steps}`)
+    if (steps > 0) {
+      stepsData.push(steps)
+    }
+
+    // Get sleep for the night before this day
+    if (Platform.OS === 'ios' && AppleHealthKit) {
+      const sleepStartDate = new Date(dayStart)
+      sleepStartDate.setDate(sleepStartDate.getDate() - 1)
+      sleepStartDate.setHours(20, 0, 0, 0)
+
+      const sleepHours = await new Promise<number | null>((resolve) => {
+        try {
+          AppleHealthKit.getSleepSamples(
+            {
+              startDate: sleepStartDate.toISOString(),
+              endDate: dayStart.toISOString(),
+            },
+            (error: any, results: any) => {
+              if (error || !results || results.length === 0) {
+                resolve(null)
+                return
+              }
+
+              let totalMinutes = 0
+              results.forEach((sample: any) => {
+                if (sample.value === 'ASLEEP' || sample.value === 'INBED') {
+                  const start = new Date(sample.startDate)
+                  const end = new Date(sample.endDate)
+                  totalMinutes += (end.getTime() - start.getTime()) / (1000 * 60)
+                }
+              })
+
+              resolve(totalMinutes > 0 ? Math.round(totalMinutes / 60 * 10) / 10 : null)
+            }
+          )
+        } catch {
+          resolve(null)
+        }
+      })
+
+      if (sleepHours !== null && sleepHours > 0) {
+        sleepData.push(sleepHours)
+      }
+    }
+  }
+
+  // Calculate averages
+  console.log(`[HealthService] Collected ${stepsData.length} days with steps, ${sleepData.length} days with sleep`)
+  if (stepsData.length > 0) {
+    summary.avgSteps = Math.round(stepsData.reduce((a, b) => a + b, 0) / stepsData.length)
+    summary.daysWithSteps = stepsData.length
+  }
+
+  if (sleepData.length > 0) {
+    summary.avgSleepHours = Math.round(sleepData.reduce((a, b) => a + b, 0) / sleepData.length * 10) / 10
+    summary.daysWithSleep = sleepData.length
+  }
+
+  console.log('[HealthService] Final summary:', JSON.stringify(summary))
+  return summary
+}
+
 export default {
   isHealthAvailable,
   requestHealthPermissions,
@@ -686,4 +885,5 @@ export default {
   getLatestWeightFromScale,
   getCompatibleScales,
   getScaleSetupInstructions,
+  getWeeklyHealthSummary,
 }

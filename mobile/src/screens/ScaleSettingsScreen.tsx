@@ -50,17 +50,63 @@ export default function ScaleSettingsScreen() {
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [syncedCount, setSyncedCount] = useState(0)
 
-  // Check availability and existing permissions on mount
+  // Check availability and auto-sync if already connected
   useEffect(() => {
-    checkAvailabilityAndPermissions()
+    checkAndAutoSync()
   }, [])
 
-  const checkAvailabilityAndPermissions = async () => {
+  const checkAndAutoSync = async () => {
     const available = await isHealthAvailable()
     setIsAvailable(available)
 
-    // Don't request permissions automatically on mount.
-    // iOS prompts should be user-initiated (button press) to avoid being suppressed.
+    // If health is available, try to sync automatically
+    // This also implicitly checks if we have permissions
+    if (available) {
+      await handleAutoSync()
+    }
+  }
+
+  // Auto-sync without user feedback (silent)
+  const handleAutoSync = async () => {
+    setIsSyncing(true)
+    try {
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+      const weightData = await getWeightDataFromScale(thirtyDaysAgo)
+
+      if (weightData.length > 0) {
+        let imported = 0
+        for (const data of weightData) {
+          const heightInMeters = profile?.height ? profile.height / 100 : null
+          const bmi = heightInMeters ? data.weight / (heightInMeters * heightInMeters) : undefined
+
+          addWeightEntry({
+            id: `scale-${Date.now()}-${imported}`,
+            date: data.date,
+            weight: data.weight,
+            source: 'scale',
+            bodyFatPercent: data.bodyFatPercent,
+            bmi: bmi ? Math.round(bmi * 10) / 10 : undefined,
+          })
+          imported++
+        }
+
+        if (imported > 0) {
+          setSyncedCount(imported)
+          setLastSync(new Date())
+          setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
+        }
+      } else {
+        // No data but permissions might still be granted
+        // We'll mark as connected if health is available
+        setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
+      }
+    } catch (error) {
+      console.log('[ScaleSettings] Auto-sync failed (probably no permissions yet):', error)
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   const showHealthDiagnostics = async () => {
@@ -230,7 +276,7 @@ export default function ScaleSettingsScreen() {
 
               <Text style={[styles.statusDescription, { color: colors.text.secondary }]}>
                 {isConnected
-                  ? `Synchronisé avec ${platformName}`
+                  ? `Tes données sont synchronisées automatiquement`
                   : `Connecte-toi à ${platformName} pour importer tes mesures`
                 }
               </Text>
@@ -267,7 +313,7 @@ export default function ScaleSettingsScreen() {
                     <>
                       <RefreshCw size={20} color={colors.accent.primary} />
                       <Text style={[styles.syncButtonText, { color: colors.accent.primary }]}>
-                        Synchroniser
+                        Actualiser
                       </Text>
                     </>
                   )}

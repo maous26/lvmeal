@@ -53,12 +53,12 @@ export const organicPalette = {
 // LIGHT THEME (Default) - iOS Light Mode
 // =============================================================================
 export const lightColors = {
-  // Backgrounds - Pure whites and iOS grays
+  // Backgrounds - Subtle blue-gray tint for warmth
   bg: {
-    primary: '#FFFFFF',           // Pure white
-    secondary: '#F2F2F7',         // iOS System Gray 6
-    tertiary: '#E5E5EA',          // iOS System Gray 5
-    elevated: '#FFFFFF',
+    primary: '#F8F9FB',           // Very subtle blue-gray (was pure white)
+    secondary: '#F0F1F5',         // Slightly darker blue-gray
+    tertiary: '#E8E9ED',          // iOS System Gray 5 with blue tint
+    elevated: '#FFFFFF',          // Cards stay pure white for contrast
     overlay: 'rgba(0, 0, 0, 0.4)',
   },
 

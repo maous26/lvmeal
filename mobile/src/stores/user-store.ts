@@ -78,6 +78,7 @@ interface UserState {
   resetStore: () => void
   resetAllData: () => Promise<void> // Clear ALL app data (all stores)
   addWeightEntry: (entry: WeightEntry) => void
+  cleanWeightHistory: () => void
   setOnboarded: (value: boolean) => void
   setHasSeenCoachWelcome: (value: boolean) => void
   calculateNeeds: () => NutritionalNeeds | null
@@ -407,10 +408,69 @@ export const useUserStore = create<UserState>()(
       },
 
       addWeightEntry: (entry) => {
+        // Validate weight is in reasonable range (30-200 kg)
+        // This catches unit conversion errors (pounds vs kg)
+        if (entry.weight < 30 || entry.weight > 200) {
+          console.warn(`[UserStore] Rejecting invalid weight entry: ${entry.weight} kg (outside 30-200 range)`)
+          return
+        }
+
+        // Check for duplicate entries (same date and weight)
+        const existingEntry = get().weightHistory.find(
+          e => e.date.split('T')[0] === entry.date.split('T')[0] && Math.abs(e.weight - entry.weight) < 0.1
+        )
+        if (existingEntry) {
+          console.log(`[UserStore] Skipping duplicate weight entry for ${entry.date.split('T')[0]}`)
+          // Still update profile weight even if entry is duplicate
+          // This ensures profile stays in sync with latest weight
+          const state = get()
+          if (state.profile && state.profile.weight !== entry.weight) {
+            set({ profile: { ...state.profile, weight: entry.weight } })
+          }
+          return
+        }
+
         set((state) => ({
           weightHistory: [...state.weightHistory, entry],
           profile: state.profile ? { ...state.profile, weight: entry.weight } : null,
         }))
+      },
+
+      // Clean up corrupted weight history (removes entries outside 30-200 kg range)
+      // Also syncs profile weight with latest valid entry
+      cleanWeightHistory: () => {
+        const { weightHistory, profile } = get()
+        const validEntries = weightHistory.filter(entry => {
+          const isValid = entry.weight >= 30 && entry.weight <= 200
+          if (!isValid) {
+            console.log(`[UserStore] Removing invalid weight entry: ${entry.weight} kg on ${entry.date}`)
+          }
+          return isValid
+        })
+
+        // Sort by date to find the most recent entry
+        const sortedEntries = [...validEntries].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+        const latestWeight = sortedEntries[0]?.weight
+
+        // Update state: clean history + sync profile weight
+        const updates: Partial<{ weightHistory: typeof validEntries; profile: typeof profile }> = {}
+
+        if (validEntries.length !== weightHistory.length) {
+          console.log(`[UserStore] Cleaned weight history: removed ${weightHistory.length - validEntries.length} invalid entries`)
+          updates.weightHistory = validEntries
+        }
+
+        // Sync profile weight with latest entry if different
+        if (latestWeight && profile && profile.weight && Math.abs(profile.weight - latestWeight) > 0.1) {
+          console.log(`[UserStore] Syncing profile weight: ${profile.weight} → ${latestWeight} kg`)
+          updates.profile = { ...profile, weight: latestWeight }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          set(updates)
+        }
       },
 
       setOnboarded: (value) => {
@@ -568,13 +628,17 @@ export const useUserStore = create<UserState>()(
         notificationPreferences: state.notificationPreferences,
         blobPalette: state.blobPalette,
       }),
-      onRehydrateStorage: () => (state, error) => {
-        hasHydrated = true
+      onRehydrateStorage: () => (state) => {
         // Set reactive hydration state in store
         useUserStore.setState({ _hasHydrated: true })
         console.log('[UserStore] Hydrated, state keys:', state ? Object.keys(state) : 'null')
         console.log('[UserStore] Hydrated, profile:', JSON.stringify(state?.profile)?.substring(0, 200))
         console.log('[UserStore] Hydrated, nutritionGoals:', JSON.stringify(state?.nutritionGoals))
+
+        // Clean up any corrupted weight history on startup
+        setTimeout(() => {
+          useUserStore.getState().cleanWeightHistory()
+        }, 200)
 
         // ONE-TIME FIX: Goals were calculated with wrong formula or AI returned incorrect values.
         // Force recalculation using the deterministic Mifflin-St Jeor formula.
