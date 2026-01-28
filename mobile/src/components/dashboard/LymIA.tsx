@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { X, Sparkles, Heart, TrendingUp, Moon, Droplets, Activity, ChevronRight, Scale, Utensils, Target, Flame, Award } from 'lucide-react-native'
+import { useNavigation } from '@react-navigation/native'
+import { X, Sparkles, Heart, TrendingUp, Moon, Droplets, Activity, ChevronRight, Utensils, Target, Flame, Award, Scale } from 'lucide-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Card } from '../ui/Card'
-import { Button } from '../ui/Button'
 import { colors, radius, spacing, typography } from '../../constants/theme'
 import { useUserStore } from '../../stores/user-store'
 import { useWellnessStore } from '../../stores/wellness-store'
@@ -12,66 +12,47 @@ import { useGamificationStore } from '../../stores/gamification-store'
 import { useSportProgramStore } from '../../stores/sport-program-store'
 import { useCaloricBankStore } from '../../stores/caloric-bank-store'
 import { lymInsights } from '../../services/lym-insights-service'
+import {
+  getTopMessages,
+  filterDismissedMessages,
+  getMessageStyle,
+  type CoachContext,
+  type CoachMessage,
+  type CoachMessageIcon,
+} from '../../services/coach-messages-service'
 
-interface LymIAProps {
-  className?: string
+
+// Icon mapping from string to component
+const ICON_MAP: Record<CoachMessageIcon, React.ReactNode> = {
+  sparkles: <Sparkles size={20} color="#D4A574" />,
+  heart: <Heart size={20} color="#F43F5E" />,
+  moon: <Moon size={20} color="#6366F1" />,
+  droplets: <Droplets size={20} color="#06B6D4" />,
+  activity: <Activity size={20} color="#8B5CF6" />,
+  'trending-up': <TrendingUp size={20} color="#10B981" />,
+  utensils: <Utensils size={20} color="#3B82F6" />,
+  target: <Target size={20} color="#F59E0B" />,
+  flame: <Flame size={20} color="#EF4444" />,
+  award: <Award size={20} color="#8B5CF6" />,
+  scale: <Scale size={20} color="#6366F1" />,
 }
 
-interface CoachMessage {
-  id: string
-  type: 'encouragement' | 'tip' | 'warning' | 'celebration' | 'adaptive' | 'nutrition' | 'sport'
-  icon: React.ReactNode
-  title: string
-  message: string
-  action?: {
-    label: string
-    onPress: () => void
+// Special icon colors for certain message types
+const getIconForMessage = (icon: CoachMessageIcon, type: CoachMessage['type']): React.ReactNode => {
+  if (type === 'plaisir') {
+    return <Sparkles size={20} color="#D946EF" />
   }
-  priority: number
+  return ICON_MAP[icon] || <Sparkles size={20} color="#D4A574" />
 }
 
-const ADAPTIVE_MESSAGES = {
-  welcome: {
-    title: 'Bienvenue dans ton espace bienveillant',
-    message: "On va prendre soin de toi en douceur. Ton corps est intelligent, on va l'accompagner pas a pas.",
-  },
-  patience: {
-    title: 'La patience est ta meilleure alliee',
-    message: 'Les changements durables prennent du temps. Chaque petit pas compte, meme les plus petits.',
-  },
-  maintenance: {
-    title: 'Phase de stabilisation',
-    message: "On consolide tes acquis avant d'aller plus loin. C'est la cle pour des resultats durables.",
-  },
-  protein: {
-    title: 'Priorite aux proteines',
-    message: 'Les proteines t\'aident a maintenir ta masse musculaire et a relancer ton metabolisme.',
-  },
-  sleep: {
-    title: 'Le sommeil, ton allie secret',
-    message: 'Un bon sommeil aide a reguler tes hormones de faim. Prends soin de tes nuits !',
-  },
-  stress: {
-    title: 'Gere ton stress',
-    message: 'Le stress impacte ton metabolisme. Accorde-toi des moments de detente.',
-  },
-  movement: {
-    title: 'Bouge au quotidien',
-    message: 'Les mouvements quotidiens sont aussi importants que les seances sport. Chaque pas compte !',
-  },
-  celebration: {
-    title: 'Tu es sur la bonne voie !',
-    message: 'Chaque jour ou tu prends soin de toi est une victoire. Continue comme ca !',
-  },
-}
-
-export function LymIA({ className }: LymIAProps) {
-  const { profile, weightHistory } = useUserStore()
-  const { todayScore, getEntryForDate, targets, streaks: wellnessStreaks } = useWellnessStore()
-  const { getDailyNutrition, getMealsForDate, getHydration } = useMealsStore()
+export function LymIA() {
+  const navigation = useNavigation()
+  const { profile } = useUserStore()
+  const { getEntryForDate, targets } = useWellnessStore()
+  const { getDailyNutrition, getMealsForDate } = useMealsStore()
   const { getStreakInfo } = useGamificationStore()
-  const { currentProgram, currentStreak: sportStreak, getPhaseProgress, totalSessionsCompleted } = useSportProgramStore()
-  const { getTotalBalance, getCurrentDayIndex, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals, canUsePlaisirMeal } = useCaloricBankStore()
+  const { totalSessionsCompleted } = useSportProgramStore()
+  const { getTotalBalance, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals } = useCaloricBankStore()
 
   const [dismissedMessages, setDismissedMessages] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
@@ -105,214 +86,63 @@ export function LymIA({ className }: LymIAProps) {
     await AsyncStorage.setItem('coach-dismissed', JSON.stringify({ date: today, ids: newDismissed }))
   }
 
-  if (!mounted || !profile) {
-    return null
-  }
+  // Build context for coach messages service
+  const coachContext = useMemo((): CoachContext | null => {
+    if (!profile) return null
 
-  const isAdaptive = profile.metabolismProfile === 'adaptive'
-  const today = new Date().toISOString().split('T')[0]
-  const todayEntry = getEntryForDate(today)
-  const todayNutrition = getDailyNutrition(today)
-  const todayMeals = getMealsForDate(today)
-  const streakInfo = getStreakInfo()
-  const currentHour = new Date().getHours()
+    const today = new Date().toISOString().split('T')[0]
+    const todayEntry = getEntryForDate(today)
+    const todayNutrition = getDailyNutrition(today)
+    const todayMeals = getMealsForDate(today)
+    const streakInfo = getStreakInfo()
 
-  const caloricBalance = getTotalBalance()
-  const currentDayIndex = getCurrentDayIndex()
-  const canHavePlaisirToday = canHavePlaisir()
-  const maxPerMeal = getMaxPlaisirPerMeal()
-  const needsSplit = requiresSplitConsumption()
-  const remainingPlaisirMeals = getRemainingPlaisirMeals()
-  const canStillUsePlaisir = canUsePlaisirMeal()
-
-  const sportPhase = getPhaseProgress()
-  const isSportEnabled = profile?.sportTrackingEnabled || isAdaptive
-
-  const latestWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1] : null
-  const previousWeight = weightHistory.length > 1 ? weightHistory[weightHistory.length - 2] : null
-  const weightTrend = latestWeight && previousWeight ? latestWeight.weight - previousWeight.weight : 0
-
-  const caloriesTarget = profile.nutritionalNeeds?.calories || 2100
-  const proteinTarget = profile.nutritionalNeeds?.proteins || 120
-
-  const generateMessages = (): CoachMessage[] => {
-    const messages: CoachMessage[] = []
-
-    // ADAPTIVE METABOLISM SPECIFIC MESSAGES
-    if (isAdaptive) {
-      if (profile.nutritionalStrategy?.currentPhase === 'maintenance') {
-        messages.push({
-          id: 'adaptive-maintenance',
-          type: 'adaptive',
-          icon: <TrendingUp size={20} color="#10B981" />,
-          title: ADAPTIVE_MESSAGES.maintenance.title,
-          message: `Semaine ${profile.nutritionalStrategy.weekInPhase} de stabilisation. ${ADAPTIVE_MESSAGES.maintenance.message}`,
-          priority: 80,
-        })
-      }
-
-      const proteinPercent = (todayNutrition.proteins / proteinTarget) * 100
-      if (proteinPercent < 50 && currentHour >= 14) {
-        messages.push({
-          id: 'adaptive-protein',
-          type: 'tip',
-          icon: <Sparkles size={20} color="#D4A574" />,
-          title: ADAPTIVE_MESSAGES.protein.title,
-          message: `Tu es a ${Math.round(proteinPercent)}% de ton objectif proteines. Pense a en ajouter a ton prochain repas.`,
-          priority: 70,
-        })
-      }
+    return {
+      profile,
+      isAdaptive: profile.metabolismProfile === 'adaptive',
+      todayNutrition: {
+        calories: todayNutrition.calories,
+        proteins: todayNutrition.proteins,
+        carbs: todayNutrition.carbs,
+        fats: todayNutrition.fats,
+      },
+      todayMealsCount: todayMeals.length,
+      wellness: todayEntry ? {
+        sleepHours: todayEntry.sleepHours,
+        stressLevel: todayEntry.stressLevel,
+        energyLevel: todayEntry.energyLevel,
+        waterLiters: todayEntry.waterLiters,
+      } : undefined,
+      targets: {
+        calories: profile.nutritionalNeeds?.calories || 2100,
+        proteins: profile.nutritionalNeeds?.proteins || 120,
+        waterLiters: targets.waterLiters,
+      },
+      streak: streakInfo.current,
+      sportSessionsCompleted: totalSessionsCompleted,
+      caloricBank: {
+        balance: getTotalBalance(),
+        canHavePlaisir: canHavePlaisir(),
+        maxPerMeal: getMaxPlaisirPerMeal(),
+        needsSplit: requiresSplitConsumption(),
+        remainingPlaisirMeals: getRemainingPlaisirMeals(),
+      },
+      currentHour: new Date().getHours(),
     }
+  }, [profile, getEntryForDate, getDailyNutrition, getMealsForDate, getStreakInfo, targets, totalSessionsCompleted, getTotalBalance, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals])
 
-    // Sleep check
-    if (todayEntry?.sleepHours) {
-      if (todayEntry.sleepHours < 6) {
-        messages.push({
-          id: 'sleep-warning',
-          type: 'warning',
-          icon: <Moon size={20} color="#6366F1" />,
-          title: 'Sommeil insuffisant',
-          message: isAdaptive
-            ? `${todayEntry.sleepHours}h de sommeil seulement. Pour ton metabolisme, vise 7-8h.`
-            : `Tu n'as dormi que ${todayEntry.sleepHours}h. Le manque de sommeil peut affecter tes objectifs.`,
-          priority: 75,
-        })
-      } else if (todayEntry.sleepHours >= 7) {
-        messages.push({
-          id: 'sleep-good',
-          type: 'celebration',
-          icon: <Moon size={20} color="#6366F1" />,
-          title: 'Belle nuit de sommeil !',
-          message: `${todayEntry.sleepHours}h de repos. Ton corps te remercie !`,
-          priority: 30,
-        })
-      }
-    }
+  // Generate messages using the service
+  const visibleMessages = useMemo(() => {
+    if (!coachContext) return []
 
-    // Stress check
-    if (todayEntry?.stressLevel && todayEntry.stressLevel >= 4) {
-      messages.push({
-        id: 'stress-high',
-        type: 'tip',
-        icon: <Heart size={20} color="#F43F5E" />,
-        title: isAdaptive ? ADAPTIVE_MESSAGES.stress.title : 'Niveau de stress eleve',
-        message: isAdaptive
-          ? ADAPTIVE_MESSAGES.stress.message
-          : 'Le stress peut impacter ta faim et ta digestion. Prends un moment pour toi.',
-        priority: 65,
-      })
-    }
+    const allMessages = getTopMessages(coachContext, 4) // Get more, then filter
+    const filtered = filterDismissedMessages(allMessages, dismissedMessages)
+    return filtered.slice(0, 2) // Show max 2
+  }, [coachContext, dismissedMessages])
 
-    // Hydration reminder
-    const waterPercent = todayEntry?.waterLiters
-      ? (todayEntry.waterLiters / targets.waterLiters) * 100
-      : 0
-    if (waterPercent < 40 && currentHour >= 12) {
-      messages.push({
-        id: 'hydration-reminder',
-        type: 'tip',
-        icon: <Droplets size={20} color="#06B6D4" />,
-        title: "Pense a t'hydrater",
-        message: `Tu es a ${Math.round(waterPercent)}% de ton objectif d'eau. L'hydratation aide ton metabolisme !`,
-        priority: 50,
-      })
-    }
-
-    // Streak celebration
-    if (streakInfo.current >= 7 && streakInfo.current % 7 === 0) {
-      messages.push({
-        id: `streak-${streakInfo.current}`,
-        type: 'celebration',
-        icon: <Sparkles size={20} color="#D4A574" />,
-        title: `${streakInfo.current} jours de suite !`,
-        message: isAdaptive
-          ? ADAPTIVE_MESSAGES.celebration.message
-          : 'Ta regularite paie ! Continue sur cette lancee.',
-        priority: 85,
-      })
-    }
-
-    // Nutrition messages
-    const caloriePercent = (todayNutrition.calories / caloriesTarget) * 100
-    if (todayMeals.length === 0 && currentHour >= 10) {
-      messages.push({
-        id: 'no-meals-logged',
-        type: 'tip',
-        icon: <Utensils size={20} color="#3B82F6" />,
-        title: 'Suivi du jour',
-        message: 'Pas de repas noté pour l\'instant — même une estimation rapide suffit !',
-        priority: 45,
-      })
-    }
-
-    // Plaisir message when available
-    // canHavePlaisirToday vérifie déjà : jour >= 3 ET solde >= 200 ET repas restants
-    if (canHavePlaisirToday) {
-      let plaisirMessage: string
-      let plaisirTitle: string
-
-      if (needsSplit) {
-        // Budget > 600 kcal → 2 repas plaisir possibles
-        if (remainingPlaisirMeals === 2) {
-          plaisirTitle = 'Tes repas plaisir de la semaine !'
-          plaisirMessage = `+${maxPerMeal} kcal bonus par repas. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
-        } else {
-          plaisirTitle = 'Ton dernier repas plaisir !'
-          plaisirMessage = `+${maxPerMeal} kcal bonus. L'idée ? Un moment différent, pas une version XXL de ton quotidien.`
-        }
-      } else {
-        // Budget <= 600 kcal → un seul repas
-        plaisirTitle = 'Ton repas plaisir de la semaine !'
-        plaisirMessage = `+${maxPerMeal} kcal bonus. Choisis quelque chose qui te fait vraiment envie — pas juste plus de la même chose.`
-      }
-
-      messages.push({
-        id: 'plaisir-available',
-        type: 'celebration',
-        icon: <Sparkles size={20} color="#D946EF" />,
-        title: plaisirTitle,
-        message: plaisirMessage,
-        priority: 75,
-      })
-    } else if (!canStillUsePlaisir && caloricBalance > 0) {
-      // Plus de repas plaisir disponibles cette semaine
-      messages.push({
-        id: 'plaisir-used',
-        type: 'tip',
-        icon: <Sparkles size={20} color="#D946EF" />,
-        title: 'Repas plaisir utilisés',
-        message: `Tu as déjà profité de tes 2 repas plaisir cette semaine. Nouvelle semaine, nouveaux plaisirs !`,
-        priority: 40,
-      })
-    }
-
-    // Sport messages
-    if (isSportEnabled && totalSessionsCompleted > 0 && totalSessionsCompleted % 5 === 0) {
-      messages.push({
-        id: `sessions-${totalSessionsCompleted}`,
-        type: 'celebration',
-        icon: <Activity size={20} color="#8B5CF6" />,
-        title: `${totalSessionsCompleted} seances completees !`,
-        message: 'Ta regularite paie ! Continue a progresser avec LymIA Sport.',
-        priority: 55,
-      })
-    }
-
-    return messages
-  }
-
-  const allMessages = generateMessages()
-  const visibleMessages = allMessages
-    .filter(m => !dismissedMessages.includes(m.id))
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, 2)
-
-  // Track reassurance messages shown (gentle reminders, encouragement)
-  // Using a ref to track which messages we've already tracked this session
+  // Track reassurance messages shown
   const trackedMessagesRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    // Track reassurance messages when they become visible
     const reassuranceMessages = visibleMessages.filter(m =>
       m.type === 'adaptive' || m.type === 'encouragement' ||
       m.id.includes('adaptive-') || m.id === 'plaisir-used'
@@ -326,24 +156,17 @@ export function LymIA({ className }: LymIAProps) {
     })
   }, [visibleMessages])
 
-  if (visibleMessages.length === 0) {
+  // Handle CTA press
+  const handleActionPress = (action: CoachMessage['action']) => {
+    if (!action) return
+    navigation.navigate(action.route as never)
+  }
+
+  if (!mounted || !profile || visibleMessages.length === 0) {
     return null
   }
 
-  const getMessageStyle = (type: CoachMessage['type']) => {
-    switch (type) {
-      case 'adaptive':
-        return { backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)' }
-      case 'celebration':
-        return { backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }
-      case 'warning':
-        return { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }
-      case 'tip':
-        return { backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)' }
-      default:
-        return { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.3)' }
-    }
-  }
+  const isAdaptive = profile.metabolismProfile === 'adaptive'
 
   return (
     <View style={styles.container}>
@@ -362,35 +185,41 @@ export function LymIA({ className }: LymIAProps) {
 
       {/* Messages */}
       <View style={styles.messages}>
-        {visibleMessages.map((msg) => (
-          <Card
-            key={msg.id}
-            style={[styles.messageCard, getMessageStyle(msg.type)]}
-          >
-            <Pressable
-              style={styles.dismissButton}
-              onPress={() => dismissMessage(msg.id)}
+        {visibleMessages.map((msg) => {
+          const style = getMessageStyle(msg.type)
+          return (
+            <Card
+              key={msg.id}
+              style={[styles.messageCard, style]}
             >
-              <X size={16} color={colors.text.tertiary} />
-            </Pressable>
+              <Pressable
+                style={styles.dismissButton}
+                onPress={() => dismissMessage(msg.id)}
+              >
+                <X size={16} color={colors.text.tertiary} />
+              </Pressable>
 
-            <View style={styles.messageContent}>
-              <View style={styles.messageIcon}>
-                {msg.icon}
+              <View style={styles.messageContent}>
+                <View style={styles.messageIcon}>
+                  {getIconForMessage(msg.icon, msg.type)}
+                </View>
+                <View style={styles.messageText}>
+                  <Text style={styles.messageTitle}>{msg.title}</Text>
+                  <Text style={styles.messageBody}>{msg.message}</Text>
+                  {msg.action && (
+                    <Pressable
+                      onPress={() => handleActionPress(msg.action)}
+                      style={styles.actionButton}
+                    >
+                      <Text style={styles.actionButtonText}>{msg.action.label}</Text>
+                      <ChevronRight size={12} color={colors.accent.primary} />
+                    </Pressable>
+                  )}
+                </View>
               </View>
-              <View style={styles.messageText}>
-                <Text style={styles.messageTitle}>{msg.title}</Text>
-                <Text style={styles.messageBody}>{msg.message}</Text>
-                {msg.action && (
-                  <Pressable onPress={msg.action.onPress} style={styles.actionButton}>
-                    <Text style={styles.actionButtonText}>{msg.action.label}</Text>
-                    <ChevronRight size={12} color={colors.accent.primary} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
-          </Card>
-        ))}
+            </Card>
+          )
+        })}
       </View>
     </View>
   )
