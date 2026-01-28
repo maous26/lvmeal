@@ -428,12 +428,13 @@ export default function HomeScreen() {
           text: dateOpt.text,
           onPress: () => {
             // Then: choose the meal type
-            const mealOptions: { text: string; mealType: MealType }[] = [
-              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' },
-              { text: '🍽️ Déjeuner', mealType: 'lunch' },
-              { text: '🍎 Collation', mealType: 'snack' },
-              { text: '🌙 Dîner', mealType: 'dinner' },
-            ].filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
+            const allMealOptions: { text: string; mealType: MealType }[] = [
+              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' as MealType },
+              { text: '🍽️ Déjeuner', mealType: 'lunch' as MealType },
+              { text: '🍎 Collation', mealType: 'snack' as MealType },
+              { text: '🌙 Dîner', mealType: 'dinner' as MealType },
+            ]
+            const mealOptions = allMealOptions.filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
 
             Alert.alert(
               'Vers quel repas ?',
@@ -473,12 +474,13 @@ export default function HomeScreen() {
           text: dateOpt.text,
           onPress: () => {
             // Then: choose the meal type
-            const mealOptions: { text: string; mealType: MealType }[] = [
-              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' },
-              { text: '🍽️ Déjeuner', mealType: 'lunch' },
-              { text: '🍎 Collation', mealType: 'snack' },
-              { text: '🌙 Dîner', mealType: 'dinner' },
-            ].filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
+            const allMealOpts: { text: string; mealType: MealType }[] = [
+              { text: '☀️ Petit-déjeuner', mealType: 'breakfast' as MealType },
+              { text: '🍽️ Déjeuner', mealType: 'lunch' as MealType },
+              { text: '🍎 Collation', mealType: 'snack' as MealType },
+              { text: '🌙 Dîner', mealType: 'dinner' as MealType },
+            ]
+            const mealOptions = allMealOpts.filter(opt => !(dateOpt.date === currentDate && opt.mealType === fromMealType))
 
             Alert.alert(
               'Vers quel repas ?',
