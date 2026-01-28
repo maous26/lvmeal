@@ -423,7 +423,7 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
       fullMessage,
       `evening-summary-${today}`,
       analysis.emoji,
-      'Coach', // Route to Coach to see the full analysis
+      'Progress', // Route to Progress screen to see detailed analysis
       'Voir l\'analyse'
     )
 
