@@ -42,8 +42,15 @@ import type {
   MealType,
   CookingPreferences,
   LifestyleHabits,
-  MetabolismFactors
+  MetabolismFactors,
+  NutritionalNeeds
 } from '../types'
+import {
+  calculateBMR,
+  calculateTDEE,
+  calculateNutritionalNeeds as calculateNutritionBase,
+  ACTIVITY_MULTIPLIERS
+} from './nutrition-calculator'
 
 // ============= CONFIGURATION =============
 
@@ -275,192 +282,54 @@ async function executeAICall(
 /**
  * Calculate personalized calorie and macro needs
  *
- * IMPORTANT: Uses DETERMINISTIC formulas (Mifflin-St Jeor + ANSES macro ratios) as the base.
- * The AI is only used for contextual adjustments and reasoning, NOT for deciding base calories.
- * This ensures consistent, reproducible results.
+ * IMPORTANT: Uses the centralized nutrition-calculator service (Mifflin-St Jeor + ISSN/ANSES).
+ * This function adds real-time wellness adjustments on top of the base calculations.
  *
  * Sources prioritaires: ANSES, EFSA, OMS pour les recommandations macros
  */
 export async function calculatePersonalizedNeeds(
   context: UserContext
 ): Promise<CalorieRecommendation> {
-  const { profile, weeklyAverage, wellnessData, programProgress } = context
+  const { profile, wellnessData } = context
 
   // ==========================================================================
-  // STEP 1: DETERMINISTIC BASE CALCULATION (Mifflin-St Jeor + ANSES)
-  // This is the scientific foundation - AI cannot change these base values
+  // STEP 1: Use centralized nutrition calculator for base values
   // ==========================================================================
 
-  // Mifflin-St Jeor BMR calculation (more accurate than Harris-Benedict)
-  const bmr = profile.gender === 'female'
-    ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
-    : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
+  const bmr = calculateBMR(profile.weight, profile.height, profile.age, profile.gender)
+  const tdee = calculateTDEE(bmr, profile.activityLevel)
 
-  // Standard activity multipliers (Mifflin-St Jeor / WHO)
-  const activityMultipliers: Record<string, number> = {
-    sedentary: 1.2,    // Little or no exercise
-    light: 1.375,      // Light exercise 1-3 days/week
-    moderate: 1.55,    // Moderate exercise 3-5 days/week
-    active: 1.725,     // Active 6-7 days/week
-    athlete: 1.9,      // Athlete/very active
-  }
-  const tdee = bmr * (activityMultipliers[profile.activityLevel] || 1.55)
-
-  // Goal adjustment - ANSES recommends 300-500 kcal deficit for sustainable weight loss
-  let baseCalories = tdee
-  if (profile.goal === 'weight_loss') baseCalories -= 400
-  if (profile.goal === 'muscle_gain') baseCalories += 300
-
-  // Round to nearest 50 for cleaner display
-  baseCalories = Math.round(baseCalories / 50) * 50
-
-  // ==========================================================================
-  // MACRO CALCULATION - Based on g/kg body weight (ISSN + ANSES guidelines)
-  // Using RANGES that adapt to the individual profile
-  // ==========================================================================
-
-  const weight = profile.weight
-
-  // Protein: g/kg based on goal and activity (ISSN Position Stand)
-  // - Sedentary adult: 0.83 g/kg (ANSES)
-  // - Weight loss (preserve muscle): 1.6-2.4 g/kg (ISSN)
-  // - Muscle gain: 1.6-2.2 g/kg (ISSN)
-  // - Maintenance active: 1.2-1.6 g/kg
-  let proteinPerKg: number
-  switch (profile.goal) {
-    case 'weight_loss':
-      // ISSN: 1.6-2.4 g/kg for weight loss
-      // Higher end for more active individuals
-      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
-        proteinPerKg = 2.2 // Upper range for very active
-      } else if (profile.activityLevel === 'moderate') {
-        proteinPerKg = 2.0 // Mid-high range
-      } else {
-        proteinPerKg = 1.8 // Lower end for sedentary
-      }
-      break
-    case 'muscle_gain':
-      // ISSN: 1.6-2.2 g/kg for muscle building
-      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
-        proteinPerKg = 2.2
-      } else {
-        proteinPerKg = 1.8
-      }
-      break
-    default: // maintain
-      // Active maintenance: 1.2-1.6 g/kg
-      if (profile.activityLevel === 'athlete' || profile.activityLevel === 'active') {
-        proteinPerKg = 1.6
-      } else if (profile.activityLevel === 'moderate') {
-        proteinPerKg = 1.4
-      } else {
-        proteinPerKg = 1.0 // ANSES minimum for sedentary
-      }
-  }
-
-  // Fat: g/kg based on goal (ANSES: 35-40% AET, minimum ~0.8g/kg for hormones)
-  let fatPerKg: number
-  switch (profile.goal) {
-    case 'weight_loss':
-      fatPerKg = 0.9 // Sufficient for hormones, not excessive
-      break
-    case 'muscle_gain':
-      fatPerKg = 0.8 // Lower to leave room for carbs
-      break
-    default:
-      fatPerKg = 1.0 // Standard maintenance
-  }
-
-  // Calculate macros in grams
-  const baseProteins = Math.round(weight * proteinPerKg)
-  const baseFats = Math.round(weight * fatPerKg)
-
-  // Carbs: remaining calories after protein and fat (variable d'ajustement)
-  // Protein = 4 kcal/g, Fat = 9 kcal/g, Carbs = 4 kcal/g
-  const proteinCalories = baseProteins * 4
-  const fatCalories = baseFats * 9
-  const remainingForCarbs = baseCalories - proteinCalories - fatCalories
-  const baseCarbs = Math.max(80, Math.round(remainingForCarbs / 4)) // Minimum 80g for brain function
-
-  console.log('===========================================')
-  console.log('[LymIABrain] CALORIE CALCULATION DEBUG')
-  console.log('===========================================')
-  console.log('Input profile:', {
-    weight: profile.weight,
-    height: profile.height,
-    age: profile.age,
-    gender: profile.gender,
-    activityLevel: profile.activityLevel,
-    goal: profile.goal,
+  // Get base nutritional needs from centralized service
+  const baseNeeds = calculateNutritionBase(profile, {
+    sleepHours: wellnessData.sleepHours,
+    stressLevel: wellnessData.stressLevel,
   })
-  console.log('Calculation steps:')
-  console.log('  1. BMR (Mifflin-St Jeor):', Math.round(bmr))
-  console.log('  2. TDEE (BMR × activity):', Math.round(tdee))
-  console.log('  3. Goal adjustment:', profile.goal === 'weight_loss' ? '-400' : profile.goal === 'muscle_gain' ? '+300' : '0')
-  console.log('  4. Final calories (rounded):', baseCalories)
-  console.log('Macros (g/kg method):')
-  console.log('  - Proteins:', baseProteins, 'g (', proteinPerKg, 'g/kg)')
-  console.log('  - Fats:', baseFats, 'g (', fatPerKg, 'g/kg)')
-  console.log('  - Carbs:', baseCarbs, 'g (remaining)')
-  console.log('===========================================')
 
-  // ==========================================================================
-  // STEP 2: CONTEXTUAL ADJUSTMENTS (optional, based on wellness data)
-  // These are small adjustments based on specific conditions
-  // ==========================================================================
-
-  let adjustedCalories = baseCalories
-  let adjustedProteins = baseProteins
-  let adjustmentReasons: string[] = []
-
-  // Adaptive metabolism: reduce deficit to prevent metabolic adaptation
-  if (profile.metabolismProfile === 'adaptive' || profile.metabolismFactors?.restrictiveDietsHistory) {
-    if (profile.goal === 'weight_loss') {
-      // Only 200 kcal deficit instead of 400 for adaptive metabolism
-      adjustedCalories = Math.round(tdee - 200)
-      adjustedCalories = Math.round(adjustedCalories / 50) * 50
-      adjustmentReasons.push('Déficit réduit (200 kcal) pour métabolisme adaptatif')
+  if (!baseNeeds) {
+    // Fallback if profile is incomplete
+    return {
+      calories: Math.round(tdee),
+      proteins: Math.round(profile.weight * 1.6),
+      carbs: 200,
+      fats: Math.round(profile.weight * 0.9),
+      decision: 'Données incomplètes',
+      reasoning: 'Profil incomplet - calcul basique appliqué',
+      confidence: 0.5,
+      sources: [],
     }
-    // Increase protein for adaptive metabolism
-    adjustedProteins = Math.round(adjustedProteins * 1.1)
-    adjustmentReasons.push('Protéines +10% pour préservation musculaire')
   }
 
   // ==========================================================================
-  // LIFESTYLE HABITS ADJUSTMENTS (from onboarding data)
-  // These baseline adjustments reflect the user's typical lifestyle
+  // STEP 2: Real-time wellness adjustments (on top of base calculations)
   // ==========================================================================
 
-  // Baseline stress from onboarding (stressLevelDaily)
-  const baselineStress = profile.lifestyleHabits?.stressLevelDaily
-  if (baselineStress === 'high' || baselineStress === 'very_high') {
-    adjustedProteins = Math.round(adjustedProteins * 1.05)
-    adjustmentReasons.push('Stress quotidien élevé: protéines +5%')
-  }
-
-  // Baseline sleep quality from onboarding (sleepQualityPerception)
-  const baselineSleepQuality = profile.lifestyleHabits?.sleepQualityPerception
-  if (baselineSleepQuality === 'poor' && profile.goal === 'weight_loss') {
-    // Reduce deficit when sleep is chronically poor (cortisol impacts fat loss)
-    adjustedCalories += 100
-    adjustmentReasons.push('Sommeil difficile: déficit réduit de 100 kcal')
-  }
-
-  // Baseline sleep hours from onboarding (averageSleepHours)
-  const baselineSleepHours = profile.lifestyleHabits?.averageSleepHours
-  if (baselineSleepHours && baselineSleepHours < 6) {
-    adjustedProteins = Math.round(adjustedProteins * 1.05)
-    adjustmentReasons.push('Sommeil court (<6h): protéines +5%')
-  }
-
-  // ==========================================================================
-  // DAILY WELLNESS ADJUSTMENTS (from today's check-in, if available)
-  // These are real-time adjustments based on current state
-  // ==========================================================================
+  let adjustedCalories = baseNeeds.calories
+  let adjustedProteins = baseNeeds.proteins
+  const adjustmentReasons: string[] = (baseNeeds as { _adjustmentReasons?: string[] })._adjustmentReasons || []
 
   // Today's stress level (from wellness check-in, scale 1-10)
+  const baselineStress = profile.lifestyleHabits?.stressLevelDaily
   if (wellnessData.stressLevel && wellnessData.stressLevel >= 7) {
-    // Only add if not already adjusted for baseline stress
     if (baselineStress !== 'high' && baselineStress !== 'very_high') {
       adjustedProteins = Math.round(adjustedProteins * 1.05)
       adjustmentReasons.push('Stress élevé aujourd\'hui: protéines +5%')
@@ -468,38 +337,46 @@ export async function calculatePersonalizedNeeds(
   }
 
   // Today's sleep (from wellness check-in)
+  const baselineSleepHours = profile.lifestyleHabits?.averageSleepHours
   if (wellnessData.sleepHours && wellnessData.sleepHours < 6) {
-    // Only add if not already adjusted for baseline sleep
     if (!baselineSleepHours || baselineSleepHours >= 6) {
       adjustedProteins = Math.round(adjustedProteins * 1.05)
       adjustmentReasons.push('Nuit courte: protéines +5%')
     }
   }
 
-  // Recalculate carbs to maintain calorie balance after protein adjustment
+  // Recalculate carbs if proteins were adjusted
   const adjustedProteinCalories = adjustedProteins * 4
-  const adjustedFatCalories = baseFats * 9
-  const remainingCalories = adjustedCalories - adjustedProteinCalories - adjustedFatCalories
-  const adjustedCarbs = Math.max(80, Math.round(remainingCalories / 4)) // Minimum 80g carbs
+  const fatCalories = baseNeeds.fats * 9
+  const remainingCalories = adjustedCalories - adjustedProteinCalories - fatCalories
+  const adjustedCarbs = Math.max(80, Math.round(remainingCalories / 4))
 
-  const finalResult: CalorieRecommendation = {
+  console.log('[LymIABrain] Personalized needs calculated:', {
+    bmr: Math.round(bmr),
+    tdee: Math.round(tdee),
     calories: adjustedCalories,
     proteins: adjustedProteins,
     carbs: adjustedCarbs,
-    fats: baseFats,
+    fats: baseNeeds.fats,
+    adjustments: adjustmentReasons,
+  })
+
+  const activityMultiplier = ACTIVITY_MULTIPLIERS[profile.activityLevel] || 1.55
+
+  return {
+    calories: adjustedCalories,
+    proteins: adjustedProteins,
+    carbs: adjustedCarbs,
+    fats: baseNeeds.fats,
     decision: `${adjustedCalories} kcal/jour`,
-    reasoning: `Calcul Mifflin-St Jeor (BMR: ${Math.round(bmr)} kcal) × NAP ${activityMultipliers[profile.activityLevel] || 1.55} = TDEE ${Math.round(tdee)} kcal. ` +
-      (profile.goal === 'weight_loss' ? 'Déficit -400 kcal pour perte progressive. ' : '') +
-      (profile.goal === 'muscle_gain' ? 'Surplus +300 kcal pour prise de masse. ' : '') +
-      `Protéines: ${proteinPerKg}g/kg (ISSN). Lipides: ${fatPerKg}g/kg. Glucides: ajustés.`,
+    reasoning: `Calcul Mifflin-St Jeor (BMR: ${Math.round(bmr)} kcal) × NAP ${activityMultiplier} = TDEE ${Math.round(tdee)} kcal. ` +
+      (profile.goal === 'weight_loss' ? 'Déficit pour perte progressive. ' : '') +
+      (profile.goal === 'muscle_gain' ? 'Surplus pour prise de masse. ' : '') +
+      `Macros calculés selon ISSN/ANSES.`,
     adjustmentReason: adjustmentReasons.length > 0 ? adjustmentReasons.join('. ') : undefined,
-    confidence: 0.95, // High confidence because we use validated formulas
+    confidence: 0.95,
     sources: [{ content: 'ISSN Position Stand 2017 + ANSES 2021 + Mifflin-St Jeor', source: 'issn', relevance: 1.0 }],
   }
-
-  console.log('[LymIABrain] Final result:', finalResult)
-
-  return finalResult
 }
 
 /**

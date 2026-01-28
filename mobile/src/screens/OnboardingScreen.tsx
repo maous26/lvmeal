@@ -28,6 +28,7 @@ import { useGamificationStore } from '../stores/gamification-store'
 import { useTheme } from '../contexts/ThemeContext'
 import { lymInsights } from '../services/lym-insights-service'
 import { useAuthStore } from '../stores/auth-store'
+import { calculateNutritionalNeeds } from '../services/nutrition-calculator'
 import type { UserProfile, NutritionalNeeds } from '../types'
 
 type OnboardingStep = 'welcome' | 'setup-choice' | 'quick-setup' | 'basic-info' | 'activity' | 'goal' | 'health-priorities' | 'diet' | 'cooking' | 'metabolism' | 'metabolic-program' | 'wellness-program' | 'lifestyle' | 'analysis' | 'cloud-sync'
@@ -107,137 +108,21 @@ const isExpoGo = Constants.appOwnership === 'expo'
 // Cela permet d'adapter diet/cooking selon le profil métabolique détecté
 const baseSteps: OnboardingStep[] = ['welcome', 'setup-choice', 'basic-info', 'activity', 'goal', 'metabolism', 'diet', 'cooking', 'lifestyle', 'analysis', 'cloud-sync']
 
-// Calculate nutritional needs based on profile (with adaptive metabolism support)
-// IMPORTANT: Cette formule DOIT être synchronisée avec user-store.ts calculateNutritionalNeeds
+// Wrapper function to maintain compatibility with existing code
+// Uses centralized nutrition-calculator service (Mifflin-St Jeor formula)
 function calculateNeeds(profile: Partial<UserProfile>): NutritionalNeeds {
-  const {
-    weight = 70,
-    height = 170,
-    age = 30,
-    gender = 'male',
-    activityLevel = 'moderate',
-    goal = 'maintenance',
-    metabolismProfile = 'standard'
-  } = profile
+  const result = calculateNutritionalNeeds(profile)
+  if (result) return result
 
-  // Harris-Benedict BMR calculation
-  let bmr: number
-  if (gender === 'female') {
-    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
-  } else {
-    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
-  }
-
-  // Activity multiplier
-  const activityMultipliers = {
-    sedentary: 1.2,
-    light: 1.375,
-    moderate: 1.55,
-    active: 1.725,
-    athlete: 1.9,
-  }
-  const tdee = bmr * activityMultipliers[activityLevel]
-
-  // Goal adjustment - ADAPTIVE METABOLISM GETS GENTLER APPROACH
-  let calories: number
-
-  if (metabolismProfile === 'adaptive') {
-    // For adaptive metabolism: start at maintenance or very gentle deficit
-    switch (goal) {
-      case 'weight_loss':
-        // Maximum 100-200 kcal deficit for adaptive profiles (vs 400 for standard)
-        calories = tdee - 100
-        break
-      case 'muscle_gain':
-        calories = tdee + 200
-        break
-      default:
-        calories = tdee
-    }
-  } else {
-    // Standard approach
-    switch (goal) {
-      case 'weight_loss':
-        // Déficit de 400-500 kcal pour perte de poids progressive (~0.5kg/semaine)
-        calories = tdee - 450
-        break
-      case 'muscle_gain':
-        calories = tdee + 300
-        break
-      default:
-        calories = tdee
-    }
-  }
-  calories = Math.round(calories)
-
-  // ==========================================================================
-  // MACRO DISTRIBUTION - Approche nutritionnelle personnalisée selon objectif
-  // Priorité : Protéines > Lipides > Glucides (complément)
-  // ==========================================================================
-
-  let proteins: number
-  let fats: number
-  let carbs: number
-
-  if (metabolismProfile === 'adaptive') {
-    // Métabolisme adaptatif: approche douce avec plus de protéines et lipides
-    proteins = Math.round(weight * 2.0)
-    fats = Math.round(calories * 0.30 / 9)
-    const remainingCals = calories - (proteins * 4) - (fats * 9)
-    carbs = Math.max(80, Math.round(remainingCals / 4))
-  } else {
-    switch (goal) {
-      case 'weight_loss':
-        // PERTE DE POIDS - Priorité à la préservation musculaire
-        // Protéines élevées (2g/kg) pour effet thermique et satiété
-        // Lipides suffisants (0.9g/kg) pour hormones et absorption vitamines
-        // Glucides modérés (plafonnés à 150g) pour favoriser l'utilisation des graisses
-        proteins = Math.round(weight * 2.0)
-        fats = Math.round(weight * 0.9)
-        const remainingCalsLoss = calories - (proteins * 4) - (fats * 9)
-        const rawCarbsLoss = Math.round(remainingCalsLoss / 4)
-        carbs = Math.max(80, Math.min(150, rawCarbsLoss)) // Plancher 80g, plafond 150g
-        break
-
-      case 'muscle_gain':
-        // PRISE DE MASSE - Glucides importants pour l'anabolisme
-        // Protéines élevées (2g/kg) pour synthèse protéique
-        // Lipides modérés (0.8g/kg)
-        // Glucides élevés pour énergie et récupération
-        proteins = Math.round(weight * 2.0)
-        fats = Math.round(weight * 0.8)
-        const remainingCalsGain = calories - (proteins * 4) - (fats * 9)
-        carbs = Math.max(150, Math.round(remainingCalsGain / 4)) // Minimum 150g
-        break
-
-      default:
-        // MAINTIEN - Répartition équilibrée
-        // Protéines modérées (1.6g/kg)
-        // Lipides standards (1g/kg)
-        proteins = Math.round(weight * 1.6)
-        fats = Math.round(weight * 1.0)
-        const remainingCalsMaint = calories - (proteins * 4) - (fats * 9)
-        carbs = Math.round(remainingCalsMaint / 4)
-    }
-  }
-
-  return {
-    calories,
-    proteins,
-    carbs,
-    fats,
-    fiber: 30,
-    water: 2.5,
-    calcium: 1000,
-    iron: gender === 'female' ? 18 : 8,
-    vitaminD: 600,
-    vitaminC: 90,
-    vitaminB12: 2.4,
-    zinc: 11,
-    magnesium: 400,
-    potassium: 3500,
-    omega3: 1.6,
-  }
+  // Fallback with minimal defaults if profile is incomplete
+  return calculateNutritionalNeeds({
+    weight: profile.weight || 70,
+    height: profile.height || 170,
+    age: profile.age || 30,
+    gender: profile.gender || 'male',
+    activityLevel: profile.activityLevel || 'moderate',
+    goal: profile.goal || 'maintenance',
+  }) as NutritionalNeeds
 }
 
 interface OnboardingScreenProps {

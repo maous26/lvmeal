@@ -30,7 +30,6 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   ChevronRight,
-  Camera,
   Sparkles,
   Heart,
   Brain,
@@ -39,7 +38,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext'
 import { spacing, radius, fonts } from '../../constants/theme'
 
-const { width, height } = Dimensions.get('window')
+const { height } = Dimensions.get('window')
 
 // iOS color palette
 const iosColors = {
@@ -123,32 +122,32 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
   const benefits = [
     {
-      id: 'smart',
+      id: 'ai',
       icon: <Brain size={20} color={iosColors.purple} strokeWidth={2} />,
-      title: 'Coach IA',
-      description: 'Qui te comprend vraiment',
+      title: 'Conseils IA',
+      description: '100% personnalisés pour toi',
       color: iosColors.purple,
     },
     {
-      id: 'personalized',
+      id: 'correlations',
       icon: <Sparkles size={20} color={iosColors.blue} strokeWidth={2} />,
-      title: 'Personnalisé',
-      description: 'Conseils uniques pour toi',
+      title: 'Corrélations',
+      description: 'Nutrition, sommeil, stress',
       color: iosColors.blue,
     },
     {
-      id: 'kind',
-      icon: <Heart size={20} color={iosColors.orange} strokeWidth={2} />,
-      title: 'Bienveillant',
-      description: 'Zéro jugement, jamais',
+      id: 'boost',
+      icon: <Leaf size={20} color={iosColors.orange} strokeWidth={2} />,
+      title: 'Boost Métabolisme',
+      description: 'Programme en 4 phases',
       color: iosColors.orange,
     },
     {
-      id: 'easy',
-      icon: <Camera size={20} color={iosColors.green} strokeWidth={2} />,
-      title: 'Simple',
-      description: 'Photo et c\'est tout',
-      color: iosColors.green,
+      id: 'wellness',
+      icon: <Heart size={20} color={'#34C759'} strokeWidth={2} />,
+      title: 'Bien-être intégré',
+      description: 'Sommeil, énergie, humeur',
+      color: '#34C759',
     },
   ]
 
@@ -185,12 +184,12 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
 
           {/* Main headline */}
           <Text style={[styles.headline, { color: colors.text.primary }]}>
-            Ton coach nutrition{'\n'}vraiment intelligent
+            La nutrition intelligente{'\n'}qui s'adapte à toi
           </Text>
 
           {/* Subheadline */}
           <Text style={[styles.subheadline, { color: colors.text.secondary }]}>
-            Une IA qui te comprend, s'adapte à toi{'\n'}et t'accompagne sans jamais juger.
+            Conseils personnalisés par IA, liens entre{'\n'}alimentation et bien-être. Sans jugement.
           </Text>
 
           {/* Benefits Grid - 2x2 */}
@@ -222,7 +221,7 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
           style={[styles.ctaButton, { backgroundColor: iosColors.green }]}
         >
           <Text style={styles.ctaText}>
-            Découvrir mon coach IA
+            Commencer — 7 jours gratuits
           </Text>
           <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
