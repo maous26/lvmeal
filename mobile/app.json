@@ -5,12 +5,12 @@
     "owner": "maous1",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/photo5.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "presence",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/photo5.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -52,7 +52,7 @@
       "versionCode": 13,
       "minSdkVersion": 26,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/photo5.png",
         "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,

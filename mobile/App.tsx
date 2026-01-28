@@ -16,6 +16,7 @@ import { RootNavigator } from './src/navigation'
 import { linkingConfig, isAuthDeepLink, getAuthAction } from './src/navigation/linking'
 import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
+import { AnimatedSplash } from './src/components/AnimatedSplash'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
 import { clearFoodSearchCache } from './src/services/food-search'
@@ -56,6 +57,7 @@ ExpoSplashScreen.preventAutoHideAsync()
 
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true)
   const [pendingDeepLink, setPendingDeepLink] = useState<{
     action: 'reset-password' | 'callback'
     url: string
@@ -300,6 +302,10 @@ export default Sentry.wrap(function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      {/* Animated splash overlay */}
+      {showAnimatedSplash && (
+        <AnimatedSplash onAnimationComplete={() => setShowAnimatedSplash(false)} />
+      )}
       <SafeAreaProvider>
         <ThemeProvider>
           <ToastProvider>
