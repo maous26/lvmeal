@@ -44,7 +44,7 @@ import {
   getPriorityConfig,
   type LymiaMessage,
 } from '../services/message-center'
-import { CoachMessageCard } from '../components/coach'
+import { CoachMessageCard, FeaturedInsight, CollapsibleSection } from '../components/coach'
 import { AnimatedBackground } from '../components/ui'
 
 // ============= WELCOME CARD COMPONENT =============
@@ -389,88 +389,103 @@ export default function CoachScreen() {
           </View>
         ) : (
           <>
-            {/* Alerts - Priority P0/P1 */}
-            {alerts.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <AlertTriangle size={16} color={priorityConfig.P0.color} />
-                  <Text style={[styles.sectionTitle, { color: priorityConfig.P0.color }]}>
-                    Alertes
-                  </Text>
-                </View>
-                {alerts.map((msg) => (
-                  <CoachMessageCard
-                    key={msg.id}
-                    message={msg}
-                    onRead={() => markAsRead(msg.id)}
-                    onDismiss={() => dismiss(msg.id)}
-                    onAction={(route) => handleAction(route, msg)}
-                  />
-                ))}
-              </View>
+            {/* Featured Insight - Le message le plus important */}
+            {activeMessages.length > 0 && (
+              <FeaturedInsight
+                message={activeMessages[0]}
+                onRead={() => markAsRead(activeMessages[0].id)}
+                onDismiss={() => dismiss(activeMessages[0].id)}
+                onAction={(route) => handleAction(route, activeMessages[0])}
+              />
             )}
 
-            {/* Actions - P1 */}
+            {/* Other messages in collapsible sections */}
+            {alerts.length > 1 && (
+              <CollapsibleSection
+                title="Alertes"
+                icon={<AlertTriangle size={18} color={priorityConfig.P0.color} />}
+                color={priorityConfig.P0.color}
+                count={alerts.length - (activeMessages[0]?.type === 'alert' || activeMessages[0]?.priority === 'P0' ? 1 : 0)}
+                unreadCount={alerts.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
+              >
+                {alerts
+                  .filter(msg => msg.id !== activeMessages[0]?.id)
+                  .map((msg) => (
+                    <CoachMessageCard
+                      key={msg.id}
+                      message={msg}
+                      onRead={() => markAsRead(msg.id)}
+                      onDismiss={() => dismiss(msg.id)}
+                      onAction={(route) => handleAction(route, msg)}
+                    />
+                  ))}
+              </CollapsibleSection>
+            )}
+
             {actions.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Bell size={16} color={priorityConfig.P1.color} />
-                  <Text style={[styles.sectionTitle, { color: priorityConfig.P1.color }]}>
-                    Actions suggérées
-                  </Text>
-                </View>
-                {actions.map((msg) => (
-                  <CoachMessageCard
-                    key={msg.id}
-                    message={msg}
-                    onRead={() => markAsRead(msg.id)}
-                    onDismiss={() => dismiss(msg.id)}
-                    onAction={(route) => handleAction(route, msg)}
-                  />
-                ))}
-              </View>
+              <CollapsibleSection
+                title="Actions suggérées"
+                icon={<Bell size={18} color={priorityConfig.P1.color} />}
+                color={priorityConfig.P1.color}
+                count={actions.filter(m => m.id !== activeMessages[0]?.id).length}
+                unreadCount={actions.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
+              >
+                {actions
+                  .filter(msg => msg.id !== activeMessages[0]?.id)
+                  .map((msg) => (
+                    <CoachMessageCard
+                      key={msg.id}
+                      message={msg}
+                      onRead={() => markAsRead(msg.id)}
+                      onDismiss={() => dismiss(msg.id)}
+                      onAction={(route) => handleAction(route, msg)}
+                    />
+                  ))}
+              </CollapsibleSection>
             )}
 
-            {/* Celebrations - P2 */}
             {celebrations.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Trophy size={16} color={priorityConfig.P2.color} />
-                  <Text style={[styles.sectionTitle, { color: priorityConfig.P2.color }]}>
-                    Félicitations
-                  </Text>
-                </View>
-                {celebrations.map((msg) => (
-                  <CoachMessageCard
-                    key={msg.id}
-                    message={msg}
-                    onRead={() => markAsRead(msg.id)}
-                    onDismiss={() => dismiss(msg.id)}
-                    onAction={(route) => handleAction(route, msg)}
-                  />
-                ))}
-              </View>
+              <CollapsibleSection
+                title="Félicitations"
+                icon={<Trophy size={18} color={priorityConfig.P2.color} />}
+                color={priorityConfig.P2.color}
+                count={celebrations.filter(m => m.id !== activeMessages[0]?.id).length}
+                unreadCount={celebrations.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
+              >
+                {celebrations
+                  .filter(msg => msg.id !== activeMessages[0]?.id)
+                  .map((msg) => (
+                    <CoachMessageCard
+                      key={msg.id}
+                      message={msg}
+                      onRead={() => markAsRead(msg.id)}
+                      onDismiss={() => dismiss(msg.id)}
+                      onAction={(route) => handleAction(route, msg)}
+                    />
+                  ))}
+              </CollapsibleSection>
             )}
 
-            {/* Tips - P3 */}
             {tips.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Lightbulb size={16} color={priorityConfig.P3.color} />
-                  <Text style={[styles.sectionTitle, { color: priorityConfig.P3.color }]}>
-                    Conseils
-                  </Text>
-                </View>
-                {tips.map((msg) => (
-                  <CoachMessageCard
-                    key={msg.id}
-                    message={msg}
-                    onRead={() => markAsRead(msg.id)}
-                    onDismiss={() => dismiss(msg.id)}
-                    onAction={(route) => handleAction(route, msg)}
-                  />
-                ))}
-              </View>
+              <CollapsibleSection
+                title="Conseils"
+                icon={<Lightbulb size={18} color={priorityConfig.P3.color} />}
+                color={priorityConfig.P3.color}
+                count={tips.filter(m => m.id !== activeMessages[0]?.id).length}
+                unreadCount={tips.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
+              >
+                {tips
+                  .filter(msg => msg.id !== activeMessages[0]?.id)
+                  .map((msg) => (
+                    <CoachMessageCard
+                      key={msg.id}
+                      message={msg}
+                      onRead={() => markAsRead(msg.id)}
+                      onDismiss={() => dismiss(msg.id)}
+                      onAction={(route) => handleAction(route, msg)}
+                    />
+                  ))}
+              </CollapsibleSection>
             )}
           </>
         )}
@@ -530,19 +545,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
   },
   bottomSpacer: {
     height: 40,
