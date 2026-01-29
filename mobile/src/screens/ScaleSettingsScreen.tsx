@@ -41,7 +41,7 @@ export default function ScaleSettingsScreen() {
   const navigation = useNavigation()
   const { colors } = useTheme()
   const toast = useToast()
-  const { profile, addWeightEntry } = useUserStore()
+  const { profile, addWeightEntry, lastHealthSyncDate, setLastHealthSyncDate, weightHistory } = useUserStore()
 
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [permissions, setPermissions] = useState<HealthPermissionStatus | null>(null)
@@ -67,22 +67,55 @@ export default function ScaleSettingsScreen() {
   }
 
   // Auto-sync without user feedback (silent)
+  // Uses lastHealthSyncDate to avoid re-syncing already imported data
   const handleAutoSync = async () => {
     setIsSyncing(true)
     try {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      // Determine start date: use last sync date if available, otherwise 30 days ago
+      let startDate: Date
+      if (lastHealthSyncDate) {
+        // Start from the day after last sync to avoid duplicates
+        startDate = new Date(lastHealthSyncDate)
+        startDate.setDate(startDate.getDate() + 1)
+        console.log('[ScaleSettings] Syncing from last sync date:', startDate.toISOString())
+      } else {
+        // First sync: get last 30 days
+        startDate = new Date()
+        startDate.setDate(startDate.getDate() - 30)
+        console.log('[ScaleSettings] First sync, getting last 30 days from:', startDate.toISOString())
+      }
 
-      const weightData = await getWeightDataFromScale(thirtyDaysAgo)
+      // Don't sync if start date is in the future (already synced today)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (startDate > today) {
+        console.log('[ScaleSettings] Already synced today, skipping')
+        setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
+        setIsSyncing(false)
+        return
+      }
+
+      const weightData = await getWeightDataFromScale(startDate)
 
       if (weightData.length > 0) {
         let imported = 0
+        // Get existing dates in weight history to avoid duplicates
+        const existingDates = new Set(weightHistory.map(e => e.date.split('T')[0]))
+
         for (const data of weightData) {
+          const dataDate = data.date.split('T')[0]
+
+          // Skip if we already have an entry for this date
+          if (existingDates.has(dataDate)) {
+            console.log(`[ScaleSettings] Skipping ${dataDate} - already exists in history`)
+            continue
+          }
+
           const heightInMeters = profile?.height ? profile.height / 100 : null
           const bmi = heightInMeters ? data.weight / (heightInMeters * heightInMeters) : undefined
 
           addWeightEntry({
-            id: `scale-${Date.now()}-${imported}`,
+            id: `scale-${dataDate}-${data.weight}`,
             date: data.date,
             weight: data.weight,
             source: 'scale',
@@ -90,16 +123,21 @@ export default function ScaleSettingsScreen() {
             bmi: bmi ? Math.round(bmi * 10) / 10 : undefined,
           })
           imported++
+          existingDates.add(dataDate) // Track newly added dates
         }
 
         if (imported > 0) {
           setSyncedCount(imported)
           setLastSync(new Date())
-          setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
+          // Update last sync date to today
+          setLastHealthSyncDate(new Date().toISOString().split('T')[0])
+          console.log(`[ScaleSettings] Imported ${imported} new weight entries`)
         }
+        setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
       } else {
-        // No data but permissions might still be granted
-        // We'll mark as connected if health is available
+        // No new data but permissions might still be granted
+        // Update last sync date anyway to avoid re-querying
+        setLastHealthSyncDate(new Date().toISOString().split('T')[0])
         setPermissions({ steps: false, sleep: false, calories: false, weight: true, bodyFat: false, isAvailable: true })
       }
     } catch (error) {

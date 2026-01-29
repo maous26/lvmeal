@@ -68,6 +68,7 @@ interface UserState {
   weightHistory: WeightEntry[]
   nutritionGoals: NutritionGoals | null
   lastRAGUpdate: string | null // Track when RAG last calculated needs
+  lastHealthSyncDate: string | null // Track last health data sync to avoid re-syncing
   notificationPreferences: NotificationPreferences
   blobPalette: BlobPaletteId // Blob color palette preference (light mode only)
 
@@ -94,6 +95,9 @@ interface UserState {
   updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void
   // Blob palette preference
   setBlobPalette: (palette: BlobPaletteId) => void
+  // Health sync tracking
+  setLastHealthSyncDate: (date: string) => void
+  getLastHealthSyncDate: () => string | null
 }
 
 // Nutritional calculation is now centralized in services/nutrition-calculator.ts
@@ -116,6 +120,7 @@ export const useUserStore = create<UserState>()(
       weightHistory: [],
       nutritionGoals: null,
       lastRAGUpdate: null,
+      lastHealthSyncDate: null,
       notificationPreferences: {
         dailyInsightsEnabled: true,
         alertsEnabled: true,
@@ -240,21 +245,36 @@ export const useUserStore = create<UserState>()(
           return
         }
 
-        // Check for duplicate entries (same date and weight)
-        const existingEntry = get().weightHistory.find(
-          e => e.date.split('T')[0] === entry.date.split('T')[0] && Math.abs(e.weight - entry.weight) < 0.1
+        const entryDate = entry.date.split('T')[0]
+        const state = get()
+
+        // Check for existing entry on the same date
+        const existingEntryIndex = state.weightHistory.findIndex(
+          e => e.date.split('T')[0] === entryDate
         )
-        if (existingEntry) {
-          console.log(`[UserStore] Skipping duplicate weight entry for ${entry.date.split('T')[0]}`)
-          // Still update profile weight even if entry is duplicate
-          // This ensures profile stays in sync with latest weight
-          const state = get()
-          if (state.profile && state.profile.weight !== entry.weight) {
-            set({ profile: { ...state.profile, weight: entry.weight } })
+
+        if (existingEntryIndex !== -1) {
+          const existingEntry = state.weightHistory[existingEntryIndex]
+
+          // If same weight (within 0.1kg), skip entirely
+          if (Math.abs(existingEntry.weight - entry.weight) < 0.1) {
+            console.log(`[UserStore] Skipping duplicate weight entry for ${entryDate} (same weight)`)
+            return
           }
+
+          // Different weight for same day: replace with newer entry
+          console.log(`[UserStore] Replacing weight entry for ${entryDate}: ${existingEntry.weight} -> ${entry.weight} kg`)
+          const updatedHistory = [...state.weightHistory]
+          updatedHistory[existingEntryIndex] = entry
+
+          set({
+            weightHistory: updatedHistory,
+            profile: state.profile ? { ...state.profile, weight: entry.weight } : null,
+          })
           return
         }
 
+        // No existing entry for this date: add new entry
         set((state) => ({
           weightHistory: [...state.weightHistory, entry],
           profile: state.profile ? { ...state.profile, weight: entry.weight } : null,
@@ -438,6 +458,14 @@ export const useUserStore = create<UserState>()(
 
       setBlobPalette: (palette: BlobPaletteId) => {
         set({ blobPalette: palette })
+      },
+
+      setLastHealthSyncDate: (date: string) => {
+        set({ lastHealthSyncDate: date })
+      },
+
+      getLastHealthSyncDate: () => {
+        return get().lastHealthSyncDate
       },
     }),
     {
