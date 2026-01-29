@@ -2,8 +2,7 @@ import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { GlassCard } from '../ui/GlassCard'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, typography, fonts } from '../../constants/theme'
-import { ArrowRight } from 'lucide-react-native'
+import { spacing, typography, radius, componentSizes } from '../../constants/theme'
 
 interface MealCardProps {
     label: string
@@ -40,37 +39,34 @@ export const MealCard = ({ label, calories, itemCount, icon, onPress, color }: M
 
 const styles = StyleSheet.create({
     card: {
-        padding: 16,
-        width: 130, // Square-ish aspect ratio
+        padding: spacing.default,
+        width: 130,
         height: 160,
-        marginRight: 12,
-        borderRadius: 24,
+        marginRight: spacing.md,
+        borderRadius: radius['2xl'],
         justifyContent: 'space-between',
         alignItems: 'flex-start',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: componentSizes.avatar.lg,
+        height: componentSizes.avatar.lg,
+        borderRadius: radius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     content: {
-        gap: 4
+        gap: spacing.xs,
     },
     label: {
-        fontSize: 16,
+        ...typography.bodyMedium,
         fontWeight: '600',
-        fontFamily: typography.h3.fontFamily,
     },
     description: {
-        fontSize: 12,
-        fontFamily: fonts.sans.regular,
+        ...typography.caption,
     },
     calories: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginTop: 4,
-    }
+        ...typography.smallMedium,
+        marginTop: spacing.xs,
+    },
 })

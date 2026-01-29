@@ -1,17 +1,17 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, ViewStyle, Pressable, Modal } from 'react-native'
 import { X, Info } from 'lucide-react-native'
-import { radius, spacing, typography, colors as themeColors } from '../../constants/theme'
+import { radius, spacing, typography, colors as themeColors, nutriScoreColors, componentSizes } from '../../constants/theme'
 import type { NutriScoreGrade } from '../../types'
 
-// Official Nutri-Score colors
+// Official Nutri-Score colors - using theme constants
 const NUTRISCORE_COLORS: Record<NutriScoreGrade, { bg: string; text: string }> = {
-  a: { bg: '#038141', text: '#FFFFFF' }, // Dark green
-  b: { bg: '#85BB2F', text: '#FFFFFF' }, // Light green
-  c: { bg: '#FECB02', text: '#000000' }, // Yellow
-  d: { bg: '#EE8100', text: '#FFFFFF' }, // Orange
-  e: { bg: '#E63E11', text: '#FFFFFF' }, // Red
-  unknown: { bg: '#9CA3AF', text: '#FFFFFF' }, // Gray
+  a: { bg: nutriScoreColors.A, text: '#FFFFFF' },
+  b: { bg: nutriScoreColors.B, text: '#FFFFFF' },
+  c: { bg: nutriScoreColors.C, text: '#000000' },
+  d: { bg: nutriScoreColors.D, text: '#FFFFFF' },
+  e: { bg: nutriScoreColors.E, text: '#FFFFFF' },
+  unknown: { bg: themeColors.text.muted, text: '#FFFFFF' },
 }
 
 interface NutriScoreBadgeProps {
@@ -153,10 +153,10 @@ interface NutriScoreDetailedProps {
 }
 
 const NOVA_LABELS: Record<number, { label: string; color: string; description: string }> = {
-  1: { label: 'NOVA 1', color: '#038141', description: 'Aliments non transformés' },
-  2: { label: 'NOVA 2', color: '#85BB2F', description: 'Ingrédients culinaires' },
-  3: { label: 'NOVA 3', color: '#FECB02', description: 'Aliments transformés' },
-  4: { label: 'NOVA 4', color: '#E63E11', description: 'Ultra-transformés' },
+  1: { label: 'NOVA 1', color: nutriScoreColors.nova1, description: 'Aliments non transformés' },
+  2: { label: 'NOVA 2', color: nutriScoreColors.nova2, description: 'Ingrédients culinaires' },
+  3: { label: 'NOVA 3', color: nutriScoreColors.nova3, description: 'Aliments transformés' },
+  4: { label: 'NOVA 4', color: nutriScoreColors.nova4, description: 'Ultra-transformés' },
 }
 
 const GRADE_DESCRIPTIONS: Record<NutriScoreGrade, string> = {
@@ -253,7 +253,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Fruits, légumes</Text>
                       <View style={[styles.factorBar, styles.positiveBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.fruits * 10, 100)}%`, backgroundColor: '#038141' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.fruits * 10, 100)}%`, backgroundColor: nutriScoreColors.A }]} />
                       </View>
                     </View>
                   )}
@@ -261,7 +261,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Fibres</Text>
                       <View style={[styles.factorBar, styles.positiveBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.fiber * 10, 100)}%`, backgroundColor: '#038141' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.fiber * 10, 100)}%`, backgroundColor: nutriScoreColors.A }]} />
                       </View>
                     </View>
                   )}
@@ -269,7 +269,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Protéines</Text>
                       <View style={[styles.factorBar, styles.positiveBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.proteins * 10, 100)}%`, backgroundColor: '#038141' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.proteins * 10, 100)}%`, backgroundColor: nutriScoreColors.A }]} />
                       </View>
                     </View>
                   )}
@@ -282,7 +282,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Sucres</Text>
                       <View style={[styles.factorBar, styles.negativeBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.sugars * 10, 100)}%`, backgroundColor: '#E63E11' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.sugars * 10, 100)}%`, backgroundColor: nutriScoreColors.E }]} />
                       </View>
                     </View>
                   )}
@@ -290,7 +290,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Graisses saturées</Text>
                       <View style={[styles.factorBar, styles.negativeBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.saturatedFat * 10, 100)}%`, backgroundColor: '#E63E11' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.saturatedFat * 10, 100)}%`, backgroundColor: nutriScoreColors.E }]} />
                       </View>
                     </View>
                   )}
@@ -298,7 +298,7 @@ export function NutriScoreDetailed({
                     <View style={styles.factorRow}>
                       <Text style={styles.factorLabel}>Sel</Text>
                       <View style={[styles.factorBar, styles.negativeBar]}>
-                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.sodium * 10, 100)}%`, backgroundColor: '#E63E11' }]} />
+                        <View style={[styles.factorFill, { width: `${Math.min(breakdown.sodium * 10, 100)}%`, backgroundColor: nutriScoreColors.E }]} />
                       </View>
                     </View>
                   )}
@@ -341,11 +341,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
   },
   label: {
-    fontSize: 10,
-    color: '#6B7280',
+    ...typography.xs,
+    color: themeColors.text.tertiary,
     fontWeight: '500',
   },
   badge: {
@@ -404,15 +404,15 @@ const styles = StyleSheet.create({
     borderTopColor: themeColors.border.light,
   },
   novaBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: componentSizes.icon.md,
+    height: componentSizes.icon.md,
+    borderRadius: radius.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
   novaText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+    color: themeColors.text.inverse,
+    fontSize: typography.caption.fontSize,
     fontWeight: '700',
   },
   novaLabel: {
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
   bigBadge: {
     width: 80,
     height: 80,
-    borderRadius: 16,
+    borderRadius: radius['2xl'],
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   bigGradeText: {
-    fontSize: 48,
+    fontSize: typography.display.fontSize,
     fontWeight: '700',
   },
   scoreText: {
@@ -517,15 +517,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   novaBadgeLarge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: componentSizes.avatar.lg,
+    height: componentSizes.avatar.lg,
+    borderRadius: radius.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
   novaTextLarge: {
-    color: '#FFFFFF',
-    fontSize: 24,
+    color: themeColors.text.inverse,
+    fontSize: typography.h3.fontSize,
     fontWeight: '700',
   },
   novaDetailText: {

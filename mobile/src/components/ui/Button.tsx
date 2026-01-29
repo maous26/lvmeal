@@ -57,7 +57,7 @@ export function Button({
             backgroundColor: colors.accent.primary,
             ...shadows.default,
           },
-          text: { color: '#FFFFFF' },
+          text: { color: colors.text.inverse },
         }
       case 'secondary':
         return {
@@ -65,7 +65,7 @@ export function Button({
             backgroundColor: colors.secondary.primary,
             ...shadows.default,
           },
-          text: { color: '#FFFFFF' },
+          text: { color: colors.text.inverse },
         }
       case 'outline':
         return {
@@ -89,7 +89,7 @@ export function Button({
             backgroundColor: colors.error,
             ...shadows.default,
           },
-          text: { color: '#FFFFFF' },
+          text: { color: colors.text.inverse },
         }
       case 'success':
         return {
@@ -97,12 +97,12 @@ export function Button({
             backgroundColor: colors.success,
             ...shadows.default,
           },
-          text: { color: '#FFFFFF' },
+          text: { color: colors.text.inverse },
         }
       default:
         return {
           container: { backgroundColor: colors.accent.primary },
-          text: { color: '#FFFFFF' },
+          text: { color: colors.text.inverse },
         }
     }
   }
@@ -114,27 +114,27 @@ export function Button({
           container: {
             paddingVertical: spacing.sm,
             paddingHorizontal: spacing.md,
-            borderRadius: radius.default, // 8px iOS-style
+            borderRadius: radius.default,
           },
-          text: { ...typography.buttonSm, fontSize: 13 },
+          text: { ...typography.buttonSm },
         }
       case 'lg':
         return {
           container: {
             paddingVertical: spacing.md,
             paddingHorizontal: spacing.lg,
-            borderRadius: radius.md, // 10px iOS-style
+            borderRadius: radius.md,
           },
-          text: { ...typography.button, fontSize: 15 },
+          text: { ...typography.button },
         }
       default:
         return {
           container: {
-            paddingVertical: spacing.sm + 2,
-            paddingHorizontal: spacing.md,
-            borderRadius: radius.default, // 8px iOS-style
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.default,
+            borderRadius: radius.default,
           },
-          text: { ...typography.button, fontSize: 14 },
+          text: { ...typography.buttonSm },
         }
     }
   }

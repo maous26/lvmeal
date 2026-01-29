@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics'
 import { Card } from '../ui/Card'
 import { ProgressBar } from '../ui/ProgressBar'
 import { useTheme } from '../../contexts/ThemeContext'
-import { radius, spacing, typography } from '../../constants/theme'
+import { radius, spacing, typography, componentSizes, fonts } from '../../constants/theme'
 import { useMealsStore } from '../../stores/meals-store'
 
 interface HydrationWidgetProps {
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
+    width: componentSizes.avatar.sm,
+    height: componentSizes.avatar.sm,
     borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -178,8 +178,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   currentValue: {
-    fontSize: 42,
+    fontSize: typography.display.fontSize,
     fontWeight: '700',
+    fontFamily: fonts.serif.bold,
   },
   targetValue: {
     ...typography.body,
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   glassEmoji: {
-    fontSize: 14,
+    fontSize: typography.small.fontSize,
   },
   progressBar: {
     marginTop: spacing.sm,
@@ -213,8 +214,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   removeButton: {
-    width: 36,
-    height: 36,
+    width: componentSizes.avatar.sm,
+    height: componentSizes.avatar.sm,
     borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: spacing.xs,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,

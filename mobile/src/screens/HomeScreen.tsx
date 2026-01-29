@@ -49,7 +49,7 @@ import {
   type SuggestedMeal,
 } from '../components/dashboard'
 import { useTheme } from '../contexts/ThemeContext'
-import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
+import { spacing, typography, radius, shadows, fonts, componentSizes } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
 import { useMealsStore } from '../stores/meals-store'
 import { useGamificationStore } from '../stores/gamification-store'
@@ -966,23 +966,22 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   avatarGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: componentSizes.avatar.xl,
+    height: componentSizes.avatar.xl,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: typography.h4.fontSize,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Will use theme in avatar component
   },
   headerTextContainer: {
-    gap: 2,
+    gap: spacing.xs,
   },
   greetingSmall: {
-    ...typography.caption,
-    fontSize: 13,
+    ...typography.label,
   },
   greeting: {
     ...typography.small,
@@ -993,9 +992,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans.bold,
   },
   headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: componentSizes.button.md,
+    height: componentSizes.button.md,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1011,17 +1010,16 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.lg,
-    gap: 2,
+    gap: spacing.xs,
   },
   statValue: {
     ...typography.body,
     fontWeight: '700',
     fontFamily: fonts.sans.bold,
-    marginTop: 2,
+    marginTop: spacing.xs,
   },
   statLabel: {
-    ...typography.caption,
-    fontSize: 11,
+    ...typography.xs,
   },
   // Calories Section - Updated for GlassCard + LiquidProgress
   caloriesSection: {
@@ -1055,8 +1053,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   quickActionBtnSmall: {
-    width: 36,
-    height: 36,
+    width: componentSizes.button.sm,
+    height: componentSizes.button.sm,
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1074,14 +1072,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   caloriesRemaining: {
-    fontSize: 32,
+    ...typography.h1,
     fontWeight: '700',
     letterSpacing: -1,
-    fontFamily: fonts.serif.bold,
   },
   caloriesRemainingLabel: {
     ...typography.caption,
-    marginTop: 2,
+    marginTop: spacing.xs,
   },
   // New stats row layout
   caloriesStatsRow: {
@@ -1114,9 +1111,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   calorieStatDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: spacing.sm,
+    height: spacing.sm,
+    borderRadius: radius.full,
   },
   calorieStatLabel: {
     ...typography.small,
@@ -1169,8 +1166,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   macroCompactLabel: {
-    ...typography.caption,
-    fontSize: 11,
+    ...typography.xs,
   },
   quickActions: {
     gap: spacing.sm,
@@ -1186,8 +1182,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   quickActionLabel: {
-    ...typography.caption,
-    fontSize: 10,
+    ...typography.xs,
     textAlign: 'center',
   },
   // Macros Section - Circles layout
@@ -1204,7 +1199,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   macroCircleEmoji: {
-    fontSize: 28,
+    fontSize: typography.h2.fontSize,
   },
   macroCircleValues: {
     flexDirection: 'row',
@@ -1215,12 +1210,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   macroCircleCurrent: {
-    fontSize: 16,
+    ...typography.bodyMedium,
     fontWeight: '700',
     fontFamily: fonts.sans.bold,
   },
   macroCircleTarget: {
-    fontSize: 12,
+    ...typography.caption,
   },
   macroCircleLabel: {
     ...typography.caption,
@@ -1264,14 +1259,14 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   mealIconContainer: {
-    width: 40,
-    height: 40,
+    width: componentSizes.avatar.md,
+    height: componentSizes.avatar.md,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   mealIcon: {
-    fontSize: 20,
+    fontSize: componentSizes.icon.sm,
   },
   mealLabel: {
     ...typography.bodyMedium,
@@ -1292,8 +1287,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   chevronContainer: {
-    width: 20,
-    height: 20,
+    width: componentSizes.icon.sm,
+    height: componentSizes.icon.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1301,8 +1296,8 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '180deg' }],
   },
   addButton: {
-    width: 36,
-    height: 36,
+    width: componentSizes.button.sm,
+    height: componentSizes.button.sm,
     borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1321,7 +1316,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    marginVertical: 2,
+    marginVertical: spacing.xs,
     borderRadius: radius.md,
   },
   foodItemInfo: {
@@ -1340,8 +1335,8 @@ const styles = StyleSheet.create({
     ...typography.smallMedium,
   },
   deleteItemButton: {
-    width: 28,
-    height: 28,
+    width: spacing.xl + spacing.xs,
+    height: spacing.xl + spacing.xs,
     borderRadius: radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1352,8 +1347,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   itemActionButton: {
-    width: 28,
-    height: 28,
+    width: spacing.xl + spacing.xs,
+    height: spacing.xl + spacing.xs,
     borderRadius: radius.sm,
     justifyContent: 'center',
     alignItems: 'center',

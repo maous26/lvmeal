@@ -546,6 +546,55 @@ export const typography = {
 }
 
 // =============================================================================
+// NUTRI-SCORE / NOVA CLASSIFICATION COLORS
+// =============================================================================
+export const nutriScoreColors = {
+  // Nutri-Score (A-E)
+  A: '#038141',
+  B: '#85BB2F',
+  C: '#FECB02',
+  D: '#EE8100',
+  E: '#E63E11',
+  // NOVA Classification (1-4)
+  nova1: '#038141',
+  nova2: '#85BB2F',
+  nova3: '#FECB02',
+  nova4: '#E63E11',
+}
+
+// =============================================================================
+// COMPONENT SIZE STANDARDS
+// =============================================================================
+export const componentSizes = {
+  // Avatar/Icon containers
+  avatar: {
+    sm: 32,
+    md: 40,
+    lg: 48,
+    xl: 56,
+  },
+  // Icon sizes
+  icon: {
+    xs: 16,
+    sm: 20,
+    md: 24,
+    lg: 32,
+  },
+  // Input heights
+  input: {
+    sm: 36,
+    md: 44,
+    lg: 52,
+  },
+  // Button heights
+  button: {
+    sm: 36,
+    md: 44,
+    lg: 52,
+  },
+}
+
+// =============================================================================
 // ANIMATIONS
 // =============================================================================
 export const animations = {
@@ -573,4 +622,6 @@ export default {
   radius,
   typography,
   animations,
+  nutriScoreColors,
+  componentSizes,
 }
