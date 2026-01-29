@@ -876,6 +876,55 @@ export async function getWeeklyHealthSummary(): Promise<WeeklyHealthSummary | nu
   return summary
 }
 
+/**
+ * Sync latest weight from Apple Health/Health Connect to user profile
+ * This should be called at app startup and when viewing profile
+ * Returns the synced weight if successful, null otherwise
+ */
+export async function syncWeightToProfile(): Promise<number | null> {
+  try {
+    const latestWeight = await getLatestWeightFromScale()
+    if (!latestWeight) {
+      console.log('[HealthService] No weight data found in Health')
+      return null
+    }
+
+    console.log('[HealthService] Latest weight from Health:', latestWeight.weight, 'kg')
+
+    // Import user store dynamically to avoid circular dependency
+    const { useUserStore } = await import('../stores/user-store')
+    const store = useUserStore.getState()
+
+    // Only update if we have a profile and the weight is different
+    if (store.profile) {
+      const currentWeight = store.profile.weight
+      const healthWeight = latestWeight.weight
+
+      // Only update if difference is > 0.1 kg (avoid unnecessary updates)
+      if (!currentWeight || Math.abs(currentWeight - healthWeight) > 0.1) {
+        console.log(`[HealthService] Updating profile weight: ${currentWeight} → ${healthWeight} kg`)
+
+        // Add weight entry to history
+        store.addWeightEntry({
+          id: `health-${Date.now()}`,
+          weight: healthWeight,
+          date: latestWeight.date,
+          source: 'health_app',
+        })
+
+        return healthWeight
+      } else {
+        console.log('[HealthService] Profile weight already in sync')
+      }
+    }
+
+    return latestWeight.weight
+  } catch (error) {
+    console.error('[HealthService] syncWeightToProfile error:', error)
+    return null
+  }
+}
+
 export default {
   isHealthAvailable,
   requestHealthPermissions,
@@ -886,4 +935,5 @@ export default {
   getCompatibleScales,
   getScaleSetupInstructions,
   getWeeklyHealthSummary,
+  syncWeightToProfile,
 }

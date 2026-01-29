@@ -10,8 +10,6 @@
     "newArchEnabled": true,
     "scheme": "presence",
     "splash": {
-      "image": "./assets/photo5.png",
-      "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
     "ios": {

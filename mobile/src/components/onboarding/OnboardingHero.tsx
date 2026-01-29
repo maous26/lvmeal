@@ -42,15 +42,16 @@ import {
   Quote,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, fonts } from '../../constants/theme'
+import { spacing, radius, fonts, lymBrand } from '../../constants/theme'
 
 const { width, height } = Dimensions.get('window')
 
-// Color palette with stronger CTA
+// Color palette using LYM brand colors from logo
 const brandColors = {
-  cta: '#34C759',  // Apple Green for high-contrast CTA
+  cta: lymBrand.green,               // LYM sage green (flat, like logo)
+  ctaPressed: lymBrand.greenLight,   // Lighter for pressed state
   purple: '#AF52DE',
-  orange: '#FF9500',
+  orange: lymBrand.orange,           // LYM orange accent
   blue: '#007AFF',
   trust: '#6B7280',
 }
@@ -413,12 +414,8 @@ export function OnboardingHero({ onGetStarted, onHaveAccount }: OnboardingHeroPr
         </View>
       </ScrollView>
 
-      {/* CTA footer - enhanced with green button and reassurance */}
+      {/* CTA footer - clean without separator line */}
       <View style={[styles.footer, { paddingBottom: safeBottom, backgroundColor: bgColor }]}>
-        <LinearGradient
-          colors={['transparent', bgColor]}
-          style={styles.footerGradient}
-        />
         <TouchableOpacity
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
@@ -621,7 +618,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: fonts.sans.medium,
   },
-  // Footer - with gradient fade
+  // Footer - clean design without separator
   footer: {
     position: 'absolute',
     left: 0,
@@ -630,14 +627,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
   },
-  footerGradient: {
-    position: 'absolute',
-    top: -40,
-    left: 0,
-    right: 0,
-    height: 40,
-  },
-  // CTA Button - larger, more prominent
+  // CTA Button - LYM sage green (flat color like logo)
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -646,10 +636,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     borderRadius: radius.lg,
     gap: spacing.sm,
-    // Shadow for depth
-    shadowColor: '#34C759',
+    // Shadow with LYM green tint
+    shadowColor: lymBrand.green,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 4,
   },

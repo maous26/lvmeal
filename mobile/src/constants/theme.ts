@@ -37,6 +37,18 @@ export const iosPalette = {
   gray: '#8E8E93',         // Apple Gray
 }
 
+// =============================================================================
+// LYM BRAND COLORS - Based on logo (flat sage green + orange accent)
+// =============================================================================
+export const lymBrand = {
+  // Primary green - flat color matching logo (no gradient in logo)
+  green: '#6B8E6B',        // Main sage green from logo
+  greenLight: '#7A9E7E',   // Slightly lighter for hover/pressed states
+  // Orange accent (from logo's Y)
+  orange: '#E8A060',
+  orangeLight: '#F0B070',
+}
+
 // Keep organicPalette for backward compatibility
 export const organicPalette = {
   sage: '#34C759',         // Now Apple Green

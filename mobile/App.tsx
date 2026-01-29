@@ -13,6 +13,7 @@ import { NunitoSans_400Regular, NunitoSans_500Medium, NunitoSans_600SemiBold, Nu
 
 import { RootNavigator } from './src/navigation'
 import { linkingConfig, isAuthDeepLink, getAuthAction } from './src/navigation/linking'
+import { SplashScreen } from './src/components/SplashScreen'
 import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
@@ -40,7 +41,7 @@ import { analytics } from './src/services/analytics-service'
 import { errorReporting } from './src/services/error-reporting-service'
 import { lymInsights } from './src/services/lym-insights-service'
 import { configureGoogleSignIn } from './src/services/google-auth-service'
-import { requestHealthPermissions, isHealthAvailable } from './src/services/health-service'
+import { requestHealthPermissions, isHealthAvailable, syncWeightToProfile } from './src/services/health-service'
 
 // Initialize Sentry
 Sentry.init({
@@ -53,6 +54,7 @@ Sentry.init({
 
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
+  const [splashFinished, setSplashFinished] = useState(false)
   const [pendingDeepLink, setPendingDeepLink] = useState<{
     action: 'reset-password' | 'callback'
     url: string
@@ -115,6 +117,12 @@ export default Sentry.wrap(function App() {
           console.log('[App] HealthKit available, requesting permissions...')
           const healthPerms = await requestHealthPermissions()
           console.log('[App] HealthKit permissions:', JSON.stringify(healthPerms))
+
+          // Sync weight from Apple Health to profile
+          const syncedWeight = await syncWeightToProfile()
+          if (syncedWeight) {
+            console.log('[App] Weight synced from Health:', syncedWeight, 'kg')
+          }
         } else {
           console.log('[App] HealthKit not available on this device')
         }
@@ -285,9 +293,19 @@ export default Sentry.wrap(function App() {
   }, [pendingDeepLink])
 
   
-  // Wait for app to be ready and fonts loaded
-  if (!appIsReady || !fontsLoaded) {
+  // Wait for fonts to load
+  if (!fontsLoaded) {
     return null
+  }
+
+  // Show custom splash screen while app initializes
+  if (!appIsReady || !splashFinished) {
+    return (
+      <SplashScreen
+        duration={2500}
+        onFinish={() => setSplashFinished(true)}
+      />
+    )
   }
 
   return (
