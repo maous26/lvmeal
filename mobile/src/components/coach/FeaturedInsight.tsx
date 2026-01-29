@@ -142,13 +142,6 @@ export function FeaturedInsight({
       )}
 
       <View style={[styles.card, { backgroundColor: colors.bg.elevated }]}>
-        {/* Gradient accent bar */}
-        <LinearGradient
-          colors={getGradientColors()}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.accentBar}
-        />
 
         {/* Header with emoji, badges and dismiss */}
         <View style={styles.header}>
@@ -240,9 +233,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     overflow: 'hidden',
     ...shadows.lg,
-  },
-  accentBar: {
-    height: 4,
   },
   header: {
     flexDirection: 'row',
