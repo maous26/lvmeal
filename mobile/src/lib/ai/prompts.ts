@@ -182,6 +182,27 @@ AUTRES:
 - 1 tranche de jambon = 30g (kcal/100g: 107)
 - 1 saucisse/chipolata = 50g (kcal/100g: 268)
 - 1 crevette moyenne = 10g (kcal/100g: 99)
+
+FECULENTS CUITS (attention: valeurs pour aliments CUITS, pas crus):
+- Pates cuites nature = kcal/100g: 131, prot: 5g, gluc: 25g, lip: 1.1g
+- Pates bolognaise = kcal/100g: 140, prot: 6g, gluc: 18g, lip: 5g
+- Riz blanc cuit = kcal/100g: 130, prot: 2.7g, gluc: 28g, lip: 0.3g
+- Riz complet cuit = kcal/100g: 123, prot: 2.7g, gluc: 25g, lip: 1g
+- Semoule cuite = kcal/100g: 112, prot: 3.6g, gluc: 23g, lip: 0.2g
+- Quinoa cuit = kcal/100g: 120, prot: 4.4g, gluc: 21g, lip: 1.9g
+- Puree de pommes de terre = kcal/100g: 95, prot: 2g, gluc: 15g, lip: 3g
+- Pommes de terre cuites = kcal/100g: 80, prot: 2g, gluc: 17g, lip: 0.1g
+
+PLATS PREPARES COURANTS (kcal/100g):
+- Lasagnes = 135 kcal/100g
+- Hachis parmentier = 120 kcal/100g
+- Gratin dauphinois = 150 kcal/100g
+- Couscous = 140 kcal/100g
+- Paella = 150 kcal/100g
+- Risotto = 130 kcal/100g
+- Pizza = 250 kcal/100g
+- Burger complet = 250 kcal/100g
+- Wrap/Tacos = 200 kcal/100g
 `
 
 // Voice/text food description prompt
@@ -193,12 +214,13 @@ Identifie tous les aliments mentionnes et calcule leurs valeurs nutritionnelles.
 ${ragContext || UNIT_WEIGHTS_REFERENCE}
 
 REGLES CRITIQUES:
-1. Si l'utilisateur mentionne un NOMBRE d'unites (ex: "10 amandes"), tu DOIS utiliser les poids de reference ci-dessus
-2. Calcule le poids: poids_total = nombre x poids_unitaire
-   Exemple: "10 amandes" = 10 x 1.2g = 12g
-3. Calcule les calories: calories = (poids_total / 100) x kcal_par_100g
-   Exemple: 12g d'amandes = (12/100) x 634 = 76 kcal
-4. Applique la meme logique pour proteines, glucides, lipides
+1. TOUJOURS utiliser les valeurs de reference ci-dessus en priorite
+2. Pour les FECULENTS (pates, riz, etc.), utilise TOUJOURS les valeurs CUITS (130-150 kcal/100g), PAS les valeurs crues (350 kcal/100g)
+3. Calcule les calories: calories = (poids_en_grammes / 100) x kcal_par_100g
+   Exemple: 250g de pates bolognaise = (250/100) x 140 = 350 kcal
+4. VALIDATION: Si ton calcul depasse 300 kcal/100g pour un plat cuisine ou feculent, REVERIFIER - c'est probablement une erreur
+5. Pour les aliments comptes par unites, calcule: poids_total = nombre x poids_unitaire
+   Exemple: "10 amandes" = 10 x 1.2g = 12g → (12/100) x 634 = 76 kcal
 
 Pour chaque aliment retourne:
 - name: nom en francais

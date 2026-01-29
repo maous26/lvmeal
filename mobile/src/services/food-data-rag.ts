@@ -132,6 +132,33 @@ const COMMON_UNIT_WEIGHTS: Record<string, { weight: number; unit: string; kcalPe
   // Autres
   'carre de chocolat': { weight: 5, unit: '1 carré', kcalPer100g: 545 },
   'carre de sucre': { weight: 5, unit: '1 morceau', kcalPer100g: 400 },
+
+  // Féculents CUITS (valeurs pour aliments cuits, pas crus!)
+  'pates': { weight: 200, unit: '1 portion de pâtes', kcalPer100g: 131 },
+  'pates bolognaise': { weight: 300, unit: '1 assiette', kcalPer100g: 140 },
+  'spaghetti': { weight: 200, unit: '1 portion', kcalPer100g: 131 },
+  'spaghetti bolognaise': { weight: 300, unit: '1 assiette', kcalPer100g: 140 },
+  'riz': { weight: 150, unit: '1 portion de riz', kcalPer100g: 130 },
+  'riz blanc': { weight: 150, unit: '1 portion', kcalPer100g: 130 },
+  'riz complet': { weight: 150, unit: '1 portion', kcalPer100g: 123 },
+  'quinoa': { weight: 150, unit: '1 portion', kcalPer100g: 120 },
+  'semoule': { weight: 150, unit: '1 portion', kcalPer100g: 112 },
+  'puree': { weight: 200, unit: '1 portion', kcalPer100g: 95 },
+  'puree de pommes de terre': { weight: 200, unit: '1 portion', kcalPer100g: 95 },
+
+  // Plats préparés courants
+  'lasagnes': { weight: 350, unit: '1 portion', kcalPer100g: 135 },
+  'lasagne': { weight: 350, unit: '1 portion', kcalPer100g: 135 },
+  'hachis parmentier': { weight: 300, unit: '1 portion', kcalPer100g: 120 },
+  'gratin dauphinois': { weight: 200, unit: '1 portion', kcalPer100g: 150 },
+  'couscous': { weight: 400, unit: '1 assiette', kcalPer100g: 140 },
+  'paella': { weight: 350, unit: '1 portion', kcalPer100g: 150 },
+  'risotto': { weight: 300, unit: '1 portion', kcalPer100g: 130 },
+  'pizza': { weight: 250, unit: '1/2 pizza', kcalPer100g: 250 },
+  'burger': { weight: 200, unit: '1 burger', kcalPer100g: 250 },
+  'wrap': { weight: 180, unit: '1 wrap', kcalPer100g: 200 },
+  'tacos': { weight: 200, unit: '1 tacos', kcalPer100g: 200 },
+  'kebab': { weight: 300, unit: '1 kebab', kcalPer100g: 220 },
 }
 
 // ============= FOOD NAME EXTRACTION =============
@@ -368,19 +395,29 @@ export async function getFoodDataForPrompt(input: string): Promise<FoodRAGContex
 
   const foods: FoodDataResult[] = []
 
-  // Query databases for each food
+  // Query databases for each food - OPTIMIZED for speed
+  // 1. Check local database first (instant)
+  // 2. Only query remote APIs if not found locally
   for (const foodName of foodNames) {
-    // Try CIQUAL first (French reference)
-    let result = await searchFoodInCIQUAL(foodName)
+    // First: Try our local unit weight database (instant, no network)
+    let result = getFallbackData(foodName)
 
-    // If not in CIQUAL, try OFF
+    // If not in local DB, try remote APIs in parallel with timeout
     if (!result) {
-      result = await searchFoodInOFF(foodName)
-    }
+      try {
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
 
-    // Fallback to our unit weight database
-    if (!result) {
-      result = getFallbackData(foodName)
+        // Run CIQUAL and OFF in parallel, first to respond wins
+        const [ciqualResult, offResult] = await Promise.all([
+          Promise.race([searchFoodInCIQUAL(foodName), timeoutPromise]),
+          Promise.race([searchFoodInOFF(foodName), timeoutPromise]),
+        ])
+
+        // Prefer CIQUAL (French reference) over OFF
+        result = ciqualResult || offResult
+      } catch (error) {
+        console.log(`[FoodRAG] API error for "${foodName}", using estimate`)
+      }
     }
 
     if (result) {
