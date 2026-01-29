@@ -706,6 +706,55 @@ export default function AddMealScreen() {
     }, 2000)
   }
 
+  // Enregistrement direct des aliments vocaux dans le journal
+  const handleVoiceFoodsDetected = (foods: FoodItem[]) => {
+    if (foods.length === 0) return
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+
+    // Convertir les FoodItem en MealItem avec les bons calculs
+    // Pour la saisie vocale (source === 'voice'), la nutrition est déjà calculée pour le poids estimé
+    const mealItems: MealItem[] = foods.map(food => ({
+      id: generateId(),
+      food,
+      quantity: 1, // Voice foods: nutrition is already the total for estimated weight
+    }))
+
+    console.log('[AddMealScreen] Saving voice meal with items:', mealItems.map(m => ({
+      name: m.food.name,
+      source: m.food.source,
+      servingSize: m.food.servingSize,
+      nutritionCalories: m.food.nutrition.calories,
+    })))
+
+    // Enregistrer directement dans le journal
+    addMeal(selectedMealType, mealItems)
+    addXP(15, 'Repas enregistré (vocal)')
+
+    // Track meal logged
+    const totalCalories = mealItems.reduce((sum, item) => {
+      return sum + (item.food.nutrition.calories || 0)
+    }, 0)
+    analytics.trackMealLogged(selectedMealType, 'voice', 'ai', totalCalories)
+
+    // Toast de confirmation
+    toast.success(`${foods.length} aliment${foods.length > 1 ? 's' : ''} ajouté${foods.length > 1 ? 's' : ''} au ${getMealLabel(selectedMealType)}`)
+
+    // Retourner à l'écran précédent
+    navigation.goBack()
+  }
+
+  // Helper pour obtenir le label du repas
+  const getMealLabel = (mealType: MealType): string => {
+    const labels: Record<MealType, string> = {
+      breakfast: 'petit-déjeuner',
+      lunch: 'déjeuner',
+      snack: 'collation',
+      dinner: 'dîner',
+    }
+    return labels[mealType] || 'repas'
+  }
+
   const isFavorite = (foodId: string) => favoriteFoods?.some((f: FoodItem) => f.id === foodId) ?? false
   const isAdded = (foodId: string) => addedFoodIds.has(foodId)
   const isRecipeFavorite = (recipeId: string) => favoriteRecipes.some((f: Recipe) => f.id === recipeId)
@@ -1954,7 +2003,7 @@ export default function AddMealScreen() {
         <VoiceFoodInput
           visible={showVoiceInput}
           onClose={() => setShowVoiceInput(false)}
-          onFoodsDetected={handleFoodsFound}
+          onFoodsDetected={handleVoiceFoodsDetected}
         />
 
         {/* AI Recipe Modal */}

@@ -356,7 +356,7 @@ export default function VoiceFoodInput({
         <ScrollView
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
         >
           {/* Voice Input Section - Only show if speech is available */}
           {!isEditing && analyzedFoods.length === 0 && speechAvailable !== false && (
@@ -472,9 +472,22 @@ export default function VoiceFoodInput({
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
-                autoFocus={isEditing}
+                autoFocus={isEditing || speechAvailable === false}
+                returnKeyType="done"
+                blurOnSubmit={true}
               />
-              {/* Bouton pour valider la modification et revenir */}
+              {/* Bouton Analyser visible dans la section texte */}
+              {transcript.trim() && !isAnalyzing && analyzedFoods.length === 0 && (
+                <TouchableOpacity
+                  style={styles.analyzeButton}
+                  onPress={handleAnalyze}
+                  activeOpacity={0.8}
+                >
+                  <Check size={20} color="#FFFFFF" />
+                  <Text style={styles.analyzeButtonText}>Analyser mon repas</Text>
+                </TouchableOpacity>
+              )}
+              {/* Bouton pour valider la modification et revenir (mode vocal) */}
               {isEditing && speechAvailable && (
                 <TouchableOpacity
                   style={styles.validateEditButton}
