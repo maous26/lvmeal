@@ -345,9 +345,9 @@ export const COACHING_ADVICE_PROMPT = {
 SITUATION: ${situationContext[context.situation]}
 
 ${context.nutrition ? `NUTRITION AUJOURD'HUI:
-- Consommé: ${context.nutrition.consumed} kcal
+- Consommé: ${context.nutrition.consumed} kcal (${Math.round((context.nutrition.consumed / context.nutrition.target) * 100)}%)
 - Objectif: ${context.nutrition.target} kcal
-- Restant: ${context.nutrition.remaining} kcal (${Math.round((context.nutrition.consumed / context.nutrition.target) * 100)}%)` : ''}
+- Restant: ${context.nutrition.remaining} kcal` : ''}
 
 ${context.wellness ? WELLNESS_CONTEXT_TEMPLATE(context.wellness) : ''}
 
