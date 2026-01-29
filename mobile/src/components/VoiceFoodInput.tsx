@@ -43,6 +43,7 @@ if (!isExpoGo) {
   console.log('[VoiceFoodInput] Skipping speech module load (Expo Go)')
 }
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Card, Button, Badge } from './ui'
 import { colors, spacing, typography, radius } from '../constants/theme'
 import { analyzeFoodDescription, hasOpenAIApiKey, type AnalyzedFood } from '../services/ai-service'
@@ -61,6 +62,7 @@ export default function VoiceFoodInput({
   onClose,
   onFoodsDetected,
 }: VoiceFoodInputProps) {
+  const insets = useSafeAreaInsets()
   const [transcript, setTranscript] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -600,7 +602,7 @@ export default function VoiceFoodInput({
         </ScrollView>
 
         {/* Bottom Action Bar - Always visible */}
-        <View style={styles.confirmBar}>
+        <View style={[styles.confirmBar, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}>
           {isAnalyzing ? (
             /* Loading during analysis - Pro animated progress */
             <View style={styles.analysisContainer}>
