@@ -16,7 +16,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
-import { ChevronRight, X } from 'lucide-react-native'
+import { ChevronRight, X, Clock } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../../contexts/ThemeContext'
@@ -69,6 +69,23 @@ export function CoachMessageCard({
   const emoji = message.emoji || CATEGORY_EMOJI[message.category]
   // Permettre à l'utilisateur de supprimer tous les messages
   const canDismiss = true
+
+  // Format relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return "À l'instant"
+    if (diffMins < 60) return `${diffMins} min`
+    if (diffHours < 24) return `${diffHours}h`
+    if (diffDays === 1) return 'Hier'
+    if (diffDays < 7) return `${diffDays}j`
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  }
 
   const handlePress = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -148,6 +165,13 @@ export function CoachMessageCard({
             {!message.read && (
               <View style={[styles.unreadDot, { backgroundColor: priorityConf.color }]} />
             )}
+          </View>
+          {/* Timestamp */}
+          <View style={styles.timeRow}>
+            <Clock size={10} color={colors.text.muted} />
+            <Text style={[styles.timeText, { color: colors.text.muted }]}>
+              {getRelativeTime(message.createdAt)}
+            </Text>
           </View>
         </View>
         {canDismiss && (
@@ -235,6 +259,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  timeText: {
+    ...typography.xs,
   },
   unreadDot: {
     width: 6,

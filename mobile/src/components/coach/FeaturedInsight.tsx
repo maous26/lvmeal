@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native'
-import { ChevronRight, Sparkles } from 'lucide-react-native'
+import { ChevronRight, Sparkles, X, Clock } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 
@@ -51,6 +51,28 @@ export function FeaturedInsight({
   const priorityConfig = getPriorityConfig(isDark)
   const priorityConf = priorityConfig[message.priority]
   const emoji = message.emoji || CATEGORY_EMOJI[message.category]
+
+  // Format relative time
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return "À l'instant"
+    if (diffMins < 60) return `Il y a ${diffMins} min`
+    if (diffHours < 24) return `Il y a ${diffHours}h`
+    if (diffDays === 1) return 'Hier'
+    if (diffDays < 7) return `Il y a ${diffDays} jours`
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  }
+
+  const handleDismiss = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    onDismiss()
+  }
 
   // Subtle pulse animation for unread
   const pulseAnim = useRef(new Animated.Value(1)).current
@@ -128,19 +150,38 @@ export function FeaturedInsight({
           style={styles.accentBar}
         />
 
-        {/* Header with emoji and badges */}
+        {/* Header with emoji, badges and dismiss */}
         <View style={styles.header}>
-          <View style={styles.emojiContainer}>
-            <Text style={styles.emoji}>{emoji}</Text>
-          </View>
-          <View style={styles.badges}>
-            <AIBadge variant="inline" text="LYM" size="sm" />
-            {!message.read && (
-              <View style={[styles.newBadge, { backgroundColor: priorityConf.color }]}>
-                <Text style={styles.newBadgeText}>Nouveau</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.emojiContainer}>
+              <Text style={styles.emoji}>{emoji}</Text>
+            </View>
+            <View style={styles.headerInfo}>
+              <View style={styles.badges}>
+                <AIBadge variant="inline" text="LYM" size="sm" />
+                {!message.read && (
+                  <View style={[styles.newBadge, { backgroundColor: priorityConf.color }]}>
+                    <Text style={styles.newBadgeText}>Nouveau</Text>
+                  </View>
+                )}
               </View>
-            )}
+              {/* Timestamp */}
+              <View style={styles.timeRow}>
+                <Clock size={12} color={colors.text.muted} />
+                <Text style={[styles.timeText, { color: colors.text.muted }]}>
+                  {getRelativeTime(message.createdAt)}
+                </Text>
+              </View>
+            </View>
           </View>
+          {/* Dismiss button */}
+          <TouchableOpacity
+            onPress={handleDismiss}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={[styles.dismissButton, { backgroundColor: colors.bg.tertiary }]}
+          >
+            <X size={18} color={colors.text.muted} />
+          </TouchableOpacity>
         </View>
 
         {/* Main content */}
@@ -206,25 +247,50 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  headerInfo: {
+    flex: 1,
+    gap: spacing.xs,
+  },
   emojiContainer: {
-    width: componentSizes.avatar.xl,
-    height: componentSizes.avatar.xl,
+    width: componentSizes.avatar.lg,
+    height: componentSizes.avatar.lg,
     borderRadius: radius.lg,
     backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   emoji: {
-    fontSize: 32,
+    fontSize: 28,
   },
   badges: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  timeText: {
+    ...typography.xs,
+  },
+  dismissButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   newBadge: {
     paddingHorizontal: spacing.sm,
