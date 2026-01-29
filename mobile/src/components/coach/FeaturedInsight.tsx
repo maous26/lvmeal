@@ -15,7 +15,6 @@ import {
 } from 'react-native'
 import { ChevronRight, Sparkles, X, Clock } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
-import { LinearGradient } from 'expo-linear-gradient'
 
 import { useTheme } from '../../contexts/ThemeContext'
 import {
@@ -24,7 +23,6 @@ import {
   radius,
   shadows,
   fonts,
-  colors as staticColors,
   componentSizes,
 } from '../../constants/theme'
 import {
@@ -111,17 +109,6 @@ export function FeaturedInsight({
     outputRange: [0.3, 0.6],
   })
 
-  // Gradient colors based on message type/priority
-  const getGradientColors = (): [string, string] => {
-    if (message.type === 'celebration') {
-      return [staticColors.secondary.primary, staticColors.accent.primary]
-    }
-    if (message.priority === 'P0') {
-      return [staticColors.error, '#FF6B6B']
-    }
-    return [staticColors.accent.primary, staticColors.secondary.primary]
-  }
-
   return (
     <TouchableOpacity
       onPress={handlePress}
@@ -196,15 +183,15 @@ export function FeaturedInsight({
 
         {/* Action footer */}
         {message.actionLabel && (
-          <LinearGradient
-            colors={getGradientColors()}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.actionButton}
+          <View
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.accent.primary },
+            ]}
           >
-            <Text style={styles.actionText}>{message.actionLabel}</Text>
-            <ChevronRight size={18} color="#FFFFFF" />
-          </LinearGradient>
+            <Text style={[styles.actionText, { color: colors.text.inverse }]}>{message.actionLabel}</Text>
+            <ChevronRight size={18} color={colors.text.inverse} />
+          </View>
         )}
 
         {/* Sparkle decoration */}
@@ -322,7 +309,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     ...typography.bodyMedium,
-    color: '#FFFFFF',
     fontWeight: '600',
   },
   sparkleDecoration: {
