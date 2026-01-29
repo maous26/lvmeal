@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, StyleSheet, Pressable, ScrollView, Modal, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Gift, TrendingUp, Calendar, Info, X, Check, Heart } from 'lucide-react-native'
+import { Gift, TrendingUp, Calendar, Info, X, Check, Heart, Sparkles, XCircle } from 'lucide-react-native'
 import { Card } from '../ui/Card'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -23,6 +23,13 @@ interface CaloricBalanceProps {
   dailyTarget: number
   isFirstTimeSetup?: boolean
   onConfirmStart?: () => void
+  // Props pour le bonus repas plaisir
+  canActivatePlaisir?: boolean
+  isPlaisirBonusActive?: boolean
+  activePlaisirBonus?: number
+  remainingPlaisirMeals?: number
+  onActivatePlaisir?: () => { success: boolean; bonus: number; message: string }
+  onDeactivatePlaisir?: () => void
 }
 
 const MAX_VARIANCE_PERCENT = 0.10
@@ -43,9 +50,16 @@ export function CaloricBalance({
   dailyTarget,
   isFirstTimeSetup = false,
   onConfirmStart,
+  canActivatePlaisir = false,
+  isPlaisirBonusActive = false,
+  activePlaisirBonus = 0,
+  remainingPlaisirMeals = 2,
+  onActivatePlaisir,
+  onDeactivatePlaisir,
 }: CaloricBalanceProps) {
   const { colors } = useTheme()
   const [showInfoModal, setShowInfoModal] = useState(false)
+  const [bonusMessage, setBonusMessage] = useState<string | null>(null)
 
   const maxDailyVariance = Math.round(dailyTarget * MAX_VARIANCE_PERCENT)
   const maxCredit = maxDailyVariance * 6
@@ -160,6 +174,63 @@ export function CaloricBalance({
             </Text>
           </View>
         </View>
+
+        {/* Bouton Activer/Désactiver repas plaisir */}
+        {isPlaisirBonusActive ? (
+          <View style={styles.plaisirActiveContainer}>
+            <View style={[styles.plaisirActiveBox, { backgroundColor: colors.success + '20', borderColor: colors.success }]}>
+              <View style={styles.plaisirActiveContent}>
+                <Sparkles size={20} color={colors.success} />
+                <View style={styles.plaisirActiveText}>
+                  <Text style={[styles.plaisirActiveTitle, { color: colors.success }]}>
+                    Bonus actif : +{activePlaisirBonus} kcal
+                  </Text>
+                  <Text style={[styles.plaisirActiveSubtitle, { color: colors.text.secondary }]}>
+                    Ajoutées à ton objectif du jour
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  onDeactivatePlaisir?.()
+                  setBonusMessage('Bonus désactivé')
+                  setTimeout(() => setBonusMessage(null), 2000)
+                }}
+                style={[styles.plaisirDeactivateButton, { backgroundColor: colors.bg.tertiary }]}
+                activeOpacity={0.7}
+              >
+                <XCircle size={16} color={colors.text.tertiary} />
+                <Text style={[styles.plaisirDeactivateText, { color: colors.text.secondary }]}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+            {bonusMessage && (
+              <Text style={[styles.bonusMessageText, { color: colors.text.tertiary }]}>{bonusMessage}</Text>
+            )}
+          </View>
+        ) : canActivatePlaisir ? (
+          <View style={styles.plaisirButtonContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                const result = onActivatePlaisir?.()
+                if (result) {
+                  setBonusMessage(result.message)
+                  setTimeout(() => setBonusMessage(null), 3000)
+                }
+              }}
+              style={[styles.plaisirButton, { backgroundColor: colors.accent.primary }]}
+              activeOpacity={0.8}
+            >
+              <Sparkles size={18} color="#FFFFFF" />
+              <Text style={styles.plaisirButtonText}>Activer repas plaisir</Text>
+            </TouchableOpacity>
+            <Text style={[styles.plaisirHintText, { color: colors.text.tertiary }]}>
+              {remainingPlaisirMeals === 2 ? '2 bonus restants cette semaine' : '1 bonus restant cette semaine'}
+            </Text>
+            {bonusMessage && (
+              <Text style={[styles.bonusMessageText, { color: colors.success }]}>{bonusMessage}</Text>
+            )}
+          </View>
+        ) : null}
 
         {/* Next cycle info */}
         <View style={[styles.cycleInfo, { borderTopColor: colors.border.light }]}>
@@ -502,6 +573,71 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     padding: spacing.lg,
+  },
+  // Styles pour le bonus repas plaisir
+  plaisirActiveContainer: {
+    marginBottom: spacing.default,
+  },
+  plaisirActiveBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  plaisirActiveContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  plaisirActiveText: {
+    flex: 1,
+  },
+  plaisirActiveTitle: {
+    ...typography.bodyMedium,
+  },
+  plaisirActiveSubtitle: {
+    ...typography.caption,
+  },
+  plaisirDeactivateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  plaisirDeactivateText: {
+    ...typography.caption,
+  },
+  plaisirButtonContainer: {
+    marginBottom: spacing.default,
+    alignItems: 'center',
+  },
+  plaisirButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    width: '100%',
+  },
+  plaisirButtonText: {
+    ...typography.bodyMedium,
+    color: '#FFFFFF',
+  },
+  plaisirHintText: {
+    ...typography.caption,
+    marginTop: spacing.sm,
+  },
+  bonusMessageText: {
+    ...typography.small,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
 })
 

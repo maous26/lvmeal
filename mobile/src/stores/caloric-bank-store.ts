@@ -27,12 +27,18 @@ interface CaloricBankState {
   weeklyPlaisirCount: number
   plaisirDatesThisWeek: string[]
 
+  // Bonus plaisir activé pour aujourd'hui (calories ajoutées à l'objectif)
+  activePlaisirBonus: number
+  activePlaisirDate: string | null
+
   // Actions
   initializeWeek: () => void
   confirmStartDay: () => void
   updateDailyBalance: (date: string, targetCalories: number, consumedCalories: number) => void
   usePlaisirMeal: (calories: number) => boolean // Renommé pour plus de clarté
   cleanOldBalances: () => void
+  activatePlaisirBonus: () => { success: boolean; bonus: number; message: string } // Ajoute 50% du solde aux calories du jour
+  deactivatePlaisirBonus: () => void // Désactive le bonus pour aujourd'hui
 
   // Getters
   getTotalSaved: () => number
@@ -47,6 +53,8 @@ interface CaloricBankState {
   requiresSplitConsumption: () => boolean // solde > 600
   getRemainingPlaisirMeals: () => number
   canUsePlaisirMeal: () => boolean
+  getActivePlaisirBonus: () => number // Retourne le bonus actif pour aujourd'hui (0 si pas actif)
+  isPlaisirBonusActiveToday: () => boolean // Vérifie si un bonus est actif aujourd'hui
 
   // Aliases pour rétrocompatibilité
   canHaveCheatMeal: () => boolean
@@ -98,6 +106,8 @@ export const useCaloricBankStore = create<CaloricBankState>()(
       lastCheatMealDate: null,
       weeklyPlaisirCount: 0,
       plaisirDatesThisWeek: [],
+      activePlaisirBonus: 0,
+      activePlaisirDate: null,
 
       initializeWeek: () => {
         const { weekStartDate } = get()
@@ -302,6 +312,96 @@ export const useCaloricBankStore = create<CaloricBankState>()(
         return weeklyPlaisirCount < MAX_PLAISIR_MEALS_PER_WEEK
       },
 
+      // Retourne le bonus plaisir actif pour aujourd'hui (0 si pas actif)
+      getActivePlaisirBonus: () => {
+        const { activePlaisirBonus, activePlaisirDate } = get()
+        const today = getTodayString()
+        // Le bonus n'est valide que pour aujourd'hui
+        if (activePlaisirDate === today) {
+          return activePlaisirBonus
+        }
+        return 0
+      },
+
+      // Vérifie si un bonus plaisir est actif aujourd'hui
+      isPlaisirBonusActiveToday: () => {
+        const { activePlaisirDate } = get()
+        return activePlaisirDate === getTodayString()
+      },
+
+      // Active le bonus plaisir : ajoute 50% du solde aux calories du jour
+      // Max 2 utilisations par semaine
+      activatePlaisirBonus: () => {
+        const { cheatMealBudget, canHavePlaisir, canUsePlaisirMeal, isPlaisirBonusActiveToday, weeklyPlaisirCount, plaisirDatesThisWeek } = get()
+        const today = getTodayString()
+
+        // Vérifier si déjà actif aujourd'hui
+        if (isPlaisirBonusActiveToday()) {
+          return { success: false, bonus: 0, message: 'Bonus déjà actif aujourd\'hui' }
+        }
+
+        // Vérifier les conditions
+        if (!canHavePlaisir()) {
+          return { success: false, bonus: 0, message: 'Conditions non remplies pour activer le bonus' }
+        }
+
+        if (!canUsePlaisirMeal()) {
+          return { success: false, bonus: 0, message: 'Tu as déjà utilisé tes 2 bonus cette semaine' }
+        }
+
+        // Calculer le bonus : 50% du solde, max 600 kcal
+        const bonus = Math.min(Math.round(cheatMealBudget * 0.5), MAX_PLAISIR_PER_MEAL)
+
+        if (bonus < 100) {
+          return { success: false, bonus: 0, message: 'Solde insuffisant (min 100 kcal de bonus)' }
+        }
+
+        // Activer le bonus
+        const newPlaisirDates = plaisirDatesThisWeek.includes(today)
+          ? plaisirDatesThisWeek
+          : [...plaisirDatesThisWeek, today]
+
+        set({
+          activePlaisirBonus: bonus,
+          activePlaisirDate: today,
+          cheatMealBudget: cheatMealBudget - bonus,
+          weeklyPlaisirCount: newPlaisirDates.length,
+          plaisirDatesThisWeek: newPlaisirDates,
+        })
+
+        // Gamification
+        const gamification = useGamificationStore.getState()
+        gamification.incrementMetric('repas_plaisir_earned')
+        gamification.addXP(XP_REWARDS.LOG_MEAL, 'Bonus repas plaisir activé')
+
+        return {
+          success: true,
+          bonus,
+          message: `+${bonus} kcal ajoutées à ton objectif du jour !`
+        }
+      },
+
+      // Désactive le bonus plaisir (rembourse les calories)
+      deactivatePlaisirBonus: () => {
+        const { activePlaisirBonus, activePlaisirDate, cheatMealBudget, plaisirDatesThisWeek } = get()
+        const today = getTodayString()
+
+        if (activePlaisirDate !== today || activePlaisirBonus === 0) {
+          return
+        }
+
+        // Rembourser les calories au solde
+        const updatedDates = plaisirDatesThisWeek.filter(d => d !== today)
+
+        set({
+          cheatMealBudget: cheatMealBudget + activePlaisirBonus,
+          activePlaisirBonus: 0,
+          activePlaisirDate: null,
+          weeklyPlaisirCount: updatedDates.length,
+          plaisirDatesThisWeek: updatedDates,
+        })
+      },
+
       getCheatMealSuggestion: () => {
         const { cheatMealBudget, canHavePlaisir, getMaxPlaisirPerMeal, requiresSplitConsumption, getRemainingPlaisirMeals, canUsePlaisirMeal, getCurrentDayIndex } = get()
         const available = canHavePlaisir()
@@ -369,6 +469,8 @@ export const useCaloricBankStore = create<CaloricBankState>()(
         lastCheatMealDate: state.lastCheatMealDate,
         weeklyPlaisirCount: state.weeklyPlaisirCount,
         plaisirDatesThisWeek: state.plaisirDatesThisWeek,
+        activePlaisirBonus: state.activePlaisirBonus,
+        activePlaisirDate: state.activePlaisirDate,
       }),
     }
   )

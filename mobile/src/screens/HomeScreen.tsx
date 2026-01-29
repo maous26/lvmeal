@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react'
 import {
   View,
@@ -216,6 +217,12 @@ export default function HomeScreen() {
     isFirstTimeSetup,
     confirmStartDay,
     initializeWeek,
+    canHavePlaisir,
+    isPlaisirBonusActiveToday,
+    getActivePlaisirBonus,
+    getRemainingPlaisirMeals,
+    activatePlaisirBonus,
+    deactivatePlaisirBonus,
   } = useCaloricBankStore()
 
   const {
@@ -316,7 +323,8 @@ export default function HomeScreen() {
   }
 
   const baseGoals = getBaseGoals()
-  const effectiveCalories = baseGoals.calories + (baseGoals.sportCaloriesBonus || 0)
+  const plaisirBonus = getActivePlaisirBonus()
+  const effectiveCalories = baseGoals.calories + (baseGoals.sportCaloriesBonus || 0) + plaisirBonus
   const goals = { ...baseGoals, calories: effectiveCalories }
 
   // Sync calories with CaloricBank whenever totals change
@@ -810,6 +818,14 @@ export default function HomeScreen() {
                 </Text>
               </View>
             )}
+            {plaisirBonus > 0 && (
+              <View style={styles.calorieStatChip}>
+                <View style={[styles.calorieStatDot, { backgroundColor: colors.accent.primary }]} />
+                <Text style={[styles.calorieStatChipText, { color: colors.accent.primary }]}>
+                  +{plaisirBonus} plaisir
+                </Text>
+              </View>
+            )}
           </View>
         </GlassCard>
 
@@ -878,6 +894,12 @@ export default function HomeScreen() {
             dailyTarget={goals.calories}
             isFirstTimeSetup={isFirstTimeSetup()}
             onConfirmStart={confirmStartDay}
+            canActivatePlaisir={canHavePlaisir()}
+            isPlaisirBonusActive={isPlaisirBonusActiveToday()}
+            activePlaisirBonus={plaisirBonus}
+            remainingPlaisirMeals={getRemainingPlaisirMeals()}
+            onActivatePlaisir={activatePlaisirBonus}
+            onDeactivatePlaisir={deactivatePlaisirBonus}
           />
         </View>
 
