@@ -18,6 +18,7 @@ import { handleDeepLink } from './src/services/deep-link-handler'
 import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
+import { FeedbackProvider } from './src/components/feedback'
 import { clearFoodSearchCache } from './src/services/food-search'
 import {
   requestNotificationPermissions,
@@ -314,6 +315,7 @@ export default Sentry.wrap(function App() {
         <ThemeProvider>
           <ToastProvider>
             <AgentTriggersProvider>
+              <FeedbackProvider bottomOffset={90}>
               <NavigationContainer
                 ref={navigationRef}
                 linking={{
@@ -350,6 +352,7 @@ export default Sentry.wrap(function App() {
               >
                 <RootNavigator />
               </NavigationContainer>
+              </FeedbackProvider>
             </AgentTriggersProvider>
           </ToastProvider>
         </ThemeProvider>
