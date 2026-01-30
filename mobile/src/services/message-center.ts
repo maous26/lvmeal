@@ -332,7 +332,13 @@ type GeneratedMessage = Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismis
 /**
  * Generate contextual messages based on user data
  * Respecte les preferences utilisateur et le système de cooldown
+ *
+ * IMPORTANT: Cette fonction génère des messages POTENTIELS.
+ * Le système de cooldown (dedupKey) empêche les doublons.
+ * On limite à MAX_MESSAGES_PER_GENERATION pour éviter les rafales.
  */
+const MAX_MESSAGES_PER_GENERATION = 3 // Max messages ajoutés à la fois
+
 export function generateDailyMessages(
   userData: {
     caloriesConsumed: number
@@ -355,7 +361,7 @@ export function generateDailyMessages(
   },
   preferences?: MessagePreferences
 ): GeneratedMessage[] {
-  const messages: GeneratedMessage[] = []
+  const allMessages: GeneratedMessage[] = []
   const now = new Date()
   const hour = now.getHours()
   const prefs = preferences || DEFAULT_PREFERENCES
@@ -370,7 +376,7 @@ export function generateDailyMessages(
     const hoursSinceLastMeal = (now.getTime() - userData.lastMealTime.getTime()) / (1000 * 60 * 60)
     if (hoursSinceLastMeal >= 8) {
       const isUrgent = prefs.enableUrgentNutritionAlerts && hoursSinceLastMeal >= 10
-      messages.push({
+      allMessages.push({
         priority: isUrgent ? 'P0' : 'P1',
         type: isUrgent ? 'alert' : 'action',
         category: 'nutrition',
@@ -392,7 +398,7 @@ export function generateDailyMessages(
       ? Math.round(userData.proteinsTarget - (userData.proteinsConsumed || 0))
       : null
     const proteinsInfo = proteinsRemaining ? ` (~${proteinsRemaining}g à rattraper)` : ''
-    messages.push({
+    allMessages.push({
       priority: 'P1',
       type: 'action',
       category: 'nutrition',
@@ -411,7 +417,7 @@ export function generateDailyMessages(
   // P1: Low hydration
   if (userData.waterPercent < 40 && hour >= 14) {
     const waterRemaining = Math.round(2000 * (100 - userData.waterPercent) / 100)
-    messages.push({
+    allMessages.push({
       priority: 'P1',
       type: 'action',
       category: 'hydration',
@@ -429,7 +435,7 @@ export function generateDailyMessages(
 
   // P2: Streak celebration
   if (userData.streak > 0 && userData.streak % 7 === 0) {
-    messages.push({
+    allMessages.push({
       priority: 'P2',
       type: 'celebration',
       category: 'progress',
@@ -444,7 +450,7 @@ export function generateDailyMessages(
 
   // P2: Good sleep
   if (userData.sleepHours && userData.sleepHours >= 7) {
-    messages.push({
+    allMessages.push({
       priority: 'P2',
       type: 'celebration',
       category: 'sleep',
@@ -461,7 +467,7 @@ export function generateDailyMessages(
   // P2: Plaisir available (max 600 kcal/repas, max 2 repas/semaine)
   if (userData.plaisirAvailable && userData.remainingPlaisirMeals > 0 && userData.maxPlaisirPerMeal > 0) {
     const repasText = userData.remainingPlaisirMeals === 2 ? 'tes 2 repas plaisir' : 'ton repas plaisir'
-    messages.push({
+    allMessages.push({
       priority: 'P2',
       type: 'tip',
       category: 'nutrition',
@@ -476,7 +482,7 @@ export function generateDailyMessages(
 
   // P3: Morning tip (si tips activés)
   if (prefs.enableDailyTips && hour >= 7 && hour <= 9) {
-    messages.push({
+    allMessages.push({
       priority: 'P3',
       type: 'tip',
       category: 'wellness',
@@ -492,7 +498,7 @@ export function generateDailyMessages(
 
   // P3: Bad sleep (si tips activés)
   if (prefs.enableDailyTips && userData.sleepHours && userData.sleepHours < 6) {
-    messages.push({
+    allMessages.push({
       priority: 'P3',
       type: 'tip',
       category: 'sleep',
@@ -535,7 +541,7 @@ export function generateDailyMessages(
       bilanEmoji = '📊'
     }
 
-    messages.push({
+    allMessages.push({
       priority: 'P3',
       type: 'insight',
       category: 'nutrition',
@@ -550,45 +556,9 @@ export function generateDailyMessages(
     })
   }
 
-  // P3: Rappels de repas contextuels avec calories restantes
-  const mealReminders: Array<{ type: 'breakfast' | 'lunch' | 'snack' | 'dinner'; startHour: number; endHour: number; title: string; emoji: string }> = [
-    { type: 'breakfast', startHour: 7, endHour: 10, title: 'Petit-déjeuner', emoji: '🌅' },
-    { type: 'lunch', startHour: 11, endHour: 14, title: 'Déjeuner', emoji: '🍽️' },
-    { type: 'snack', startHour: 15, endHour: 17, title: 'Collation', emoji: '🍎' },
-    { type: 'dinner', startHour: 18, endHour: 21, title: 'Dîner', emoji: '🌙' },
-  ]
-
-  for (const reminder of mealReminders) {
-    if (hour >= reminder.startHour && hour < reminder.endHour) {
-      // Suggérer des calories basées sur ce qu'il reste
-      const mealsLeft = reminder.type === 'dinner' ? 1 : (reminder.type === 'snack' ? 2 : 3)
-      const suggestedCalories = Math.round(caloriesRemaining / mealsLeft)
-
-      let contextMessage: string
-      if (caloriesRemaining > 200) {
-        contextMessage = `~${suggestedCalories} kcal suggérées pour ce repas. Il te reste ${caloriesRemaining} kcal aujourd'hui.`
-      } else if (caloriesRemaining > 0) {
-        contextMessage = `Budget serré : ${caloriesRemaining} kcal restantes. Opte pour quelque chose de léger.`
-      } else {
-        contextMessage = `Tu as atteint ton objectif ! Un repas léger si tu as faim.`
-      }
-
-      messages.push({
-        priority: 'P3',
-        type: 'tip',
-        category: 'nutrition',
-        title: reminder.title,
-        message: contextMessage,
-        emoji: reminder.emoji,
-        actionLabel: 'Ajouter ce repas',
-        actionRoute: 'AddMeal',
-        reason: `Rappel ${reminder.type} (${reminder.startHour}h-${reminder.endHour}h)`,
-        confidence: 0.7,
-        dedupKey: `meal-reminder-${reminder.type}-${now.toISOString().split('T')[0]}`,
-      })
-      break // Un seul rappel de repas à la fois
-    }
-  }
+  // NOTE: Les rappels de repas (petit-déjeuner, déjeuner, etc.) sont gérés par
+  // meal-reminder-service.ts via notifications push programmées.
+  // Ne PAS les dupliquer ici pour éviter les rafales de messages.
 
   // ============= SUGGESTIONS PROGRAMMES CONTEXTUELLES =============
   // Ces suggestions apparaissent uniquement quand pertinent (stress, sommeil, etc.)
@@ -596,7 +566,7 @@ export function generateDailyMessages(
 
   // Suggestion Wellness si stress détecté ou fatigue
   if (userData.sleepHours && userData.sleepHours < 6) {
-    messages.push({
+    allMessages.push({
       priority: 'P3',
       type: 'tip',
       category: 'wellness',
@@ -614,7 +584,7 @@ export function generateDailyMessages(
 
   // Suggestion Boost Métabolique si streak élevé mais progression lente
   if (userData.streak >= 14 && caloriesPercent < 80) {
-    messages.push({
+    allMessages.push({
       priority: 'P3',
       type: 'tip',
       category: 'progress',
@@ -629,7 +599,14 @@ export function generateDailyMessages(
     })
   }
 
-  return messages
+  // Trier par priorité (P0 > P1 > P2 > P3) et ne garder que les plus importants
+  // Cela évite les rafales de messages qui submergent l'utilisateur
+  const priorityOrder: Record<MessagePriority, number> = { P0: 0, P1: 1, P2: 2, P3: 3 }
+  const sortedMessages = allMessages.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+
+  // Retourner maximum MAX_MESSAGES_PER_GENERATION messages
+  // Le système de cooldown empêchera de toute façon les doublons
+  return sortedMessages.slice(0, MAX_MESSAGES_PER_GENERATION)
 }
 
 // ============= TOAST HELPER =============

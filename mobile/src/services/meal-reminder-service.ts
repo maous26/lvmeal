@@ -11,8 +11,7 @@
 
 import * as Notifications from 'expo-notifications'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { isInEatingWindow, buildFastingContext } from './lymia-brain'
-import { useMessageCenter } from './message-center'
+import { isInEatingWindow } from './lymia-brain'
 import type { UserProfile, MealType, FastingConfig } from '../types'
 
 // Storage keys
@@ -285,27 +284,9 @@ export async function scheduleDailyMealReminders(
         },
       })
 
-      // Add to MessageCenter for Coach screen (with future expiry)
-      const mealEmoji: Record<MealType, string> = {
-        breakfast: '🌅',
-        lunch: '🍽️',
-        snack: '🍎',
-        dinner: '🌙',
-      }
-      const messageCenter = useMessageCenter.getState()
-      messageCenter.addMessage({
-        priority: 'P3',
-        type: 'tip',
-        category: 'nutrition',
-        title: messages.title,
-        message: randomBody,
-        emoji: mealEmoji[mealType],
-        reason: `Rappel repas: ${mealType}`,
-        confidence: 0.7,
-        dedupKey: `meal-reminder-${mealType}-${now.toISOString().split('T')[0]}`,
-        actionRoute: 'AddMeal',
-        actionLabel: 'Ajouter ce repas',
-      })
+      // NOTE: On n'ajoute PAS directement au MessageCenter ici
+      // Le message sera ajouté quand la notification sera reçue (voir App.tsx)
+      // Cela évite que tous les rappels apparaissent en rafale dans le Coach screen
 
       notificationIds.push(id)
       console.log(`[MealReminders] Scheduled ${mealType} for ${triggerDate.toLocaleTimeString()}`)

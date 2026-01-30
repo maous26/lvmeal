@@ -296,18 +296,21 @@ async function generateEveningSummaryAnalysis(profile: UserProfile): Promise<Eve
     }
 
     // Determine title and emoji based on performance
+    // Note: On ne montre PAS "Journée sans tracking" le soir même - l'utilisateur peut encore manger
+    // Ce message ne sera jamais envoyé car on skip l'envoi si 0 repas (voir scheduleEveningSummary)
     let title: string
     let emoji: string
 
-    if (todayMeals.length === 0) {
-      title = 'Journée sans tracking'
-      emoji = '📝'
-    } else if (percentCalories >= 85 && percentCalories <= 115 && percentProteins >= 80) {
+    if (percentCalories >= 85 && percentCalories <= 115 && percentProteins >= 80) {
       title = 'Excellente journée!'
       emoji = '🎉'
     } else if (percentCalories >= 70 && percentCalories <= 130) {
       title = 'Bonne journée'
       emoji = '👍'
+    } else if (todayMeals.length === 0) {
+      // Cas rare: ne devrait pas arriver car on skip si 0 repas
+      title = 'Bilan du jour'
+      emoji = '📊'
     } else {
       title = 'Bilan de ta journée'
       emoji = '📊'
@@ -320,7 +323,8 @@ async function generateEveningSummaryAnalysis(profile: UserProfile): Promise<Eve
     } else {
       // Fallback to structured summary
       if (todayMeals.length === 0) {
-        body = 'Tu n\'as pas tracké de repas aujourd\'hui. Demain est une nouvelle opportunité!'
+        // Ne jamais culpabiliser - message neutre
+        body = 'Passe une bonne soirée ! 🌙'
       } else if (percentCalories >= 85 && percentCalories <= 115) {
         body = `Super! Tu as consommé ${todayNutrition.calories} kcal sur ${goals.calories} (${percentCalories}%). Continue comme ça!`
       } else if (percentCalories < 70) {
@@ -376,6 +380,18 @@ export async function scheduleEveningSummary(profile: UserProfile): Promise<void
 
     const now = new Date()
     if (now.getHours() >= summaryHour) return // Already past summary time
+
+    // Check if user has tracked any meals today BEFORE scheduling
+    // Don't send "evening summary" if nothing was tracked - it's not helpful
+    const mealsState = useMealsStore.getState()
+    const todayStr = now.toISOString().split('T')[0]
+    const todayData = mealsState.dailyData[todayStr]
+    const todayMealsCount = todayData?.meals?.length || 0
+
+    if (todayMealsCount === 0) {
+      console.log('[CoachProactive] No meals tracked today, skipping evening summary')
+      return
+    }
 
     const triggerDate = new Date(now)
     triggerDate.setHours(summaryHour, 0, 0, 0)
