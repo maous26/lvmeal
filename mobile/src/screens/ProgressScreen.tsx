@@ -141,11 +141,11 @@ export default function ProgressScreen() {
         ...dayData,
         totalNutrition: dayData.totalNutrition && typeof dayData.totalNutrition === 'object'
           ? {
-              calories: typeof dayData.totalNutrition.calories === 'number' ? dayData.totalNutrition.calories : 0,
-              proteins: typeof dayData.totalNutrition.proteins === 'number' ? dayData.totalNutrition.proteins : 0,
-              carbs: typeof dayData.totalNutrition.carbs === 'number' ? dayData.totalNutrition.carbs : 0,
-              fats: typeof dayData.totalNutrition.fats === 'number' ? dayData.totalNutrition.fats : 0,
-            }
+            calories: typeof dayData.totalNutrition.calories === 'number' ? dayData.totalNutrition.calories : 0,
+            proteins: typeof dayData.totalNutrition.proteins === 'number' ? dayData.totalNutrition.proteins : 0,
+            carbs: typeof dayData.totalNutrition.carbs === 'number' ? dayData.totalNutrition.carbs : 0,
+            fats: typeof dayData.totalNutrition.fats === 'number' ? dayData.totalNutrition.fats : 0,
+          }
           : { calories: 0, proteins: 0, carbs: 0, fats: 0 },
       }
     }
@@ -307,75 +307,115 @@ export default function ProgressScreen() {
       )
     }
 
-    const chartWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
     const chartHeight = 160
     const paddingTop = 20
     const paddingBottom = 30
+    const paddingRight = 40 // Space for Y-axis labels
+    const contentWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
+    const chartWidth = contentWidth - paddingRight
     const graphHeight = chartHeight - paddingTop - paddingBottom
 
     const barWidth = days <= 7 ? 24 : days <= 30 ? 8 : 4
     const barGap = days <= 7 ? 8 : days <= 30 ? 3 : 1
     const maxSteps = Math.max(...stepsData.map(d => d.steps), STEPS_GOAL)
+    // Round max to nice number
+    const maxScale = Math.ceil(maxSteps / 1000) * 1000
+
     const totalBarsWidth = days * (barWidth + barGap) - barGap
     const startX = (chartWidth - totalBarsWidth) / 2
     const avgSteps = Math.round(stepsData.reduce((sum, d) => sum + d.steps, 0) / days)
 
+    // Grid lines
+    const gridLines = [0, 0.5, 1].map(ratio => {
+      const value = Math.round(maxScale * ratio)
+      const y = paddingTop + graphHeight - (value / maxScale) * graphHeight
+      return { y, value }
+    })
+
     return (
       <View style={styles.chartContainer}>
-        <Svg width={chartWidth} height={chartHeight}>
-          <Defs>
-            <LinearGradient id="stepsGradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.accent.primary} stopOpacity="1" />
-              <Stop offset="1" stopColor={colors.accent.primary} stopOpacity="0.6" />
-            </LinearGradient>
-          </Defs>
+        <View style={{ flexDirection: 'row' }}>
+          <Svg width={chartWidth} height={chartHeight}>
+            <Defs>
+              <LinearGradient id="stepsGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.accent.primary} stopOpacity="1" />
+                <Stop offset="1" stopColor={colors.accent.primary} stopOpacity="0.4" />
+              </LinearGradient>
+            </Defs>
 
-          {/* Goal line */}
-          <Line
-            x1={0}
-            y1={paddingTop + graphHeight - (STEPS_GOAL / maxSteps) * graphHeight}
-            x2={chartWidth}
-            y2={paddingTop + graphHeight - (STEPS_GOAL / maxSteps) * graphHeight}
-            stroke={colors.success}
-            strokeWidth={1}
-            strokeDasharray="4 4"
-            opacity={0.6}
-          />
-
-          {/* Bars */}
-          {stepsData.map((d, i) => {
-            const x = startX + i * (barWidth + barGap)
-            const barHeight = (d.steps / maxSteps) * graphHeight
-            const y = paddingTop + graphHeight - barHeight
-            const isAboveGoal = d.steps >= STEPS_GOAL
-
-            return (
-              <Rect
-                key={i}
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={barWidth / 4}
-                fill={isAboveGoal ? colors.success : 'url(#stepsGradient)'}
+            {/* Grid Lines */}
+            {gridLines.map((line, i) => (
+              <Line
+                key={`grid-${i}`}
+                x1={0}
+                y1={line.y}
+                x2={chartWidth}
+                y2={line.y}
+                stroke={colors.border.light} // Subtle grid
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                opacity={0.5}
               />
-            )
-          })}
+            ))}
 
-          {/* X-axis labels (only for 7 days) */}
-          {days <= 7 && stepsData.map((d, i) => (
-            <SvgText
-              key={`label-${i}`}
-              x={startX + i * (barWidth + barGap) + barWidth / 2}
-              y={chartHeight - 8}
-              fontSize={10}
-              fill={colors.text.muted}
-              textAnchor="middle"
-            >
-              {d.dayLabel}
-            </SvgText>
-          ))}
-        </Svg>
+            {/* Goal line */}
+            <Line
+              x1={0}
+              y1={paddingTop + graphHeight - (STEPS_GOAL / maxScale) * graphHeight}
+              x2={chartWidth}
+              y2={paddingTop + graphHeight - (STEPS_GOAL / maxScale) * graphHeight}
+              stroke={colors.success}
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              opacity={0.8}
+            />
+
+            {/* Bars */}
+            {stepsData.map((d, i) => {
+              const x = startX + i * (barWidth + barGap)
+              const barHeight = (d.steps / maxScale) * graphHeight
+              const y = paddingTop + graphHeight - barHeight
+              const isAboveGoal = d.steps >= STEPS_GOAL
+
+              return (
+                <Rect
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={barWidth / 4}
+                  fill={isAboveGoal ? colors.success : 'url(#stepsGradient)'}
+                  opacity={0.9}
+                />
+              )
+            })}
+
+            {/* X-axis labels (only for 7 days) */}
+            {days <= 7 && stepsData.map((d, i) => (
+              <SvgText
+                key={`label-${i}`}
+                x={startX + i * (barWidth + barGap) + barWidth / 2}
+                y={chartHeight - 8}
+                fontSize={10}
+                fill={colors.text.muted}
+                textAnchor="middle"
+                fontWeight="500"
+              >
+                {d.dayLabel}
+              </SvgText>
+            ))}
+          </Svg>
+
+          {/* Y-Axis Labels */}
+          <View style={[styles.yAxisLabelsRight, { height: chartHeight, paddingTop, paddingBottom }]}>
+            {gridLines.reverse().map((line, i) => (
+              <Text key={i} style={[styles.yLabel, { color: colors.text.tertiary, position: 'absolute', top: line.y - 6 }]}>
+                {formatNumber(line.value)}
+              </Text>
+            ))}
+          </View>
+        </View>
 
         {/* Stats */}
         <View style={styles.chartStatsCompact}>
@@ -415,62 +455,99 @@ export default function ProgressScreen() {
       )
     }
 
-    const chartWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
     const chartHeight = 140
     const paddingTop = 15
     const paddingBottom = 30
+    const paddingRight = 40
+    const contentWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
+    const chartWidth = contentWidth - paddingRight
     const graphHeight = chartHeight - paddingTop - paddingBottom
 
     const barWidth = days <= 7 ? 24 : days <= 30 ? 8 : 4
     const barGap = days <= 7 ? 8 : days <= 30 ? 3 : 1
     const maxCalories = Math.max(...caloriesData.map(d => d.caloriesBurned), 400)
+    const maxScale = Math.ceil(maxCalories / 100) * 100
+
     const totalBarsWidth = days * (barWidth + barGap) - barGap
     const startX = (chartWidth - totalBarsWidth) / 2
     const avgCalories = Math.round(caloriesData.reduce((sum, d) => sum + d.caloriesBurned, 0) / days)
 
+    const gridLines = [0, 0.5, 1].map(ratio => {
+      const value = Math.round(maxScale * ratio)
+      const y = paddingTop + graphHeight - (value / maxScale) * graphHeight
+      return { y, value }
+    })
+
     return (
       <View style={styles.chartContainer}>
-        <Svg width={chartWidth} height={chartHeight}>
-          <Defs>
-            <LinearGradient id="burnedGradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.warning} stopOpacity="1" />
-              <Stop offset="1" stopColor={colors.warning} stopOpacity="0.6" />
-            </LinearGradient>
-          </Defs>
+        <View style={{ flexDirection: 'row' }}>
+          <Svg width={chartWidth} height={chartHeight}>
+            <Defs>
+              <LinearGradient id="burnedGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.warning} stopOpacity="1" />
+                <Stop offset="1" stopColor={colors.warning} stopOpacity="0.4" />
+              </LinearGradient>
+            </Defs>
 
-          {/* Bars */}
-          {caloriesData.map((d, i) => {
-            const x = startX + i * (barWidth + barGap)
-            const barHeight = (d.caloriesBurned / maxCalories) * graphHeight
-            const y = paddingTop + graphHeight - barHeight
-
-            return (
-              <Rect
-                key={i}
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={barWidth / 4}
-                fill="url(#burnedGradient)"
+            {/* Grid Lines */}
+            {gridLines.map((line, i) => (
+              <Line
+                key={`grid-${i}`}
+                x1={0}
+                y1={line.y}
+                x2={chartWidth}
+                y2={line.y}
+                stroke={colors.border.light}
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                opacity={0.5}
               />
-            )
-          })}
+            ))}
 
-          {/* X-axis labels (only for 7 days) */}
-          {days <= 7 && caloriesData.map((d, i) => (
-            <SvgText
-              key={`label-${i}`}
-              x={startX + i * (barWidth + barGap) + barWidth / 2}
-              y={chartHeight - 8}
-              fontSize={10}
-              fill={colors.text.muted}
-              textAnchor="middle"
-            >
-              {d.dayLabel}
-            </SvgText>
-          ))}
-        </Svg>
+            {/* Bars */}
+            {caloriesData.map((d, i) => {
+              const x = startX + i * (barWidth + barGap)
+              const barHeight = (d.caloriesBurned / maxScale) * graphHeight
+              const y = paddingTop + graphHeight - barHeight
+
+              return (
+                <Rect
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={barWidth / 4}
+                  fill="url(#burnedGradient)"
+                />
+              )
+            })}
+
+            {/* X-axis labels (only for 7 days) */}
+            {days <= 7 && caloriesData.map((d, i) => (
+              <SvgText
+                key={`label-${i}`}
+                x={startX + i * (barWidth + barGap) + barWidth / 2}
+                y={chartHeight - 8}
+                fontSize={10}
+                fill={colors.text.muted}
+                textAnchor="middle"
+                fontWeight="500"
+              >
+                {d.dayLabel}
+              </SvgText>
+            ))}
+          </Svg>
+
+          {/* Y-Axis Labels */}
+          <View style={[styles.yAxisLabelsRight, { height: chartHeight, paddingTop, paddingBottom }]}>
+            {gridLines.reverse().map((line, i) => (
+              <Text key={i} style={[styles.yLabel, { color: colors.text.tertiary, position: 'absolute', top: line.y - 6 }]}>
+                {formatNumber(line.value)}
+              </Text>
+            ))}
+          </View>
+        </View>
 
         {/* Stats */}
         <View style={styles.chartStatsCompact}>
@@ -499,10 +576,12 @@ export default function ProgressScreen() {
       )
     }
 
-    const chartWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
     const chartHeight = 180
     const paddingTop = 20
     const paddingBottom = 30
+    const paddingRight = 40
+    const contentWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
+    const chartWidth = contentWidth - paddingRight
     const graphHeight = chartHeight - paddingTop - paddingBottom
 
     const weights = chartData.map(d => d.smoothedWeight)
@@ -524,45 +603,69 @@ export default function ProgressScreen() {
     const weightPath = weightPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
     const weightAreaPath = `${weightPath} L ${weightPoints[weightPoints.length - 1].x} ${paddingTop + graphHeight} L 0 ${paddingTop + graphHeight} Z`
 
+    const gridLines = [minW, (minW + maxW) / 2, maxW].map(val => ({
+      y: getWeightY(val),
+      value: val
+    }))
+
     return (
       <View style={styles.chartContainer}>
-        <Svg width={chartWidth} height={chartHeight}>
-          <Defs>
-            <LinearGradient id="weightAreaGradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.accent.primary} stopOpacity="0.3" />
-              <Stop offset="1" stopColor={colors.accent.primary} stopOpacity="0.05" />
-            </LinearGradient>
-            <LinearGradient id="goalZone" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.success} stopOpacity="0.15" />
-              <Stop offset="1" stopColor={colors.success} stopOpacity="0.05" />
-            </LinearGradient>
-          </Defs>
+        <View style={{ flexDirection: 'row' }}>
+          <Svg width={chartWidth} height={chartHeight}>
+            <Defs>
+              <LinearGradient id="weightAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.accent.primary} stopOpacity="0.2" />
+                <Stop offset="1" stopColor={colors.accent.primary} stopOpacity="0.0" />
+              </LinearGradient>
+              <LinearGradient id="goalZone" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.success} stopOpacity="0.1" />
+                <Stop offset="1" stopColor={colors.success} stopOpacity="0.05" />
+              </LinearGradient>
+            </Defs>
 
-          {/* Goal zone */}
-          <Rect x={0} y={goalY - 10} width={chartWidth} height={20} fill="url(#goalZone)" />
+            {/* Grid lines */}
+            {gridLines.map((line, i) => (
+              <Line
+                key={`grid-${i}`}
+                x1={0}
+                y1={line.y}
+                x2={chartWidth}
+                y2={line.y}
+                stroke={colors.border.light}
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                opacity={0.5}
+              />
+            ))}
 
-          {/* Target line */}
-          <Line x1={0} y1={goalY} x2={chartWidth} y2={goalY} stroke={colors.success} strokeWidth={1.5} strokeDasharray="6 4" />
+            {/* Goal zone */}
+            <Rect x={0} y={goalY - 10} width={chartWidth} height={20} fill="url(#goalZone)" />
 
-          {/* Ideal trajectory */}
-          <Line x1={0} y1={startY} x2={chartWidth} y2={goalY} stroke={colors.text.muted} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
+            {/* Target line */}
+            <Line x1={0} y1={goalY} x2={chartWidth} y2={goalY} stroke={colors.success} strokeWidth={1.5} strokeDasharray="6 4" />
 
-          {/* Weight area */}
-          <Path d={weightAreaPath} fill="url(#weightAreaGradient)" />
+            {/* Ideal trajectory */}
+            <Line x1={0} y1={startY} x2={chartWidth} y2={goalY} stroke={colors.text.muted} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
 
-          {/* Weight line */}
-          <Path d={weightPath} stroke={colors.accent.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Weight area */}
+            <Path d={weightAreaPath} fill="url(#weightAreaGradient)" />
 
-          {/* Current point */}
-          <Circle cx={weightPoints[weightPoints.length - 1].x} cy={weightPoints[weightPoints.length - 1].y} r={6} fill={colors.accent.primary} />
-          <Circle cx={weightPoints[weightPoints.length - 1].x} cy={weightPoints[weightPoints.length - 1].y} r={3} fill="#FFFFFF" />
-        </Svg>
+            {/* Weight line */}
+            <Path d={weightPath} stroke={colors.accent.primary} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
-        {/* Y-axis labels */}
-        <View style={[styles.yAxisLabels, { height: graphHeight }]}>
-          <Text style={[styles.yLabel, { color: colors.text.muted }]}>{Math.round(maxW)} kg</Text>
-          <Text style={[styles.yLabel, { color: colors.success }]}>{targetWeight} kg</Text>
-          <Text style={[styles.yLabel, { color: colors.text.muted }]}>{Math.round(minW)} kg</Text>
+            {/* Current point */}
+            <Circle cx={weightPoints[weightPoints.length - 1].x} cy={weightPoints[weightPoints.length - 1].y} r={6} fill={colors.accent.primary} />
+            <Circle cx={weightPoints[weightPoints.length - 1].x} cy={weightPoints[weightPoints.length - 1].y} r={3} fill="#FFFFFF" />
+          </Svg>
+
+          {/* Y-axis labels */}
+          <View style={[styles.yAxisLabelsRight, { height: chartHeight, paddingTop, paddingBottom }]}>
+            {gridLines.map((line, i) => (
+              <Text key={i} style={[styles.yLabel, { color: colors.text.tertiary, position: 'absolute', top: line.y - 6 }]}>
+                {Math.round(line.value)}
+              </Text>
+            ))}
+          </View>
         </View>
 
         {/* Stats */}
@@ -602,82 +705,119 @@ export default function ProgressScreen() {
       )
     }
 
-    const chartWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
     const chartHeight = 140
     const paddingTop = 15
     const paddingBottom = 30
+    const paddingRight = 40
+    const contentWidth = SCREEN_WIDTH - spacing.default * 2 - spacing.md * 2
+    const chartWidth = contentWidth - paddingRight
     const graphHeight = chartHeight - paddingTop - paddingBottom
 
     const barWidth = days <= 7 ? 24 : days <= 30 ? 8 : 4
     const barGap = days <= 7 ? 8 : days <= 30 ? 3 : 1
     const maxCalories = Math.max(...nutritionData.map(d => d.calories), goals.calories * 1.2)
+    const maxScale = Math.ceil(maxCalories / 100) * 100
+
     const totalBarsWidth = days * (barWidth + barGap) - barGap
     const startX = (chartWidth - totalBarsWidth) / 2
-    const goalLineY = paddingTop + graphHeight - (goals.calories / maxCalories) * graphHeight
+    const goalLineY = paddingTop + graphHeight - (goals.calories / maxScale) * graphHeight
     const daysWithData = nutritionData.filter(d => d.calories > 0).length
     const avgCalories = daysWithData > 0 ? Math.round(nutritionData.reduce((sum, d) => sum + d.calories, 0) / daysWithData) : 0
 
+    const gridLines = [0, 0.5, 1].map(ratio => {
+      const value = Math.round(maxScale * ratio)
+      const y = paddingTop + graphHeight - (value / maxScale) * graphHeight
+      return { y, value }
+    })
+
     return (
       <View style={styles.chartContainer}>
-        <Svg width={chartWidth} height={chartHeight}>
-          <Defs>
-            <LinearGradient id="consumedGradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.warning} stopOpacity="1" />
-              <Stop offset="1" stopColor={colors.warning} stopOpacity="0.6" />
-            </LinearGradient>
-            <LinearGradient id="consumedOverGradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.error} stopOpacity="1" />
-              <Stop offset="1" stopColor={colors.error} stopOpacity="0.6" />
-            </LinearGradient>
-          </Defs>
+        <View style={{ flexDirection: 'row' }}>
+          <Svg width={chartWidth} height={chartHeight}>
+            <Defs>
+              <LinearGradient id="consumedGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.warning} stopOpacity="1" />
+                <Stop offset="1" stopColor={colors.warning} stopOpacity="0.6" />
+              </LinearGradient>
+              <LinearGradient id="consumedOverGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colors.error} stopOpacity="1" />
+                <Stop offset="1" stopColor={colors.error} stopOpacity="0.6" />
+              </LinearGradient>
+            </Defs>
 
-          {/* Goal line */}
-          <Line
-            x1={0}
-            y1={goalLineY}
-            x2={chartWidth}
-            y2={goalLineY}
-            stroke={colors.success}
-            strokeWidth={1}
-            strokeDasharray="4 4"
-            opacity={0.6}
-          />
-
-          {/* Bars */}
-          {nutritionData.map((d, i) => {
-            if (d.calories === 0) return null
-            const x = startX + i * (barWidth + barGap)
-            const barHeight = (d.calories / maxCalories) * graphHeight
-            const y = paddingTop + graphHeight - barHeight
-            const isOverGoal = d.calories > goals.calories
-
-            return (
-              <Rect
-                key={i}
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={barWidth / 4}
-                fill={isOverGoal ? 'url(#consumedOverGradient)' : 'url(#consumedGradient)'}
+            {/* Grid Lines */}
+            {gridLines.map((line, i) => (
+              <Line
+                key={`grid-${i}`}
+                x1={0}
+                y1={line.y}
+                x2={chartWidth}
+                y2={line.y}
+                stroke={colors.border.light}
+                strokeWidth={1}
+                strokeDasharray="4 4"
+                opacity={0.5}
               />
-            )
-          })}
+            ))}
 
-          {/* X-axis labels (only for 7 days) */}
-          {days <= 7 && nutritionData.map((d, i) => (
-            <SvgText
-              key={`label-${i}`}
-              x={startX + i * (barWidth + barGap) + barWidth / 2}
-              y={chartHeight - 8}
-              fontSize={10}
-              fill={colors.text.muted}
-              textAnchor="middle"
-            >
-              {d.dayLabel}
-            </SvgText>
-          ))}
-        </Svg>
+            {/* Goal line */}
+            <Line
+              x1={0}
+              y1={goalLineY}
+              x2={chartWidth}
+              y2={goalLineY}
+              stroke={colors.success}
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              opacity={0.8}
+            />
+
+            {/* Bars */}
+            {nutritionData.map((d, i) => {
+              if (d.calories === 0) return null
+              const x = startX + i * (barWidth + barGap)
+              const barHeight = (d.calories / maxScale) * graphHeight
+              const y = paddingTop + graphHeight - barHeight
+              const isOverGoal = d.calories > goals.calories
+
+              return (
+                <Rect
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={barWidth / 4}
+                  fill={isOverGoal ? 'url(#consumedOverGradient)' : 'url(#consumedGradient)'}
+                />
+              )
+            })}
+
+            {/* X-axis labels (only for 7 days) */}
+            {days <= 7 && nutritionData.map((d, i) => (
+              <SvgText
+                key={`label-${i}`}
+                x={startX + i * (barWidth + barGap) + barWidth / 2}
+                y={chartHeight - 8}
+                fontSize={10}
+                fill={colors.text.muted}
+                textAnchor="middle"
+                fontWeight="500"
+              >
+                {d.dayLabel}
+              </SvgText>
+            ))}
+          </Svg>
+
+          {/* Y-Axis Labels */}
+          <View style={[styles.yAxisLabelsRight, { height: chartHeight, paddingTop, paddingBottom }]}>
+            {gridLines.reverse().map((line, i) => (
+              <Text key={i} style={[styles.yLabel, { color: colors.text.tertiary, position: 'absolute', top: line.y - 6 }]}>
+                {formatNumber(line.value)}
+              </Text>
+            ))}
+          </View>
+        </View>
 
         {/* Stats */}
         <View style={styles.chartStatsCompact}>
@@ -1475,5 +1615,13 @@ const styles = StyleSheet.create({
     left: 36,
     width: (SCREEN_WIDTH - spacing.default * 2 - 40 - 36 * 6) / 5,
     height: 2,
+  },
+  yAxisLabelsRight: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 40,
+    alignItems: 'flex-end',
+    paddingRight: 4
   },
 })
