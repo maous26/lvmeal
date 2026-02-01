@@ -138,7 +138,10 @@ export function FeaturedInsight({
             </View>
             <View style={styles.headerInfo}>
               <View style={styles.badges}>
-                <AIBadge variant="inline" text="LYM" size="sm" />
+                {/* Only show AI badge for actual AI-generated messages */}
+                {message.reason?.startsWith('IA:') && (
+                  <AIBadge variant="inline" text="IA" size="sm" />
+                )}
                 {!message.read && (
                   <View style={[styles.newBadge, { backgroundColor: priorityConf.color }]}>
                     <Text style={styles.newBadgeText}>Nouveau</Text>

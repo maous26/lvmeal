@@ -14,7 +14,6 @@ import {
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
 } from 'react-native'
 import {
@@ -37,12 +36,13 @@ import { useUserStore, useUserStoreHydration } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { useMealsStore, useMealsStoreHydration } from '../stores/meals-store'
 import { useGamificationStore, useGamificationStoreHydration } from '../stores/gamification-store'
-import { useCaloricBankStore, useCaloricBankStoreHydration } from '../stores/caloric-bank-store'
+import { useCaloricBankStoreHydration } from '../stores/caloric-bank-store'
 import {
   useMessageCenter,
-  generateDailyMessages,
+  generateAIMessages,
   getPriorityConfig,
   type LymiaMessage,
+  type AIMessageContext,
 } from '../services/message-center'
 import { CoachMessageCard, FeaturedInsight, CollapsibleSection } from '../components/coach'
 import { AnimatedBackground } from '../components/ui'
@@ -208,29 +208,19 @@ export default function CoachScreen() {
 
   // Track if messages have been generated to prevent infinite loops
   const hasGeneratedMessages = React.useRef(false)
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
 
-  // Generate messages - called imperatively, not via useCallback to avoid dependency issues
-  const generateMessages = () => {
+  // Generate messages - uses REAL AI via LymIABrain
+  const generateMessages = async () => {
     // Get fresh data from stores directly to avoid stale closures
     const mealsStore = useMealsStore.getState()
-    const caloricBankStore = useCaloricBankStore.getState()
     const gamificationStore = useGamificationStore.getState()
     const messageCenter = useMessageCenter.getState()
+    const userStore = useUserStore.getState()
 
     const todayData = mealsStore.getTodayData()
 
-    // Récupérer plaisirInfo avec valeurs par défaut sécurisées
-    let plaisirInfo = { available: false, maxPerMeal: 0, remainingPlaisirMeals: 0, budget: 0, suggestion: '', requiresSplit: false }
-    try {
-      plaisirInfo = caloricBankStore.getPlaisirSuggestion() || plaisirInfo
-    } catch (e) {
-      console.warn('[CoachScreen] Error getting plaisir suggestion:', e)
-    }
-
     // Calculer les pourcentages
-    const proteinsPercent = nutritionGoals?.proteins
-      ? Math.round((todayData.totalNutrition.proteins / nutritionGoals.proteins) * 100)
-      : 0
     const waterPercent = Math.round((todayData.hydration / 2000) * 100)
 
     // Trouver le dernier repas
@@ -241,27 +231,45 @@ export default function CoachScreen() {
         }, new Date(0))
       : null
 
-    const newMessages = generateDailyMessages({
-      caloriesConsumed: todayData.totalNutrition.calories,
-      caloriesTarget: nutritionGoals?.calories || 2000,
-      proteinsConsumed: todayData.totalNutrition.proteins,
-      proteinsTarget: nutritionGoals?.proteins,
-      proteinsPercent,
-      carbsConsumed: todayData.totalNutrition.carbs,
-      carbsTarget: nutritionGoals?.carbs,
-      fatsConsumed: todayData.totalNutrition.fats,
-      fatsTarget: nutritionGoals?.fats,
-      waterPercent,
-      sleepHours: null,
+    // Build context for AI message generation
+    const aiContext: AIMessageContext = {
+      profile: {
+        firstName: userStore.profile?.firstName,
+        goal: userStore.profile?.goal,
+      },
+      nutrition: {
+        caloriesConsumed: todayData.totalNutrition.calories,
+        caloriesTarget: nutritionGoals?.calories || 2000,
+        proteinsConsumed: todayData.totalNutrition.proteins,
+        proteinsTarget: nutritionGoals?.proteins || 100,
+        carbsConsumed: todayData.totalNutrition.carbs,
+        fatsConsumed: todayData.totalNutrition.fats,
+      },
+      wellness: {
+        sleepHours: null,
+        stressLevel: null,
+        energyLevel: null,
+        hydrationPercent: waterPercent,
+      },
       streak: gamificationStore.currentStreak,
       lastMealTime: lastMeal && lastMeal.getTime() > 0 ? lastMeal : null,
-      plaisirAvailable: plaisirInfo.available,
-      maxPlaisirPerMeal: plaisirInfo.maxPerMeal,
-      remainingPlaisirMeals: plaisirInfo.remainingPlaisirMeals,
-    }, messageCenter.preferences)
+      todayMealsCount: todayData.meals.length,
+    }
 
-    // Ajouter les messages (le cooldown empêche les doublons)
-    newMessages.forEach(msg => messageCenter.addMessage(msg))
+    setIsGeneratingAI(true)
+    try {
+      // Use smart message generation (AI + critical alerts, with built-in fallback)
+      const newMessages = await generateAIMessages(aiContext)
+      console.log('[CoachScreen] Generated', newMessages.length, 'messages')
+
+      // Ajouter les messages (le cooldown empêche les doublons)
+      newMessages.forEach(msg => messageCenter.addMessage(msg))
+    } catch (error) {
+      console.error('[CoachScreen] Message generation failed:', error)
+      // generateAIMessages handles its own fallback internally
+    } finally {
+      setIsGeneratingAI(false)
+    }
   }
 
   // Générer les messages UNE SEULE FOIS quand les stores sont hydratés
@@ -360,11 +368,19 @@ export default function CoachScreen() {
             <View>
               <Text style={[styles.title, { color: colors.text.primary }]}>Mon Coach</Text>
               <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
-                {unreadCount > 0 ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}` : 'Tes conseils personnalisés'}
+                {isGeneratingAI
+                  ? 'Analyse en cours...'
+                  : unreadCount > 0
+                    ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}`
+                    : 'Conseils IA personnalisés'}
               </Text>
             </View>
             <View style={[styles.avatarGradient, { backgroundColor: staticColors.accent.primary }]}>
-              <Bot size={24} color="#FFFFFF" />
+              {isGeneratingAI ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Bot size={24} color="#FFFFFF" />
+              )}
             </View>
           </View>
         </View>

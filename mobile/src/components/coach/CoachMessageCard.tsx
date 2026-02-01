@@ -161,7 +161,10 @@ export function CoachMessageCard({
             <Text style={[styles.typeLabel, { color: priorityConf.color }]}>
               {typeConf.label}
             </Text>
-            <AIBadge variant="inline" text="IA" size="sm" />
+            {/* Only show AI badge for actual AI-generated messages */}
+            {message.reason?.startsWith('IA:') && (
+              <AIBadge variant="inline" text="IA" size="sm" />
+            )}
             {!message.read && (
               <View style={[styles.unreadDot, { backgroundColor: priorityConf.color }]} />
             )}

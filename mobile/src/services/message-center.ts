@@ -329,15 +329,307 @@ export const useMessageCenter = create<MessageCenterState>()(
 
 type GeneratedMessage = Omit<LymiaMessage, 'id' | 'createdAt' | 'read' | 'dismissed'>
 
-/**
- * Generate contextual messages based on user data
- * Respecte les preferences utilisateur et le système de cooldown
- *
- * IMPORTANT: Cette fonction génère des messages POTENTIELS.
- * Le système de cooldown (dedupKey) empêche les doublons.
- * On limite à MAX_MESSAGES_PER_GENERATION pour éviter les rafales.
- */
 const MAX_MESSAGES_PER_GENERATION = 3 // Max messages ajoutés à la fois
+
+// ============= AI MESSAGE GENERATION =============
+
+export interface AIMessageContext {
+  profile: {
+    firstName?: string
+    goal?: string
+  }
+  nutrition: {
+    caloriesConsumed: number
+    caloriesTarget: number
+    proteinsConsumed: number
+    proteinsTarget: number
+    carbsConsumed: number
+    fatsConsumed: number
+  }
+  wellness: {
+    sleepHours?: number | null
+    stressLevel?: number | null
+    energyLevel?: number | null
+    hydrationPercent: number
+  }
+  streak: number
+  lastMealTime: Date | null
+  todayMealsCount: number
+}
+
+/**
+ * Generate smart messages combining AI insights + critical contextual alerts
+ *
+ * Strategy:
+ * 1. AI messages (LymIABrain) - personalized coaching, tips, motivation
+ * 2. Critical alerts only - urgent situations that need immediate attention
+ * 3. Max 3 messages total to avoid overwhelming the user
+ * 4. Dedup keys prevent duplicate messages on the same topic
+ */
+export async function generateAIMessages(context: AIMessageContext): Promise<GeneratedMessage[]> {
+  const messages: GeneratedMessage[] = []
+  const hour = new Date().getHours()
+  const { profile, nutrition, wellness, streak, lastMealTime, todayMealsCount } = context
+  const today = new Date().toISOString().split('T')[0]
+
+  // Calculate percentages
+  const caloriesPercent = nutrition.caloriesTarget > 0
+    ? Math.round((nutrition.caloriesConsumed / nutrition.caloriesTarget) * 100)
+    : 0
+  const proteinsPercent = nutrition.proteinsTarget > 0
+    ? Math.round((nutrition.proteinsConsumed / nutrition.proteinsTarget) * 100)
+    : 0
+
+  // ============= STEP 1: Critical contextual alerts (non-AI, urgent only) =============
+  // These are simple rule-based alerts for urgent situations
+  // They complement AI messages by catching critical states
+
+  // Alert: Long fast (8+ hours without eating, daytime only)
+  if (lastMealTime && hour >= 9 && hour <= 21) {
+    const hoursSinceLastMeal = (Date.now() - lastMealTime.getTime()) / (1000 * 60 * 60)
+    if (hoursSinceLastMeal >= 8) {
+      messages.push({
+        priority: 'P1',
+        type: 'action',
+        category: 'nutrition',
+        title: 'Tu as faim ?',
+        message: `Ça fait ${Math.round(hoursSinceLastMeal)}h sans repas. Prends soin de toi !`,
+        emoji: '🍽️',
+        actionLabel: 'Ajouter un repas',
+        actionRoute: 'AddMeal',
+        reason: `Alerte: ${Math.round(hoursSinceLastMeal)}h sans repas`,
+        confidence: 0.85,
+        dedupKey: `alert-long-fast-${today}`,
+      })
+    }
+  }
+
+  // Alert: Critical dehydration (< 30% after 15h)
+  if (wellness.hydrationPercent < 30 && hour >= 15) {
+    messages.push({
+      priority: 'P1',
+      type: 'action',
+      category: 'hydration',
+      title: 'Pense à boire',
+      message: `Seulement ${wellness.hydrationPercent}% de ton objectif eau. Un verre d'eau ?`,
+      emoji: '💧',
+      actionLabel: "Ajouter de l'eau",
+      actionRoute: 'Home',
+      reason: `Alerte: hydratation à ${wellness.hydrationPercent}%`,
+      confidence: 0.8,
+      dedupKey: `alert-dehydration-${today}`,
+      source: 'ANSES',
+    })
+  }
+
+  // ============= STEP 2: AI-powered personalized messages =============
+  // Only fetch AI messages if we have room (max 3 total)
+  const remainingSlots = MAX_MESSAGES_PER_GENERATION - messages.length
+
+  if (remainingSlots > 0) {
+    try {
+      // Dynamically import LymIABrain to avoid circular dependencies
+      const { getCoachingAdvice } = await import('./lymia-brain')
+
+      // Build context for LymIA
+      const lymiaContext = {
+        profile: {
+          firstName: profile.firstName,
+          goal: profile.goal || 'maintain',
+          nutritionalNeeds: {
+            calories: nutrition.caloriesTarget,
+            proteins: nutrition.proteinsTarget,
+            carbs: 0,
+            fats: 0,
+          },
+        } as any,
+        todayNutrition: {
+          calories: nutrition.caloriesConsumed,
+          proteins: nutrition.proteinsConsumed,
+          carbs: nutrition.carbsConsumed,
+          fats: nutrition.fatsConsumed,
+        },
+        weeklyAverage: {
+          calories: nutrition.caloriesConsumed,
+          proteins: nutrition.proteinsConsumed,
+          carbs: nutrition.carbsConsumed,
+          fats: nutrition.fatsConsumed,
+        },
+        currentStreak: streak,
+        lastMeals: [],
+        wellnessData: {
+          sleepHours: wellness.sleepHours || undefined,
+          stressLevel: wellness.stressLevel || undefined,
+          energyLevel: wellness.energyLevel || undefined,
+          hydrationLiters: (wellness.hydrationPercent / 100) * 2,
+        },
+      }
+
+      // Get AI coaching advice
+      const advices = await getCoachingAdvice(lymiaContext)
+
+      // Convert advices to messages (respect remaining slots)
+      for (const advice of advices.slice(0, remainingSlots)) {
+        // Skip if AI gives advice on same topic as our alerts
+        const aiCategory = advice.category === 'alert' ? 'nutrition' :
+          advice.category === 'motivation' ? 'progress' :
+          advice.category as MessageCategory
+
+        // Check for duplicates with existing messages
+        const isDuplicate = messages.some(m =>
+          m.category === aiCategory &&
+          (m.dedupKey?.includes('fast') && advice.message.toLowerCase().includes('repas')) ||
+          (m.dedupKey?.includes('hydration') && advice.message.toLowerCase().includes('eau'))
+        )
+
+        if (isDuplicate) continue
+
+        const priority: MessagePriority =
+          advice.priority === 'high' ? 'P1' :
+          advice.priority === 'medium' ? 'P2' : 'P3'
+
+        const type: MessageType =
+          advice.category === 'alert' ? 'alert' :
+          advice.category === 'motivation' ? 'celebration' :
+          advice.priority === 'high' ? 'action' : 'tip'
+
+        // Extract source name from sources array (sources is Array<{content, source, relevance}>)
+        const sourceEntry = advice.sources?.[0]
+        const sourceName = sourceEntry?.source?.toUpperCase() || undefined
+
+        messages.push({
+          priority,
+          type,
+          category: aiCategory,
+          title: extractTitle(advice.message),
+          message: advice.message,
+          emoji: getCategoryEmoji(aiCategory, type),
+          actionLabel: advice.actionItems?.[0] || undefined,
+          actionRoute: getActionRoute(aiCategory),
+          reason: `IA: ${advice.category} - ${advice.priority}`,
+          confidence: 0.9,
+          dedupKey: `ai-${aiCategory}-${today}-${advice.priority}`,
+          source: sourceName,
+        })
+
+        // Stop if we've filled all slots
+        if (messages.length >= MAX_MESSAGES_PER_GENERATION) break
+      }
+    } catch (error) {
+      console.error('[MessageCenter] AI generation failed:', error)
+      // Don't add fallback if we already have alert messages
+    }
+  }
+
+  // ============= STEP 3: Fallback if no messages at all =============
+  // Only add a fallback insight in the evening if we have nothing
+  if (messages.length === 0 && hour >= 18) {
+    messages.push(await generateFallbackInsight(context))
+  }
+
+  // Sort by priority (P0 > P1 > P2 > P3) before returning
+  const priorityOrder: Record<MessagePriority, number> = { P0: 0, P1: 1, P2: 2, P3: 3 }
+  messages.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+
+  return messages.slice(0, MAX_MESSAGES_PER_GENERATION)
+}
+
+/**
+ * Extract a short title from an AI message
+ */
+function extractTitle(message: string): string {
+  // Take first sentence or first 40 chars
+  const firstSentence = message.split(/[.!?]/)[0]
+  if (firstSentence.length <= 40) return firstSentence
+  return firstSentence.substring(0, 37) + '...'
+}
+
+/**
+ * Get appropriate emoji for category and type
+ */
+function getCategoryEmoji(category: MessageCategory, type: MessageType): string {
+  if (type === 'celebration') return '🎉'
+  if (type === 'alert') return '⚠️'
+
+  const emojis: Record<MessageCategory, string> = {
+    nutrition: '🥗',
+    hydration: '💧',
+    sleep: '😴',
+    sport: '💪',
+    stress: '🧘',
+    progress: '📈',
+    wellness: '❤️',
+    system: '⚙️',
+  }
+  return emojis[category] || '💡'
+}
+
+/**
+ * Get action route for category
+ */
+function getActionRoute(category: MessageCategory): string {
+  const routes: Record<MessageCategory, string> = {
+    nutrition: 'AddMeal',
+    hydration: 'Home',
+    sleep: 'WellnessProgram',
+    sport: 'WellnessProgram',
+    stress: 'WellnessProgram',
+    progress: 'Progress',
+    wellness: 'WellnessProgram',
+    system: 'Settings',
+  }
+  return routes[category] || 'Home'
+}
+
+/**
+ * Generate a fallback insight when AI fails
+ */
+async function generateFallbackInsight(context: AIMessageContext): Promise<GeneratedMessage> {
+  const { nutrition, streak } = context
+  const caloriesPercent = nutrition.caloriesTarget > 0
+    ? Math.round((nutrition.caloriesConsumed / nutrition.caloriesTarget) * 100)
+    : 0
+
+  let title: string
+  let message: string
+  let emoji: string
+
+  if (caloriesPercent >= 85 && caloriesPercent <= 115) {
+    title = 'Objectif atteint !'
+    message = `${nutrition.caloriesConsumed} kcal aujourd'hui, pile dans ton objectif. Belle journée !`
+    emoji = '✅'
+  } else if (caloriesPercent < 70) {
+    title = 'Il te reste de la marge'
+    message = `${nutrition.caloriesConsumed} kcal sur ${nutrition.caloriesTarget}. Si tu as faim, c'est le moment.`
+    emoji = '🍽️'
+  } else {
+    title = 'Bilan du jour'
+    message = `${nutrition.caloriesConsumed} / ${nutrition.caloriesTarget} kcal (${caloriesPercent}%). ${streak > 1 ? `Série de ${streak} jours !` : ''}`
+    emoji = '📊'
+  }
+
+  return {
+    priority: 'P3',
+    type: 'insight',
+    category: 'nutrition',
+    title,
+    message,
+    emoji,
+    actionLabel: 'Voir mes progrès',
+    actionRoute: 'Progress',
+    reason: 'Bilan journalier (fallback)',
+    confidence: 0.7,
+    dedupKey: `fallback-insight-${new Date().toISOString().split('T')[0]}`,
+  }
+}
+
+// ============= TEMPLATE-BASED MESSAGES (Legacy) =============
+
+/**
+ * Generate contextual messages based on user data (TEMPLATE-BASED)
+ * @deprecated Use generateAIMessages for real AI-powered messages
+ * This function uses static templates - kept for fallback only
+ */
 
 export function generateDailyMessages(
   userData: {
