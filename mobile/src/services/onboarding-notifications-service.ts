@@ -87,19 +87,38 @@ export const ONBOARDING_NOTIFICATIONS: Record<number, {
  * Schedule all 7 onboarding notifications
  * Called once when user completes onboarding
  */
-export async function scheduleOnboardingNotifications(preferredHour: number = 9): Promise<void> {
+export async function scheduleOnboardingNotifications(preferredHour: number = 9, force: boolean = false): Promise<void> {
   try {
-    // Check if already scheduled
-    const alreadyScheduled = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_NOTIFICATIONS_SCHEDULED)
-    if (alreadyScheduled === 'true') {
-      console.log('[OnboardingNotifications] Already scheduled, skipping')
-      return
+    // Check if already scheduled (unless forced)
+    if (!force) {
+      const alreadyScheduled = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_NOTIFICATIONS_SCHEDULED)
+      if (alreadyScheduled === 'true') {
+        // Verify that notifications actually exist
+        const idsJson = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_NOTIFICATION_IDS)
+        if (idsJson) {
+          const ids: string[] = JSON.parse(idsJson)
+          const allScheduled = await Notifications.getAllScheduledNotificationsAsync()
+          const existingCount = allScheduled.filter(n => ids.includes(n.identifier)).length
+          if (existingCount > 0) {
+            console.log(`[OnboardingNotifications] Already scheduled (${existingCount} pending), skipping`)
+            return
+          }
+        }
+        // Notifications were marked as scheduled but none exist - reset and retry
+        console.log('[OnboardingNotifications] Marked as scheduled but none found, resetting...')
+        await AsyncStorage.removeItem(STORAGE_KEYS.ONBOARDING_NOTIFICATIONS_SCHEDULED)
+      }
     }
 
-    // Check permissions
-    const { status } = await Notifications.getPermissionsAsync()
+    // Check permissions - request if not granted
+    let { status } = await Notifications.getPermissionsAsync()
     if (status !== 'granted') {
-      console.log('[OnboardingNotifications] Permissions not granted')
+      const { status: newStatus } = await Notifications.requestPermissionsAsync()
+      status = newStatus
+    }
+
+    if (status !== 'granted') {
+      console.log('[OnboardingNotifications] Permissions not granted after request')
       return
     }
 
@@ -349,5 +368,49 @@ export async function getOnboardingNotificationsInfo(): Promise<{
     scheduled,
     lastDayNotified,
     pendingNotifications,
+  }
+}
+
+/**
+ * Check and ensure onboarding notifications are properly scheduled
+ * Call this on app startup to recover from any scheduling failures
+ */
+export async function ensureOnboardingNotificationsScheduled(
+  signupDate: string | null,
+  isSubscribed: boolean
+): Promise<void> {
+  // Don't schedule for subscribers
+  if (isSubscribed) {
+    console.log('[OnboardingNotifications] User is subscribed, skipping')
+    return
+  }
+
+  // Don't schedule if no signup date
+  if (!signupDate) {
+    console.log('[OnboardingNotifications] No signup date, skipping')
+    return
+  }
+
+  // Calculate current day
+  const signup = new Date(signupDate)
+  const now = new Date()
+  const diffTime = now.getTime() - signup.getTime()
+  const currentDay = Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1)
+
+  // If past day 7, no need to schedule
+  if (currentDay > 7) {
+    console.log('[OnboardingNotifications] Past day 7, no more notifications needed')
+    return
+  }
+
+  // Check if notifications are actually scheduled
+  const info = await getOnboardingNotificationsInfo()
+
+  if (info.pendingNotifications === 0 && currentDay < 7) {
+    console.log(`[OnboardingNotifications] No pending notifications on day ${currentDay}, rescheduling...`)
+    // Force reschedule remaining notifications
+    await rescheduleOnboardingNotifications(9, currentDay)
+  } else {
+    console.log(`[OnboardingNotifications] ${info.pendingNotifications} notifications pending, day ${currentDay}`)
   }
 }

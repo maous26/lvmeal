@@ -58,6 +58,7 @@ import { useOnboardingStore, FEATURE_DISCOVERY_MESSAGES } from '../stores/onboar
 import FeatureDiscoveryModal from '../components/onboarding/FeatureDiscoveryModal'
 import PhotoFoodScanner from '../components/PhotoFoodScanner'
 import BarcodeScanner from '../components/BarcodeScanner'
+import { CreditsIndicator } from '../components/CreditsIndicator'
 import { getGreeting, formatNumber, getRelativeDate, getDateKey } from '../lib/utils'
 import type { MealType, FoodItem } from '../types'
 
@@ -230,8 +231,16 @@ export default function HomeScreen() {
     markFeatureDiscovered,
     getDaysSinceSignup,
     isTrialExpired,
+    isTrialActive,
+    getTrialDaysRemaining,
     hasSeenPaywall,
+    markPaywallSeen,
   } = useOnboardingStore()
+
+  // Compute trial status on each render to ensure reactivity
+  const trialExpired = isTrialExpired()
+  const trialActive = isTrialActive()
+  const trialDaysLeft = getTrialDaysRemaining()
 
   const [collapsedMeals, setCollapsedMeals] = useState<Set<MealType>>(new Set())
   const [showPhotoScanner, setShowPhotoScanner] = useState(false)
@@ -286,15 +295,16 @@ export default function HomeScreen() {
 
   // Check if should show paywall (trial expired and not seen)
   useEffect(() => {
-    if (isTrialExpired() && !hasSeenPaywall) {
+    if (trialExpired && !hasSeenPaywall) {
       // Navigate to paywall after a short delay
       const timer = setTimeout(() => {
         // @ts-ignore
         navigation.navigate('Paywall')
-      }, 1000)
+        markPaywallSeen()
+      }, 1500)
       return () => clearTimeout(timer)
     }
-  }, [isTrialExpired, hasSeenPaywall, navigation])
+  }, [trialExpired, hasSeenPaywall, navigation, markPaywallSeen])
 
   const handleDiscoveryDismiss = () => {
     if (currentDiscoveryFeature) {
@@ -599,6 +609,7 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
+            <CreditsIndicator variant="compact" />
             <TouchableOpacity
               style={[styles.headerIconButton, { backgroundColor: colors.bg.elevated }]}
               onPress={handleNavigateToCalendar}
@@ -607,6 +618,39 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Trial Banner - Show remaining days or expired status */}
+        {trialActive && trialDaysLeft > 0 && trialDaysLeft <= 3 && (
+          <TouchableOpacity
+            style={[styles.trialBanner, { backgroundColor: colors.warning + '15', borderColor: colors.warning + '30' }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              // @ts-ignore
+              navigation.navigate('Paywall')
+            }}
+          >
+            <Text style={[styles.trialBannerText, { color: colors.warning }]}>
+              Essai gratuit : {trialDaysLeft} jour{trialDaysLeft > 1 ? 's' : ''} restant{trialDaysLeft > 1 ? 's' : ''}
+            </Text>
+            <Text style={[styles.trialBannerCta, { color: colors.warning }]}>Passer Premium →</Text>
+          </TouchableOpacity>
+        )}
+
+        {trialExpired && !hasSeenPaywall && (
+          <TouchableOpacity
+            style={[styles.trialBanner, { backgroundColor: colors.error + '15', borderColor: colors.error + '30' }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              // @ts-ignore
+              navigation.navigate('Paywall')
+            }}
+          >
+            <Text style={[styles.trialBannerText, { color: colors.error }]}>
+              Ton essai gratuit est terminé
+            </Text>
+            <Text style={[styles.trialBannerCta, { color: colors.error }]}>Continuer avec Premium →</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Stats Row - 3 cards */}
         <View style={styles.statsRow}>
@@ -997,6 +1041,25 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Trial Banner
+  trialBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.default,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  trialBannerText: {
+    ...typography.small,
+    fontWeight: '500',
+  },
+  trialBannerCta: {
+    ...typography.small,
+    fontWeight: '600',
   },
   // Stats Row
   statsRow: {

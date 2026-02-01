@@ -19,6 +19,7 @@ import { ThemeProvider } from './src/contexts/ThemeContext'
 import { AgentTriggersProvider } from './src/components/AgentTriggersProvider'
 import { ToastProvider } from './src/components/ui/Toast'
 import { FeedbackProvider } from './src/components/feedback'
+import { RewardAnimationProvider } from './src/components/RewardAnimationProvider'
 import { clearFoodSearchCache } from './src/services/food-search'
 import {
   requestNotificationPermissions,
@@ -28,7 +29,9 @@ import {
 import { useMessageCenter } from './src/services/message-center'
 import {
   markOnboardingDayNotified,
+  ensureOnboardingNotificationsScheduled,
 } from './src/services/onboarding-notifications-service'
+import { useOnboardingStore } from './src/stores/onboarding-store'
 import {
   checkAndScheduleReminders,
 } from './src/services/meal-reminder-service'
@@ -143,6 +146,13 @@ export default Sentry.wrap(function App() {
             await initializeCoachProactiveService(profile as any)
             console.log('[App] Coach proactive service initialized')
           }
+
+          // Ensure onboarding notifications are scheduled (recover from failures)
+          const onboardingState = useOnboardingStore.getState()
+          await ensureOnboardingNotificationsScheduled(
+            onboardingState.signupDate,
+            onboardingState.isSubscribed
+          )
         }
 
         // Wait for preload tasks to complete
@@ -316,6 +326,7 @@ export default Sentry.wrap(function App() {
           <ToastProvider>
             <AgentTriggersProvider>
               <FeedbackProvider bottomOffset={90}>
+              <RewardAnimationProvider>
               <NavigationContainer
                 ref={navigationRef}
                 linking={{
@@ -352,6 +363,7 @@ export default Sentry.wrap(function App() {
               >
                 <RootNavigator />
               </NavigationContainer>
+              </RewardAnimationProvider>
               </FeedbackProvider>
             </AgentTriggersProvider>
           </ToastProvider>
