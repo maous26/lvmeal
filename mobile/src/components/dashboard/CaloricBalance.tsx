@@ -69,8 +69,9 @@ export function CaloricBalance({
     return acc + cappedBalance
   }, 0)
 
-  const availableCredit = Math.round(cumulativeSavings)
-  const creditPercentage = maxCredit > 0 ? Math.max(0, (availableCredit / maxCredit) * 100) : 0
+  // Cap availableCredit to maxCredit - le solde ne peut jamais dépasser le max
+  const availableCredit = Math.min(Math.max(0, Math.round(cumulativeSavings)), maxCredit)
+  const creditPercentage = maxCredit > 0 ? (availableCredit / maxCredit) * 100 : 0
 
   const getStatus = () => {
     if (availableCredit >= maxCredit * 0.6) {
@@ -139,7 +140,7 @@ export function CaloricBalance({
         <View style={styles.creditDisplay}>
           <Text style={[styles.creditLabel, { color: colors.text.tertiary }]}>Solde disponible</Text>
           <View style={styles.creditValue}>
-            <Text style={[styles.creditNumber, { color: colors.accent.primary }]}>{formatNumber(Math.max(0, availableCredit))}</Text>
+            <Text style={[styles.creditNumber, { color: colors.accent.primary }]}>{formatNumber(availableCredit)}</Text>
             <Text style={[styles.creditUnit, { color: colors.text.secondary }]}>kcal</Text>
           </View>
           <Text style={[styles.creditMax, { color: colors.text.tertiary }]}>sur {formatNumber(maxCredit)} kcal max possible</Text>

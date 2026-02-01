@@ -549,14 +549,15 @@ export const useGamificationStore = create<GamificationState>()(
           return 999
         }
 
+        // During trial period: UNLIMITED credits for full testing experience
+        // Les testeurs doivent pouvoir tout tester pendant les 7 jours
+        if (state.isInTrialPeriod()) {
+          return 999
+        }
+
         // Check if new month (reset credits)
         const thisMonth = getMonthKey()
         const used = state.currentMonth === thisMonth ? state.aiCreditsUsed : 0
-
-        // During trial period: 15 credits to taste the features
-        if (state.isInTrialPeriod()) {
-          return Math.max(0, TRIAL_AI_CREDITS - used)
-        }
 
         // Free users after trial: only 3 credits/month (frustrating, push to premium)
         return Math.max(0, FREE_MONTHLY_AI_CREDITS - used)
