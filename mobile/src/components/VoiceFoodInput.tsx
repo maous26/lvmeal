@@ -634,14 +634,14 @@ export default function VoiceFoodInput({
           ) : analyzedFoods.length > 0 ? (
             /* After analysis - Add button */
             <Button
-              variant="primary"
+              variant="success"
               size="lg"
               fullWidth
               onPress={handleConfirm}
               disabled={selectedFoods.size === 0}
               icon={<Check size={20} color="#FFFFFF" />}
             >
-              Ajouter {selectedFoods.size} aliment{selectedFoods.size > 1 ? 's' : ''}
+              Ajouter le repas
             </Button>
           ) : transcript.trim() ? (
             /* Has transcript - Analyze button */
