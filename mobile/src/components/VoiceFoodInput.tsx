@@ -640,6 +640,7 @@ export default function VoiceFoodInput({
               onPress={handleConfirm}
               disabled={selectedFoods.size === 0}
               icon={<Check size={20} color="#FFFFFF" />}
+              style={{ backgroundColor: colors.success }}
             >
               Ajouter le repas
             </Button>
