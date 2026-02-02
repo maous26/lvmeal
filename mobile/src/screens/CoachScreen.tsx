@@ -397,8 +397,19 @@ export default function CoachScreen() {
 
   const handleAction = (route: string, message?: LymiaMessage) => {
     const mealType = message?.dedupKey?.match(/meal-reminder-(breakfast|lunch|snack|dinner)/)?.[1]
-    // @ts-ignore
-    navigation.navigate(route, mealType ? { mealType } : undefined)
+
+    // Handle tab navigation vs stack navigation
+    const tabRoutes = ['Home', 'Coach', 'Recipes', 'Programs', 'Profile']
+
+    if (tabRoutes.includes(route)) {
+      // Navigate to a tab - use getParent to access the tab navigator
+      // @ts-ignore
+      navigation.getParent()?.navigate(route)
+    } else {
+      // Navigate to a stack screen
+      // @ts-ignore
+      navigation.navigate(route, mealType ? { mealType } : undefined)
+    }
   }
 
   // Handle dismiss with CoachState tracking

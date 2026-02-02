@@ -469,6 +469,9 @@ export async function generateAIMessages(context: AIMessageContext): Promise<Gen
 
     const advices = await getCoachingAdvice(lymiaContext)
 
+    // Track topics already covered by rule-based alerts to avoid duplicates
+    const coveredTopics = new Set(candidates.map(c => c.topic))
+
     for (const advice of advices.slice(0, 2)) { // Max 2 AI messages
       const aiCategory = advice.category === 'alert' ? 'nutrition' :
         advice.category === 'motivation' ? 'progress' :
@@ -482,6 +485,12 @@ export async function generateAIMessages(context: AIMessageContext): Promise<Gen
         aiCategory === 'stress' ? 'wellness' :
         aiCategory === 'progress' ? 'progress' :
         'motivation'
+
+      // Skip AI message if this topic is already covered by a rule-based alert
+      if (coveredTopics.has(aiTopic)) {
+        console.log(`[MessageCenter] Skipping AI message for ${aiTopic}: already covered by rule`)
+        continue
+      }
 
       const priority: MessagePriority =
         advice.priority === 'high' ? 'P1' :
@@ -514,6 +523,9 @@ export async function generateAIMessages(context: AIMessageContext): Promise<Gen
         dedupKey: `ai-${aiCategory}-${today}-${advice.priority}`,
         source: sourceName,
       }))
+
+      // Mark this topic as covered
+      coveredTopics.add(aiTopic)
     }
   } catch (error) {
     console.error('[MessageCenter] AI generation failed:', error)
