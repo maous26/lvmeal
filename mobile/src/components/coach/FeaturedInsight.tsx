@@ -1,8 +1,13 @@
 /**
- * FeaturedInsight - Carte principale mise en avant
+ * FeaturedInsight - Carte Primaire du Cockpit Coach
  *
- * Design premium pour l'insight le plus important du jour.
- * Plus grande, avec effet visuel et animation subtile.
+ * UX Cockpit - Couche 1:
+ * - UNE seule grande carte, toujours visible en haut
+ * - Titre actionnable + preuve courte (becauseLine)
+ * - Bouton d'action unique
+ * - Badge épistémique: ⚠️ (règle), 🤖 (IA), 🎉 (célébration)
+ *
+ * C'est LA meilleure prochaine action selon le système.
  */
 
 import React, { useEffect, useRef } from 'react'
@@ -13,7 +18,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native'
-import { ChevronRight, Sparkles, X, Clock } from 'lucide-react-native'
+import { ChevronRight, X } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../../contexts/ThemeContext'
@@ -30,13 +35,44 @@ import {
   CATEGORY_EMOJI,
   type LymiaMessage,
 } from '../../services/message-center'
-import { AIBadge, SourceBadge } from '../ai'
+import { SourceBadge } from '../ai'
 
 interface FeaturedInsightProps {
   message: LymiaMessage
   onRead: () => void
   onDismiss: () => void
   onAction?: (route: string) => void
+}
+
+/**
+ * Get epistemic badge based on message source
+ * - ⚠️ = Règle dure (rule-based alert)
+ * - 🤖 = Calcul personnalisé (AI-generated)
+ * - 🎉 = Événement/célébration
+ */
+function getEpistemicBadge(message: LymiaMessage): { emoji: string; label: string } {
+  // Celebration type
+  if (message.type === 'celebration') {
+    return { emoji: '🎉', label: 'Bravo' }
+  }
+
+  // AI-generated (reason starts with "IA:")
+  if (message.reason?.startsWith('IA:')) {
+    return { emoji: '🤖', label: 'IA' }
+  }
+
+  // Rule-based alerts (P0/P1 without AI marker)
+  if (message.priority === 'P0' || message.priority === 'P1') {
+    return { emoji: '⚠️', label: 'Alerte' }
+  }
+
+  // Tips/insights
+  if (message.type === 'tip' || message.type === 'insight') {
+    return { emoji: '💡', label: 'Conseil' }
+  }
+
+  // Default
+  return { emoji: '📋', label: 'Info' }
 }
 
 export function FeaturedInsight({
@@ -48,24 +84,8 @@ export function FeaturedInsight({
   const { colors, isDark } = useTheme()
   const priorityConfig = getPriorityConfig(isDark)
   const priorityConf = priorityConfig[message.priority]
-  const emoji = message.emoji || CATEGORY_EMOJI[message.category]
-
-  // Format relative time
-  const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 1) return "À l'instant"
-    if (diffMins < 60) return `Il y a ${diffMins} min`
-    if (diffHours < 24) return `Il y a ${diffHours}h`
-    if (diffDays === 1) return 'Hier'
-    if (diffDays < 7) return `Il y a ${diffDays} jours`
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  }
+  const categoryEmoji = message.emoji || CATEGORY_EMOJI[message.category]
+  const epistemicBadge = getEpistemicBadge(message)
 
   const handleDismiss = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -73,12 +93,10 @@ export function FeaturedInsight({
   }
 
   // Subtle pulse animation for unread
-  const pulseAnim = useRef(new Animated.Value(1)).current
   const glowAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (!message.read) {
-      // Subtle glow effect
       Animated.loop(
         Animated.sequence([
           Animated.timing(glowAnim, {
@@ -106,8 +124,14 @@ export function FeaturedInsight({
 
   const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.3, 0.6],
+    outputRange: [0.2, 0.5],
   })
+
+  // Extract becauseLine from reason field if it contains useful info
+  // The becauseLine is stored in `reason` field for AI messages
+  const becauseLine = message.reason && !message.reason.startsWith('IA:')
+    ? message.reason
+    : null
 
   return (
     <TouchableOpacity
@@ -129,34 +153,30 @@ export function FeaturedInsight({
       )}
 
       <View style={[styles.card, { backgroundColor: colors.bg.elevated }]}>
-
-        {/* Header with emoji, badges and dismiss */}
+        {/* Header with epistemic badge and dismiss */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.emojiContainer}>
-              <Text style={styles.emoji}>{emoji}</Text>
+            {/* Category emoji */}
+            <View style={[styles.emojiContainer, { backgroundColor: `${priorityConf.color}15` }]}>
+              <Text style={styles.emoji}>{categoryEmoji}</Text>
             </View>
-            <View style={styles.headerInfo}>
-              <View style={styles.badges}>
-                {/* Only show AI badge for actual AI-generated messages */}
-                {message.reason?.startsWith('IA:') && (
-                  <AIBadge variant="inline" text="IA" size="sm" />
-                )}
-                {!message.read && (
-                  <View style={[styles.newBadge, { backgroundColor: priorityConf.color }]}>
-                    <Text style={styles.newBadgeText}>Nouveau</Text>
-                  </View>
-                )}
-              </View>
-              {/* Timestamp */}
-              <View style={styles.timeRow}>
-                <Clock size={12} color={colors.text.muted} />
-                <Text style={[styles.timeText, { color: colors.text.muted }]}>
-                  {getRelativeTime(message.createdAt)}
-                </Text>
-              </View>
+
+            {/* Epistemic badge - tells user WHY this message exists */}
+            <View style={[styles.epistemicBadge, { backgroundColor: `${priorityConf.color}20` }]}>
+              <Text style={styles.epistemicEmoji}>{epistemicBadge.emoji}</Text>
+              <Text style={[styles.epistemicLabel, { color: priorityConf.color }]}>
+                {epistemicBadge.label}
+              </Text>
             </View>
+
+            {/* Unread indicator */}
+            {!message.read && (
+              <View style={[styles.newBadge, { backgroundColor: priorityConf.color }]}>
+                <Text style={styles.newBadgeText}>Nouveau</Text>
+              </View>
+            )}
           </View>
+
           {/* Dismiss button */}
           <TouchableOpacity
             onPress={handleDismiss}
@@ -177,6 +197,15 @@ export function FeaturedInsight({
           </Text>
         </View>
 
+        {/* Because line - the proof/reason (visible to user) */}
+        {becauseLine && (
+          <View style={[styles.becauseContainer, { backgroundColor: colors.bg.secondary }]}>
+            <Text style={[styles.becauseText, { color: colors.text.tertiary }]}>
+              💡 Parce que : {becauseLine}
+            </Text>
+          </View>
+        )}
+
         {/* Source scientifique */}
         {message.source && (
           <View style={styles.sourceRow}>
@@ -184,7 +213,7 @@ export function FeaturedInsight({
           </View>
         )}
 
-        {/* Action footer */}
+        {/* Single action button - THE thing to do */}
         {message.actionLabel && (
           <View
             style={[
@@ -192,15 +221,12 @@ export function FeaturedInsight({
               { backgroundColor: colors.accent.primary },
             ]}
           >
-            <Text style={[styles.actionText, { color: colors.text.inverse }]}>{message.actionLabel}</Text>
+            <Text style={[styles.actionText, { color: colors.text.inverse }]}>
+              {message.actionLabel}
+            </Text>
             <ChevronRight size={18} color={colors.text.inverse} />
           </View>
         )}
-
-        {/* Sparkle decoration */}
-        <View style={styles.sparkleDecoration}>
-          <Sparkles size={16} color={`${priorityConf.color}40`} />
-        </View>
       </View>
     </TouchableOpacity>
   )
@@ -212,11 +238,11 @@ const styles = StyleSheet.create({
   },
   glowEffect: {
     position: 'absolute',
-    top: -8,
-    left: -8,
-    right: -8,
-    bottom: -8,
-    borderRadius: radius.xl + 8,
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    borderRadius: radius.xl + 6,
     zIndex: -1,
   },
   card: {
@@ -227,43 +253,41 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
     flex: 1,
-  },
-  headerInfo: {
-    flex: 1,
-    gap: spacing.xs,
   },
   emojiContainer: {
-    width: componentSizes.avatar.lg,
-    height: componentSizes.avatar.lg,
+    width: componentSizes.avatar.md,
+    height: componentSizes.avatar.md,
     borderRadius: radius.lg,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   emoji: {
-    fontSize: 28,
+    fontSize: 24,
   },
-  badges: {
+  epistemicBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    gap: 4,
   },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+  epistemicEmoji: {
+    fontSize: 12,
   },
-  timeText: {
+  epistemicLabel: {
     ...typography.xs,
+    fontWeight: '600',
   },
   dismissButton: {
     width: 32,
@@ -283,7 +307,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
     fontSize: 20,
@@ -295,6 +320,16 @@ const styles = StyleSheet.create({
   message: {
     ...typography.body,
     lineHeight: 24,
+  },
+  becauseContainer: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+  },
+  becauseText: {
+    ...typography.small,
+    fontStyle: 'italic',
   },
   sourceRow: {
     paddingHorizontal: spacing.lg,
@@ -313,12 +348,6 @@ const styles = StyleSheet.create({
   actionText: {
     ...typography.bodyMedium,
     fontWeight: '600',
-  },
-  sparkleDecoration: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: spacing.lg + 80,
-    opacity: 0.5,
   },
 })
 

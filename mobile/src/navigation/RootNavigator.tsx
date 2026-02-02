@@ -138,6 +138,7 @@ import BackupSettingsScreen from '../screens/BackupSettingsScreen'
 import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import AddCustomRecipeScreen from '../screens/AddCustomRecipeScreen'
 import CustomRecipesScreen from '../screens/CustomRecipesScreen'
+import CoachHistoryScreen from '../screens/CoachHistoryScreen'
 import { useUserStore } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { isGoogleSignedIn, getCachedGoogleUser } from '../services/google-auth-service'
@@ -192,6 +193,7 @@ export type RootStackParamList = {
   ChangePassword: { fromDeepLink?: boolean } | undefined
   AddCustomRecipe: undefined
   CustomRecipes: undefined
+  CoachHistory: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -469,6 +471,13 @@ export default function RootNavigator() {
           <Stack.Screen
             name="CustomRecipes"
             component={CustomRecipesScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="CoachHistory"
+            component={CoachHistoryScreen}
             options={{
               animation: 'slide_from_right',
             }}

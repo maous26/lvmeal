@@ -1,8 +1,17 @@
 /**
- * CoachScreen - Flux intelligent de conseils LymIA
+ * CoachScreen - Cockpit de contrôle Coach
  *
- * Migré vers MessageCenter unifié.
- * Affiche tous les messages du système avec priorité visuelle.
+ * UX Cockpit - Structure en 3 couches:
+ * - Couche 1: Carte primaire (FeaturedInsight) - LA meilleure prochaine action
+ * - Couche 2: Pile compressée (MessageStack) - "En attente (N)"
+ * - Couche 3: Historique (bouton vers CoachHistoryScreen)
+ *
+ * Philosophie:
+ * - "Que dois-je faire maintenant ?" → Carte primaire
+ * - "Pourquoi ?" → becauseLine visible
+ * - "Qu'est-ce qui attend derrière ?" → Pile compressée
+ *
+ * Le Coach est une BOUSSOLE, pas un perroquet.
  */
 
 import React, { useEffect, useCallback, useState } from 'react'
@@ -15,17 +24,15 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
 } from 'react-native'
 import {
   Sparkles,
-  AlertTriangle,
-  Trophy,
-  X,
-  Lightbulb,
-  Bell,
   Bot,
+  History,
   TrendingUp,
   Heart,
+  X,
 } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
@@ -40,12 +47,11 @@ import { useCaloricBankStoreHydration } from '../stores/caloric-bank-store'
 import {
   useMessageCenter,
   generateAIMessages,
-  getPriorityConfig,
   type LymiaMessage,
   type AIMessageContext,
 } from '../services/message-center'
 import { useCoachState, type CoachTopic } from '../services/coach-state'
-import { CoachMessageCard, FeaturedInsight, CollapsibleSection } from '../components/coach'
+import { FeaturedInsight, MessageStack, CoachMessageCard } from '../components/coach'
 import { AnimatedBackground } from '../components/ui'
 
 // Map message category to CoachTopic
@@ -189,16 +195,103 @@ const welcomeStyles = StyleSheet.create({
   },
 })
 
+// ============= MESSAGE DETAIL MODAL =============
+
+interface MessageDetailModalProps {
+  message: LymiaMessage | null
+  visible: boolean
+  onClose: () => void
+  onRead: () => void
+  onDismiss: () => void
+  onAction: (route: string) => void
+}
+
+function MessageDetailModal({
+  message,
+  visible,
+  onClose,
+  onRead,
+  onDismiss,
+  onAction,
+}: MessageDetailModalProps) {
+  const { colors } = useTheme()
+
+  if (!message) return null
+
+  const handleDismiss = () => {
+    onDismiss()
+    onClose()
+  }
+
+  const handleAction = (route: string) => {
+    onAction(route)
+    onClose()
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={modalStyles.overlay}>
+        <View style={[modalStyles.container, { backgroundColor: colors.bg.primary }]}>
+          <TouchableOpacity
+            style={[modalStyles.closeButton, { backgroundColor: colors.bg.tertiary }]}
+            onPress={onClose}
+          >
+            <X size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+
+          <CoachMessageCard
+            message={message}
+            onRead={onRead}
+            onDismiss={handleDismiss}
+            onAction={handleAction}
+          />
+        </View>
+      </View>
+    </Modal>
+  )
+}
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  container: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    maxHeight: '80%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+})
+
 // ============= MAIN COMPONENT =============
 
 export default function CoachScreen() {
-  const { colors, isDark } = useTheme()
+  const { colors } = useTheme()
   const navigation = useNavigation()
   const [refreshing, setRefreshing] = useState(false)
-  const priorityConfig = getPriorityConfig(isDark)
+  const [selectedMessage, setSelectedMessage] = useState<LymiaMessage | null>(null)
+  const [modalVisible, setModalVisible] = useState(false)
 
-  // Wait for ALL stores to be hydrated before rendering/generating messages
-  // This prevents crashes when accessing store data before AsyncStorage rehydration
+  // Wait for ALL stores to be hydrated
   const isUserStoreHydrated = useUserStoreHydration()
   const isMealsStoreHydrated = useMealsStoreHydration()
   const isGamificationStoreHydrated = useGamificationStoreHydration()
@@ -206,12 +299,12 @@ export default function CoachScreen() {
 
   const isStoreHydrated = isUserStoreHydrated && isMealsStoreHydrated && isGamificationStoreHydrated && isCaloricBankStoreHydrated
 
-  // MessageCenter - subscribe to messages array to trigger re-renders on changes
+  // MessageCenter
   const messages = useMessageCenter((s) => s.messages)
   const markAsRead = useMessageCenter((s) => s.markAsRead)
   const dismiss = useMessageCenter((s) => s.dismiss)
 
-  // User data - use individual selectors for stable references
+  // User data
   const profile = useUserStore((s) => s.profile)
   const nutritionGoals = useUserStore((s) => s.nutritionGoals)
   const hasSeenCoachWelcome = useUserStore((s) => s.hasSeenCoachWelcome)
@@ -219,7 +312,7 @@ export default function CoachScreen() {
   const syncStatus = useAuthStore((s) => s.syncStatus)
   const userId = useAuthStore((s) => s.userId)
 
-  // Track if messages have been generated to prevent infinite loops
+  // Track if messages have been generated
   const hasGeneratedMessages = React.useRef(false)
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
 
@@ -227,25 +320,21 @@ export default function CoachScreen() {
   const recordAppOpen = useCoachState((s) => s.recordAppOpen)
   const recordDismiss = useCoachState((s) => s.recordDismiss)
 
-  // Record app open when screen mounts (for adaptive timing)
+  // Record app open when screen mounts
   useEffect(() => {
     recordAppOpen()
   }, [recordAppOpen])
 
-  // Generate messages - uses REAL AI via LymIABrain
+  // Generate messages
   const generateMessages = async () => {
-    // Get fresh data from stores directly to avoid stale closures
     const mealsStore = useMealsStore.getState()
     const gamificationStore = useGamificationStore.getState()
     const messageCenter = useMessageCenter.getState()
     const userStore = useUserStore.getState()
 
     const todayData = mealsStore.getTodayData()
-
-    // Calculer les pourcentages
     const waterPercent = Math.round((todayData.hydration / 2000) * 100)
 
-    // Trouver le dernier repas
     const lastMeal = todayData.meals.length > 0
       ? todayData.meals.reduce((latest, meal) => {
           const mealTime = new Date(`${meal.date}T${meal.time}`)
@@ -253,7 +342,6 @@ export default function CoachScreen() {
         }, new Date(0))
       : null
 
-    // Build context for AI message generation
     const aiContext: AIMessageContext = {
       profile: {
         firstName: userStore.profile?.firstName,
@@ -280,21 +368,17 @@ export default function CoachScreen() {
 
     setIsGeneratingAI(true)
     try {
-      // Use smart message generation (AI + critical alerts, with built-in fallback)
       const newMessages = await generateAIMessages(aiContext)
       console.log('[CoachScreen] Generated', newMessages.length, 'messages')
-
-      // Ajouter les messages (le cooldown empêche les doublons)
       newMessages.forEach(msg => messageCenter.addMessage(msg))
     } catch (error) {
       console.error('[CoachScreen] Message generation failed:', error)
-      // generateAIMessages handles its own fallback internally
     } finally {
       setIsGeneratingAI(false)
     }
   }
 
-  // Générer les messages UNE SEULE FOIS quand les stores sont hydratés
+  // Generate messages once when stores are hydrated
   useEffect(() => {
     if (isStoreHydrated && !hasGeneratedMessages.current) {
       hasGeneratedMessages.current = true
@@ -307,21 +391,19 @@ export default function CoachScreen() {
     setRefreshing(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     useMessageCenter.getState().clearExpired()
-    generateMessages()
+    await generateMessages()
     setRefreshing(false)
   }, [])
 
   const handleAction = (route: string, message?: LymiaMessage) => {
-    // Extract meal type from dedupKey if available (e.g., "meal-reminder-dinner-2026-01-12")
     const mealType = message?.dedupKey?.match(/meal-reminder-(breakfast|lunch|snack|dinner)/)?.[1]
-    // @ts-ignore - navigation typing
+    // @ts-ignore
     navigation.navigate(route, mealType ? { mealType } : undefined)
   }
 
-  // Handle dismiss with CoachState tracking (for adaptive cooldowns)
+  // Handle dismiss with CoachState tracking
   const handleDismissMessage = (message: LymiaMessage) => {
     dismiss(message.id)
-    // Track dismiss in CoachState to increase cooldown for this topic
     const topic = categoryToTopic[message.category] || 'motivation'
     recordDismiss(topic)
   }
@@ -331,19 +413,31 @@ export default function CoachScreen() {
     setHasSeenCoachWelcome(true)
   }
 
-  // Auto-mark welcome as seen for returning users (restored from cloud)
-  // This prevents the welcome card from showing again after reinstall/reconnect
-  // We check for syncStatus !== 'syncing' to ensure cloud restore has completed (success, error, or idle)
+  // Handle message selection from stack
+  const handleSelectMessage = (message: LymiaMessage) => {
+    setSelectedMessage(message)
+    setModalVisible(true)
+    if (!message.read) {
+      markAsRead(message.id)
+    }
+  }
+
+  // Navigate to history
+  const handleOpenHistory = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    // @ts-ignore
+    navigation.navigate('CoachHistory')
+  }
+
+  // Auto-mark welcome as seen for returning users
   useEffect(() => {
     if (isStoreHydrated && syncStatus !== 'syncing' && userId && !hasSeenCoachWelcome && profile?.firstName) {
-      // User has a profile and is authenticated - they've completed onboarding before
-      // Mark welcome as seen to prevent showing it again
-      console.log('[CoachScreen] Returning user detected (syncStatus:', syncStatus, '), auto-marking welcome as seen')
+      console.log('[CoachScreen] Returning user detected, auto-marking welcome as seen')
       setHasSeenCoachWelcome(true)
     }
   }, [isStoreHydrated, syncStatus, userId, hasSeenCoachWelcome, profile?.firstName, setHasSeenCoachWelcome])
 
-  // Compute active messages from the messages array (reactive to changes)
+  // Compute active messages (not dismissed, not expired)
   const activeMessages = React.useMemo(() => {
     if (!isStoreHydrated) return []
     const now = new Date().toISOString()
@@ -358,15 +452,11 @@ export default function CoachScreen() {
     return activeMessages.filter(m => !m.read).length
   }, [activeMessages])
 
-  // Organize by type for sections
-  const alerts = activeMessages.filter(m => m.type === 'alert' || m.priority === 'P0')
-  const actions = activeMessages.filter(m => m.type === 'action' && m.priority !== 'P0')
-  const celebrations = activeMessages.filter(m => m.type === 'celebration')
-  const tips = activeMessages.filter(m => m.type === 'tip' || m.type === 'insight')
+  // Separate primary message from the stack
+  const primaryMessage = activeMessages[0] || null
+  const stackMessages = activeMessages.slice(1)
 
-  const hasMessages = activeMessages.length > 0
-
-  // Show loading state while stores are hydrating to prevent crashes
+  // Show loading state
   if (!isStoreHydrated) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -384,6 +474,7 @@ export default function CoachScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
       <AnimatedBackground circleCount={4} intensity={0.06} />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -402,20 +493,30 @@ export default function CoachScreen() {
                   ? 'Analyse en cours...'
                   : unreadCount > 0
                     ? `${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''}`
-                    : 'Conseils IA personnalisés'}
+                    : 'Ta prochaine action'}
               </Text>
             </View>
-            <View style={[styles.avatarGradient, { backgroundColor: staticColors.accent.primary }]}>
-              {isGeneratingAI ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Bot size={24} color="#FFFFFF" />
-              )}
+            <View style={styles.headerButtons}>
+              {/* History button */}
+              <TouchableOpacity
+                style={[styles.historyButton, { backgroundColor: colors.bg.tertiary }]}
+                onPress={handleOpenHistory}
+              >
+                <History size={20} color={colors.text.secondary} />
+              </TouchableOpacity>
+              {/* Bot avatar */}
+              <View style={[styles.avatarGradient, { backgroundColor: staticColors.accent.primary }]}>
+                {isGeneratingAI ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Bot size={24} color="#FFFFFF" />
+                )}
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Welcome Card - shown only once after onboarding (wait for store hydration and cloud sync) */}
+        {/* Welcome Card */}
         {isStoreHydrated && !hasSeenCoachWelcome && profile?.firstName && syncStatus !== 'syncing' && (
           <WelcomeCard
             firstName={profile.firstName}
@@ -424,120 +525,48 @@ export default function CoachScreen() {
           />
         )}
 
-        {/* Content */}
-        {!hasMessages ? (
+        {/* Content - Cockpit Layout */}
+        {!primaryMessage ? (
+          /* Empty state */
           <View style={styles.emptyState}>
             <Sparkles size={48} color={colors.text.tertiary} />
             <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>Tout va bien !</Text>
             <Text style={[styles.emptySubtitle, { color: colors.text.secondary }]}>
-              Continue à tracker tes repas pour recevoir des conseils personnalisés de LYM.
+              Continue à tracker tes repas pour recevoir des conseils personnalisés.
             </Text>
           </View>
         ) : (
           <>
-            {/* Featured Insight - Le message le plus important (1 carte primaire) */}
-            {activeMessages.length > 0 && (
-              <FeaturedInsight
-                message={activeMessages[0]}
-                onRead={() => markAsRead(activeMessages[0].id)}
-                onDismiss={() => handleDismissMessage(activeMessages[0])}
-                onAction={(route) => handleAction(route, activeMessages[0])}
+            {/* Couche 1: Carte primaire - LA meilleure prochaine action */}
+            <FeaturedInsight
+              message={primaryMessage}
+              onRead={() => markAsRead(primaryMessage.id)}
+              onDismiss={() => handleDismissMessage(primaryMessage)}
+              onAction={(route) => handleAction(route, primaryMessage)}
+            />
+
+            {/* Couche 2: Pile compressée - "En attente" */}
+            {stackMessages.length > 0 && (
+              <MessageStack
+                messages={stackMessages}
+                onSelectMessage={handleSelectMessage}
               />
-            )}
-
-            {/* Other messages in collapsible sections */}
-            {alerts.length > 1 && (
-              <CollapsibleSection
-                title="Alertes"
-                icon={<AlertTriangle size={18} color={priorityConfig.P0.color} />}
-                color={priorityConfig.P0.color}
-                count={alerts.length - (activeMessages[0]?.type === 'alert' || activeMessages[0]?.priority === 'P0' ? 1 : 0)}
-                unreadCount={alerts.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
-              >
-                {alerts
-                  .filter(msg => msg.id !== activeMessages[0]?.id)
-                  .map((msg) => (
-                    <CoachMessageCard
-                      key={msg.id}
-                      message={msg}
-                      onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => handleDismissMessage(msg)}
-                      onAction={(route) => handleAction(route, msg)}
-                    />
-                  ))}
-              </CollapsibleSection>
-            )}
-
-            {actions.length > 0 && (
-              <CollapsibleSection
-                title="Actions suggérées"
-                icon={<Bell size={18} color={priorityConfig.P1.color} />}
-                color={priorityConfig.P1.color}
-                count={actions.filter(m => m.id !== activeMessages[0]?.id).length}
-                unreadCount={actions.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
-              >
-                {actions
-                  .filter(msg => msg.id !== activeMessages[0]?.id)
-                  .map((msg) => (
-                    <CoachMessageCard
-                      key={msg.id}
-                      message={msg}
-                      onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => handleDismissMessage(msg)}
-                      onAction={(route) => handleAction(route, msg)}
-                    />
-                  ))}
-              </CollapsibleSection>
-            )}
-
-            {celebrations.length > 0 && (
-              <CollapsibleSection
-                title="Félicitations"
-                icon={<Trophy size={18} color={priorityConfig.P2.color} />}
-                color={priorityConfig.P2.color}
-                count={celebrations.filter(m => m.id !== activeMessages[0]?.id).length}
-                unreadCount={celebrations.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
-              >
-                {celebrations
-                  .filter(msg => msg.id !== activeMessages[0]?.id)
-                  .map((msg) => (
-                    <CoachMessageCard
-                      key={msg.id}
-                      message={msg}
-                      onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => handleDismissMessage(msg)}
-                      onAction={(route) => handleAction(route, msg)}
-                    />
-                  ))}
-              </CollapsibleSection>
-            )}
-
-            {tips.length > 0 && (
-              <CollapsibleSection
-                title="Conseils"
-                icon={<Lightbulb size={18} color={priorityConfig.P3.color} />}
-                color={priorityConfig.P3.color}
-                count={tips.filter(m => m.id !== activeMessages[0]?.id).length}
-                unreadCount={tips.filter(m => !m.read && m.id !== activeMessages[0]?.id).length}
-              >
-                {tips
-                  .filter(msg => msg.id !== activeMessages[0]?.id)
-                  .map((msg) => (
-                    <CoachMessageCard
-                      key={msg.id}
-                      message={msg}
-                      onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => handleDismissMessage(msg)}
-                      onAction={(route) => handleAction(route, msg)}
-                    />
-                  ))}
-              </CollapsibleSection>
             )}
           </>
         )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Modal for stack message detail */}
+      <MessageDetailModal
+        message={selectedMessage}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onRead={() => selectedMessage && markAsRead(selectedMessage.id)}
+        onDismiss={() => selectedMessage && handleDismissMessage(selectedMessage)}
+        onAction={handleAction}
+      />
     </SafeAreaView>
   )
 }
@@ -568,6 +597,18 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.body,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  historyButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarGradient: {
     width: 48,
