@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { WellnessEntry, WellnessTargets, WellnessStreaks, LifestyleHabits } from '../types'
 import { useGamificationStore, XP_REWARDS } from './gamification-store'
+import { trackAppEvent } from '../services/weekly-challenges-service'
+import { useUserStore } from './user-store'
 
 function getTodayString(): string {
   return new Date().toISOString().split('T')[0]
@@ -146,6 +148,12 @@ export const useWellnessStore = create<WellnessState>()(
           gamification.addXP(XP_REWARDS.GOOD_SLEEP_7H, '7h+ de sommeil')
         }
 
+        // Track for weekly challenges
+        const userId = useUserStore.getState().profile?.id
+        if (userId) {
+          trackAppEvent(userId, 'SLEEP_LOGGED', hours).catch(() => {})
+        }
+
         get().updateStreaks()
       },
 
@@ -202,6 +210,12 @@ export const useWellnessStore = create<WellnessState>()(
         if (liters >= get().targets.waterLiters) {
           const gamification = useGamificationStore.getState()
           gamification.addXP(XP_REWARDS.REACH_HYDRATION_TARGET, 'Objectif hydratation atteint')
+        }
+
+        // Track for weekly challenges
+        const userId = useUserStore.getState().profile?.id
+        if (userId) {
+          trackAppEvent(userId, 'WATER_LOGGED', liters).catch(() => {})
         }
       },
 

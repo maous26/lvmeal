@@ -5,6 +5,8 @@ import type { Meal, MealType, MealItem, DailyData, NutritionInfo, FoodItem } fro
 import { getDateKey, generateId } from '../lib/utils'
 import { useCaloricBankStore } from './caloric-bank-store'
 import { useUserStore } from './user-store'
+import { useGamificationStore, XP_REWARDS } from './gamification-store'
+import { trackAppEvent } from '../services/weekly-challenges-service'
 
 interface MealsState {
   dailyData: Record<string, DailyData>
@@ -186,6 +188,27 @@ export const useMealsStore = create<MealsState>()(
 
         // Sync with CaloricBankStore
         syncCaloricBank(currentDate, newTotals.calories)
+
+        // === Gamification & Challenges Integration ===
+        const gamification = useGamificationStore.getState()
+
+        // Award XP for logging a meal
+        gamification.addXP(XP_REWARDS.LOG_MEAL, `Repas ${type} enregistré`)
+        gamification.incrementMetric('meals_logged')
+        gamification.checkAndUpdateStreak()
+
+        // Track for weekly challenges (async, fire and forget)
+        const userId = useUserStore.getState().profile?.id
+        if (userId) {
+          trackAppEvent(userId, 'MEAL_LOGGED').catch(() => {
+            // Silent fail - challenges are optional
+          })
+        }
+
+        // Bonus XP for logging all meals
+        if (updatedMeals.length >= 3) {
+          gamification.addXP(XP_REWARDS.LOG_ALL_MEALS, 'Tous les repas enregistrés')
+        }
       },
 
       updateMeal: (mealId, items) => {

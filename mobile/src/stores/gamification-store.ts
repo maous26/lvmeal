@@ -198,6 +198,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'share_first', name: 'Partage Culinaire', description: 'Partage ta première recette', icon: '📤', xpReward: 50, condition: { type: 'count', target: 1, metric: 'recipes_shared' } },
   { id: 'share_5', name: 'Influenceur', description: '5 recettes partagées', icon: '📱', xpReward: 100, condition: { type: 'count', target: 5, metric: 'recipes_shared' } },
   { id: 'share_10', name: 'Ambassadeur LYM', description: '10 recettes partagées', icon: '🌟', xpReward: 250, condition: { type: 'count', target: 10, metric: 'recipes_shared' } },
+
+  // Défis Hebdomadaires (4) - Intégration avec weekly-challenges-service
+  { id: 'challenge_first', name: 'Premier Défi', description: 'Complète ton premier défi hebdomadaire', icon: '🎯', xpReward: 75, condition: { type: 'count', target: 1, metric: 'challenges_completed' } },
+  { id: 'challenge_5', name: 'Challenger', description: '5 défis hebdomadaires complétés', icon: '🏅', xpReward: 200, condition: { type: 'count', target: 5, metric: 'challenges_completed' } },
+  { id: 'challenge_10', name: 'Champion des Défis', description: '10 défis hebdomadaires complétés', icon: '🏆', xpReward: 500, condition: { type: 'count', target: 10, metric: 'challenges_completed' } },
+  { id: 'challenge_25', name: 'Maître des Défis', description: '25 défis hebdomadaires complétés', icon: '👑', xpReward: 1000, condition: { type: 'count', target: 25, metric: 'challenges_completed' } },
 ]
 
 // =============================================================================
