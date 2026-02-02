@@ -83,13 +83,13 @@ export const lightColors = {
     inverse: '#FFFFFF',
   },
 
-  // Primary - Black (iOS-style)
+  // Primary - LYM Brand Green
   accent: {
-    primary: '#1D1D1F',           // Black
-    secondary: '#3C3C43',         // Dark gray
-    hover: '#000000',             // Pure black for press
-    light: 'rgba(29, 29, 31, 0.08)', // Light black tint
-    muted: 'rgba(29, 29, 31, 0.2)',  // Muted black
+    primary: '#6B8E6B',           // LYM Sage Green
+    secondary: '#5A7D5A',         // Darker sage for press states
+    hover: '#7A9E7E',             // Lighter sage for hover
+    light: 'rgba(107, 142, 107, 0.12)', // Light sage tint
+    muted: 'rgba(107, 142, 107, 0.3)',  // Muted sage
   },
 
   // Secondary - Apple Blue
@@ -125,7 +125,7 @@ export const lightColors = {
     light: '#E5E5E7',             // iOS Separator
     default: '#D1D1D6',           // iOS Opaque separator
     medium: '#C7C7CC',            // Darker separator
-    focus: '#1D1D1F',             // Black focus
+    focus: '#6B8E6B',             // LYM Sage Green focus
   },
 
   // Gamification - Metallic colors
@@ -183,13 +183,13 @@ export const darkColors = {
     inverse: '#1D1D1F',
   },
 
-  // Primary - White (Dark mode)
+  // Primary - LYM Brand Green (brighter for dark mode)
   accent: {
-    primary: '#FFFFFF',           // White
-    secondary: 'rgba(255, 255, 255, 0.8)',
-    hover: '#F5F5F7',
-    light: 'rgba(255, 255, 255, 0.12)',
-    muted: 'rgba(255, 255, 255, 0.3)',
+    primary: '#7A9E7E',           // LYM Sage Green Light (more visible on dark)
+    secondary: '#8CAE8C',         // Lighter sage for press states
+    hover: '#9CBE9C',             // Even lighter for hover
+    light: 'rgba(122, 158, 126, 0.2)', // Light sage tint
+    muted: 'rgba(122, 158, 126, 0.4)',  // Muted sage
   },
 
   // Secondary - Apple Blue (Dark mode)
@@ -225,7 +225,7 @@ export const darkColors = {
     light: '#38383A',
     default: '#48484A',
     medium: '#636366',
-    focus: '#FFFFFF',
+    focus: '#7A9E7E',             // LYM Sage Green Light focus
   },
 
   // Gamification
