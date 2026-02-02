@@ -17,6 +17,7 @@ import OpenAI from 'openai'
 import { queryKnowledgeBase, isSupabaseConfigured, type KnowledgeBaseEntry } from './supabase-client'
 import { buildPhasePromptModifier, getPhaseContext, PhaseMessages } from './phase-context'
 import { aiRateLimiter, type AIRequestType } from './ai-rate-limiter'
+import { withRetry, parseAIError, type AIError } from './ai-error-handler'
 import {
   isDSPyEnabled,
   hookRewriteQuery,
@@ -225,7 +226,12 @@ export function buildFastingContext(profile: UserProfile): UserContext['fastingC
 }
 
 /**
- * Execute OpenAI call with rate limiting and model selection
+ * Execute OpenAI call with rate limiting, retry, and model selection
+ *
+ * Améliorations audit:
+ * - Retry automatique avec backoff exponentiel
+ * - Fallback sur modèle alternatif en cas d'échec
+ * - Logging structuré des erreurs
  */
 async function executeAICall(
   requestType: AIRequestType,
@@ -234,45 +240,77 @@ async function executeAICall(
     temperature?: number
     responseFormat?: { type: 'json_object' | 'text' }
     context?: Record<string, unknown>
+    maxRetries?: number
   } = {}
 ): Promise<{ content: string; model: string; fromCache: boolean } | null> {
-  const { temperature = 0.7, responseFormat, context = {} } = options
+  const { temperature = 0.7, responseFormat, context = {}, maxRetries = 2 } = options
 
   // Check rate limit and get model to use
   const rateCheck = aiRateLimiter.checkRateLimit(requestType, context)
 
   // Return cached response if available
   if (rateCheck.cached) {
+    console.log(`[LymIABrain] Cache hit for ${requestType}`)
     return { content: rateCheck.cached, model: 'cache', fromCache: true }
   }
 
   // Check if request is allowed
   if (!rateCheck.allowed) {
-    console.warn(`AI Rate limit: ${rateCheck.reason}`)
+    console.warn(`[LymIABrain] Rate limit: ${rateCheck.reason}`)
     return null
   }
 
+  // Execute with retry
   try {
-    const response = await getOpenAI().chat.completions.create({
-      model: rateCheck.model,
-      messages,
-      temperature,
-      ...(responseFormat && { response_format: responseFormat }),
-    })
+    const result = await withRetry(
+      async () => {
+        const response = await getOpenAI().chat.completions.create({
+          model: rateCheck.model,
+          messages,
+          temperature,
+          ...(responseFormat && { response_format: responseFormat }),
+        })
 
-    const content = response.choices[0].message.content || ''
+        const content = response.choices[0].message.content || ''
+        if (!content) {
+          throw new Error('Empty response from AI')
+        }
+        return content
+      },
+      {
+        serviceName: `lymia_${requestType}`,
+        config: {
+          maxRetries,
+          initialDelay: 1000,
+          maxDelay: 5000,
+          backoffMultiplier: 2,
+        },
+        onRetry: (attempt, error) => {
+          console.warn(`[LymIABrain] Retry ${attempt} for ${requestType}:`, error.message)
+        },
+        shouldRetry: (error) => {
+          // Ne pas retry si c'est une erreur de quota ou clé invalide
+          return error.type !== 'quota_exceeded' && error.type !== 'invalid_key'
+        },
+      }
+    )
 
     // Consume credits after successful call
     aiRateLimiter.consumeCredits(requestType)
 
     // Cache the response if applicable
     if (Object.keys(context).length > 0) {
-      aiRateLimiter.cacheResponse(requestType, context, content)
+      aiRateLimiter.cacheResponse(requestType, context, result)
     }
 
-    return { content, model: rateCheck.model, fromCache: false }
+    return { content: result, model: rateCheck.model, fromCache: false }
   } catch (error) {
-    console.error(`AI call error (${requestType}):`, error)
+    const aiError = parseAIError(error)
+    console.error(`[LymIABrain] ${requestType} failed after retries:`, {
+      type: aiError.type,
+      message: aiError.message,
+      retryable: aiError.retryable,
+    })
     throw error
   }
 }
@@ -494,16 +532,120 @@ Reponds en JSON:
       })),
     }
   } catch (error) {
-    console.error('LymIA Brain meal recommendation error:', error)
+    const aiError = parseAIError(error)
+    console.error('[LymIABrain] Meal recommendation error:', aiError.type, aiError.message)
+
+    // Fallback: suggestions statiques basées sur le type de repas et les préférences
+    const staticSuggestions = generateStaticMealSuggestions(mealType, targetCalories, profile)
+
     return {
       mealType,
-      suggestions: [],
-      decision: 'Erreur de generation',
-      reasoning: 'Service temporairement indisponible',
-      confidence: 0,
+      suggestions: staticSuggestions,
+      decision: staticSuggestions.length > 0 ? `${staticSuggestions.length} suggestions (fallback)` : 'Service indisponible',
+      reasoning: aiError.retryable
+        ? 'Suggestions générées localement. Réessayez plus tard pour des conseils personnalisés.'
+        : 'Service IA temporairement indisponible.',
+      confidence: staticSuggestions.length > 0 ? 0.5 : 0,
       sources: [],
     }
   }
+}
+
+/**
+ * Génère des suggestions de repas statiques en fallback
+ * Utilisé quand l'IA n'est pas disponible
+ */
+function generateStaticMealSuggestions(
+  mealType: MealType,
+  targetCalories: number,
+  profile: UserProfile
+): MealRecommendation['suggestions'] {
+  const isVegetarian = profile.dietType === 'vegetarian' || profile.dietType === 'vegan'
+
+  const staticMeals: Record<MealType, MealRecommendation['suggestions']> = {
+    breakfast: [
+      {
+        name: 'Flocons d\'avoine aux fruits',
+        calories: Math.min(400, targetCalories),
+        proteins: 12,
+        carbs: 55,
+        fats: 8,
+        prepTime: 10,
+        reason: 'Petit-déjeuner équilibré et rassasiant',
+      },
+      {
+        name: 'Tartines complètes et œuf',
+        calories: Math.min(350, targetCalories),
+        proteins: 15,
+        carbs: 40,
+        fats: 12,
+        prepTime: 15,
+        reason: 'Protéines et fibres pour bien démarrer',
+      },
+    ],
+    lunch: [
+      {
+        name: isVegetarian ? 'Buddha bowl aux légumineuses' : 'Poulet grillé et légumes',
+        calories: Math.min(550, targetCalories),
+        proteins: isVegetarian ? 18 : 35,
+        carbs: 45,
+        fats: 15,
+        prepTime: 25,
+        reason: 'Repas complet et équilibré',
+      },
+      {
+        name: 'Salade composée protéinée',
+        calories: Math.min(450, targetCalories),
+        proteins: 25,
+        carbs: 30,
+        fats: 18,
+        prepTime: 15,
+        reason: 'Léger mais nutritif',
+      },
+    ],
+    snack: [
+      {
+        name: 'Yaourt grec et fruits frais',
+        calories: Math.min(180, targetCalories),
+        proteins: 12,
+        carbs: 20,
+        fats: 5,
+        prepTime: 5,
+        reason: 'Collation riche en protéines',
+      },
+      {
+        name: 'Poignée d\'amandes et pomme',
+        calories: Math.min(200, targetCalories),
+        proteins: 6,
+        carbs: 22,
+        fats: 12,
+        prepTime: 2,
+        reason: 'Énergie durable sans pic glycémique',
+      },
+    ],
+    dinner: [
+      {
+        name: isVegetarian ? 'Curry de légumes au tofu' : 'Poisson et légumes vapeur',
+        calories: Math.min(450, targetCalories),
+        proteins: isVegetarian ? 20 : 30,
+        carbs: 35,
+        fats: 15,
+        prepTime: 30,
+        reason: 'Dîner léger favorisant le sommeil',
+      },
+      {
+        name: 'Soupe de légumes et fromage frais',
+        calories: Math.min(350, targetCalories),
+        proteins: 15,
+        carbs: 30,
+        fats: 12,
+        prepTime: 20,
+        reason: 'Digestion facile pour le soir',
+      },
+    ],
+  }
+
+  return staticMeals[mealType] || staticMeals.lunch
 }
 
 /**
@@ -629,9 +771,92 @@ Reponds en JSON:
       })),
     }))
   } catch (error) {
-    console.error('LymIA Brain coaching error:', error)
-    return []
+    const aiError = parseAIError(error)
+    console.error('[LymIABrain] Coaching error:', aiError.type, aiError.message)
+
+    // Fallback: conseils statiques basés sur les données disponibles
+    return generateStaticCoachingAdvice(context)
   }
+}
+
+/**
+ * Génère des conseils coaching statiques en fallback
+ */
+function generateStaticCoachingAdvice(context: UserContext): CoachingAdvice[] {
+  const { todayNutrition, profile, wellnessData, currentStreak } = context
+  const advices: CoachingAdvice[] = []
+
+  // Conseil basé sur le streak
+  if (currentStreak >= 7) {
+    advices.push({
+      message: `Bravo pour ta série de ${currentStreak} jours ! Ta régularité est la clé du succès.`,
+      priority: 'low',
+      category: 'motivation',
+      decision: 'Streak celebration',
+      reasoning: 'Encouragement basé sur la régularité',
+      confidence: 0.7,
+      sources: [],
+    })
+  }
+
+  // Conseil basé sur les protéines
+  const proteinTarget = profile.nutritionalNeeds?.proteins || 100
+  const proteinRatio = todayNutrition.proteins / proteinTarget
+  if (proteinRatio < 0.5 && new Date().getHours() >= 14) {
+    advices.push({
+      message: `Tes protéines sont à ${Math.round(proteinRatio * 100)}%. Privilégie un repas riche en protéines pour ce soir.`,
+      priority: 'medium',
+      category: 'nutrition',
+      actionItems: ['Ajouter une source de protéines au dîner'],
+      decision: 'Protein reminder',
+      reasoning: 'Rappel protéines basé sur les données',
+      confidence: 0.8,
+      sources: [],
+    })
+  }
+
+  // Conseil basé sur le sommeil
+  if (wellnessData.sleepHours !== undefined && wellnessData.sleepHours < 6) {
+    advices.push({
+      message: `Avec ${wellnessData.sleepHours}h de sommeil, ton corps a besoin de récupérer. Privilégie des repas rassasiants et évite le café après 14h.`,
+      priority: 'high',
+      category: 'wellness',
+      actionItems: ['Éviter le café après 14h', 'Se coucher plus tôt ce soir'],
+      decision: 'Sleep advice',
+      reasoning: 'Conseil basé sur le manque de sommeil',
+      confidence: 0.8,
+      sources: [],
+    })
+  }
+
+  // Conseil basé sur l'hydratation
+  if (wellnessData.hydrationLiters !== undefined && wellnessData.hydrationLiters < 1) {
+    advices.push({
+      message: `Tu n'as bu que ${wellnessData.hydrationLiters}L. L'hydratation impacte ton énergie et ta concentration.`,
+      priority: 'medium',
+      category: 'wellness',
+      actionItems: ['Boire un verre d\'eau maintenant'],
+      decision: 'Hydration reminder',
+      reasoning: 'Rappel hydratation',
+      confidence: 0.9,
+      sources: [],
+    })
+  }
+
+  // Si aucun conseil spécifique, conseil général
+  if (advices.length === 0) {
+    advices.push({
+      message: 'Continue sur ta lancée ! Chaque repas équilibré te rapproche de ton objectif.',
+      priority: 'low',
+      category: 'motivation',
+      decision: 'General encouragement',
+      reasoning: 'Conseil par défaut',
+      confidence: 0.5,
+      sources: [],
+    })
+  }
+
+  return advices
 }
 
 /**
@@ -1299,9 +1524,23 @@ INSTRUCTIONS:
       enhanced: false,
     }
   } catch (error) {
-    console.error('LymIA Brain ask error:', error)
+    const aiError = parseAIError(error)
+    console.error('[LymIABrain] Ask error:', aiError.type, aiError.message)
+
+    // Fallback: réponse basée sur les connaissances locales si disponibles
+    if (uniqueEntries.length > 0) {
+      const bestMatch = uniqueEntries[0]
+      return {
+        answer: `Voici ce que je sais sur ce sujet :\n\n${bestMatch.content.slice(0, 300)}...\n\n⚠️ Service IA temporairement indisponible. Cette réponse est basée sur notre base de connaissances.`,
+        sources: [bestMatch.source],
+        enhanced: false,
+      }
+    }
+
     return {
-      answer: 'Desole, je ne peux pas repondre pour le moment. Reessaie plus tard.',
+      answer: aiError.retryable
+        ? 'Le service est temporairement indisponible. Réessaie dans quelques instants.'
+        : 'Je ne peux pas répondre pour le moment. Vérifie ta connexion internet.',
       sources: [],
       enhanced: false,
     }

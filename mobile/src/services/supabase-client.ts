@@ -6,6 +6,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fetchWithTimeout, TIMEOUTS } from '../lib/fetch-utils'
 
 // Environment variables
@@ -98,6 +99,127 @@ function startCacheCleanup(): void {
 
 // Start cleanup on module load
 startCacheCleanup()
+
+// ============= KNOWLEDGE BASE RESULT CACHE =============
+// Cache KB query results to avoid redundant API calls
+// Persisted to AsyncStorage for cross-session performance
+
+interface KBCacheEntry {
+  result: RAGQueryResult
+  timestamp: number
+  queryHash: string
+}
+
+const kbCache = new Map<string, KBCacheEntry>()
+const KB_CACHE_KEY = 'kb_query_cache'
+const KB_CACHE_TTL = 4 * 60 * 60 * 1000 // 4 hours (KB data doesn't change often)
+const KB_CACHE_MAX_SIZE = 50
+
+let kbCacheLoaded = false
+
+/**
+ * Generate a hash for KB query parameters
+ */
+function hashKBQuery(query: string, options?: { category?: string; limit?: number }): string {
+  const str = `${query.toLowerCase().trim()}_${options?.category || 'all'}_${options?.limit || 5}`
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash
+  }
+  return hash.toString(36)
+}
+
+/**
+ * Load KB cache from AsyncStorage
+ */
+async function loadKBCache(): Promise<void> {
+  if (kbCacheLoaded) return
+
+  try {
+    const cached = await AsyncStorage.getItem(KB_CACHE_KEY)
+    if (cached) {
+      const entries = JSON.parse(cached) as [string, KBCacheEntry][]
+      const now = Date.now()
+
+      // Load only non-expired entries
+      for (const [key, entry] of entries) {
+        if (now - entry.timestamp < KB_CACHE_TTL) {
+          kbCache.set(key, entry)
+        }
+      }
+
+      if (__DEV__) {
+        console.log(`[KBCache] Loaded ${kbCache.size} entries from storage`)
+      }
+    }
+  } catch (error) {
+    console.error('[KBCache] Error loading cache:', error)
+  }
+
+  kbCacheLoaded = true
+}
+
+/**
+ * Save KB cache to AsyncStorage
+ */
+async function saveKBCache(): Promise<void> {
+  try {
+    const entries = Array.from(kbCache.entries())
+    await AsyncStorage.setItem(KB_CACHE_KEY, JSON.stringify(entries))
+  } catch (error) {
+    console.error('[KBCache] Error saving cache:', error)
+  }
+}
+
+/**
+ * Get cached KB result
+ */
+function getCachedKBResult(queryHash: string): RAGQueryResult | null {
+  const cached = kbCache.get(queryHash)
+  if (!cached) return null
+
+  // Check if expired
+  if (Date.now() - cached.timestamp > KB_CACHE_TTL) {
+    kbCache.delete(queryHash)
+    return null
+  }
+
+  return cached.result
+}
+
+/**
+ * Cache a KB result
+ */
+function cacheKBResult(queryHash: string, result: RAGQueryResult): void {
+  kbCache.set(queryHash, {
+    result,
+    timestamp: Date.now(),
+    queryHash,
+  })
+
+  // LRU eviction
+  if (kbCache.size > KB_CACHE_MAX_SIZE) {
+    const firstKey = kbCache.keys().next().value
+    if (firstKey) kbCache.delete(firstKey)
+  }
+
+  // Save to storage (debounced would be better, but simple for now)
+  saveKBCache()
+}
+
+/**
+ * Clear KB cache (useful after KB updates)
+ */
+export async function clearKBCache(): Promise<void> {
+  kbCache.clear()
+  await AsyncStorage.removeItem(KB_CACHE_KEY)
+  console.log('[KBCache] Cache cleared')
+}
+
+// Load KB cache on module init
+loadKBCache()
 
 /**
  * Get cached embedding or null if expired/not found (LRU: updates lastAccess)
@@ -314,6 +436,7 @@ export async function queryKnowledgeBaseBatch(
 
 /**
  * Query knowledge base using semantic search (direct via Supabase RPC)
+ * Now with local caching for improved performance
  */
 export async function queryKnowledgeBase(
   query: string,
@@ -322,10 +445,23 @@ export async function queryKnowledgeBase(
     source?: KnowledgeBaseEntry['source']
     limit?: number
     threshold?: number
+    skipCache?: boolean
   }
 ): Promise<RAGQueryResult | null> {
   const client = getSupabaseClient()
   if (!client) return null
+
+  // Check cache first (unless skipCache is true)
+  const queryHash = hashKBQuery(query, { category: options?.category, limit: options?.limit })
+  if (!options?.skipCache) {
+    const cached = getCachedKBResult(queryHash)
+    if (cached) {
+      if (__DEV__) {
+        console.log(`[KBCache] Hit for query: ${query.slice(0, 30)}...`)
+      }
+      return cached
+    }
+  }
 
   try {
     // Generate embedding for the query
@@ -350,7 +486,9 @@ export async function queryKnowledgeBase(
     }
 
     if (!data || data.length === 0) {
-      return { entries: [], similarity_scores: [] }
+      const emptyResult = { entries: [], similarity_scores: [] }
+      // Don't cache empty results
+      return emptyResult
     }
 
     const entries: KnowledgeBaseEntry[] = data.map((row: Record<string, unknown>) => ({
@@ -366,7 +504,12 @@ export async function queryKnowledgeBase(
 
     const similarity_scores = data.map((row: Record<string, unknown>) => row.similarity as number)
 
-    return { entries, similarity_scores }
+    const result = { entries, similarity_scores }
+
+    // Cache the result
+    cacheKBResult(queryHash, result)
+
+    return result
   } catch (error) {
     console.error('Failed to query knowledge base:', error)
     return null

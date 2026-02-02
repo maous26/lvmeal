@@ -18,6 +18,7 @@
 
 import { getSupabaseClient, isSupabaseConfigured } from './supabase-client'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { AppState, type AppStateStatus } from 'react-native'
 import type { UserProfile, WeightEntry, NutritionInfo } from '../types'
 
 // ============================================================================
@@ -209,15 +210,16 @@ async function saveSyncQueue(): Promise<void> {
 export function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retries'>): void {
   const queueItem: SyncQueueItem = {
     ...item,
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     timestamp: new Date().toISOString(),
     retries: 0,
   }
   syncQueue.push(queueItem)
   saveSyncQueue()
 
-  // Try to sync immediately if online
-  processSyncQueue()
+  // Trigger debounced auto-sync instead of immediate sync
+  // This prevents excessive API calls when multiple changes happen quickly
+  triggerAutoSync()
 }
 
 // ============================================================================
@@ -235,7 +237,7 @@ export async function getCloudUserId(): Promise<string | null> {
     if (!userId) {
       // Generate anonymous user ID
       // In production, use Supabase Auth for proper authentication
-      userId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      userId = `anon_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
       await AsyncStorage.setItem(USER_ID_KEY, userId)
       console.log('[CloudSync] Created new anonymous user:', userId)
     }
@@ -962,6 +964,142 @@ export async function restoreLocalBackup(backupJson: string): Promise<boolean> {
 }
 
 // ============================================================================
+// AUTO-SYNC & BACKGROUND PROCESSING
+// ============================================================================
+
+// Configuration for auto-sync
+const AUTO_SYNC_CONFIG = {
+  debounceMs: 5000,           // Wait 5 seconds after last change before syncing
+  minIntervalMs: 60 * 1000,   // Minimum 1 minute between syncs
+  maxIntervalMs: 15 * 60 * 1000, // Force sync every 15 minutes if pending
+  retryDelayMs: 30 * 1000,    // Wait 30 seconds before retry on failure
+}
+
+let autoSyncTimer: ReturnType<typeof setTimeout> | null = null
+let lastAutoSyncTime = 0
+let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null
+
+/**
+ * Debounced auto-sync trigger
+ * Waits for changes to stop before syncing
+ */
+export function triggerAutoSync(): void {
+  // Clear existing timer
+  if (autoSyncTimer) {
+    clearTimeout(autoSyncTimer)
+  }
+
+  // Check if we synced recently
+  const timeSinceLastSync = Date.now() - lastAutoSyncTime
+  if (timeSinceLastSync < AUTO_SYNC_CONFIG.minIntervalMs) {
+    // Schedule for later
+    autoSyncTimer = setTimeout(() => {
+      performAutoSync()
+    }, AUTO_SYNC_CONFIG.minIntervalMs - timeSinceLastSync)
+    return
+  }
+
+  // Debounce: wait for activity to settle
+  autoSyncTimer = setTimeout(() => {
+    performAutoSync()
+  }, AUTO_SYNC_CONFIG.debounceMs)
+}
+
+/**
+ * Perform the actual auto-sync
+ */
+async function performAutoSync(): Promise<void> {
+  if (!isSupabaseConfigured()) return
+  if (isSyncing) return
+  if (syncQueue.length === 0) return
+
+  console.log('[CloudSync] Auto-sync triggered')
+  lastAutoSyncTime = Date.now()
+
+  try {
+    await processSyncQueue()
+  } catch (error) {
+    console.error('[CloudSync] Auto-sync failed:', error)
+    // Schedule retry
+    autoSyncTimer = setTimeout(() => {
+      performAutoSync()
+    }, AUTO_SYNC_CONFIG.retryDelayMs)
+  }
+}
+
+/**
+ * Handle app state changes (foreground/background)
+ */
+function handleAppStateChange(nextAppState: AppStateStatus): void {
+  if (nextAppState === 'active') {
+    // App came to foreground - check for pending syncs
+    console.log('[CloudSync] App active - checking pending syncs')
+    if (syncQueue.length > 0) {
+      triggerAutoSync()
+    }
+  } else if (nextAppState === 'background') {
+    // App going to background - try to sync pending changes
+    if (syncQueue.length > 0) {
+      console.log('[CloudSync] App backgrounding - syncing pending changes')
+      performAutoSync()
+    }
+  }
+}
+
+/**
+ * Start auto-sync background service
+ */
+export function startAutoSync(): void {
+  // Listen to app state changes
+  if (!appStateSubscription) {
+    appStateSubscription = AppState.addEventListener('change', handleAppStateChange)
+    console.log('[CloudSync] Auto-sync service started')
+  }
+
+  // Start periodic sync check
+  setInterval(() => {
+    const timeSinceLastSync = Date.now() - lastAutoSyncTime
+    if (syncQueue.length > 0 && timeSinceLastSync > AUTO_SYNC_CONFIG.maxIntervalMs) {
+      console.log('[CloudSync] Periodic sync check - forcing sync')
+      performAutoSync()
+    }
+  }, AUTO_SYNC_CONFIG.maxIntervalMs)
+}
+
+/**
+ * Stop auto-sync service
+ */
+export function stopAutoSync(): void {
+  if (autoSyncTimer) {
+    clearTimeout(autoSyncTimer)
+    autoSyncTimer = null
+  }
+  if (appStateSubscription) {
+    appStateSubscription.remove()
+    appStateSubscription = null
+  }
+  console.log('[CloudSync] Auto-sync service stopped')
+}
+
+/**
+ * Force an immediate sync (useful for critical data)
+ */
+export async function forceSync(): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false
+
+  console.log('[CloudSync] Force sync requested')
+  lastAutoSyncTime = Date.now()
+
+  try {
+    await processSyncQueue()
+    return syncQueue.length === 0
+  } catch (error) {
+    console.error('[CloudSync] Force sync failed:', error)
+    return false
+  }
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -976,7 +1114,10 @@ export async function initCloudSync(): Promise<void> {
     processSyncQueue()
   }
 
-  console.log('[CloudSync] Service initialized')
+  // Start auto-sync service
+  startAutoSync()
+
+  console.log('[CloudSync] Service initialized with auto-sync')
 }
 
 // Auto-initialize when module loads

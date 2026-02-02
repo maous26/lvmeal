@@ -22,6 +22,7 @@ import {
 import { getFoodDataForPrompt } from './food-data-rag'
 import { generateUserProfileContext, generateRemainingNutritionContext } from '../lib/ai/user-context'
 import { getThemedPrompt } from '../lib/ai/themes'
+import { withRetry } from './ai-error-handler'
 import type { UserProfile, NutritionInfo } from '../types'
 
 // ============= TYPES =============
@@ -143,6 +144,7 @@ async function callOpenAI(
     maxTokens?: number
     temperature?: number
     timeout?: number
+    maxRetries?: number
   } = {}
 ): Promise<string> {
   const apiKey = await getOpenAIApiKey()
@@ -150,49 +152,70 @@ async function callOpenAI(
     throw new Error('OpenAI API key not configured')
   }
 
-  const { model = 'gpt-4o-mini', maxTokens = 1500, temperature = 0.7, timeout = 30000 } = options
+  const { model = 'gpt-4o-mini', maxTokens = 1500, temperature = 0.7, timeout = 30000, maxRetries = 2 } = options
 
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
+  // Utilise withRetry pour les appels critiques
+  return withRetry(
+    async () => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
 
-  try {
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+      try {
+        const response = await fetch(OPENAI_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: maxTokens,
+            temperature,
+          }),
+          signal: controller.signal,
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}))
+          throw new Error(error.error?.message || `API Error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        const content = data.choices?.[0]?.message?.content
+
+        if (!content) {
+          throw new Error('No response from AI')
+        }
+
+        return content
+      } catch (error) {
+        clearTimeout(timeoutId)
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error('Request timeout')
+        }
+        throw error
+      }
+    },
+    {
+      serviceName: `ai_service_${model}`,
+      config: {
+        maxRetries,
+        initialDelay: 1000,
+        maxDelay: 5000,
+        backoffMultiplier: 2,
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: maxTokens,
-        temperature,
-      }),
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeoutId)
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(error.error?.message || `API Error: ${response.status}`)
+      onRetry: (attempt, error) => {
+        console.warn(`[AIService] Retry ${attempt} for ${model}:`, error.message)
+      },
+      shouldRetry: (error) => {
+        // Ne pas retry pour les erreurs de quota ou clé invalide
+        return error.type !== 'quota_exceeded' && error.type !== 'invalid_key'
+      },
     }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
-      throw new Error('No response from AI')
-    }
-
-    return content
-  } catch (error) {
-    clearTimeout(timeoutId)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timeout')
-    }
-    throw error
-  }
+  )
 }
 
 function extractJSON<T = Record<string, unknown>>(text: string): T {
