@@ -17,6 +17,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { LymIABrain, type UserContext, type ProgramAdaptation } from '../services/lymia-brain'
 import type { UserProfile } from '../types'
+import { analytics } from '../services/analytics-service'
 
 export type WellnessPhase = 'foundations' | 'awareness' | 'balance' | 'harmony'
 
@@ -361,6 +362,12 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           totalBreathingExercises: 0,
           isHiddenDueToMetabolic: false,
         })
+
+        // Track program enrollment
+        analytics.track('program_started', {
+          program_id: 'wellness_program',
+          program_name: 'Programme Bien-être',
+        })
       },
 
       unenroll: () => {
@@ -600,6 +607,21 @@ export const useWellnessProgramStore = create<WellnessProgramState>()(
           phaseTransitions: [...phaseTransitions, transition],
           completedAt: isCompleted ? getDateString() : null,
         })
+
+        // Track phase progression
+        analytics.track('program_day_completed', {
+          program_id: 'wellness_program',
+          program_name: `Phase ${nextPhase}`,
+          day_number: totalWeeksCompleted + WELLNESS_PHASE_CONFIGS[currentPhase].durationWeeks,
+        })
+
+        // Track program completion
+        if (isCompleted) {
+          analytics.track('program_completed', {
+            program_id: 'wellness_program',
+            program_name: 'Programme Bien-être',
+          })
+        }
 
         return true
       },

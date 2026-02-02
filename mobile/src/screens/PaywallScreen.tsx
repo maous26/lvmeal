@@ -37,6 +37,7 @@ import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
+import { analytics } from '../services/analytics-service'
 import { useOnboardingStore, SUBSCRIPTION_PRICE } from '../stores/onboarding-store'
 import { useFeedbackStore, type PaywallResponse } from '../stores/feedback-store'
 import { useUserStore } from '../stores/user-store'
@@ -57,6 +58,11 @@ export default function PaywallScreen() {
 
   const daysSinceSignup = getDaysSinceSignup()
   const userName = profile?.firstName || 'toi'
+
+  // Track paywall view on mount
+  React.useEffect(() => {
+    analytics.trackPaywallViewed('auto_trigger', `day_${daysSinceSignup}`)
+  }, [])
 
   const responseOptions: { key: PaywallResponse; label: string; sublabel: string; icon: React.ReactNode; color: string }[] = [
     {
@@ -100,6 +106,22 @@ export default function PaywallScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     setIsSubmitting(true)
+
+    // Track the response analytics
+    analytics.track('upgrade_prompt_clicked', {
+      source: 'paywall',
+      paywall_variant: `day_${daysSinceSignup}`,
+      // Map response to subscription intent
+      subscription_plan: selectedResponse === 'would_pay' ? 'monthly' : undefined,
+    })
+
+    // Track specific conversion intent
+    if (selectedResponse === 'would_pay') {
+      analytics.track('payment_initiated', {
+        source: 'paywall_feedback',
+        payment_method: undefined, // Test phase - no real payment
+      })
+    }
 
     // Submit feedback
     submitPaywallFeedback(

@@ -101,6 +101,8 @@ export type FunnelId =
   | 'first_week_retention'
   | 'feature_discovery'
   | 'streak_achievement'
+  | 'subscription_conversion'
+  | 'wellness_engagement'
 
 export interface FunnelStep {
   id: string
@@ -180,6 +182,31 @@ const FUNNEL_DEFINITIONS: FunnelDefinition[] = [
     targetConversionRate: 0.3,
     alertThreshold: 0.2,
   },
+  {
+    id: 'subscription_conversion',
+    name: 'Conversion Abonnement',
+    description: 'Du paywall à l\'abonnement actif',
+    steps: [
+      { id: 'paywall', name: 'Paywall vu', event: 'paywall_viewed' },
+      { id: 'initiated', name: 'Paiement initié', event: 'payment_initiated' },
+      { id: 'completed', name: 'Paiement terminé', event: 'payment_completed' },
+      { id: 'active', name: 'Abonnement actif', event: 'subscription_activated' },
+    ],
+    targetConversionRate: 0.1,
+    alertThreshold: 0.05,
+  },
+  {
+    id: 'wellness_engagement',
+    name: 'Engagement Bien-être',
+    description: 'Utilisation des features bien-être',
+    steps: [
+      { id: 'mood', name: 'Humeur enregistrée', event: 'mood_logged' },
+      { id: 'sleep', name: 'Sommeil tracké', event: 'sleep_tracked' },
+      { id: 'meditation', name: 'Méditation complétée', event: 'meditation_completed' },
+    ],
+    targetConversionRate: 0.25,
+    alertThreshold: 0.15,
+  },
 ]
 
 // ============= ALERT THRESHOLDS =============
@@ -249,12 +276,16 @@ export type AnalyticsEvent =
   | 'onboarding_started'
   | 'onboarding_step_completed'
   | 'onboarding_completed'
-  // Meal tracking
+  | 'onboarding_skipped'
+  // Meal tracking (Nutrition)
   | 'meal_logged'
   | 'meal_deleted'
   | 'meal_edited'
   | 'food_search'
   | 'food_selected'
+  | 'nutrition_goal_set'
+  | 'calorie_tracked'
+  | 'recipe_viewed'
   // AI features
   | 'photo_scan_started'
   | 'photo_scan_completed'
@@ -274,10 +305,21 @@ export type AnalyticsEvent =
   | 'coach_insight_viewed'
   | 'coach_celebration_shown'
   | 'coach_alert_shown'
-  // Programs
+  // Programs & Challenges
   | 'program_started'
   | 'program_completed'
   | 'program_day_completed'
+  | 'challenge_joined'
+  | 'challenge_completed'
+  | 'workout_started'
+  | 'workout_completed'
+  // Wellness (Bien-être)
+  | 'mood_logged'
+  | 'sleep_tracked'
+  | 'meditation_started'
+  | 'meditation_completed'
+  | 'wellness_score_viewed'
+  | 'stress_level_logged'
   // Profile
   | 'profile_updated'
   | 'weight_logged'
@@ -294,6 +336,19 @@ export type AnalyticsEvent =
   | 'advice_viewed'
   | 'health_overview_opened'
   | 'diversity_card_viewed'
+  // Payment & Subscription
+  | 'paywall_viewed'
+  | 'subscription_started'
+  | 'subscription_trial_started'
+  | 'subscription_activated'
+  | 'subscription_renewed'
+  | 'subscription_cancelled'
+  | 'subscription_expired'
+  | 'payment_initiated'
+  | 'payment_completed'
+  | 'payment_failed'
+  | 'upgrade_prompt_shown'
+  | 'upgrade_prompt_clicked'
   // Errors & issues
   | 'error_occurred'
   | 'feature_failed'
@@ -305,24 +360,47 @@ export interface AnalyticsProperties {
   duration_ms?: number
   success?: boolean
   error_message?: string
-  // Meal specific
+  // Meal specific (Nutrition)
   meal_type?: string
   input_method?: 'search' | 'photo' | 'voice' | 'barcode' | 'ai' | 'manual'
   food_source?: 'off' | 'ciqual' | 'gustar' | 'ai'
   calories?: number
+  recipe_id?: string
+  recipe_name?: string
   // AI specific
   ai_model?: string
   confidence_score?: number
-  // Program specific
+  // Program & Challenge specific
   program_id?: string
   program_name?: string
   day_number?: number
+  challenge_id?: string
+  challenge_name?: string
+  workout_type?: string
+  workout_duration_min?: number
+  // Wellness specific
+  mood_score?: number
+  mood_type?: 'happy' | 'neutral' | 'sad' | 'stressed' | 'energized' | 'tired'
+  sleep_hours?: number
+  sleep_quality?: 'poor' | 'fair' | 'good' | 'excellent'
+  stress_level?: number
+  meditation_type?: string
   // Search
   query?: string
   results_count?: number
   // Plan
   plan_duration_days?: number
   meals_count?: number
+  // Payment & Subscription specific
+  subscription_plan?: 'monthly' | 'yearly' | 'lifetime'
+  subscription_price?: number
+  subscription_currency?: string
+  payment_method?: 'apple_pay' | 'google_pay' | 'card' | 'paypal'
+  trial_duration_days?: number
+  cancellation_reason?: string
+  upgrade_from?: string
+  upgrade_to?: string
+  paywall_variant?: string
   // Generic
   [key: string]: string | number | boolean | undefined
 }
@@ -360,6 +438,8 @@ class CohortTracker {
             first_week_retention: [],
             feature_discovery: [],
             streak_achievement: [],
+            subscription_conversion: [],
+            wellness_engagement: [],
           },
           cohortHistory: [],
         }
@@ -702,6 +782,148 @@ class AnalyticsService {
       feature,
       error_message: errorMessage.substring(0, 200), // Truncate long errors
       ...additionalProps,
+    })
+  }
+
+  // ============= PAYMENT & SUBSCRIPTION TRACKING =============
+
+  /**
+   * Track paywall view
+   */
+  trackPaywallViewed(source: string, variant?: string): void {
+    this.track('paywall_viewed', {
+      source,
+      paywall_variant: variant,
+    })
+  }
+
+  /**
+   * Track subscription events
+   */
+  trackSubscription(
+    event: 'started' | 'trial_started' | 'activated' | 'renewed' | 'cancelled' | 'expired',
+    plan: AnalyticsProperties['subscription_plan'],
+    price?: number,
+    additionalProps?: AnalyticsProperties
+  ): void {
+    const eventMap: Record<string, AnalyticsEvent> = {
+      started: 'subscription_started',
+      trial_started: 'subscription_trial_started',
+      activated: 'subscription_activated',
+      renewed: 'subscription_renewed',
+      cancelled: 'subscription_cancelled',
+      expired: 'subscription_expired',
+    }
+
+    this.track(eventMap[event], {
+      subscription_plan: plan,
+      subscription_price: price,
+      ...additionalProps,
+    })
+
+    // Update user property for subscription status
+    if (this.initialized) {
+      const identify = new Amplitude.Identify()
+      if (event === 'activated' || event === 'renewed') {
+        identify.set('is_premium', true)
+        identify.set('subscription_plan', plan || 'unknown')
+      } else if (event === 'cancelled' || event === 'expired') {
+        identify.set('is_premium', false)
+      }
+      Amplitude.identify(identify)
+    }
+  }
+
+  /**
+   * Track payment events
+   */
+  trackPayment(
+    event: 'initiated' | 'completed' | 'failed',
+    method: AnalyticsProperties['payment_method'],
+    amount?: number,
+    additionalProps?: AnalyticsProperties
+  ): void {
+    const eventMap: Record<string, AnalyticsEvent> = {
+      initiated: 'payment_initiated',
+      completed: 'payment_completed',
+      failed: 'payment_failed',
+    }
+
+    this.track(eventMap[event], {
+      payment_method: method,
+      subscription_price: amount,
+      success: event === 'completed',
+      ...additionalProps,
+    })
+  }
+
+  // ============= WELLNESS TRACKING =============
+
+  /**
+   * Track mood logged
+   */
+  trackMoodLogged(
+    moodType: AnalyticsProperties['mood_type'],
+    score?: number
+  ): void {
+    this.track('mood_logged', {
+      mood_type: moodType,
+      mood_score: score,
+    })
+  }
+
+  /**
+   * Track sleep
+   */
+  trackSleep(hours: number, quality: AnalyticsProperties['sleep_quality']): void {
+    this.track('sleep_tracked', {
+      sleep_hours: hours,
+      sleep_quality: quality,
+    })
+  }
+
+  /**
+   * Track meditation
+   */
+  trackMeditation(
+    event: 'started' | 'completed',
+    type: string,
+    durationMs?: number
+  ): void {
+    this.track(event === 'started' ? 'meditation_started' : 'meditation_completed', {
+      meditation_type: type,
+      duration_ms: durationMs,
+      success: event === 'completed',
+    })
+  }
+
+  /**
+   * Track workout
+   */
+  trackWorkout(
+    event: 'started' | 'completed',
+    type: string,
+    durationMin?: number
+  ): void {
+    this.track(event === 'started' ? 'workout_started' : 'workout_completed', {
+      workout_type: type,
+      workout_duration_min: durationMin,
+      success: event === 'completed',
+    })
+  }
+
+  /**
+   * Track challenge
+   */
+  trackChallenge(
+    event: 'joined' | 'completed',
+    challengeId: string,
+    challengeName: string
+  ): void {
+    this.track(event === 'joined' ? 'challenge_joined' : 'challenge_completed', {
+      challenge_id: challengeId,
+      challenge_name: challengeName,
+      success: event === 'completed',
     })
   }
 

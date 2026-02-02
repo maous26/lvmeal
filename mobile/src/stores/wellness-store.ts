@@ -5,6 +5,7 @@ import type { WellnessEntry, WellnessTargets, WellnessStreaks, LifestyleHabits }
 import { useGamificationStore, XP_REWARDS } from './gamification-store'
 import { trackAppEvent } from '../services/weekly-challenges-service'
 import { useUserStore } from './user-store'
+import { analytics } from '../services/analytics-service'
 
 function getTodayString(): string {
   return new Date().toISOString().split('T')[0]
@@ -104,6 +105,22 @@ export const useWellnessStore = create<WellnessState>()(
         if (score >= 80) {
           gamification.addXP(XP_REWARDS.WELLNESS_SCORE_80, 'Score wellness >= 80')
         }
+
+        // Analytics tracking
+        if (entryData.stressLevel) {
+          analytics.track('stress_level_logged', {
+            stress_level: entryData.stressLevel,
+          })
+        }
+        if (entryData.energyLevel) {
+          analytics.track('mood_logged', {
+            mood_score: entryData.energyLevel,
+            mood_type: entryData.energyLevel >= 4 ? 'energized' : entryData.energyLevel <= 2 ? 'tired' : 'neutral',
+          })
+        }
+        analytics.track('wellness_score_viewed', {
+          source: 'checkin',
+        })
       },
 
       updateEntry: (date, updates) => {
@@ -153,6 +170,16 @@ export const useWellnessStore = create<WellnessState>()(
         if (userId) {
           trackAppEvent(userId, 'SLEEP_LOGGED', hours).catch(() => {})
         }
+
+        // Analytics tracking
+        const qualityMap: Record<number, 'poor' | 'fair' | 'good' | 'excellent'> = {
+          1: 'poor',
+          2: 'poor',
+          3: 'fair',
+          4: 'good',
+          5: 'excellent',
+        }
+        analytics.trackSleep(hours, qualityMap[quality] || 'fair')
 
         get().updateStreaks()
       },

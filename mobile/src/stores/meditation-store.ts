@@ -7,6 +7,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { meditationTTSService, MEDITATION_SESSIONS, type MeditationSession, type MeditationStatus } from '../services/meditation-tts-service'
 import { useGamificationStore, XP_REWARDS } from './gamification-store'
+import { analytics } from '../services/analytics-service'
 
 export interface MeditationProgress {
   sessionId: string
@@ -154,6 +155,10 @@ export const useMeditationStore = create<MeditationState>()(
         // Récupérer la position de reprise si disponible
         const progress = sessionProgress.find(p => p.sessionId === sessionId)
         const startPosition = progress?.lastPosition || 0
+
+        // Track meditation started
+        const session = MEDITATION_SESSIONS.find(s => s.id === sessionId)
+        analytics.trackMeditation('started', session?.theme || 'unknown')
 
         set({
           currentSessionId: sessionId,
@@ -313,6 +318,11 @@ export const useMeditationStore = create<MeditationState>()(
 
         // Incrémenter la métrique pour les achievements
         gamification.incrementMetric('meditation_sessions')
+
+        // Track meditation completed in analytics
+        const session = MEDITATION_SESSIONS.find(s => s.id === sessionId)
+        const progress = get().sessionProgress.find(p => p.sessionId === sessionId)
+        analytics.trackMeditation('completed', session?.theme || 'unknown', progress?.totalListenTime)
       },
 
       setStatus: (status) => set({ currentStatus: status }),

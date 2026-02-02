@@ -16,6 +16,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useRewardStore } from '../stores/reward-store'
+import { analytics } from './analytics-service'
 
 // ============================================================================
 // TYPES
@@ -326,6 +327,9 @@ export async function startChallenge(
   progress.push(newProgress)
   await saveUserProgress(userId, progress)
 
+  // Track challenge joined
+  analytics.trackChallenge('joined', challengeId, challenge.name)
+
   console.log('[Challenges] Started:', challenge.name)
   return newProgress
 }
@@ -407,6 +411,9 @@ async function completeChallenge(userId: string, challengeId: string): Promise<v
 
     // Mettre à jour les stats locales aussi
     await updateLocalStats(userId, challenge.points)
+
+    // Track challenge completed in analytics
+    analytics.trackChallenge('completed', challengeId, challenge.name)
   }
 
   console.log('[Challenges] Completed:', challengeId)
