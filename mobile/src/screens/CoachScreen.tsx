@@ -44,8 +44,21 @@ import {
   type LymiaMessage,
   type AIMessageContext,
 } from '../services/message-center'
+import { useCoachState, type CoachTopic } from '../services/coach-state'
 import { CoachMessageCard, FeaturedInsight, CollapsibleSection } from '../components/coach'
 import { AnimatedBackground } from '../components/ui'
+
+// Map message category to CoachTopic
+const categoryToTopic: Record<string, CoachTopic> = {
+  nutrition: 'nutrition',
+  hydration: 'hydration',
+  sleep: 'sleep',
+  sport: 'activity',
+  stress: 'wellness',
+  progress: 'progress',
+  wellness: 'wellness',
+  system: 'motivation',
+}
 
 // ============= WELCOME CARD COMPONENT =============
 
@@ -210,6 +223,15 @@ export default function CoachScreen() {
   const hasGeneratedMessages = React.useRef(false)
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
 
+  // CoachState for engagement tracking
+  const recordAppOpen = useCoachState((s) => s.recordAppOpen)
+  const recordDismiss = useCoachState((s) => s.recordDismiss)
+
+  // Record app open when screen mounts (for adaptive timing)
+  useEffect(() => {
+    recordAppOpen()
+  }, [recordAppOpen])
+
   // Generate messages - uses REAL AI via LymIABrain
   const generateMessages = async () => {
     // Get fresh data from stores directly to avoid stale closures
@@ -294,6 +316,14 @@ export default function CoachScreen() {
     const mealType = message?.dedupKey?.match(/meal-reminder-(breakfast|lunch|snack|dinner)/)?.[1]
     // @ts-ignore - navigation typing
     navigation.navigate(route, mealType ? { mealType } : undefined)
+  }
+
+  // Handle dismiss with CoachState tracking (for adaptive cooldowns)
+  const handleDismissMessage = (message: LymiaMessage) => {
+    dismiss(message.id)
+    // Track dismiss in CoachState to increase cooldown for this topic
+    const topic = categoryToTopic[message.category] || 'motivation'
+    recordDismiss(topic)
   }
 
   const handleDismissWelcome = () => {
@@ -405,12 +435,12 @@ export default function CoachScreen() {
           </View>
         ) : (
           <>
-            {/* Featured Insight - Le message le plus important */}
+            {/* Featured Insight - Le message le plus important (1 carte primaire) */}
             {activeMessages.length > 0 && (
               <FeaturedInsight
                 message={activeMessages[0]}
                 onRead={() => markAsRead(activeMessages[0].id)}
-                onDismiss={() => dismiss(activeMessages[0].id)}
+                onDismiss={() => handleDismissMessage(activeMessages[0])}
                 onAction={(route) => handleAction(route, activeMessages[0])}
               />
             )}
@@ -431,7 +461,7 @@ export default function CoachScreen() {
                       key={msg.id}
                       message={msg}
                       onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => dismiss(msg.id)}
+                      onDismiss={() => handleDismissMessage(msg)}
                       onAction={(route) => handleAction(route, msg)}
                     />
                   ))}
@@ -453,7 +483,7 @@ export default function CoachScreen() {
                       key={msg.id}
                       message={msg}
                       onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => dismiss(msg.id)}
+                      onDismiss={() => handleDismissMessage(msg)}
                       onAction={(route) => handleAction(route, msg)}
                     />
                   ))}
@@ -475,7 +505,7 @@ export default function CoachScreen() {
                       key={msg.id}
                       message={msg}
                       onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => dismiss(msg.id)}
+                      onDismiss={() => handleDismissMessage(msg)}
                       onAction={(route) => handleAction(route, msg)}
                     />
                   ))}
@@ -497,7 +527,7 @@ export default function CoachScreen() {
                       key={msg.id}
                       message={msg}
                       onRead={() => markAsRead(msg.id)}
-                      onDismiss={() => dismiss(msg.id)}
+                      onDismiss={() => handleDismissMessage(msg)}
                       onAction={(route) => handleAction(route, msg)}
                     />
                   ))}

@@ -359,15 +359,14 @@ export interface AIMessageContext {
 
 /**
  * Generate smart messages combining AI insights + critical contextual alerts
+ * Now uses MessageRouter for collision resolution, TTL, and delivery routing
  *
  * Strategy:
- * 1. AI messages (LymIABrain) - personalized coaching, tips, motivation
- * 2. Critical alerts only - urgent situations that need immediate attention
- * 3. Max 3 messages total to avoid overwhelming the user
- * 4. Dedup keys prevent duplicate messages on the same topic
+ * 1. Critical alerts (rules-based, urgent only)
+ * 2. AI messages (LymIABrain) with becauseLine for transparency
+ * 3. Route through MessageRouter for collision/delivery decisions
  */
 export async function generateAIMessages(context: AIMessageContext): Promise<GeneratedMessage[]> {
-  const messages: GeneratedMessage[] = []
   const hour = new Date().getHours()
   const { profile, nutrition, wellness, streak, lastMealTime, todayMealsCount } = context
   const today = new Date().toISOString().split('T')[0]
@@ -380,158 +379,234 @@ export async function generateAIMessages(context: AIMessageContext): Promise<Gen
     ? Math.round((nutrition.proteinsConsumed / nutrition.proteinsTarget) * 100)
     : 0
 
+  // Import router dynamically to avoid circular deps
+  const { messageRouter, createRuleCandidate, createAICandidate } = await import('./message-router')
+  type CandidateMessage = Parameters<typeof messageRouter.deliver>[0]
+  type CoachTopic = CandidateMessage['topic']
+
+  const candidates: CandidateMessage[] = []
+
   // ============= STEP 1: Critical contextual alerts (non-AI, urgent only) =============
-  // These are simple rule-based alerts for urgent situations
-  // They complement AI messages by catching critical states
 
   // Alert: Long fast (8+ hours without eating, daytime only)
   if (lastMealTime && hour >= 9 && hour <= 21) {
     const hoursSinceLastMeal = (Date.now() - lastMealTime.getTime()) / (1000 * 60 * 60)
     if (hoursSinceLastMeal >= 8) {
-      messages.push({
+      candidates.push(createRuleCandidate({
         priority: 'P1',
         type: 'action',
         category: 'nutrition',
+        topic: 'fasting' as CoachTopic,
         title: 'Tu as faim ?',
         message: `Ça fait ${Math.round(hoursSinceLastMeal)}h sans repas. Prends soin de toi !`,
         emoji: '🍽️',
         actionLabel: 'Ajouter un repas',
         actionRoute: 'AddMeal',
-        reason: `Alerte: ${Math.round(hoursSinceLastMeal)}h sans repas`,
+        becauseLine: `Ça fait ${Math.round(hoursSinceLastMeal)} heures que tu n'as rien mangé`,
         confidence: 0.85,
         dedupKey: `alert-long-fast-${today}`,
-      })
+        urgencyWindow: 2, // Actionable in next 2 hours
+      }))
     }
   }
 
   // Alert: Critical dehydration (< 30% after 15h)
   if (wellness.hydrationPercent < 30 && hour >= 15) {
-    messages.push({
+    candidates.push(createRuleCandidate({
       priority: 'P1',
       type: 'action',
       category: 'hydration',
+      topic: 'hydration' as CoachTopic,
       title: 'Pense à boire',
       message: `Seulement ${wellness.hydrationPercent}% de ton objectif eau. Un verre d'eau ?`,
       emoji: '💧',
       actionLabel: "Ajouter de l'eau",
       actionRoute: 'Home',
-      reason: `Alerte: hydratation à ${wellness.hydrationPercent}%`,
+      becauseLine: `Tu n'as bu que ${wellness.hydrationPercent}% de ton objectif aujourd'hui`,
       confidence: 0.8,
       dedupKey: `alert-dehydration-${today}`,
       source: 'ANSES',
-    })
+      urgencyWindow: 3,
+    }))
   }
 
   // ============= STEP 2: AI-powered personalized messages =============
-  // Only fetch AI messages if we have room (max 3 total)
-  const remainingSlots = MAX_MESSAGES_PER_GENERATION - messages.length
+  try {
+    const { getCoachingAdvice } = await import('./lymia-brain')
 
-  if (remainingSlots > 0) {
-    try {
-      // Dynamically import LymIABrain to avoid circular dependencies
-      const { getCoachingAdvice } = await import('./lymia-brain')
-
-      // Build context for LymIA
-      const lymiaContext = {
-        profile: {
-          firstName: profile.firstName,
-          goal: profile.goal || 'maintain',
-          nutritionalNeeds: {
-            calories: nutrition.caloriesTarget,
-            proteins: nutrition.proteinsTarget,
-            carbs: 0,
-            fats: 0,
-          },
-        } as any,
-        todayNutrition: {
-          calories: nutrition.caloriesConsumed,
-          proteins: nutrition.proteinsConsumed,
-          carbs: nutrition.carbsConsumed,
-          fats: nutrition.fatsConsumed,
+    const lymiaContext = {
+      profile: {
+        firstName: profile.firstName,
+        goal: profile.goal || 'maintain',
+        nutritionalNeeds: {
+          calories: nutrition.caloriesTarget,
+          proteins: nutrition.proteinsTarget,
+          carbs: 0,
+          fats: 0,
         },
-        weeklyAverage: {
-          calories: nutrition.caloriesConsumed,
-          proteins: nutrition.proteinsConsumed,
-          carbs: nutrition.carbsConsumed,
-          fats: nutrition.fatsConsumed,
-        },
-        currentStreak: streak,
-        lastMeals: [],
-        wellnessData: {
-          sleepHours: wellness.sleepHours || undefined,
-          stressLevel: wellness.stressLevel || undefined,
-          energyLevel: wellness.energyLevel || undefined,
-          hydrationLiters: (wellness.hydrationPercent / 100) * 2,
-        },
-      }
+      } as any,
+      todayNutrition: {
+        calories: nutrition.caloriesConsumed,
+        proteins: nutrition.proteinsConsumed,
+        carbs: nutrition.carbsConsumed,
+        fats: nutrition.fatsConsumed,
+      },
+      weeklyAverage: {
+        calories: nutrition.caloriesConsumed,
+        proteins: nutrition.proteinsConsumed,
+        carbs: nutrition.carbsConsumed,
+        fats: nutrition.fatsConsumed,
+      },
+      currentStreak: streak,
+      lastMeals: [],
+      wellnessData: {
+        sleepHours: wellness.sleepHours || undefined,
+        stressLevel: wellness.stressLevel || undefined,
+        energyLevel: wellness.energyLevel || undefined,
+        hydrationLiters: (wellness.hydrationPercent / 100) * 2,
+      },
+    }
 
-      // Get AI coaching advice
-      const advices = await getCoachingAdvice(lymiaContext)
+    const advices = await getCoachingAdvice(lymiaContext)
 
-      // Convert advices to messages (respect remaining slots)
-      for (const advice of advices.slice(0, remainingSlots)) {
-        // Skip if AI gives advice on same topic as our alerts
-        const aiCategory = advice.category === 'alert' ? 'nutrition' :
-          advice.category === 'motivation' ? 'progress' :
-          advice.category as MessageCategory
+    for (const advice of advices.slice(0, 2)) { // Max 2 AI messages
+      const aiCategory = advice.category === 'alert' ? 'nutrition' :
+        advice.category === 'motivation' ? 'progress' :
+        advice.category as MessageCategory
 
-        // Check for duplicates with existing messages
-        const isDuplicate = messages.some(m =>
-          m.category === aiCategory &&
-          (m.dedupKey?.includes('fast') && advice.message.toLowerCase().includes('repas')) ||
-          (m.dedupKey?.includes('hydration') && advice.message.toLowerCase().includes('eau'))
-        )
+      const aiTopic: CoachTopic =
+        aiCategory === 'nutrition' ? 'nutrition' :
+        aiCategory === 'hydration' ? 'hydration' :
+        aiCategory === 'sleep' ? 'sleep' :
+        aiCategory === 'sport' ? 'activity' :
+        aiCategory === 'stress' ? 'wellness' :
+        aiCategory === 'progress' ? 'progress' :
+        'motivation'
 
-        if (isDuplicate) continue
+      const priority: MessagePriority =
+        advice.priority === 'high' ? 'P1' :
+        advice.priority === 'medium' ? 'P2' : 'P3'
 
-        const priority: MessagePriority =
-          advice.priority === 'high' ? 'P1' :
-          advice.priority === 'medium' ? 'P2' : 'P3'
+      const type: MessageType =
+        advice.category === 'alert' ? 'alert' :
+        advice.category === 'motivation' ? 'celebration' :
+        advice.priority === 'high' ? 'action' : 'tip'
 
-        const type: MessageType =
-          advice.category === 'alert' ? 'alert' :
-          advice.category === 'motivation' ? 'celebration' :
-          advice.priority === 'high' ? 'action' : 'tip'
+      const sourceEntry = advice.sources?.[0]
+      const sourceName = sourceEntry?.source?.toUpperCase() || undefined
 
-        // Extract source name from sources array (sources is Array<{content, source, relevance}>)
-        const sourceEntry = advice.sources?.[0]
-        const sourceName = sourceEntry?.source?.toUpperCase() || undefined
+      // Build human-readable becauseLine from context
+      const becauseLine = buildBecauseLine(context, advice.category, caloriesPercent, proteinsPercent)
 
-        messages.push({
-          priority,
-          type,
-          category: aiCategory,
-          title: extractTitle(advice.message),
-          message: advice.message,
-          emoji: getCategoryEmoji(aiCategory, type),
-          actionLabel: advice.actionItems?.[0] || undefined,
-          actionRoute: getActionRoute(aiCategory),
-          reason: `IA: ${advice.category} - ${advice.priority}`,
-          confidence: 0.9,
-          dedupKey: `ai-${aiCategory}-${today}-${advice.priority}`,
-          source: sourceName,
-        })
+      candidates.push(createAICandidate({
+        priority,
+        type,
+        category: aiCategory,
+        topic: aiTopic,
+        title: extractTitle(advice.message),
+        message: advice.message,
+        emoji: getCategoryEmoji(aiCategory, type),
+        actionLabel: advice.actionItems?.[0] || undefined,
+        actionRoute: getActionRoute(aiCategory),
+        becauseLine,
+        reason: `IA: ${advice.category} - ${advice.priority}`,
+        confidence: 0.9,
+        dedupKey: `ai-${aiCategory}-${today}-${advice.priority}`,
+        source: sourceName,
+      }))
+    }
+  } catch (error) {
+    console.error('[MessageCenter] AI generation failed:', error)
+  }
 
-        // Stop if we've filled all slots
-        if (messages.length >= MAX_MESSAGES_PER_GENERATION) break
-      }
-    } catch (error) {
-      console.error('[MessageCenter] AI generation failed:', error)
-      // Don't add fallback if we already have alert messages
+  // ============= STEP 3: Fallback if no candidates =============
+  if (candidates.length === 0 && hour >= 18) {
+    const fallback = await generateFallbackInsight(context)
+    candidates.push(createRuleCandidate({
+      priority: fallback.priority,
+      type: fallback.type,
+      category: fallback.category,
+      topic: 'nutrition' as CoachTopic,
+      title: fallback.title,
+      message: fallback.message,
+      emoji: fallback.emoji,
+      actionLabel: fallback.actionLabel,
+      actionRoute: fallback.actionRoute,
+      becauseLine: 'Bilan de ta journée nutrition',
+      confidence: fallback.confidence,
+      dedupKey: fallback.dedupKey || `fallback-${today}`,
+    }))
+  }
+
+  // ============= STEP 4: Route through MessageRouter =============
+  const deliveredIds = await messageRouter.deliverBatch(candidates)
+
+  // Convert to GeneratedMessage format for backward compatibility
+  const messageCenter = useMessageCenter.getState()
+  const messages: GeneratedMessage[] = []
+
+  for (const id of deliveredIds) {
+    const msg = messageCenter.messages.find(m => m.id === id)
+    if (msg) {
+      messages.push({
+        priority: msg.priority,
+        type: msg.type,
+        category: msg.category,
+        title: msg.title,
+        message: msg.message,
+        emoji: msg.emoji,
+        actionLabel: msg.actionLabel,
+        actionRoute: msg.actionRoute,
+        reason: msg.reason,
+        confidence: msg.confidence,
+        dedupKey: msg.dedupKey,
+        source: msg.source,
+        expiresAt: msg.expiresAt,
+      })
     }
   }
 
-  // ============= STEP 3: Fallback if no messages at all =============
-  // Only add a fallback insight in the evening if we have nothing
-  if (messages.length === 0 && hour >= 18) {
-    messages.push(await generateFallbackInsight(context))
+  return messages
+}
+
+/**
+ * Build a human-readable "because line" for AI messages
+ */
+function buildBecauseLine(
+  context: AIMessageContext,
+  category: string,
+  caloriesPercent: number,
+  proteinsPercent: number
+): string {
+  const { nutrition, wellness, streak, todayMealsCount } = context
+
+  switch (category) {
+    case 'nutrition':
+      if (caloriesPercent < 50) {
+        return `Tu as consommé ${caloriesPercent}% de tes calories aujourd'hui`
+      } else if (caloriesPercent > 110) {
+        return `Tu as dépassé ton objectif calorique de ${caloriesPercent - 100}%`
+      }
+      return `Basé sur tes ${todayMealsCount} repas d'aujourd'hui`
+
+    case 'wellness':
+      if (wellness.sleepHours && wellness.sleepHours < 6) {
+        return `Tu as dormi seulement ${wellness.sleepHours}h cette nuit`
+      }
+      return 'Basé sur ton bien-être général'
+
+    case 'motivation':
+      if (streak > 7) {
+        return `Tu as maintenu une série de ${streak} jours`
+      }
+      return 'Pour te motiver à continuer'
+
+    case 'alert':
+      return 'Détecté automatiquement selon tes données'
+
+    default:
+      return 'Conseil personnalisé selon ton profil'
   }
-
-  // Sort by priority (P0 > P1 > P2 > P3) before returning
-  const priorityOrder: Record<MessagePriority, number> = { P0: 0, P1: 1, P2: 2, P3: 3 }
-  messages.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
-
-  return messages.slice(0, MAX_MESSAGES_PER_GENERATION)
 }
 
 /**
