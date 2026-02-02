@@ -37,15 +37,23 @@ import {
   ChevronRight,
 } from 'lucide-react-native'
 import { useTheme } from '../../contexts/ThemeContext'
-import { spacing, radius, fonts } from '../../constants/theme'
+import { spacing, radius, fonts, lymBrand } from '../../constants/theme'
 
 const { height } = Dimensions.get('window')
 
-const iosColors = {
-  purple: '#AF52DE',
-  blue: '#007AFF',
-  orange: '#FF9500',
-  green: '#34C759',
+// Couleurs harmonieuses avec la marque LYM
+const brandColors = {
+  // Vert sage LYM (couleur principale)
+  sage: lymBrand.green,           // #6B8E6B
+  sageLight: lymBrand.greenLight, // #7A9E7E
+  // Orange accent LYM
+  warmOrange: lymBrand.orange,    // #E8A060
+  // Terre/brun chaud - symbolise la nature, l'authenticité, le bien-être
+  earth: '#5D4E37',               // Brun chaud naturel
+  earthLight: '#7A6B52',          // Version plus claire
+  // Accents complémentaires (tons naturels)
+  moss: '#7A9E7E',                // Vert mousse
+  clay: '#C4A484',                // Argile/sable
 }
 
 // Carte animée pour les bénéfices
@@ -129,31 +137,31 @@ export function OnboardingHero({
   const benefits = [
     {
       id: 'coach',
-      icon: <Brain size={20} color={iosColors.purple} strokeWidth={2} />,
+      icon: <Brain size={20} color={brandColors.sage} strokeWidth={2} />,
       title: 'Coach IA',
       description: 'Conseils sur‑mesure en temps réel',
-      color: iosColors.purple,
+      color: brandColors.sage,
     },
     {
       id: 'analysis',
-      icon: <Sparkles size={20} color={iosColors.blue} strokeWidth={2} />,
+      icon: <Sparkles size={20} color={brandColors.earth} strokeWidth={2} />,
       title: 'Analyses croisées',
       description: 'Nutrition, sommeil, stress, énergie',
-      color: iosColors.blue,
+      color: brandColors.earth,
     },
     {
       id: 'program',
-      icon: <Zap size={20} color={iosColors.orange} strokeWidth={2} />,
+      icon: <Zap size={20} color={brandColors.warmOrange} strokeWidth={2} />,
       title: 'Programme métabolique',
       description: '4 phases pour te transformer',
-      color: iosColors.orange,
+      color: brandColors.warmOrange,
     },
     {
       id: 'wellness',
-      icon: <Heart size={20} color={iosColors.green} strokeWidth={2} />,
+      icon: <Heart size={20} color={brandColors.moss} strokeWidth={2} />,
       title: 'Bien‑être 360°',
       description: 'Sommeil, stress, humeur, hydratation',
-      color: iosColors.green,
+      color: brandColors.moss,
     },
   ]
 
@@ -182,8 +190,8 @@ export function OnboardingHero({
         <Animated.View style={[styles.content, mainStyle]}>
           {/* Marque */}
           <View style={styles.brandContainer}>
-            <Brain size={14} color={iosColors.purple} strokeWidth={2} />
-            <Text style={[styles.brandName, { color: iosColors.purple }]}>LYM</Text>
+            <Brain size={14} color={brandColors.sage} strokeWidth={2} />
+            <Text style={[styles.brandName, { color: brandColors.sage }]}>LYM</Text>
           </View>
 
           {/* Titre */}
@@ -221,11 +229,11 @@ export function OnboardingHero({
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
             onGetStarted()
           }}
-          activeOpacity={0.9}
-          style={[styles.ctaButton, { backgroundColor: iosColors.green }]}
+          activeOpacity={0.85}
+          style={[styles.ctaButton, { backgroundColor: brandColors.sage }]}
         >
           <Text style={styles.ctaText}>Commencer — 7 jours gratuits</Text>
-          <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
 
         {onHaveAccount && (
@@ -339,15 +347,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.md,
+    paddingVertical: spacing.md + 4,
+    paddingHorizontal: spacing['2xl'],
+    borderRadius: radius.lg,
     gap: spacing.sm,
+    minHeight: 54,
   },
   ctaText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: fonts.sans.semibold,
+    textAlign: 'center',
   },
   haveAccountButton: {
     paddingVertical: spacing.sm,
