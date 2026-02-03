@@ -113,7 +113,7 @@ export function GuidedMode({ onSwitchToFree }: GuidedModeProps) {
                 key={button.intent}
                 style={[
                   styles.intentButton,
-                  { backgroundColor: colors.background.secondary },
+                  { backgroundColor: colors.bg.secondary },
                 ]}
                 onPress={() => handleIntentPress(button.intent)}
                 disabled={isProcessing}
@@ -189,7 +189,7 @@ export function MessageBubble({
           styles.messageBubble,
           isUser
             ? [styles.userBubble, { backgroundColor: colors.accent.primary }]
-            : [styles.assistantBubble, { backgroundColor: colors.background.secondary }],
+            : [styles.assistantBubble, { backgroundColor: colors.bg.secondary }],
         ]}
       >
         {/* Message text */}
@@ -315,7 +315,7 @@ function DiagnosisCard({ diagnosis }: DiagnosisCardProps) {
   }
 
   return (
-    <View style={[styles.diagnosisCard, { backgroundColor: colors.background.tertiary }]}>
+    <View style={[styles.diagnosisCard, { backgroundColor: colors.bg.tertiary }]}>
       <Text style={[styles.diagnosisSummary, { color: colors.text.secondary }]}>
         {diagnosis.summary}
       </Text>
@@ -428,7 +428,7 @@ export function FreeModeInput({
   }
 
   return (
-    <View style={[styles.inputContainer, { backgroundColor: colors.background.primary }]}>
+    <View style={[styles.inputContainer, { backgroundColor: colors.bg.primary }]}>
       {onSwitchToGuided && (
         <TouchableOpacity
           style={styles.guidedModeButton}
@@ -442,7 +442,7 @@ export function FreeModeInput({
         ref={inputRef}
         style={[
           styles.textInput,
-          { backgroundColor: colors.background.secondary, color: colors.text.primary },
+          { backgroundColor: colors.bg.secondary, color: colors.text.primary },
         ]}
         value={input}
         onChangeText={setInput}
@@ -458,7 +458,7 @@ export function FreeModeInput({
       <TouchableOpacity
         style={[
           styles.sendButton,
-          { backgroundColor: input.trim() ? colors.accent.primary : colors.background.secondary },
+          { backgroundColor: input.trim() ? colors.accent.primary : colors.bg.secondary },
         ]}
         onPress={handleSend}
         disabled={!input.trim() || disabled}
@@ -504,7 +504,7 @@ export function MessageLimitBanner({ remaining, isPremium, onUpgrade }: MessageL
             ? colors.semantic.error + '20'
             : isLow
             ? colors.semantic.warning + '20'
-            : colors.background.secondary,
+            : colors.bg.secondary,
         },
       ]}
     >
@@ -637,7 +637,7 @@ function MealPreviewCard({ data, onAction }: MealPreviewCardProps) {
   }
 
   return (
-    <View style={[styles.richCard, { backgroundColor: colors.background.secondary }]}>
+    <View style={[styles.richCard, { backgroundColor: colors.bg.secondary }]}>
       {/* Header */}
       <View style={styles.mealCardHeader}>
         <Text style={styles.mealIcon}>🍽️</Text>
@@ -678,7 +678,7 @@ function MealPreviewCard({ data, onAction }: MealPreviewCardProps) {
       {tags.length > 0 && (
         <View style={styles.tagsContainer}>
           {tags.slice(0, 3).map((tag, index) => (
-            <View key={index} style={[styles.tag, { backgroundColor: colors.background.tertiary }]}>
+            <View key={index} style={[styles.tag, { backgroundColor: colors.bg.tertiary }]}>
               <Text style={[styles.tagText, { color: colors.text.secondary }]}>{tag}</Text>
             </View>
           ))}
@@ -695,7 +695,7 @@ function MealPreviewCard({ data, onAction }: MealPreviewCardProps) {
       {/* Actions */}
       <View style={styles.mealCardActions}>
         <TouchableOpacity
-          style={[styles.mealCardButton, { backgroundColor: colors.background.tertiary }]}
+          style={[styles.mealCardButton, { backgroundColor: colors.bg.tertiary }]}
           onPress={handleViewRecipe}
         >
           <Ionicons name="book-outline" size={16} color={colors.text.primary} />
@@ -759,7 +759,7 @@ function CorrelationInsightCard({ data }: CorrelationInsightCardProps) {
   }
 
   return (
-    <View style={[styles.richCard, { backgroundColor: colors.background.secondary }]}>
+    <View style={[styles.richCard, { backgroundColor: colors.bg.secondary }]}>
       {/* Header */}
       <View style={styles.correlationHeader}>
         <View style={[styles.correlationIconContainer, { backgroundColor: getTrendColor() + '20' }]}>
@@ -847,7 +847,7 @@ function ProgressChartCard({ data }: ProgressChartCardProps) {
   const barHeights = chartData.map(v => Math.max(4, (v / maxValue) * 40))
 
   return (
-    <View style={[styles.richCard, { backgroundColor: colors.background.secondary }]}>
+    <View style={[styles.richCard, { backgroundColor: colors.bg.secondary }]}>
       {/* Header */}
       <View style={styles.progressHeader}>
         <View>
@@ -878,7 +878,7 @@ function ProgressChartCard({ data }: ProgressChartCardProps) {
 
       {/* Progress bar */}
       <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarBg, { backgroundColor: colors.background.tertiary }]}>
+        <View style={[styles.progressBarBg, { backgroundColor: colors.bg.tertiary }]}>
           <View
             style={[
               styles.progressBarFill,
@@ -904,7 +904,7 @@ function ProgressChartCard({ data }: ProgressChartCardProps) {
                 styles.miniBar,
                 {
                   height,
-                  backgroundColor: index === barHeights.length - 1 ? colors.accent.primary : colors.background.tertiary,
+                  backgroundColor: index === barHeights.length - 1 ? colors.accent.primary : colors.bg.tertiary,
                 },
               ]}
             />
@@ -969,7 +969,7 @@ function ChallengePreviewCard({ data, onAction }: ChallengePreviewCardProps) {
   }
 
   return (
-    <View style={[styles.richCard, { backgroundColor: colors.background.secondary }]}>
+    <View style={[styles.richCard, { backgroundColor: colors.bg.secondary }]}>
       {/* Header */}
       <View style={styles.challengeHeader}>
         <View style={[styles.challengeIconContainer, { backgroundColor: getDifficultyColor() + '20' }]}>
@@ -1009,7 +1009,7 @@ function ChallengePreviewCard({ data, onAction }: ChallengePreviewCardProps) {
       {/* Progress (if active) */}
       {isActive && (
         <View style={styles.challengeProgressContainer}>
-          <View style={[styles.challengeProgressBg, { backgroundColor: colors.background.tertiary }]}>
+          <View style={[styles.challengeProgressBg, { backgroundColor: colors.bg.tertiary }]}>
             <View
               style={[
                 styles.challengeProgressFill,

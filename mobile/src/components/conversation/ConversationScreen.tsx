@@ -167,7 +167,7 @@ export function ConversationScreen() {
     if (!isProcessing) return null
 
     return (
-      <View style={[styles.typingContainer, { backgroundColor: colors.background.secondary }]}>
+      <View style={[styles.typingContainer, { backgroundColor: colors.bg.secondary }]}>
         <ActivityIndicator size="small" color={colors.accent.primary} />
       </View>
     )
@@ -175,7 +175,7 @@ export function ConversationScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background.primary }]}
+      style={[styles.container, { backgroundColor: colors.bg.primary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
