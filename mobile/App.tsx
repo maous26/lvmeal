@@ -46,6 +46,7 @@ import { errorReporting } from './src/services/error-reporting-service'
 import { lymInsights } from './src/services/lym-insights-service'
 import { configureGoogleSignIn } from './src/services/google-auth-service'
 import { requestHealthPermissions, isHealthAvailable, syncWeightToProfile } from './src/services/health-service'
+import { useSubscriptionStore } from './src/stores/subscription-store'
 
 // Initialize Sentry
 Sentry.init({
@@ -97,6 +98,11 @@ export default Sentry.wrap(function App() {
 
         // Initialize LYM Insights (Supabase-based, bienveillant analytics)
         await lymInsights.initialize()
+
+        // Initialize RevenueCat for in-app purchases
+        const subscriptionStore = useSubscriptionStore.getState()
+        await subscriptionStore.initialize()
+        console.log('[App] RevenueCat initialized, premium:', subscriptionStore.isPremium)
 
         // Configure Google Sign-In for native builds
         configureGoogleSignIn()
