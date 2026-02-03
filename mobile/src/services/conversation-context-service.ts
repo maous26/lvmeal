@@ -19,7 +19,7 @@ import {
   ConversationMemory,
 } from '../types/conversation'
 import { useUserStore } from '../stores/user-store'
-import { useCalorieStore } from '../stores/calorie-store'
+import { useMealsStore } from '../stores/meals-store'
 import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useSubscriptionStore } from '../stores/subscription-store'
@@ -40,15 +40,19 @@ class ConversationContextService {
    */
   buildFullContext(conversationHistory: ConversationTurn[]): ConversationContextFull {
     const userStore = useUserStore.getState()
-    const calorieStore = useCalorieStore.getState()
+    const mealsStore = useMealsStore.getState()
     const gamificationStore = useGamificationStore.getState()
     const subscriptionStore = useSubscriptionStore.getState()
+
+    // Get today's nutrition data
+    const todayData = mealsStore.getTodayData()
+    const calorieTarget = userStore.nutritionGoals?.calories || 2000
 
     // Get wellness data (may not have a store yet, use defaults)
     const wellnessData = this.getWellnessData()
 
     // Calculate temporal signals
-    const temporal = this.calculateTemporalSignals(calorieStore)
+    const temporal = this.calculateTemporalSignals(mealsStore)
 
     // Get correlations (simplified - would come from correlation service)
     const correlations = this.getCorrelations()
@@ -58,23 +62,23 @@ class ConversationContextService {
 
     const context: ConversationContextFull = {
       nutrition: {
-        caloriesConsumed: calorieStore.totalCalories || 0,
-        caloriesRemaining: Math.max(0, (calorieStore.calorieTarget || 2000) - (calorieStore.totalCalories || 0)),
-        caloriesTarget: calorieStore.calorieTarget || 2000,
+        caloriesConsumed: todayData.totalNutrition.calories || 0,
+        caloriesRemaining: Math.max(0, calorieTarget - (todayData.totalNutrition.calories || 0)),
+        caloriesTarget: calorieTarget,
         macroBalance: {
-          proteins: calorieStore.totalProtein || 0,
-          carbs: calorieStore.totalCarbs || 0,
-          fats: calorieStore.totalFat || 0,
+          proteins: todayData.totalNutrition.proteins || 0,
+          carbs: todayData.totalNutrition.carbs || 0,
+          fats: todayData.totalNutrition.fats || 0,
         },
         macroTargets: {
-          proteins: Math.round((calorieStore.calorieTarget || 2000) * 0.25 / 4), // 25% protein
-          carbs: Math.round((calorieStore.calorieTarget || 2000) * 0.45 / 4),    // 45% carbs
-          fats: Math.round((calorieStore.calorieTarget || 2000) * 0.30 / 9),     // 30% fat
+          proteins: userStore.nutritionGoals?.proteins || Math.round(calorieTarget * 0.25 / 4),
+          carbs: userStore.nutritionGoals?.carbs || Math.round(calorieTarget * 0.45 / 4),
+          fats: userStore.nutritionGoals?.fats || Math.round(calorieTarget * 0.30 / 9),
         },
-        lastMealTime: this.getLastMealTime(calorieStore.meals),
-        todayMeals: this.formatMeals(calorieStore.meals || []),
-        weeklyTrend: this.calculateWeeklyTrend(calorieStore),
-        avgCaloriesLast7Days: this.calculateAvgCalories(calorieStore),
+        lastMealTime: this.getLastMealTime(todayData.meals),
+        todayMeals: this.formatMeals(todayData.meals || []),
+        weeklyTrend: this.calculateWeeklyTrend(mealsStore),
+        avgCaloriesLast7Days: this.calculateAvgCalories(mealsStore),
       },
 
       wellness: {
@@ -521,7 +525,7 @@ class ConversationContextService {
     }
   }
 
-  private calculateTemporalSignals(calorieStore: any): ConversationContextFull['temporal'] {
+  private calculateTemporalSignals(mealsStore: any): ConversationContextFull['temporal'] {
     const now = new Date()
     const hour = now.getHours()
     const dayOfWeek = now.getDay()
@@ -534,12 +538,13 @@ class ConversationContextService {
     else timeOfDay = 'night'
 
     // Calculate hours since last meal
-    const meals = calorieStore.meals || []
+    const todayData = mealsStore.getTodayData()
+    const meals = todayData.meals || []
     let hoursSinceLastMeal = 4 // Default
     if (meals.length > 0) {
       const lastMeal = meals[meals.length - 1]
-      if (lastMeal.timestamp) {
-        const lastMealTime = new Date(lastMeal.timestamp)
+      if (lastMeal.time && lastMeal.date) {
+        const lastMealTime = new Date(`${lastMeal.date}T${lastMeal.time}`)
         hoursSinceLastMeal = Math.round((now.getTime() - lastMealTime.getTime()) / (1000 * 60 * 60))
       }
     }
@@ -557,23 +562,28 @@ class ConversationContextService {
   private getLastMealTime(meals: any[]): string | null {
     if (!meals || meals.length === 0) return null
     const lastMeal = meals[meals.length - 1]
-    return lastMeal.timestamp || lastMeal.loggedAt || null
+    if (lastMeal.date && lastMeal.time) {
+      return `${lastMeal.date}T${lastMeal.time}`
+    }
+    return null
   }
 
   private formatMeals(meals: any[]): MealEntry[] {
     return meals.map(meal => ({
       id: meal.id || String(Math.random()),
-      name: meal.name || meal.foodName || 'Repas',
-      calories: meal.calories || 0,
-      mealType: meal.mealType || 'snack',
-      loggedAt: meal.timestamp || meal.loggedAt || new Date().toISOString(),
+      name: meal.items?.[0]?.name || meal.type || 'Repas',
+      calories: meal.totalNutrition?.calories || 0,
+      mealType: meal.type || 'snack',
+      loggedAt: meal.date && meal.time ? `${meal.date}T${meal.time}` : new Date().toISOString(),
     }))
   }
 
-  private calculateWeeklyTrend(calorieStore: any): 'deficit' | 'balanced' | 'surplus' {
-    // Simplified - would need historical data
-    const consumed = calorieStore.totalCalories || 0
-    const target = calorieStore.calorieTarget || 2000
+  private calculateWeeklyTrend(mealsStore: any): 'deficit' | 'balanced' | 'surplus' {
+    // Get today's data
+    const todayData = mealsStore.getTodayData()
+    const userStore = useUserStore.getState()
+    const consumed = todayData.totalNutrition?.calories || 0
+    const target = userStore.nutritionGoals?.calories || 2000
     const ratio = consumed / target
 
     if (ratio < 0.9) return 'deficit'
@@ -581,9 +591,10 @@ class ConversationContextService {
     return 'balanced'
   }
 
-  private calculateAvgCalories(calorieStore: any): number {
-    // Simplified - would need historical data
-    return calorieStore.totalCalories || 0
+  private calculateAvgCalories(mealsStore: any): number {
+    // Get today's calories as simplified average
+    const todayData = mealsStore.getTodayData()
+    return todayData.totalNutrition?.calories || 0
   }
 
   private calculateWeightTrend(userStore: any): 'losing' | 'stable' | 'gaining' | null {
