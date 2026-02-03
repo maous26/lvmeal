@@ -16,12 +16,19 @@ import {
   MoodType,
   MealEntry,
   CorrelationInsight,
+  ConversationMemory,
 } from '../types/conversation'
 import { useUserStore } from '../stores/user-store'
 import { useCalorieStore } from '../stores/calorie-store'
 import { useWellnessStore } from '../stores/wellness-store'
 import { useGamificationStore } from '../stores/gamification-store'
 import { useSubscriptionStore } from '../stores/subscription-store'
+import { useCoachStore } from '../stores/coach-store'
+import {
+  BehaviorAnalysisAgent,
+  type BehaviorPattern,
+  type BehaviorInsight,
+} from './behavior-analysis-agent'
 
 // ============================================================================
 // CONTEXT AGGREGATOR SERVICE
@@ -217,6 +224,270 @@ class ConversationContextService {
     return `Conversation récente: ${themes.join(', ')}`
   }
 
+  /**
+   * Generate enhanced memory object for richer context
+   * Extracts preferences, patterns, and learned information
+   */
+  generateEnhancedMemory(history: ConversationTurn[]): ConversationMemory {
+    const memory: ConversationMemory = {
+      userPreferences: {
+        foodLikes: [],
+        foodDislikes: [],
+        mealPreferences: [],
+        timingPreferences: [],
+      },
+      patterns: {
+        frequentIntents: [],
+        timePatterns: [],
+        triggerPatterns: [],
+      },
+      conversationStats: {
+        totalMessages: history.length,
+        averageSessionLength: 0,
+        mostActiveTimeOfDay: null,
+      },
+      learnedFacts: [],
+      lastUpdated: new Date().toISOString(),
+    }
+
+    if (history.length < 5) return memory
+
+    // Extract user messages
+    const userMessages = history.filter(t => t.role === 'user')
+
+    // Count intents
+    const intentCounts: Record<string, number> = {}
+    const timeOfDayCounts: Record<string, number> = { morning: 0, midday: 0, afternoon: 0, evening: 0, night: 0 }
+
+    for (const turn of userMessages) {
+      // Count intents
+      if (turn.detectedIntent?.topIntents[0]) {
+        const intent = turn.detectedIntent.topIntents[0].intent
+        intentCounts[intent] = (intentCounts[intent] || 0) + 1
+      }
+
+      // Count time of day
+      const hour = new Date(turn.timestamp).getHours()
+      if (hour >= 5 && hour < 11) timeOfDayCounts.morning++
+      else if (hour >= 11 && hour < 14) timeOfDayCounts.midday++
+      else if (hour >= 14 && hour < 18) timeOfDayCounts.afternoon++
+      else if (hour >= 18 && hour < 22) timeOfDayCounts.evening++
+      else timeOfDayCounts.night++
+
+      // Extract food mentions and preferences
+      this.extractFoodPreferences(turn.content, memory)
+    }
+
+    // Set frequent intents (those occurring more than twice)
+    memory.patterns.frequentIntents = Object.entries(intentCounts)
+      .filter(([_, count]) => count > 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([intent]) => intent)
+
+    // Set most active time of day
+    const maxTimeCount = Math.max(...Object.values(timeOfDayCounts))
+    memory.conversationStats.mostActiveTimeOfDay = Object.entries(timeOfDayCounts)
+      .find(([_, count]) => count === maxTimeCount)?.[0] as any || null
+
+    // Detect trigger patterns (stress → craving, fatigue → hunger, etc.)
+    memory.patterns.triggerPatterns = this.detectTriggerPatterns(history)
+
+    // Extract learned facts from conversation
+    memory.learnedFacts = this.extractLearnedFacts(history)
+
+    return memory
+  }
+
+  /**
+   * Build a compact summary string from enhanced memory
+   */
+  buildMemorySummaryFromEnhanced(memory: ConversationMemory): string {
+    const parts: string[] = []
+
+    // User preferences
+    if (memory.userPreferences.foodLikes.length > 0) {
+      parts.push(`Aime: ${memory.userPreferences.foodLikes.slice(0, 3).join(', ')}`)
+    }
+    if (memory.userPreferences.foodDislikes.length > 0) {
+      parts.push(`Évite: ${memory.userPreferences.foodDislikes.slice(0, 2).join(', ')}`)
+    }
+
+    // Patterns
+    if (memory.patterns.frequentIntents.length > 0) {
+      const patternMap: Record<string, string> = {
+        'HUNGER': 'souvent faim',
+        'CRAVING': 'envies fréquentes',
+        'STRESS': 'période stressante',
+        'FATIGUE': 'fatigue récurrente',
+        'DOUBT': 'phase de doute',
+        'CELEBRATION': 'bons résultats',
+      }
+      const patternDescriptions = memory.patterns.frequentIntents
+        .map(i => patternMap[i])
+        .filter(Boolean)
+        .slice(0, 2)
+      if (patternDescriptions.length > 0) {
+        parts.push(`Patterns: ${patternDescriptions.join(', ')}`)
+      }
+    }
+
+    // Triggers
+    if (memory.patterns.triggerPatterns.length > 0) {
+      parts.push(`Triggers: ${memory.patterns.triggerPatterns.slice(0, 2).join(', ')}`)
+    }
+
+    // Time preference
+    if (memory.conversationStats.mostActiveTimeOfDay) {
+      const timeLabels: Record<string, string> = {
+        morning: 'actif le matin',
+        midday: 'actif le midi',
+        afternoon: 'actif l\'aprèm',
+        evening: 'actif le soir',
+        night: 'actif la nuit',
+      }
+      parts.push(timeLabels[memory.conversationStats.mostActiveTimeOfDay] || '')
+    }
+
+    // Learned facts (keep it brief)
+    if (memory.learnedFacts.length > 0) {
+      parts.push(memory.learnedFacts[0])
+    }
+
+    return parts.filter(p => p.length > 0).join(' | ')
+  }
+
+  /**
+   * Extract food preferences from user message
+   */
+  private extractFoodPreferences(message: string, memory: ConversationMemory): void {
+    const lowerMessage = message.toLowerCase()
+
+    // Positive food mentions
+    const likePatterns = [
+      /j'aime (?:bien )?(le |la |les |du |de la |l')?([a-zàâäéèêëîïôùûüç]+)/gi,
+      /j'adore (?:le |la |les |du |de la |l')?([a-zàâäéèêëîïôùûüç]+)/gi,
+      /je préfère (?:le |la |les |du |de la |l')?([a-zàâäéèêëîïôùûüç]+)/gi,
+    ]
+
+    // Negative food mentions
+    const dislikePatterns = [
+      /je n'aime pas (?:le |la |les |du |de la |l')?([a-zàâäéèêëîïôùûüç]+)/gi,
+      /je déteste (?:le |la |les |du |de la |l')?([a-zàâäéèêëîïôùûüç]+)/gi,
+      /pas de ([a-zàâäéèêëîïôùûüç]+)/gi,
+      /sans ([a-zàâäéèêëîïôùûüç]+)/gi,
+    ]
+
+    // Extract likes
+    for (const pattern of likePatterns) {
+      const matches = lowerMessage.matchAll(pattern)
+      for (const match of matches) {
+        const food = (match[2] || match[1])?.trim()
+        if (food && food.length > 2 && !memory.userPreferences.foodLikes.includes(food)) {
+          memory.userPreferences.foodLikes.push(food)
+        }
+      }
+    }
+
+    // Extract dislikes
+    for (const pattern of dislikePatterns) {
+      const matches = lowerMessage.matchAll(pattern)
+      for (const match of matches) {
+        const food = match[1]?.trim()
+        if (food && food.length > 2 && !memory.userPreferences.foodDislikes.includes(food)) {
+          memory.userPreferences.foodDislikes.push(food)
+        }
+      }
+    }
+
+    // Timing preferences
+    if (lowerMessage.includes('repas rapide') || lowerMessage.includes('pas le temps')) {
+      if (!memory.userPreferences.timingPreferences.includes('quick_meals')) {
+        memory.userPreferences.timingPreferences.push('quick_meals')
+      }
+    }
+    if (lowerMessage.includes('le soir') || lowerMessage.includes('ce soir')) {
+      if (!memory.userPreferences.timingPreferences.includes('evening_focus')) {
+        memory.userPreferences.timingPreferences.push('evening_focus')
+      }
+    }
+  }
+
+  /**
+   * Detect trigger patterns (A → B correlations)
+   */
+  private detectTriggerPatterns(history: ConversationTurn[]): string[] {
+    const triggers: string[] = []
+    const userTurns = history.filter(t => t.role === 'user' && t.detectedIntent)
+
+    // Look for patterns in consecutive messages
+    for (let i = 1; i < userTurns.length; i++) {
+      const prevIntent = userTurns[i - 1].detectedIntent?.topIntents[0]?.intent
+      const currIntent = userTurns[i].detectedIntent?.topIntents[0]?.intent
+
+      if (!prevIntent || !currIntent) continue
+
+      // Detect known trigger patterns
+      if (prevIntent === 'STRESS' && currIntent === 'CRAVING') {
+        if (!triggers.includes('stress → envies')) triggers.push('stress → envies')
+      }
+      if (prevIntent === 'FATIGUE' && currIntent === 'HUNGER') {
+        if (!triggers.includes('fatigue → faim')) triggers.push('fatigue → faim')
+      }
+      if (prevIntent === 'ANXIETY' && currIntent === 'CRAVING') {
+        if (!triggers.includes('anxiété → envies')) triggers.push('anxiété → envies')
+      }
+      if ((prevIntent === 'DOUBT' || prevIntent === 'PLATEAU') && currIntent === 'OVERWHELM') {
+        if (!triggers.includes('doute → démotivation')) triggers.push('doute → démotivation')
+      }
+    }
+
+    return triggers
+  }
+
+  /**
+   * Extract learned facts from conversation
+   */
+  private extractLearnedFacts(history: ConversationTurn[]): string[] {
+    const facts: string[] = []
+    const userMessages = history.filter(t => t.role === 'user').map(t => t.content.toLowerCase())
+
+    // Check for specific patterns that reveal user facts
+    for (const message of userMessages) {
+      // Work schedule mentions
+      if (message.includes('je travaille') && (message.includes('nuit') || message.includes('tard'))) {
+        if (!facts.includes('horaires décalés')) facts.push('horaires décalés')
+      }
+
+      // Family mentions
+      if (message.includes('enfant') || message.includes('famille') || message.includes('bébé')) {
+        if (!facts.includes('vie de famille')) facts.push('vie de famille')
+      }
+
+      // Exercise mentions
+      if (message.includes('sport') || message.includes('salle') || message.includes('course') || message.includes('musculation')) {
+        if (!facts.includes('fait du sport')) facts.push('fait du sport')
+      }
+
+      // Vegetarian/vegan
+      if (message.includes('végéta') || message.includes('vegan')) {
+        if (!facts.includes('régime végétarien')) facts.push('régime végétarien')
+      }
+
+      // Difficulty mentions
+      if (message.includes('difficile le soir') || message.includes('le soir c\'est dur')) {
+        if (!facts.includes('difficultés le soir')) facts.push('difficultés le soir')
+      }
+
+      // Sweet tooth
+      if (message.includes('toujours envie de sucré') || message.includes('bec sucré')) {
+        if (!facts.includes('attrait pour le sucré')) facts.push('attrait pour le sucré')
+      }
+    }
+
+    return facts.slice(0, 5) // Keep max 5 facts
+  }
+
   // ============================================================================
   // PRIVATE METHODS
   // ============================================================================
@@ -321,13 +592,93 @@ class ConversationContextService {
   }
 
   private getCorrelations(): ConversationContextFull['correlations'] {
-    // Simplified - would come from correlation service
-    // In production, this would analyze actual user data
-    return {
+    const correlations: ConversationContextFull['correlations'] = {
       sleepNutrition: [],
       stressEating: [],
       energyPatterns: [],
     }
+
+    try {
+      // Get correlation data from coach store's last coordinated analysis
+      const coachStore = useCoachStore.getState()
+      const lastAnalysis = coachStore.lastCoordinatedAnalysis
+
+      if (lastAnalysis) {
+        // Extract correlations from connected insights
+        for (const insight of lastAnalysis.connectedInsights) {
+          const insightLower = insight.toLowerCase()
+
+          // Detect sleep-nutrition correlations
+          if (insightLower.includes('sommeil') && (insightLower.includes('calorie') || insightLower.includes('faim') || insightLower.includes('nutrition'))) {
+            correlations.sleepNutrition.push({
+              id: `sleep_nutrition_${Date.now()}`,
+              type: 'correlation',
+              description: insight,
+              confidence: 0.8,
+              detectedAt: new Date().toISOString(),
+            })
+          }
+
+          // Detect stress-eating correlations
+          if (insightLower.includes('stress') && (insightLower.includes('manger') || insightLower.includes('envie') || insightLower.includes('craving') || insightLower.includes('sucre'))) {
+            correlations.stressEating.push({
+              id: `stress_eating_${Date.now()}`,
+              type: 'stress_eating',
+              description: insight,
+              confidence: 0.85,
+              detectedAt: new Date().toISOString(),
+            })
+          }
+
+          // Detect energy patterns
+          if (insightLower.includes('énergie') || insightLower.includes('fatigue')) {
+            correlations.energyPatterns.push({
+              id: `energy_pattern_${Date.now()}`,
+              type: 'energy_correlation',
+              description: insight,
+              confidence: 0.75,
+              detectedAt: new Date().toISOString(),
+            })
+          }
+        }
+      }
+
+      // Also check coach items for behavior patterns
+      const coachItems = coachStore.items
+      for (const item of coachItems) {
+        if (!item.linkedFeatures) continue
+
+        // Items with sleep + nutrition linked features
+        if (item.linkedFeatures.includes('sleep') && item.linkedFeatures.includes('nutrition')) {
+          if (!correlations.sleepNutrition.some(c => c.description === item.message)) {
+            correlations.sleepNutrition.push({
+              id: `coach_sleep_${item.id}`,
+              type: 'correlation',
+              description: item.message,
+              confidence: item.confidence || 0.7,
+              detectedAt: item.createdAt,
+            })
+          }
+        }
+
+        // Items with stress linked
+        if (item.linkedFeatures.includes('stress') && item.category === 'nutrition') {
+          if (!correlations.stressEating.some(c => c.description === item.message)) {
+            correlations.stressEating.push({
+              id: `coach_stress_${item.id}`,
+              type: 'stress_eating',
+              description: item.message,
+              confidence: item.confidence || 0.7,
+              detectedAt: item.createdAt,
+            })
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[ContextService] Could not fetch correlations from coach store:', error)
+    }
+
+    return correlations
   }
 
   private getProgramData(): ConversationContextFull['program'] {

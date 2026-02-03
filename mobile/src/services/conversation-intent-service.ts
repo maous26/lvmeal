@@ -19,6 +19,8 @@ import {
   ConversationContextCompact,
 } from '../types/conversation'
 import { conversationSafetyService } from './conversation-safety-service'
+import { conversationLLMService } from './conversation-llm-service'
+import { conversationContextService } from './conversation-context-service'
 
 // ============================================================================
 // INTENT PATTERNS (Rules-based, cost: $0)
@@ -405,8 +407,22 @@ class ConversationIntentService {
     const needsLLM = topConfidence < 0.6 && canUseLLM
 
     if (needsLLM) {
-      // LLM would be called here - for now return enhanced rules
-      console.log('[IntentService] Would use LLM for ambiguous case:', message.substring(0, 50))
+      try {
+        // Build compact context for LLM (minimal tokens)
+        const compactContext = conversationContextService.buildCompactContext(context)
+
+        // Call LLM for intent detection
+        const llmResult = await conversationLLMService.detectIntentWithLLM(message, compactContext)
+
+        if (llmResult && llmResult.intents.length > 0) {
+          // Use LLM results if successful
+          intents = llmResult.intents
+          console.log('[IntentService] LLM detected:', intents[0], `(${llmResult.tokensUsed} tokens)`)
+        }
+      } catch (error) {
+        // Fallback to rules-based if LLM fails
+        console.warn('[IntentService] LLM fallback to rules:', error)
+      }
     }
 
     // 8. Ensure we have top 3

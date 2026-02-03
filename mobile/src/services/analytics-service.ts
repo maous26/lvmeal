@@ -305,6 +305,22 @@ export type AnalyticsEvent =
   | 'coach_insight_viewed'
   | 'coach_celebration_shown'
   | 'coach_alert_shown'
+  // Conversational AI Coach (Check #6 - Observability)
+  | 'coach_message_sent'
+  | 'coach_intent_selected'
+  | 'coach_intent_detected'
+  | 'coach_llm_called'
+  | 'coach_llm_fallback'
+  | 'coach_action_executed'
+  | 'coach_action_confirmed'
+  | 'coach_safety_flag'
+  | 'coach_diagnosis_viewed'
+  | 'coach_feedback'
+  | 'coach_conversation_cleared'
+  | 'coach_memory_reset'
+  | 'coach_memory_toggled'
+  | 'coach_experiment_assigned'
+  | 'coach_error'
   // Programs & Challenges
   | 'program_started'
   | 'program_completed'
@@ -1110,6 +1126,110 @@ class AnalyticsService {
     Amplitude.reset()
     this.userId = null
     console.log('[Analytics] Reset')
+  }
+
+  // ============= CONVERSATIONAL AI COACH TRACKING (Check #6 - Observability) =============
+
+  /**
+   * Track coach message sent
+   */
+  trackCoachMessage(props: {
+    intent: string
+    model: 'rules' | 'hybrid' | 'llm'
+    hasActions: boolean
+    processingTimeMs: number
+    confidence?: number
+    isPremium: boolean
+  }): void {
+    this.track('coach_message_sent', {
+      ...props,
+      // Anonymize - don't include message content
+    })
+  }
+
+  /**
+   * Track when LLM is called for disambiguation
+   */
+  trackCoachLLMCall(props: {
+    reason: 'low_confidence' | 'complex_intent' | 'response_generation'
+    inputTokens?: number
+    outputTokens?: number
+    durationMs: number
+    success: boolean
+    cached: boolean
+  }): void {
+    this.track('coach_llm_called', {
+      ...props,
+    })
+  }
+
+  /**
+   * Track coach safety flag triggered
+   */
+  trackCoachSafetyFlag(props: {
+    flags: string[]
+    action: 'allow' | 'safe_rewrite' | 'refuse_redirect'
+    // Anonymized - no message content
+  }): void {
+    this.track('coach_safety_flag', {
+      safety_flags: props.flags.join(','),
+      safety_action: props.action,
+    })
+  }
+
+  /**
+   * Track coach action execution
+   */
+  trackCoachAction(props: {
+    actionType: string
+    requiresConfirmation: boolean
+    confirmed?: boolean
+    success: boolean
+    errorType?: string
+  }): void {
+    this.track('coach_action_executed', {
+      action_type: props.actionType,
+      requires_confirmation: props.requiresConfirmation,
+      user_confirmed: props.confirmed,
+      success: props.success,
+      error_message: props.errorType,
+    })
+  }
+
+  /**
+   * Track coach error for debugging
+   */
+  trackCoachError(props: {
+    errorType: 'intent_detection' | 'response_generation' | 'action_execution' | 'llm_call' | 'validation'
+    errorMessage: string
+    context?: string
+  }): void {
+    this.track('coach_error', {
+      error_type: props.errorType,
+      error_message: props.errorMessage.substring(0, 100), // Truncate
+      error_context: props.context,
+    })
+  }
+
+  /**
+   * Get coach-specific metrics for A/B testing
+   */
+  getCoachMetrics(): {
+    messagesPerSession: number
+    llmCallRate: number
+    actionExecutionRate: number
+    safetyFlagRate: number
+    avgProcessingTimeMs: number
+  } {
+    // This would be computed from stored session data
+    // For now, returns placeholder - real implementation would aggregate from local storage
+    return {
+      messagesPerSession: 0,
+      llmCallRate: 0,
+      actionExecutionRate: 0,
+      safetyFlagRate: 0,
+      avgProcessingTimeMs: 0,
+    }
   }
 
   // ============= COHORT & FUNNEL METHODS =============

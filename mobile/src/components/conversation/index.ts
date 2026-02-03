@@ -9,4 +9,6 @@ export {
   FreeModeInput,
   MessageLimitBanner,
   FeedbackButtons,
+  RichCard,
+  CardsContainer,
 } from './ConversationUI'

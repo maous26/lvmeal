@@ -383,10 +383,38 @@ export interface MealEntry {
 }
 
 export interface CorrelationInsight {
+  id?: string
   type: string
-  correlation: number  // -1 to 1
+  correlation?: number  // -1 to 1
   description: string
-  dataPoints: number
+  dataPoints?: number
+  confidence?: number
+  detectedAt?: string
+}
+
+// ============================================================================
+// CONVERSATION MEMORY
+// ============================================================================
+
+export interface ConversationMemory {
+  userPreferences: {
+    foodLikes: string[]
+    foodDislikes: string[]
+    mealPreferences: string[]
+    timingPreferences: string[]
+  }
+  patterns: {
+    frequentIntents: string[]
+    timePatterns: string[]
+    triggerPatterns: string[]
+  }
+  conversationStats: {
+    totalMessages: number
+    averageSessionLength: number
+    mostActiveTimeOfDay: 'morning' | 'midday' | 'afternoon' | 'evening' | 'night' | null
+  }
+  learnedFacts: string[]
+  lastUpdated: string
 }
 
 export interface ActiveChallenge {

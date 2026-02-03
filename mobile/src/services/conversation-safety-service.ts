@@ -309,10 +309,65 @@ En attendant, je peux t'aider à :
     return flags
   }
 
+  /**
+   * Check if text contains moralizing/judgmental language that should be avoided
+   * SAFETY UX: Never guilt-trip, never moralize
+   */
+  containsMoralizingLanguage(text: string): boolean {
+    const moralizingPatterns = [
+      /tu (as|aurais) (trop|pas assez)/i,
+      /c'est (mal|pas bien|mauvais) de/i,
+      /tu (devrais|aurais dû) (pas|éviter)/i,
+      /tu n'aurais pas dû/i,
+      /c'est (de )?ta faute/i,
+      /tu (as|t'es) fait (du mal|une erreur)/i,
+      /honte|culpabilité/i,
+      /tu (triches|craques)/i,
+      /fais un effort/i,
+      /tu manques de (volonté|discipline)/i,
+      /c'est pas sérieux/i,
+    ]
+    return moralizingPatterns.some(p => p.test(text))
+  }
+
+  /**
+   * Rewrite moralizing text to be more empathetic
+   * SAFETY UX: Transform judgmental phrases into supportive ones
+   */
+  rewriteMoralizingText(text: string): string {
+    const replacements: [RegExp, string][] = [
+      [/tu as trop mangé/gi, "c'était un repas copieux"],
+      [/tu n'aurais pas dû manger ça/gi, "ce repas était plus calorique que prévu"],
+      [/tu as craqué/gi, "tu t'es fait plaisir"],
+      [/tu as fait une erreur/gi, "c'est une occasion d'apprendre"],
+      [/tu (devrais|aurais dû) pas/gi, "la prochaine fois, tu pourrais"],
+      [/c'est (mal|pas bien)/gi, "ce n'est pas idéal mais"],
+      [/fais un effort/gi, "tu peux essayer"],
+      [/tu manques de volonté/gi, "c'est un défi"],
+    ]
+
+    let result = text
+    for (const [pattern, replacement] of replacements) {
+      result = result.replace(pattern, replacement)
+    }
+    return result
+  }
+
   private safeRewriteResponse(response: ConversationResponse, flags: SafetyFlag[]): ConversationResponse {
+    let messageText = response.message.text
+
+    // SAFETY UX: Check and rewrite moralizing language
+    if (this.containsMoralizingLanguage(messageText)) {
+      messageText = this.rewriteMoralizingText(messageText)
+    }
+
     // Add disclaimer for flagged content
     return {
       ...response,
+      message: {
+        ...response.message,
+        text: messageText,
+      },
       disclaimer: `⚠️ Ces conseils sont généraux. Consulte un professionnel de santé pour un accompagnement personnalisé.`,
     }
   }
@@ -322,6 +377,101 @@ En attendant, je peux t'aider à :
     if (Math.random() > 0.3) return ''
 
     return '💡 Ces conseils sont personnalisés selon tes données, mais ne remplacent pas l\'avis d\'un professionnel de santé.'
+  }
+}
+
+  // ============================================================================
+  // LOG ANONYMIZATION (for analytics/debugging)
+  // ============================================================================
+
+  /**
+   * Anonymize message content for logging/analytics
+   * Removes PII while preserving intent detection capability
+   */
+  anonymizeForLog(message: string): string {
+    let anonymized = message
+
+    // Remove names (common French first names pattern)
+    anonymized = anonymized.replace(
+      /\b(je m'appelle |moi c'est |c'est )?[A-Z][a-zéèêëàâäùûüôöîïç]+\b/g,
+      '[PRENOM]'
+    )
+
+    // Remove phone numbers
+    anonymized = anonymized.replace(
+      /(\+33|0)\s*[1-9](\s*\d{2}){4}/g,
+      '[TEL]'
+    )
+
+    // Remove emails
+    anonymized = anonymized.replace(
+      /[\w.-]+@[\w.-]+\.\w+/g,
+      '[EMAIL]'
+    )
+
+    // Remove specific weights/measurements
+    anonymized = anonymized.replace(
+      /\b\d{2,3}\s*(kg|kilos?|livres?)\b/gi,
+      '[POIDS]'
+    )
+
+    // Remove ages
+    anonymized = anonymized.replace(
+      /\b(j'ai |je fais )\d{1,3}\s*(ans?|kg)\b/gi,
+      '[INFO_PERSO]'
+    )
+
+    // Remove addresses
+    anonymized = anonymized.replace(
+      /\d+\s+(rue|avenue|boulevard|allée|place)\s+[A-Za-zéèêëàâäùûüôöîïç\s]+/gi,
+      '[ADRESSE]'
+    )
+
+    return anonymized
+  }
+
+  /**
+   * Create anonymized analytics event for conversation
+   */
+  createAnonymizedEvent(
+    eventType: 'message_sent' | 'intent_detected' | 'action_taken' | 'safety_flag',
+    data: {
+      intent?: string
+      confidence?: number
+      safetyFlags?: SafetyFlag[]
+      actionType?: string
+      processingTimeMs?: number
+    }
+  ): Record<string, unknown> {
+    return {
+      event: `conversation_${eventType}`,
+      timestamp: new Date().toISOString(),
+      // Only include non-PII data
+      intent: data.intent,
+      confidence: data.confidence ? Math.round(data.confidence * 100) / 100 : undefined,
+      safetyFlags: data.safetyFlags,
+      actionType: data.actionType,
+      processingTimeMs: data.processingTimeMs,
+      // Session info (no user ID)
+      sessionId: this.getSessionId(),
+    }
+  }
+
+  private sessionId: string | null = null
+
+  private getSessionId(): string {
+    if (!this.sessionId) {
+      // Generate anonymous session ID (not linked to user)
+      this.sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    }
+    return this.sessionId
+  }
+
+  /**
+   * Reset session (call on app restart or logout)
+   */
+  resetSession(): void {
+    this.sessionId = null
   }
 }
 

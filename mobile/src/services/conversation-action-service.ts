@@ -154,6 +154,20 @@ interface ActionUsage {
   counts: Partial<Record<ActionType, number>>
 }
 
+// ============================================================================
+// SENSITIVE ACTIONS - Force confirmation regardless of LLM output
+// ============================================================================
+
+/**
+ * Actions that ALWAYS require user confirmation, even if LLM says otherwise
+ * This is a safety measure to prevent accidental or unauthorized changes
+ */
+const FORCE_CONFIRMATION_ACTIONS: ActionType[] = [
+  'ADJUST_CALORIES',     // Modifies user's calorie target
+  'SCHEDULE_REMINDER',   // Creates persistent notifications
+  'START_CHALLENGE',     // Commits user to a challenge
+]
+
 class ConversationActionService {
   private usageTracker: ActionUsage = {
     date: new Date().toDateString(),
@@ -225,12 +239,16 @@ class ConversationActionService {
     }
 
     // 6. Create sanitized action
+    // FORCE confirmation for sensitive actions - regardless of LLM output
+    const forceConfirmation = FORCE_CONFIRMATION_ACTIONS.includes(action.type)
+
     const sanitizedAction: ConversationAction = {
       type: action.type,
       label: this.sanitizeLabel(action.label),
       description: action.description ? this.sanitizeLabel(action.description) : undefined,
       params: sanitizedParams,
-      requiresConfirmation: permission.requiresConfirmation || permission.risk === 'high',
+      // Force confirmation for sensitive actions OR if permission requires it
+      requiresConfirmation: forceConfirmation || permission.requiresConfirmation || permission.risk === 'high',
       isPremium: !permission.allowedTiers.includes('free'),
     }
 
@@ -239,15 +257,28 @@ class ConversationActionService {
 
   /**
    * Execute an action (after validation)
+   * @param action The action to execute
+   * @param context The conversation context
+   * @param userConfirmed Whether user has explicitly confirmed (required for sensitive actions)
    */
   async executeAction(
     action: ConversationAction,
-    context: ConversationContextFull
+    context: ConversationContextFull,
+    userConfirmed: boolean = false
   ): Promise<{ success: boolean; result?: unknown; error?: string }> {
     // Validate first
     const validation = this.validateAction(action, context)
     if (!validation.isValid) {
       return { success: false, error: validation.errors.join(', ') }
+    }
+
+    // SECURITY: Require explicit confirmation for sensitive actions
+    if (FORCE_CONFIRMATION_ACTIONS.includes(action.type) && !userConfirmed) {
+      return {
+        success: false,
+        error: 'Cette action nécessite ta confirmation explicite',
+        result: { requiresConfirmation: true, actionType: action.type },
+      }
     }
 
     // Track usage

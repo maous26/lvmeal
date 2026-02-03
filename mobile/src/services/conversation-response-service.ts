@@ -17,6 +17,7 @@ import {
   ResponseTone,
   DiagnosisFactor,
   QuickReply,
+  PlanStep,
 } from '../types/conversation'
 import { conversationActionService } from './conversation-action-service'
 import { conversationSafetyService } from './conversation-safety-service'
@@ -443,7 +444,12 @@ class ConversationResponseService {
     // 6. Build quick replies
     const quickReplies = this.personalizeQuickReplies(intentConfig.quickReplies, context)
 
-    // 7. Safety validation
+    // 7. Build short term plan (Premium only)
+    const shortTermPlan = context.user.isPremium
+      ? this.buildShortTermPlan(primaryIntent, context)
+      : undefined
+
+    // 8. Safety validation
     const response: ConversationResponse = {
       message: {
         text: filledText,
@@ -451,6 +457,7 @@ class ConversationResponseService {
         emoji: template.emoji,
       },
       diagnosis,
+      shortTermPlan,
       actions,
       ui: {
         quickReplies,
@@ -464,7 +471,7 @@ class ConversationResponseService {
       },
     }
 
-    // 8. Validate response for safety
+    // 9. Validate response for safety
     const validatedResponse = conversationSafetyService.validateResponse(response, context)
 
     return validatedResponse
@@ -688,14 +695,308 @@ class ConversationResponseService {
 
   private personalizeQuickReplies(
     replies: QuickReply[],
-    context: ConversationContextFull
+    _context: ConversationContextFull
   ): QuickReply[] {
     // Could add context-based personalization here
     return replies.slice(0, 3)
   }
 
+  /**
+   * Build short term plan based on intent and context (Premium feature)
+   */
+  private buildShortTermPlan(
+    intent: UserIntent,
+    context: ConversationContextFull
+  ): ConversationResponse['shortTermPlan'] | undefined {
+    // Only generate plans for actionable intents
+    const planGenerators: Partial<Record<UserIntent, () => ConversationResponse['shortTermPlan']>> = {
+      HUNGER: () => this.buildHungerPlan(context),
+      FATIGUE: () => this.buildFatiguePlan(context),
+      LOW_ENERGY: () => this.buildFatiguePlan(context),
+      STRESS: () => this.buildStressPlan(context),
+      ANXIETY: () => this.buildStressPlan(context),
+      CRAVING: () => this.buildCravingPlan(context),
+      PLATEAU: () => this.buildPlateauPlan(context),
+      DOUBT: () => this.buildMotivationPlan(context),
+      OVERWHELM: () => this.buildSimplificationPlan(context),
+    }
+
+    const generator = planGenerators[intent]
+    return generator ? generator() : undefined
+  }
+
+  private buildHungerPlan(context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    const steps: PlanStep[] = []
+    const hoursSinceLastMeal = context.temporal.hoursSinceLastMeal
+
+    // Immediate action
+    if (hoursSinceLastMeal > 5) {
+      steps.push({
+        action: 'Manger un repas équilibré',
+        timing: 'Maintenant',
+        priority: 'high',
+      })
+    } else {
+      steps.push({
+        action: 'Collation légère si besoin',
+        timing: 'Maintenant',
+        priority: 'medium',
+      })
+    }
+
+    // Hydration check
+    if (context.wellness.hydration < 4) {
+      steps.push({
+        action: 'Boire un verre d\'eau',
+        timing: 'Avec le repas',
+        priority: 'medium',
+      })
+    }
+
+    // Short term follow-up
+    steps.push({
+      action: 'Logger le repas dans l\'app',
+      timing: '+15min',
+      priority: 'low',
+    })
+
+    return {
+      horizon: 'immediate',
+      steps,
+      expectedOutcome: hoursSinceLastMeal > 5
+        ? 'Regain d\'énergie dans 30-45 minutes'
+        : 'Maintien de ton niveau d\'énergie',
+    }
+  }
+
+  private buildFatiguePlan(context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    const steps: PlanStep[] = []
+    const causes: string[] = []
+
+    // Identify causes and build plan
+    if (context.temporal.hoursSinceLastMeal > 4) {
+      steps.push({
+        action: 'Manger un encas énergisant',
+        timing: 'Maintenant',
+        priority: 'high',
+      })
+      causes.push('jeûne prolongé')
+    }
+
+    if (context.wellness.hydration < 4) {
+      steps.push({
+        action: 'Boire 2 verres d\'eau',
+        timing: 'Maintenant',
+        priority: 'high',
+      })
+      causes.push('déshydratation possible')
+    }
+
+    if (context.wellness.sleepLastNight && context.wellness.sleepLastNight.hours < 6) {
+      steps.push({
+        action: 'Micro-sieste de 15-20min si possible',
+        timing: '+30min',
+        priority: 'medium',
+      })
+      causes.push('manque de sommeil')
+    }
+
+    // Always add movement
+    steps.push({
+      action: 'Marche légère de 5-10 min',
+      timing: '+1h',
+      priority: 'low',
+    })
+
+    return {
+      horizon: 'today',
+      steps: steps.slice(0, 4), // Max 4 steps
+      expectedOutcome: causes.length > 0
+        ? `Amélioration progressive (causes identifiées: ${causes.join(', ')})`
+        : 'Regain d\'énergie progressif',
+    }
+  }
+
+  private buildStressPlan(context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    const steps: PlanStep[] = [
+      {
+        action: 'Exercice de respiration 4-7-8',
+        timing: 'Maintenant',
+        priority: 'high',
+      },
+    ]
+
+    // Add stress-eating prevention if pattern detected
+    if (context.correlations.stressEating.length > 0) {
+      steps.push({
+        action: 'Si envie de manger: attendre 10min',
+        timing: '+5min',
+        priority: 'high',
+      })
+      steps.push({
+        action: 'Collation saine si faim réelle',
+        timing: '+15min',
+        priority: 'medium',
+      })
+    } else {
+      steps.push({
+        action: 'Pause de 5 minutes',
+        timing: '+5min',
+        priority: 'medium',
+      })
+    }
+
+    steps.push({
+      action: 'Marche courte ou étirements',
+      timing: '+30min',
+      priority: 'low',
+    })
+
+    return {
+      horizon: 'immediate',
+      steps: steps.slice(0, 4),
+      expectedOutcome: 'Réduction du stress et clarté mentale',
+    }
+  }
+
+  private buildCravingPlan(context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    const steps: PlanStep[] = [
+      {
+        action: 'Boire un verre d\'eau',
+        timing: 'Maintenant',
+        priority: 'medium',
+      },
+      {
+        action: 'Attendre 10 minutes',
+        timing: '+2min',
+        priority: 'high',
+      },
+    ]
+
+    if (context.temporal.hoursSinceLastMeal > 3) {
+      steps.push({
+        action: 'Si l\'envie persiste: collation équilibrée',
+        timing: '+10min',
+        priority: 'medium',
+      })
+    } else {
+      steps.push({
+        action: 'Si l\'envie persiste: alternative saine',
+        timing: '+10min',
+        priority: 'medium',
+      })
+    }
+
+    steps.push({
+      action: 'Noter l\'envie et le contexte',
+      timing: '+15min',
+      priority: 'low',
+    })
+
+    return {
+      horizon: 'immediate',
+      steps,
+      expectedOutcome: 'Gestion de l\'envie sans culpabilité',
+    }
+  }
+
+  private buildPlateauPlan(context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    return {
+      horizon: 'this_week',
+      steps: [
+        {
+          action: 'Varier les sources de protéines',
+          timing: 'Aujourd\'hui',
+          priority: 'medium',
+        },
+        {
+          action: 'Ajouter 10min d\'activité par jour',
+          timing: 'Cette semaine',
+          priority: 'medium',
+        },
+        {
+          action: 'Revoir tes objectifs caloriques',
+          timing: 'Dans 3 jours',
+          priority: 'low',
+        },
+        {
+          action: 'Mesurer (pas que le poids)',
+          timing: 'Fin de semaine',
+          priority: 'low',
+        },
+      ],
+      expectedOutcome: 'Relancer la progression naturellement',
+    }
+  }
+
+  private buildMotivationPlan(_context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    const streak = _context.gamification.currentStreak
+    const steps: PlanStep[] = []
+
+    if (streak > 0) {
+      steps.push({
+        action: `Célèbre ta série de ${streak} jours`,
+        timing: 'Maintenant',
+        priority: 'high',
+      })
+    }
+
+    steps.push({
+      action: 'Fixer UN seul objectif simple pour aujourd\'hui',
+      timing: 'Maintenant',
+      priority: 'high',
+    })
+
+    steps.push({
+      action: 'Logger 1 repas (même approximatif)',
+      timing: 'Aujourd\'hui',
+      priority: 'medium',
+    })
+
+    steps.push({
+      action: 'Relire pourquoi tu as commencé',
+      timing: 'Ce soir',
+      priority: 'low',
+    })
+
+    return {
+      horizon: 'today',
+      steps: steps.slice(0, 4),
+      expectedOutcome: 'Retrouver confiance et motivation',
+    }
+  }
+
+  private buildSimplificationPlan(_context: ConversationContextFull): ConversationResponse['shortTermPlan'] {
+    return {
+      horizon: 'today',
+      steps: [
+        {
+          action: 'Oublie les macros, juste les calories',
+          timing: 'Maintenant',
+          priority: 'high',
+        },
+        {
+          action: 'Logger 1 seul repas aujourd\'hui',
+          timing: 'Aujourd\'hui',
+          priority: 'high',
+        },
+        {
+          action: 'Boire de l\'eau régulièrement',
+          timing: 'Toute la journée',
+          priority: 'medium',
+        },
+        {
+          action: 'Demain on en reparle',
+          timing: 'Demain',
+          priority: 'low',
+        },
+      ],
+      expectedOutcome: 'Reprendre en douceur, sans pression',
+    }
+  }
+
   private generateId(): string {
-    return `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    return `resp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 }
 

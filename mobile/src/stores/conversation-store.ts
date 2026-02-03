@@ -18,6 +18,7 @@ import {
   UserIntent,
   ConversationMetrics,
   ConversationContextFull,
+  ConversationMemory,
   CONVERSATION_TIERS,
 } from '../types/conversation'
 import { conversationContextService } from '../services/conversation-context-service'
@@ -45,6 +46,13 @@ interface ConversationState {
   // Memory summary (for long conversations)
   memorySummary: string | null
 
+  // Enhanced memory (user preferences, patterns, learned facts)
+  enhancedMemory: ConversationMemory | null
+
+  // User memory control settings
+  memoryEnabled: boolean  // Whether memory collection is enabled
+  memoryLastResetAt: string | null  // When memory was last reset
+
   // Metrics (Recommendation #6)
   metrics: ConversationMetrics
 
@@ -63,6 +71,13 @@ interface ConversationState {
   trackFeedback: (positive: boolean) => void
   setHasHydrated: (state: boolean) => void
   reset: () => void
+  updateEnhancedMemory: () => void
+  getEnhancedMemory: () => ConversationMemory | null
+
+  // User memory control actions
+  resetMemory: () => void  // Clears all learned preferences/patterns
+  toggleMemory: (enabled: boolean) => void  // Enable/disable memory collection
+  getMemoryStats: () => { totalFacts: number; preferences: number; patterns: number; enabled: boolean }
 
   // Getters
   canSendMessage: (isPremium: boolean) => boolean
@@ -95,6 +110,9 @@ const initialState = {
   llmCallsToday: 0,
   lastResetDate: new Date().toDateString(),
   memorySummary: null as string | null,
+  enhancedMemory: null as ConversationMemory | null,
+  memoryEnabled: true,  // Memory enabled by default
+  memoryLastResetAt: null as string | null,
   metrics: initialMetrics,
   experimentGroup: null as 'control' | 'treatment' | null,
   _hasHydrated: false,
@@ -226,6 +244,12 @@ export const useConversationStore = create<ConversationState>()(
             ? conversationContextService.generateMemorySummary(newTurns)
             : state.memorySummary
 
+          // 8. Update enhanced memory every 10 messages (if enabled)
+          let enhancedMemory = state.enhancedMemory
+          if (state.memoryEnabled && newTurns.length >= 10 && newTurns.length % 10 === 0) {
+            enhancedMemory = conversationContextService.generateEnhancedMemory(newTurns)
+          }
+
           set({
             turns: newTurns,
             messagesToday: state.messagesToday + 1,
@@ -233,6 +257,7 @@ export const useConversationStore = create<ConversationState>()(
             isProcessing: false,
             metrics: newMetrics,
             memorySummary,
+            enhancedMemory,
           })
 
           // 8. Track analytics
@@ -486,6 +511,113 @@ export const useConversationStore = create<ConversationState>()(
           _hasHydrated: true,
         })
       },
+
+      /**
+       * Update enhanced memory manually (e.g., on app foreground)
+       * Respects user's memory preference setting
+       */
+      updateEnhancedMemory: () => {
+        const state = get()
+
+        // Don't update if memory is disabled by user
+        if (!state.memoryEnabled) {
+          return
+        }
+
+        if (state.turns.length >= 10) {
+          const enhancedMemory = conversationContextService.generateEnhancedMemory(state.turns)
+          const memorySummary = conversationContextService.buildMemorySummaryFromEnhanced(enhancedMemory)
+
+          set({
+            enhancedMemory,
+            memorySummary: memorySummary || state.memorySummary,
+          })
+        }
+      },
+
+      /**
+       * Get current enhanced memory
+       */
+      getEnhancedMemory: (): ConversationMemory | null => {
+        return get().enhancedMemory
+      },
+
+      // ========================================================================
+      // USER MEMORY CONTROL (Check #5)
+      // ========================================================================
+
+      /**
+       * Reset all learned memory (preferences, patterns, facts)
+       * User control: allows user to start fresh without clearing conversation history
+       */
+      resetMemory: () => {
+        const now = new Date().toISOString()
+
+        set({
+          enhancedMemory: null,
+          memorySummary: null,
+          memoryLastResetAt: now,
+        })
+
+        analytics.track('coach_memory_reset', {
+          timestamp: now,
+        })
+      },
+
+      /**
+       * Toggle memory collection on/off
+       * User control: allows user to opt-out of preference learning
+       */
+      toggleMemory: (enabled: boolean) => {
+        set({ memoryEnabled: enabled })
+
+        // If disabling, optionally clear existing memory
+        if (!enabled) {
+          set({
+            enhancedMemory: null,
+            memorySummary: null,
+          })
+        }
+
+        analytics.track('coach_memory_toggled', {
+          enabled,
+        })
+      },
+
+      /**
+       * Get memory statistics for settings UI
+       */
+      getMemoryStats: () => {
+        const state = get()
+        const memory = state.enhancedMemory
+
+        if (!memory) {
+          return {
+            totalFacts: 0,
+            preferences: 0,
+            patterns: 0,
+            enabled: state.memoryEnabled,
+          }
+        }
+
+        const preferences =
+          (memory.userPreferences.foodLikes?.length || 0) +
+          (memory.userPreferences.foodDislikes?.length || 0) +
+          (memory.userPreferences.mealPreferences?.length || 0) +
+          (memory.userPreferences.timingPreferences?.length || 0)
+
+        const patterns =
+          (memory.patterns.frequentIntents?.length || 0) +
+          (memory.patterns.timePatterns?.length || 0) +
+          (memory.patterns.triggerPatterns?.length || 0)
+
+        return {
+          totalFacts: memory.learnedFacts?.length || 0,
+          preferences,
+          patterns,
+          enabled: state.memoryEnabled,
+        }
+      },
     }),
     {
       name: 'lym-conversation-store',
@@ -499,6 +631,11 @@ export const useConversationStore = create<ConversationState>()(
         lastResetDate: state.lastResetDate,
         // Persist memory summary
         memorySummary: state.memorySummary,
+        // Persist enhanced memory
+        enhancedMemory: state.enhancedMemory,
+        // Persist user memory control settings
+        memoryEnabled: state.memoryEnabled,
+        memoryLastResetAt: state.memoryLastResetAt,
         // Persist experiment group
         experimentGroup: state.experimentGroup,
       }),
