@@ -269,20 +269,22 @@ export function MessageBubble({
 
           {/* Quick replies */}
           {turn.response.ui?.quickReplies && turn.response.ui.quickReplies.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.quickRepliesContainer}
-              contentContainerStyle={styles.quickRepliesContent}
-            >
-              {turn.response.ui.quickReplies.map((reply, index) => (
-                <QuickReplyChip
-                  key={`${reply.label}-${index}`}
-                  reply={reply}
-                  onPress={() => onQuickReplyPress?.(reply)}
-                />
-              ))}
-            </ScrollView>
+            <View style={styles.quickRepliesWrapper}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.quickRepliesContainer}
+                contentContainerStyle={styles.quickRepliesContent}
+              >
+                {turn.response.ui.quickReplies.map((reply, index) => (
+                  <QuickReplyChip
+                    key={`${reply.label}-${index}`}
+                    reply={reply}
+                    onPress={() => onQuickReplyPress?.(reply)}
+                  />
+                ))}
+              </ScrollView>
+            </View>
           )}
         </>
       )}
@@ -1229,20 +1231,30 @@ const styles = StyleSheet.create({
   },
 
   // Quick Replies
-  quickRepliesContainer: {
+  quickRepliesWrapper: {
     marginTop: 10,
+    height: 40,
+  },
+  quickRepliesContainer: {
+    flex: 1,
   },
   quickRepliesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    paddingRight: 8,
   },
   quickReplyChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 18,
     borderWidth: 1,
+    height: 36,
+    justifyContent: 'center',
   },
   quickReplyText: {
     fontSize: 13,
+    lineHeight: 18,
   },
 
   // Input

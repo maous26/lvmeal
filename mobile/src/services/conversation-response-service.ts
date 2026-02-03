@@ -378,6 +378,70 @@ const RESPONSE_TEMPLATES: Partial<Record<UserIntent, IntentTemplates>> = {
     ],
   },
 
+  // ========== LOG_MEAL ==========
+  LOG_MEAL: {
+    templates: [
+      {
+        text: "Super ! Dis-moi ce que tu as mangé, je m'occupe du reste 📝",
+        tone: 'encouraging',
+        emoji: '📝',
+        slots: [],
+      },
+      {
+        text: "Parfait ! Qu'est-ce que tu as pris ? Je te guide pour l'ajouter.",
+        tone: 'casual',
+        emoji: '✅',
+        slots: [],
+      },
+      {
+        text: "C'est noté ! Décris-moi ton repas et je calcule tout pour toi.",
+        tone: 'informative',
+        emoji: '🍽️',
+        slots: [],
+      },
+    ],
+    quickReplies: [
+      { label: "Petit-déjeuner", action: 'NAVIGATE_TO', params: { screen: 'AddMeal', params: { type: 'breakfast' } } },
+      { label: "Déjeuner", action: 'NAVIGATE_TO', params: { screen: 'AddMeal', params: { type: 'lunch' } } },
+      { label: "Dîner", action: 'NAVIGATE_TO', params: { screen: 'AddMeal', params: { type: 'dinner' } } },
+      { label: "Snack", action: 'NAVIGATE_TO', params: { screen: 'AddMeal', params: { type: 'snack' } } },
+    ],
+  },
+
+  // ========== MEAL_SUGGESTION ==========
+  MEAL_SUGGESTION: {
+    templates: [
+      {
+        text: "J'ai quelques idées pour toi ! Avec {calories} kcal disponibles, voici ce que je te propose.",
+        tone: 'encouraging',
+        emoji: '👨‍🍳',
+        slots: ['calories'],
+      },
+      {
+        text: "Voyons ce qu'on peut préparer ! Tu as encore {calories} kcal aujourd'hui.",
+        tone: 'casual',
+        emoji: '🍳',
+        slots: ['calories'],
+      },
+      {
+        text: "Je te prépare une suggestion sur mesure. Budget restant : {calories} kcal.",
+        tone: 'informative',
+        emoji: '✨',
+        slots: ['calories'],
+      },
+    ],
+    quickReplies: [
+      { label: "Rapide (< 15min)", intent: 'MEAL_SUGGESTION' },
+      { label: "Healthy", intent: 'MEAL_SUGGESTION' },
+      { label: "J'ai déjà mangé", intent: 'LOG_MEAL' },
+    ],
+    diagnosisGenerator: (ctx) => [
+      { label: 'Calories restantes', value: `${ctx.nutrition.caloriesRemaining} kcal`, impact: 'high' },
+      { label: 'Moment de la journée', value: ctx.temporal.timeOfDay, impact: 'medium' },
+      { label: 'Dernière alimentation', value: `il y a ${ctx.temporal.hoursSinceLastMeal}h`, impact: 'medium' },
+    ],
+  },
+
   // ========== UNKNOWN ==========
   UNKNOWN: {
     templates: [
