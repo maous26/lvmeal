@@ -349,6 +349,14 @@ export type AnalyticsEvent =
   | 'payment_failed'
   | 'upgrade_prompt_shown'
   | 'upgrade_prompt_clicked'
+  // Revenue Events (RevenueCat)
+  | 'trial_started'
+  | 'trial_converted'
+  | 'trial_expired'
+  | 'subscription_refunded'
+  | 'billing_issue_detected'
+  | 'billing_issue_resolved'
+  | 'revenue_generated'
   // Errors & issues
   | 'error_occurred'
   | 'feature_failed'
@@ -401,6 +409,18 @@ export interface AnalyticsProperties {
   upgrade_from?: string
   upgrade_to?: string
   paywall_variant?: string
+  // Revenue KPIs (RevenueCat integration)
+  revenue?: number
+  mrr?: number // Monthly Recurring Revenue
+  ltv?: number // Lifetime Value
+  product_id?: string
+  transaction_id?: string
+  store?: 'app_store' | 'play_store'
+  is_trial_conversion?: boolean
+  trial_start_date?: string
+  subscription_start_date?: string
+  billing_issue?: boolean
+  refund_reason?: string
   // Generic
   [key: string]: string | number | boolean | undefined
 }
@@ -925,6 +945,149 @@ class AnalyticsService {
       challenge_name: challengeName,
       success: event === 'completed',
     })
+  }
+
+  // ============= REVENUE TRACKING (RevenueCat Integration) =============
+
+  /**
+   * Track trial events
+   */
+  trackTrial(
+    event: 'started' | 'converted' | 'expired',
+    plan: AnalyticsProperties['subscription_plan'],
+    additionalProps?: AnalyticsProperties
+  ): void {
+    const eventMap: Record<string, AnalyticsEvent> = {
+      started: 'trial_started',
+      converted: 'trial_converted',
+      expired: 'trial_expired',
+    }
+
+    this.track(eventMap[event], {
+      subscription_plan: plan,
+      is_trial_conversion: event === 'converted',
+      ...additionalProps,
+    })
+
+    // Update user property
+    if (this.initialized) {
+      const identify = new Amplitude.Identify()
+      if (event === 'started') {
+        identify.set('is_in_trial', true)
+        identify.set('trial_start_date', new Date().toISOString())
+      } else if (event === 'converted') {
+        identify.set('is_in_trial', false)
+        identify.set('is_premium', true)
+        identify.set('converted_from_trial', true)
+      } else if (event === 'expired') {
+        identify.set('is_in_trial', false)
+        identify.set('trial_expired', true)
+      }
+      Amplitude.identify(identify)
+    }
+  }
+
+  /**
+   * Track revenue event (for MRR/LTV calculations)
+   */
+  trackRevenue(
+    amount: number,
+    productId: string,
+    plan: AnalyticsProperties['subscription_plan'],
+    currency: string = 'EUR',
+    additionalProps?: AnalyticsProperties
+  ): void {
+    // Use Amplitude's revenue tracking
+    if (this.initialized) {
+      const revenue = new Amplitude.Revenue()
+        .setProductId(productId)
+        .setPrice(amount)
+        .setQuantity(1)
+
+      Amplitude.revenue(revenue)
+    }
+
+    // Also track as custom event for dashboards
+    this.track('revenue_generated', {
+      revenue: amount,
+      product_id: productId,
+      subscription_plan: plan,
+      subscription_currency: currency,
+      ...additionalProps,
+    })
+  }
+
+  /**
+   * Track billing issues
+   */
+  trackBillingIssue(
+    event: 'detected' | 'resolved',
+    plan: AnalyticsProperties['subscription_plan'],
+    additionalProps?: AnalyticsProperties
+  ): void {
+    this.track(event === 'detected' ? 'billing_issue_detected' : 'billing_issue_resolved', {
+      subscription_plan: plan,
+      billing_issue: event === 'detected',
+      ...additionalProps,
+    })
+  }
+
+  /**
+   * Track refund
+   */
+  trackRefund(
+    amount: number,
+    productId: string,
+    reason?: string
+  ): void {
+    this.track('subscription_refunded', {
+      revenue: -amount, // Negative for refund
+      product_id: productId,
+      refund_reason: reason,
+    })
+
+    // Update user property
+    if (this.initialized) {
+      const identify = new Amplitude.Identify()
+      identify.set('is_premium', false)
+      identify.set('has_refunded', true)
+      Amplitude.identify(identify)
+    }
+  }
+
+  /**
+   * Set revenue user properties (from RevenueCat customer info)
+   */
+  setRevenueUserProperties(props: {
+    isPremium: boolean
+    plan?: string
+    isInTrial?: boolean
+    willRenew?: boolean
+    expirationDate?: string
+    totalRevenue?: number
+  }): void {
+    if (!this.initialized) return
+
+    const identify = new Amplitude.Identify()
+    identify.set('is_premium', props.isPremium)
+
+    if (props.plan) {
+      identify.set('subscription_plan', props.plan)
+    }
+    if (props.isInTrial !== undefined) {
+      identify.set('is_in_trial', props.isInTrial)
+    }
+    if (props.willRenew !== undefined) {
+      identify.set('will_renew', props.willRenew)
+    }
+    if (props.expirationDate) {
+      identify.set('subscription_expiration', props.expirationDate)
+    }
+    if (props.totalRevenue !== undefined) {
+      identify.set('total_revenue', props.totalRevenue)
+    }
+
+    Amplitude.identify(identify)
   }
 
   /**

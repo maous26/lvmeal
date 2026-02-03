@@ -117,6 +117,12 @@ class RevenueCatService {
       this.customerInfo = await Purchases.getCustomerInfo()
       this.initialized = true
 
+      // Sync user properties with Amplitude
+      this.syncAnalyticsUserProperties()
+
+      // Set up listener for subscription changes
+      this.setupCustomerInfoListener()
+
       console.log('[RevenueCat] Initialized successfully')
       console.log('[RevenueCat] User ID:', await Purchases.getAppUserID())
       console.log('[RevenueCat] Is Premium:', this.isPremium())
@@ -314,12 +320,31 @@ class RevenueCatService {
       const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined
 
       if (isPremium) {
-        // Track successful purchase
-        analytics.trackPayment('completed', Platform.OS === 'ios' ? 'apple_pay' : 'google_pay')
+        const priceValue = parseFloat(plan.price.replace(/[^0-9.,]/g, '').replace(',', '.'))
+
+        // Track successful payment
+        analytics.trackPayment('completed', Platform.OS === 'ios' ? 'apple_pay' : 'google_pay', priceValue, {
+          product_id: plan.id,
+          store: Platform.OS === 'ios' ? 'app_store' : 'play_store',
+        })
+
+        // Track revenue for MRR/LTV calculations
+        analytics.trackRevenue(
+          priceValue,
+          plan.id,
+          plan.period as 'monthly' | 'yearly' | 'lifetime',
+          plan.currency
+        )
+
+        // Track subscription activation (listener will also fire but this is immediate)
         analytics.trackSubscription(
           'activated',
           plan.period as 'monthly' | 'yearly',
-          parseFloat(plan.price.replace(/[^0-9.,]/g, '').replace(',', '.'))
+          priceValue,
+          {
+            product_id: plan.id,
+            store: Platform.OS === 'ios' ? 'app_store' : 'play_store',
+          }
         )
 
         console.log('[RevenueCat] Purchase successful')
@@ -499,6 +524,124 @@ class RevenueCatService {
     // RevenueCat SDK doesn't return a subscription object
     // Return empty cleanup function
     return () => {}
+  }
+
+  /**
+   * Sync RevenueCat customer info with Amplitude user properties
+   */
+  private syncAnalyticsUserProperties(): void {
+    if (!this.customerInfo) return
+
+    const entitlement = this.customerInfo.entitlements.active[PREMIUM_ENTITLEMENT]
+
+    analytics.setRevenueUserProperties({
+      isPremium: !!entitlement,
+      plan: entitlement?.productIdentifier,
+      isInTrial: entitlement?.periodType === 'TRIAL',
+      willRenew: entitlement?.willRenew,
+      expirationDate: entitlement?.expirationDate || undefined,
+    })
+  }
+
+  /**
+   * Set up listener for customer info changes (subscription events)
+   */
+  private setupCustomerInfoListener(): void {
+    Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+      const previousInfo = this.customerInfo
+      this.customerInfo = customerInfo
+
+      // Detect subscription changes and track events
+      this.detectAndTrackSubscriptionChanges(previousInfo, customerInfo)
+
+      // Sync user properties
+      this.syncAnalyticsUserProperties()
+    })
+  }
+
+  /**
+   * Detect subscription changes and track appropriate events
+   */
+  private detectAndTrackSubscriptionChanges(
+    previous: CustomerInfo | null,
+    current: CustomerInfo
+  ): void {
+    const prevEntitlement = previous?.entitlements.active[PREMIUM_ENTITLEMENT]
+    const currentEntitlement = current.entitlements.active[PREMIUM_ENTITLEMENT]
+
+    // New subscription or trial started
+    if (!prevEntitlement && currentEntitlement) {
+      const plan = this.getPlanFromProductId(currentEntitlement.productIdentifier)
+
+      if (currentEntitlement.periodType === 'TRIAL') {
+        // Trial started
+        analytics.trackTrial('started', plan)
+        console.log('[RevenueCat] Trial started:', currentEntitlement.productIdentifier)
+      } else {
+        // Direct subscription (no trial)
+        analytics.trackSubscription('activated', plan)
+        console.log('[RevenueCat] Subscription activated:', currentEntitlement.productIdentifier)
+      }
+    }
+
+    // Trial converted to paid
+    if (prevEntitlement?.periodType === 'TRIAL' && currentEntitlement?.periodType !== 'TRIAL') {
+      const plan = this.getPlanFromProductId(currentEntitlement?.productIdentifier || '')
+      analytics.trackTrial('converted', plan)
+      console.log('[RevenueCat] Trial converted to paid')
+    }
+
+    // Subscription renewed
+    if (prevEntitlement && currentEntitlement &&
+        prevEntitlement.expirationDate !== currentEntitlement.expirationDate &&
+        currentEntitlement.willRenew) {
+      const plan = this.getPlanFromProductId(currentEntitlement.productIdentifier)
+      analytics.trackSubscription('renewed', plan)
+      console.log('[RevenueCat] Subscription renewed')
+    }
+
+    // Subscription cancelled (will not renew)
+    if (prevEntitlement?.willRenew && !currentEntitlement?.willRenew) {
+      const plan = this.getPlanFromProductId(currentEntitlement?.productIdentifier || '')
+      analytics.trackSubscription('cancelled', plan)
+      console.log('[RevenueCat] Subscription cancelled')
+    }
+
+    // Subscription expired
+    if (prevEntitlement && !currentEntitlement) {
+      const plan = this.getPlanFromProductId(prevEntitlement.productIdentifier)
+
+      if (prevEntitlement.periodType === 'TRIAL') {
+        analytics.trackTrial('expired', plan)
+        console.log('[RevenueCat] Trial expired')
+      } else {
+        analytics.trackSubscription('expired', plan)
+        console.log('[RevenueCat] Subscription expired')
+      }
+    }
+
+    // Billing issue detected
+    if (!prevEntitlement?.billingIssueDetectedAt && currentEntitlement?.billingIssueDetectedAt) {
+      const plan = this.getPlanFromProductId(currentEntitlement.productIdentifier)
+      analytics.trackBillingIssue('detected', plan)
+      console.log('[RevenueCat] Billing issue detected')
+    }
+
+    // Billing issue resolved
+    if (prevEntitlement?.billingIssueDetectedAt && !currentEntitlement?.billingIssueDetectedAt) {
+      const plan = this.getPlanFromProductId(currentEntitlement?.productIdentifier || '')
+      analytics.trackBillingIssue('resolved', plan)
+      console.log('[RevenueCat] Billing issue resolved')
+    }
+  }
+
+  /**
+   * Get plan type from product identifier
+   */
+  private getPlanFromProductId(productId: string): 'monthly' | 'yearly' | 'lifetime' {
+    if (productId.includes('yearly') || productId.includes('annual')) return 'yearly'
+    if (productId.includes('lifetime')) return 'lifetime'
+    return 'monthly'
   }
 
   /**
