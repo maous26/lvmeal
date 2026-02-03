@@ -150,15 +150,16 @@ export default Sentry.wrap(function App() {
         addLog('[Init] LYM Insights...')
         await lymInsights.initialize()
 
-        // Initialize RevenueCat for in-app purchases
-        addLog('[Init] RevenueCat...')
-        try {
-          const subscriptionStore = useSubscriptionStore.getState()
-          await subscriptionStore.initialize()
-          addLog(`[Init] RevenueCat OK, premium: ${subscriptionStore.isPremium}`)
-        } catch (rcError: any) {
-          addLog(`[Init] RevenueCat ERROR: ${rcError?.message || rcError}`)
-        }
+        // DISABLED: RevenueCat - need production API key
+        // TODO: Re-enable when RevenueCat iOS app is configured
+        addLog('[Init] RevenueCat SKIPPED (disabled)')
+        // try {
+        //   const subscriptionStore = useSubscriptionStore.getState()
+        //   await subscriptionStore.initialize()
+        //   addLog(`[Init] RevenueCat OK, premium: ${subscriptionStore.isPremium}`)
+        // } catch (rcError: any) {
+        //   addLog(`[Init] RevenueCat ERROR: ${rcError?.message || rcError}`)
+        // }
 
         // Configure Google Sign-In for native builds
         addLog('[Init] Google Sign-In...')
