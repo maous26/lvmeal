@@ -309,14 +309,9 @@ export default Sentry.wrap(function App() {
     }
   }, [pendingDeepLink])
 
-  
-  // Wait for fonts to load
-  if (!fontsLoaded) {
-    return null
-  }
-
-  // Show custom splash screen while app initializes
-  if (!appIsReady || !splashFinished) {
+  // Show custom splash screen while fonts load OR app initializes
+  // IMPORTANT: We must show splash during font loading to avoid white screen
+  if (!fontsLoaded || !appIsReady || !splashFinished) {
     return (
       <SplashScreen
         duration={2500}
