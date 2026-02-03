@@ -378,7 +378,6 @@ En attendant, je peux t'aider à :
 
     return '💡 Ces conseils sont personnalisés selon tes données, mais ne remplacent pas l\'avis d\'un professionnel de santé.'
   }
-}
 
   // ============================================================================
   // LOG ANONYMIZATION (for analytics/debugging)
