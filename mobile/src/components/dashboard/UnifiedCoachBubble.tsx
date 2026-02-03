@@ -163,30 +163,40 @@ export default function UnifiedCoachBubble({
     if (onSeeAll) {
       onSeeAll()
     } else {
-      navigation.navigate('Coach' as never)
+      // Navigate to the new conversational coach
+      navigation.navigate('ConversationCoach' as never)
     }
   }, [onSeeAll, navigation])
 
-  // No message - show minimal state
+  // No message - show minimal state with chat access
   if (!priorityMessage) {
     if (compact) return null
 
     return (
-      <Card style={[styles.container, { backgroundColor: colors.bg.elevated }]}>
-        <View style={styles.emptyState}>
-          <View style={[styles.coachAvatar, { backgroundColor: colors.accent.light }]}>
-            <Sparkles size={20} color={colors.accent.primary} />
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+          navigation.navigate('ConversationCoach' as never)
+        }}
+      >
+        <Card style={[styles.container, { backgroundColor: colors.bg.elevated }]}>
+          <View style={styles.emptyState}>
+            <View style={[styles.coachAvatar, { backgroundColor: colors.accent.light }]}>
+              <Sparkles size={20} color={colors.accent.primary} />
+            </View>
+            <View style={styles.emptyContent}>
+              <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
+                Coach LYM
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.text.tertiary }]}>
+                Discute avec moi pour des conseils personnalisés
+              </Text>
+            </View>
+            <ChevronRight size={20} color={colors.text.tertiary} />
           </View>
-          <View style={styles.emptyContent}>
-            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>
-              LYM
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.text.tertiary }]}>
-              Tout va bien ! Continue comme ca.
-            </Text>
-          </View>
-        </View>
-      </Card>
+        </Card>
+      </TouchableOpacity>
     )
   }
 

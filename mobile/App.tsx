@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { View, Text, StyleSheet, ScrollView } from 'react-native'
+import { View } from 'react-native'
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 import { PlayfairDisplay_400Regular, PlayfairDisplay_500Medium, PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display'
 import { Lora_400Regular, Lora_500Medium, Lora_600SemiBold, Lora_700Bold } from '@expo-google-fonts/lora'
@@ -58,59 +58,14 @@ Sentry.init({
 })
 
 
-// Debug screen to see initialization status
-function DebugScreen({ logs }: { logs: string[] }) {
-  return (
-    <View style={debugStyles.container}>
-      <Text style={debugStyles.title}>LYM Debug</Text>
-      <ScrollView style={debugStyles.scroll}>
-        {logs.map((log, i) => (
-          <Text key={i} style={debugStyles.log}>{log}</Text>
-        ))}
-      </ScrollView>
-    </View>
-  )
-}
-
-const debugStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  title: {
-    color: '#00ff88',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  scroll: {
-    flex: 1,
-  },
-  log: {
-    color: '#ffffff',
-    fontSize: 12,
-    marginBottom: 8,
-    fontFamily: 'monospace',
-  },
-})
-
 export default Sentry.wrap(function App() {
   const [appIsReady, setAppIsReady] = useState(false)
   const [splashFinished, setSplashFinished] = useState(false)
-  const [initError, setInitError] = useState<string | null>(null)
-  const [debugLogs, setDebugLogs] = useState<string[]>(['[App] Starting...'])
   const [pendingDeepLink, setPendingDeepLink] = useState<{
     action: 'reset-password' | 'callback'
     url: string
   } | null>(null)
   const navigationRef = React.useRef<any>(null)
-
-  const addLog = (msg: string) => {
-    console.log(msg)
-    setDebugLogs(prev => [...prev, `${new Date().toISOString().slice(11,19)} ${msg}`])
-  }
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -135,87 +90,87 @@ export default Sentry.wrap(function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        addLog('[Init] Starting initialization...')
+        console.log('[Init] Starting initialization...')
 
         // Initialize error reporting first (to catch init errors)
-        addLog('[Init] Error reporting...')
+        console.log('[Init] Error reporting...')
         errorReporting.initialize()
 
         // Initialize analytics
-        addLog('[Init] Analytics...')
+        console.log('[Init] Analytics...')
         await analytics.initialize()
         analytics.track('app_opened')
 
         // Initialize LYM Insights (Supabase-based, bienveillant analytics)
-        addLog('[Init] LYM Insights...')
+        console.log('[Init] LYM Insights...')
         await lymInsights.initialize()
 
         // DISABLED: RevenueCat - need production API key
         // TODO: Re-enable when RevenueCat iOS app is configured
-        addLog('[Init] RevenueCat SKIPPED (disabled)')
+        console.log('[Init] RevenueCat SKIPPED (disabled)')
         // try {
         //   const subscriptionStore = useSubscriptionStore.getState()
         //   await subscriptionStore.initialize()
-        //   addLog(`[Init] RevenueCat OK, premium: ${subscriptionStore.isPremium}`)
+        //   console.log(`[Init] RevenueCat OK, premium: ${subscriptionStore.isPremium}`)
         // } catch (rcError: any) {
-        //   addLog(`[Init] RevenueCat ERROR: ${rcError?.message || rcError}`)
+        //   console.log(`[Init] RevenueCat ERROR: ${rcError?.message || rcError}`)
         // }
 
         // Configure Google Sign-In for native builds
-        addLog('[Init] Google Sign-In...')
+        console.log('[Init] Google Sign-In...')
         configureGoogleSignIn()
 
         // OPTIMIZATION: Pre-load static recipes in parallel with other init tasks
         // This prevents latency during meal plan generation
-        addLog('[Init] Preloading...')
+        console.log('[Init] Preloading...')
         const preloadPromises = [
           clearFoodSearchCache(),
           loadStaticRecipes().then(recipes => {
-            addLog(`[Init] Loaded ${recipes.length} recipes`)
+            console.log(`[Init] Loaded ${recipes.length} recipes`)
           }),
         ]
 
         // Initialize notifications
-        addLog('[Init] Notifications...')
+        console.log('[Init] Notifications...')
         const notificationsEnabled = await requestNotificationPermissions()
-        addLog(`[Init] Notifications: ${notificationsEnabled}`)
+        console.log(`[Init] Notifications: ${notificationsEnabled}`)
 
         // Request HealthKit permissions early (Apple recommends this)
         // This ensures the permission popup appears reliably
-        addLog('[Init] HealthKit check...')
+        console.log('[Init] HealthKit check...')
         const healthAvailable = await isHealthAvailable()
         if (healthAvailable) {
-          addLog('[Init] HealthKit available, requesting...')
+          console.log('[Init] HealthKit available, requesting...')
           const healthPerms = await requestHealthPermissions()
-          addLog(`[Init] HealthKit perms: ${JSON.stringify(healthPerms)}`)
+          console.log(`[Init] HealthKit perms: ${JSON.stringify(healthPerms)}`)
 
           // Sync weight from Apple Health to profile
           const syncedWeight = await syncWeightToProfile()
           if (syncedWeight) {
-            addLog(`[Init] Weight synced: ${syncedWeight}kg`)
+            console.log(`[Init] Weight synced: ${syncedWeight}kg`)
           }
         } else {
-          addLog('[Init] HealthKit not available')
+          console.log('[Init] HealthKit not available')
         }
 
         // Initialize Super Agent daily insight service
         if (notificationsEnabled) {
-          addLog('[Init] Daily insights...')
+          console.log('[Init] Daily insights...')
           await initializeDailyInsightService()
 
           // Schedule meal reminders based on user profile and fasting preferences
           const profile = useUserStore.getState().profile
           if (profile) {
-            addLog('[Init] Meal reminders...')
+            console.log('[Init] Meal reminders...')
             await checkAndScheduleReminders(profile as any)
 
             // Initialize Coach proactive notifications
-            addLog('[Init] Coach proactive...')
+            console.log('[Init] Coach proactive...')
             await initializeCoachProactiveService(profile as any)
           }
 
           // Ensure onboarding notifications are scheduled (recover from failures)
-          addLog('[Init] Onboarding notifs...')
+          console.log('[Init] Onboarding notifs...')
           const onboardingState = useOnboardingStore.getState()
           await ensureOnboardingNotificationsScheduled(
             onboardingState.signupDate,
@@ -224,19 +179,16 @@ export default Sentry.wrap(function App() {
         }
 
         // Wait for preload tasks to complete
-        addLog('[Init] Waiting for preload...')
+        console.log('[Init] Waiting for preload...')
         await Promise.all(preloadPromises)
 
-        addLog('[Init] Done!')
+        console.log('[Init] Done!')
         await new Promise(resolve => setTimeout(resolve, 500))
       } catch (e: any) {
-        const errorMsg = e?.message || String(e)
-        addLog(`[Init] ERROR: ${errorMsg}`)
-        setInitError(errorMsg)
-        console.warn(e)
+        console.warn('[Init] ERROR:', e?.message || e)
         errorReporting.captureException(e, { feature: 'app_init' })
       } finally {
-        addLog('[Init] Setting appIsReady = true')
+        console.log('[Init] Setting appIsReady = true')
         setAppIsReady(true)
       }
     }
@@ -377,15 +329,9 @@ export default Sentry.wrap(function App() {
     }
   }, [pendingDeepLink])
 
-  // DEBUG: Show debug screen to identify where it blocks
-  // Remove this after debugging
-  if (initError || !appIsReady) {
-    return <DebugScreen logs={[...debugLogs, `fontsLoaded: ${fontsLoaded}`, `appIsReady: ${appIsReady}`, `error: ${initError || 'none'}`]} />
-  }
-
   // Show custom splash screen while fonts load OR app initializes
   // IMPORTANT: We must show splash during font loading to avoid white screen
-  if (!fontsLoaded || !splashFinished) {
+  if (!fontsLoaded || !appIsReady || !splashFinished) {
     return (
       <SplashScreen
         duration={2500}

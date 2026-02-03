@@ -139,6 +139,7 @@ import ChangePasswordScreen from '../screens/ChangePasswordScreen'
 import AddCustomRecipeScreen from '../screens/AddCustomRecipeScreen'
 import CustomRecipesScreen from '../screens/CustomRecipesScreen'
 import CoachHistoryScreen from '../screens/CoachHistoryScreen'
+import { ConversationScreen } from '../components/conversation'
 import { useUserStore } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { isGoogleSignedIn, getCachedGoogleUser } from '../services/google-auth-service'
@@ -194,6 +195,7 @@ export type RootStackParamList = {
   AddCustomRecipe: undefined
   CustomRecipes: undefined
   CoachHistory: undefined
+  ConversationCoach: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -480,6 +482,14 @@ export default function RootNavigator() {
             component={CoachHistoryScreen}
             options={{
               animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="ConversationCoach"
+            component={ConversationScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              presentation: 'modal',
             }}
           />
         </>
