@@ -3,7 +3,7 @@
  * Manages premium subscriptions in Supabase
  */
 
-import { supabaseAdmin, PremiumSubscription } from './supabase.js'
+import { supabaseAdmin, PremiumSubscription } from './supabase'
 
 export interface GrantPremiumParams {
   email: string
@@ -207,7 +207,8 @@ class SubscriptionService {
     trialUsers: number
     lifetimeUsers: number
   }> {
-    const { count: totalUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const { data: usersData } = await supabaseAdmin.auth.admin.listUsers()
+    const totalUsers = usersData?.users?.length || 0
 
     const { data: subscriptions } = await supabaseAdmin
       .from('premium_subscriptions')
@@ -220,7 +221,7 @@ class SubscriptionService {
     )
 
     return {
-      totalUsers: totalUsers?.users?.length || 0,
+      totalUsers,
       premiumUsers: activeSubscriptions.length,
       trialUsers: trialSubscriptions.length,
       lifetimeUsers: lifetimeSubscriptions.length,

@@ -9,12 +9,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import session from 'express-session'
 import path from 'path'
-import { fileURLToPath } from 'url'
-import apiRoutes from './routes/api.js'
-import { requireAuth } from './middleware/auth.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import apiRoutes from './routes/api'
+import { requireAuth } from './middleware/auth'
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '3000', 10)

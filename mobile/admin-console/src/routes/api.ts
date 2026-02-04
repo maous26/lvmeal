@@ -3,8 +3,8 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { subscriptionService } from '../services/subscription-service.js'
-import { requireAuth, handleLogin, handleLogout, checkAuth } from '../middleware/auth.js'
+import { subscriptionService } from '../services/subscription-service'
+import { requireAuth, handleLogin, handleLogout, checkAuth } from '../middleware/auth'
 
 const router = Router()
 
