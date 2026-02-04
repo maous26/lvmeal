@@ -19,6 +19,42 @@ import {
   type PurchaseResult,
 } from '../services/revenuecat-service'
 import { analytics } from '../services/analytics-service'
+import { supabase } from '../services/supabase-client'
+
+// ============================================================================
+// MANUAL PREMIUM CHECK (via Supabase)
+// ============================================================================
+
+interface ManualPremiumStatus {
+  isPremium: boolean
+  planType: string | null
+  expiresAt: string | null
+}
+
+/**
+ * Check if user has manual premium subscription granted via admin console
+ */
+async function checkManualPremiumStatus(userId: string): Promise<ManualPremiumStatus> {
+  try {
+    const { data, error } = await supabase.rpc('check_premium_status', {
+      check_user_id: userId,
+    })
+
+    if (error) {
+      console.log('[SubscriptionStore] Manual premium check error:', error.message)
+      return { isPremium: false, planType: null, expiresAt: null }
+    }
+
+    return {
+      isPremium: data?.isPremium || false,
+      planType: data?.planType || null,
+      expiresAt: data?.expiresAt || null,
+    }
+  } catch (err) {
+    console.log('[SubscriptionStore] Manual premium check failed:', err)
+    return { isPremium: false, planType: null, expiresAt: null }
+  }
+}
 
 // ============================================================================
 // TYPES
@@ -30,6 +66,7 @@ interface SubscriptionState {
   isLoading: boolean
   isPremium: boolean
   isInTrial: boolean
+  isManualPremium: boolean // Premium granted via admin console
 
   // Subscription details
   status: SubscriptionStatus | null
@@ -67,6 +104,7 @@ const initialState = {
   isLoading: false,
   isPremium: false,
   isInTrial: false,
+  isManualPremium: false,
   status: null,
   plans: [],
   trialStartDate: null,
@@ -87,6 +125,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
       /**
        * Initialize RevenueCat and fetch subscription status
+       * Also checks for manual premium granted via admin console
        */
       initialize: async (userId?: string) => {
         const { isInitialized } = get()
@@ -95,24 +134,37 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         set({ isLoading: true, error: null })
 
         try {
+          // Check manual premium status first (via Supabase admin console)
+          let manualPremium = { isPremium: false, planType: null, expiresAt: null }
+          if (userId) {
+            manualPremium = await checkManualPremiumStatus(userId)
+            if (manualPremium.isPremium) {
+              console.log('[SubscriptionStore] Manual premium detected:', manualPremium.planType)
+            }
+          }
+
           // Initialize RevenueCat
           await revenueCatService.initialize(userId)
 
-          // Get subscription status
+          // Get subscription status from RevenueCat
           const status = await revenueCatService.getSubscriptionStatus()
 
           // Check if in trial
           const isInTrial = status.isInTrial || get().checkTrialStatus()
 
+          // Premium if: RevenueCat says so, OR manual premium, OR in trial
+          const isPremium = status.isPremium || manualPremium.isPremium || isInTrial
+
           set({
             isInitialized: true,
             isLoading: false,
-            isPremium: status.isPremium || isInTrial,
+            isPremium,
             isInTrial,
+            isManualPremium: manualPremium.isPremium,
             status,
           })
 
-          console.log('[SubscriptionStore] Initialized, premium:', status.isPremium)
+          console.log('[SubscriptionStore] Initialized, premium:', isPremium, '(manual:', manualPremium.isPremium, ')')
         } catch (error: any) {
           console.error('[SubscriptionStore] Initialization failed:', error)
           set({
@@ -125,18 +177,31 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
       /**
        * Refresh subscription status
+       * Also re-checks manual premium from admin console
        */
       refreshStatus: async () => {
         set({ isLoading: true, error: null })
 
         try {
+          // Check manual premium status
+          const { data: { session } } = await supabase.auth.getSession()
+          let manualPremium = { isPremium: false, planType: null, expiresAt: null }
+          if (session?.user?.id) {
+            manualPremium = await checkManualPremiumStatus(session.user.id)
+          }
+
+          // Get RevenueCat status
           const status = await revenueCatService.getSubscriptionStatus()
           const isInTrial = status.isInTrial || get().checkTrialStatus()
 
+          // Premium if: RevenueCat says so, OR manual premium, OR in trial
+          const isPremium = status.isPremium || manualPremium.isPremium || isInTrial
+
           set({
             isLoading: false,
-            isPremium: status.isPremium || isInTrial,
+            isPremium,
             isInTrial,
+            isManualPremium: manualPremium.isPremium,
             status,
           })
         } catch (error: any) {
@@ -302,6 +367,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       reset: () => {
         set({
           ...initialState,
+          isManualPremium: false,
           _hasHydrated: true,
         })
       },
@@ -360,7 +426,9 @@ export const useTrialDaysRemaining = () => {
 export const useSubscriptionPlanLabel = () => {
   const status = useSubscriptionStore((s) => s.status)
   const isInTrial = useSubscriptionStore((s) => s.isInTrial)
+  const isManualPremium = useSubscriptionStore((s) => s.isManualPremium)
 
+  if (isManualPremium) return 'Premium' // Manual premium from admin console
   if (isInTrial) return 'Essai gratuit'
   if (!status?.plan) return 'Gratuit'
 
