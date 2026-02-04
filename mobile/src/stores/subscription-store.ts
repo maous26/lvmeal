@@ -36,20 +36,25 @@ interface ManualPremiumStatus {
  */
 async function checkManualPremiumStatus(userId: string): Promise<ManualPremiumStatus> {
   try {
+    console.log('[SubscriptionStore] Checking manual premium for userId:', userId)
     const { data, error } = await supabase.rpc('check_premium_status', {
       check_user_id: userId,
     })
+
+    console.log('[SubscriptionStore] RPC response - data:', JSON.stringify(data), 'error:', error?.message)
 
     if (error) {
       console.log('[SubscriptionStore] Manual premium check error:', error.message)
       return { isPremium: false, planType: null, expiresAt: null }
     }
 
-    return {
+    const result = {
       isPremium: data?.isPremium || false,
       planType: data?.planType || null,
       expiresAt: data?.expiresAt || null,
     }
+    console.log('[SubscriptionStore] Manual premium result:', JSON.stringify(result))
+    return result
   } catch (err) {
     console.log('[SubscriptionStore] Manual premium check failed:', err)
     return { isPremium: false, planType: null, expiresAt: null }
@@ -129,13 +134,27 @@ export const useSubscriptionStore = create<SubscriptionState>()(
        */
       initialize: async (userId?: string) => {
         const { isInitialized } = get()
-        if (isInitialized) return
+
+        // If already initialized, just refresh manual premium status
+        if (isInitialized) {
+          if (userId) {
+            const manualPremium = await checkManualPremiumStatus(userId)
+            if (manualPremium.isPremium) {
+              console.log('[SubscriptionStore] Re-check: Manual premium detected:', manualPremium.planType)
+              set({
+                isPremium: true,
+                isManualPremium: true
+              })
+            }
+          }
+          return
+        }
 
         set({ isLoading: true, error: null })
 
         try {
           // Check manual premium status first (via Supabase admin console)
-          let manualPremium = { isPremium: false, planType: null, expiresAt: null }
+          let manualPremium: ManualPremiumStatus = { isPremium: false, planType: null, expiresAt: null }
           if (userId) {
             manualPremium = await checkManualPremiumStatus(userId)
             if (manualPremium.isPremium) {
@@ -185,7 +204,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         try {
           // Check manual premium status
           const { data: { session } } = await supabase.auth.getSession()
-          let manualPremium = { isPremium: false, planType: null, expiresAt: null }
+          let manualPremium: ManualPremiumStatus = { isPremium: false, planType: null, expiresAt: null }
           if (session?.user?.id) {
             manualPremium = await checkManualPremiumStatus(session.user.id)
           }

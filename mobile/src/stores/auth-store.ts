@@ -42,6 +42,7 @@ import {
   type AppleAuthResult,
 } from '../services/apple-auth-service'
 import { useUserStore } from './user-store'
+import { useSubscriptionStore } from './subscription-store'
 
 // ============================================================================
 // Types
@@ -227,6 +228,9 @@ export const useAuthStore = create<AuthState>()(
             // Auto-restore from cloud on first sign-in
             await get().restoreData()
 
+            // Refresh subscription status (check manual premium from admin console)
+            await useSubscriptionStore.getState().refreshStatus()
+
             return { success: true }
           } else {
             set({
@@ -302,6 +306,9 @@ export const useAuthStore = create<AuthState>()(
             // Sync current local data to cloud
             await get().triggerSync()
 
+            // Refresh subscription status (check manual premium from admin console)
+            await useSubscriptionStore.getState().refreshStatus()
+
             return { success: true }
           } else {
             set({
@@ -372,6 +379,9 @@ export const useAuthStore = create<AuthState>()(
             // Auto-restore from cloud on first sign-in
             await get().restoreData()
 
+            // Refresh subscription status (check manual premium from admin console)
+            await useSubscriptionStore.getState().refreshStatus()
+
             return { success: true }
           } else {
             set({
@@ -440,6 +450,9 @@ export const useAuthStore = create<AuthState>()(
 
             // Auto-restore from cloud on first sign-in
             await get().restoreData()
+
+            // Refresh subscription status (check manual premium from admin console)
+            await useSubscriptionStore.getState().refreshStatus()
 
             return { success: true }
           } else {

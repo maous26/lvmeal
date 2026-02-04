@@ -48,6 +48,7 @@ import { lymInsights } from './src/services/lym-insights-service'
 import { configureGoogleSignIn } from './src/services/google-auth-service'
 import { requestHealthPermissions, isHealthAvailable, syncWeightToProfile } from './src/services/health-service'
 import { useSubscriptionStore } from './src/stores/subscription-store'
+import { supabase } from './src/services/supabase-client'
 
 // Initialize Sentry
 Sentry.init({
@@ -105,16 +106,20 @@ export default Sentry.wrap(function App() {
         console.log('[Init] LYM Insights...')
         await lymInsights.initialize()
 
-        // DISABLED: RevenueCat - need production API key
-        // TODO: Re-enable when RevenueCat iOS app is configured
-        console.log('[Init] RevenueCat SKIPPED (disabled)')
-        // try {
-        //   const subscriptionStore = useSubscriptionStore.getState()
-        //   await subscriptionStore.initialize()
-        //   console.log(`[Init] RevenueCat OK, premium: ${subscriptionStore.isPremium}`)
-        // } catch (rcError: any) {
-        //   console.log(`[Init] RevenueCat ERROR: ${rcError?.message || rcError}`)
-        // }
+        // Initialize subscription store (checks manual premium from admin console)
+        console.log('[Init] Subscription store...')
+        try {
+          // Get user ID from Supabase session
+          const { data: { session } } = await supabase.auth.getSession()
+          const userId = session?.user?.id || undefined
+          console.log(`[Init] Subscription - userId: ${userId}`)
+          await useSubscriptionStore.getState().initialize(userId)
+          // Re-read state after async initialize completes
+          const updatedState = useSubscriptionStore.getState()
+          console.log(`[Init] Subscription OK, premium: ${updatedState.isPremium}, manual: ${updatedState.isManualPremium}`)
+        } catch (subError: any) {
+          console.log(`[Init] Subscription ERROR: ${subError?.message || subError}`)
+        }
 
         // Configure Google Sign-In for native builds
         console.log('[Init] Google Sign-In...')
