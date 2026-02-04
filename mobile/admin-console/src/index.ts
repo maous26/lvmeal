@@ -15,6 +15,9 @@ import { requireAuth } from './middleware/auth'
 const app = express()
 const PORT = parseInt(process.env.PORT || '3000', 10)
 
+// Trust proxy for Railway/Heroku (HTTPS termination via reverse proxy)
+app.set('trust proxy', 1)
+
 // ============================================================================
 // MIDDLEWARE
 // ============================================================================
@@ -43,6 +46,7 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax', // Allow cookie on redirects
   },
 }))
 
