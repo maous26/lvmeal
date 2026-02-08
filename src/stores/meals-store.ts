@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Meal, MealType, NutritionInfo, DailyMeals, FoodItem, MealItem } from '@/types'
+import { useWellnessStore } from './wellness-store'
 
 // Helper to get today's date string
 function getTodayString(): string {
@@ -283,9 +284,15 @@ export const useMealsStore = create<MealsState>()(
         set((state) => ({
           hydration: {
             ...state.hydration,
-            [targetDate]: (state.hydration[targetDate] || 0) + amount,
+            [targetDate]: Math.max(0, (state.hydration[targetDate] || 0) + amount),
           },
         }))
+
+        // Sync to wellness store (convert ml to liters)
+        const newTotalMl = get().hydration[targetDate] || 0
+        const wellnessStore = useWellnessStore.getState()
+        const currentEntry = wellnessStore.getEntryForDate(targetDate)
+        wellnessStore.updateEntry(targetDate, { waterLiters: newTotalMl / 1000 })
       },
 
       getHydration: (date) => {

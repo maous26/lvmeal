@@ -40,13 +40,13 @@ import type { UserProfile, DietType, ReligiousDiet, MetabolismProfile, ActivityL
 const getDietLabel = (diet?: DietType): string => {
   const labels: Record<DietType, string> = {
     omnivore: 'Omnivore',
-    vegetarian: 'Vegetarien',
-    vegan: 'Vegan',
-    pescatarian: 'Pescetarien',
-    keto: 'Keto',
-    paleo: 'Paleo',
+    vegetarian: 'Végétarien',
+    vegan: 'Végan',
+    pescatarian: 'Pescétarien',
+    keto: 'Kéto',
+    paleo: 'Paléo',
   }
-  return diet ? labels[diet] : 'Non defini'
+  return diet ? labels[diet] : 'Non défini'
 }
 
 const getReligiousDietLabel = (diet?: ReligiousDiet): string | null => {
@@ -60,13 +60,13 @@ const getReligiousDietLabel = (diet?: ReligiousDiet): string | null => {
 
 const getActivityLabel = (level?: ActivityLevel): string => {
   const labels: Record<ActivityLevel, string> = {
-    sedentary: 'Sedentaire',
-    light: 'Leger',
-    moderate: 'Modere',
+    sedentary: 'Sédentaire',
+    light: 'Léger',
+    moderate: 'Modéré',
     active: 'Actif',
-    athlete: 'Athlete',
+    athlete: 'Athlète',
   }
-  return level ? labels[level] : 'Non defini'
+  return level ? labels[level] : 'Non défini'
 }
 
 const getGoalLabel = (goal?: Goal): string => {
@@ -74,17 +74,17 @@ const getGoalLabel = (goal?: Goal): string => {
     weight_loss: 'Perte de poids',
     muscle_gain: 'Prise de muscle',
     maintenance: 'Maintien',
-    health: 'Sante',
-    energy: 'Energie',
+    health: 'Santé',
+    energy: 'Énergie',
   }
-  return goal ? labels[goal] : 'Non defini'
+  return goal ? labels[goal] : 'Non défini'
 }
 
 const getMetabolismLabel = (profile?: MetabolismProfile): { label: string; description: string } => {
   if (profile === 'adaptive') {
     return {
       label: 'Approche bienveillante',
-      description: 'Programme progressif et adapte',
+      description: 'Programme progressif et adapté',
     }
   }
   return {
@@ -128,9 +128,18 @@ export default function ProfilePage() {
   }, [storeProfile])
 
   const handleLogout = () => {
-    // Clear both stores
+    // Clear all Zustand persisted stores and legacy data
     clearProfile()
     localStorage.removeItem('userProfile')
+    localStorage.removeItem('presence-user')
+    localStorage.removeItem('presence-meals')
+    localStorage.removeItem('presence-caloric-bank')
+    localStorage.removeItem('presence-gamification')
+    localStorage.removeItem('presence-wellness')
+    localStorage.removeItem('presence-sport')
+    localStorage.removeItem('presence-devices')
+    localStorage.removeItem('presence-recipes')
+    localStorage.removeItem('presence-ui')
     router.push('/onboarding')
   }
 
@@ -169,7 +178,7 @@ export default function ProfilePage() {
                   {profile.firstName} {profile.lastName || ''}
                 </h2>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {profile.email || 'Membre Premium'}
+                  {profile.email || 'Membre Presence'}
                 </p>
                 <div className="mt-2">
                   <StreakBadge days={streakInfo.current} isActive={streakInfo.isActive} size="sm" />
@@ -245,7 +254,7 @@ export default function ProfilePage() {
                   >
                     <div className="px-4 pb-4 space-y-3">
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-[var(--text-secondary)]">Prenom</span>
+                        <span className="text-sm text-[var(--text-secondary)]">Prénom</span>
                         <span className="text-sm font-medium text-[var(--text-primary)]">{profile.firstName || '--'}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
@@ -265,7 +274,7 @@ export default function ProfilePage() {
                         <span className="text-sm font-medium text-[var(--text-primary)]">{profile.targetWeight ? `${profile.targetWeight} kg` : '--'}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-t border-[var(--border-light)]">
-                        <span className="text-sm text-[var(--text-secondary)]">Niveau d&apos;activite</span>
+                        <span className="text-sm text-[var(--text-secondary)]">Niveau d&apos;activité</span>
                         <span className="text-sm font-medium text-[var(--text-primary)]">{getActivityLabel(profile.activityLevel)}</span>
                       </div>
                     </div>
@@ -313,7 +322,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[var(--border-light)]">
                         <div className="text-center p-2 rounded-lg bg-[var(--bg-secondary)]">
-                          <p className="text-xs text-[var(--text-tertiary)]">Proteines</p>
+                          <p className="text-xs text-[var(--text-tertiary)]">Protéines</p>
                           <p className="text-sm font-semibold text-[var(--proteins)]">
                             {profile.nutritionalNeeds?.proteins || '--'}g
                           </p>
@@ -347,7 +356,7 @@ export default function ProfilePage() {
                   <Utensils className="h-5 w-5 text-[var(--text-secondary)]" />
                 </div>
                 <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
-                  Preferences alimentaires
+                  Préférences alimentaires
                 </span>
                 <motion.div
                   animate={{ rotate: expandedSection === 'diet' ? 180 : 0 }}
@@ -367,7 +376,7 @@ export default function ProfilePage() {
                   >
                     <div className="px-4 pb-4 space-y-3">
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-[var(--text-secondary)]">Regime</span>
+                        <span className="text-sm text-[var(--text-secondary)]">Régime</span>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" size="sm">{getDietLabel(profile.dietType)}</Badge>
                           {getReligiousDietLabel(profile.religiousDiet) && (
@@ -455,7 +464,7 @@ export default function ProfilePage() {
                             Phase: {profile.nutritionalStrategy.currentPhase === 'maintenance'
                               ? 'Stabilisation'
                               : profile.nutritionalStrategy.currentPhase === 'gentle_deficit'
-                                ? 'Deficit doux'
+                                ? 'Déficit doux'
                                 : 'Reverse dieting'}
                             {' • '}Semaine {profile.nutritionalStrategy.weekInPhase}
                           </p>
@@ -528,9 +537,9 @@ export default function ProfilePage() {
                               <p className="text-xs text-[var(--text-tertiary)]">Stress</p>
                               <p className="text-sm font-medium text-[var(--text-primary)]">
                                 {profile.lifestyleHabits.stressLevelDaily === 'low' ? 'Faible'
-                                  : profile.lifestyleHabits.stressLevelDaily === 'moderate' ? 'Modere'
-                                  : profile.lifestyleHabits.stressLevelDaily === 'high' ? 'Eleve'
-                                  : 'Tres eleve'}
+                                  : profile.lifestyleHabits.stressLevelDaily === 'moderate' ? 'Modéré'
+                                  : profile.lifestyleHabits.stressLevelDaily === 'high' ? 'Élevé'
+                                  : 'Très élevé'}
                               </p>
                             </div>
                           </div>
@@ -539,7 +548,7 @@ export default function ProfilePage() {
                               <Activity className="h-3.5 w-3.5 text-orange-500" />
                             </div>
                             <div>
-                              <p className="text-xs text-[var(--text-tertiary)]">Sedentarite</p>
+                              <p className="text-xs text-[var(--text-tertiary)]">Sédentarité</p>
                               <p className="text-sm font-medium text-[var(--text-primary)]">
                                 {profile.lifestyleHabits.sedentaryHoursDaily}h/jour
                               </p>
@@ -548,7 +557,7 @@ export default function ProfilePage() {
                         </div>
                       ) : (
                         <p className="text-sm text-[var(--text-tertiary)] text-center py-2">
-                          Aucune donnee. Refais l&apos;onboarding pour renseigner tes habitudes.
+                          Aucune donnée. Refais l&apos;onboarding pour renseigner tes habitudes.
                         </p>
                       )}
                     </div>
@@ -629,7 +638,7 @@ export default function ProfilePage() {
                           </div>
                           {profile.sportProgram.neatActivities && profile.sportProgram.neatActivities.length > 0 && (
                             <div>
-                              <p className="text-xs text-[var(--text-tertiary)] mb-1">Activites NEAT</p>
+                              <p className="text-xs text-[var(--text-tertiary)] mb-1">Activités NEAT</p>
                               <div className="flex flex-wrap gap-1">
                                 {profile.sportProgram.neatActivities.slice(0, 3).map((activity, idx) => (
                                   <Badge key={idx} variant="outline" size="sm" className="text-xs">
@@ -642,7 +651,7 @@ export default function ProfilePage() {
                         </div>
                       ) : (
                         <p className="text-sm text-[var(--text-tertiary)] text-center py-2">
-                          Programme sportif non active. Disponible avec l&apos;approche bienveillante.
+                          Programme sportif non activé. Disponible avec l&apos;approche bienveillante.
                         </p>
                       )}
                     </div>
@@ -653,12 +662,11 @@ export default function ProfilePage() {
           </Card>
         </Section>
 
-        {/* Parametres */}
-        <Section title="Parametres">
+        {/* Paramètres */}
+        <Section title="Paramètres">
           <Card padding="none">
-            <button
-              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
-              onClick={() => {/* TODO: Notifications settings */}}
+            <div
+              className="w-full flex items-center gap-4 p-4 border-b border-[var(--border-light)] opacity-50 cursor-not-allowed"
             >
               <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
                 <Bell className="h-5 w-5 text-[var(--text-secondary)]" />
@@ -666,12 +674,11 @@ export default function ProfilePage() {
               <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
                 Notifications
               </span>
-              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
-            </button>
+              <Badge variant="outline" size="sm">Bientôt</Badge>
+            </div>
 
-            <button
-              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
-              onClick={() => {/* TODO: Subscription */}}
+            <div
+              className="w-full flex items-center gap-4 p-4 border-b border-[var(--border-light)] opacity-50 cursor-not-allowed"
             >
               <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
                 <CreditCard className="h-5 w-5 text-[var(--text-secondary)]" />
@@ -679,25 +686,23 @@ export default function ProfilePage() {
               <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
                 Abonnement
               </span>
-              <Badge variant="default" size="sm">Premium</Badge>
-            </button>
+              <Badge variant="outline" size="sm">Bientôt</Badge>
+            </div>
 
-            <button
-              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors border-b border-[var(--border-light)]"
-              onClick={() => {/* TODO: Settings */}}
+            <div
+              className="w-full flex items-center gap-4 p-4 border-b border-[var(--border-light)] opacity-50 cursor-not-allowed"
             >
               <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
                 <Settings className="h-5 w-5 text-[var(--text-secondary)]" />
               </div>
               <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
-                Parametres
+                Paramètres
               </span>
-              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
-            </button>
+              <Badge variant="outline" size="sm">Bientôt</Badge>
+            </div>
 
-            <button
-              className="w-full flex items-center gap-4 p-4 hover:bg-[var(--bg-secondary)] transition-colors"
-              onClick={() => {/* TODO: Help */}}
+            <div
+              className="w-full flex items-center gap-4 p-4 opacity-50 cursor-not-allowed"
             >
               <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
                 <HelpCircle className="h-5 w-5 text-[var(--text-secondary)]" />
@@ -705,8 +710,8 @@ export default function ProfilePage() {
               <span className="flex-1 text-left font-medium text-[var(--text-primary)]">
                 Aide & Support
               </span>
-              <span className="text-xs text-[var(--text-tertiary)]">Bientot</span>
-            </button>
+              <Badge variant="outline" size="sm">Bientôt</Badge>
+            </div>
           </Card>
         </Section>
 
@@ -718,7 +723,7 @@ export default function ProfilePage() {
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 mr-2" />
-            Se deconnecter
+            Se déconnecter
           </Button>
         </Section>
 

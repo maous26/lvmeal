@@ -430,7 +430,7 @@ function calculateStreaks(
     if (!entry) break
 
     const sleep7hMet = entry.sleepHours >= 7
-    const fiber30gMet = entry.fiberGrams >= 25
+    const fiber30gMet = entry.fiberGrams >= 30
     const water2LMet = entry.waterLiters >= 2
     const stepsMet = entry.steps >= targets.dailySteps * 0.8
     const lowStressMet = entry.stressLevel <= 2

@@ -18,9 +18,9 @@ interface UserState {
   migrateFromLocalStorage: () => void
 }
 
-// Harris-Benedict BMR calculation
-function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNeeds | null {
-  const { weight, height, age, gender, activityLevel, goal } = profile
+// Harris-Benedict BMR calculation with adaptive metabolism support
+export function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNeeds | null {
+  const { weight, height, age, gender, activityLevel, goal, metabolismProfile = 'standard' } = profile
 
   if (!weight || !height || !age) return null
 
@@ -42,24 +42,48 @@ function calculateNutritionalNeeds(profile: Partial<UserProfile>): NutritionalNe
   }
   const tdee = bmr * (activityMultipliers[activityLevel || 'moderate'] || 1.55)
 
-  // Goal adjustment
+  // Goal adjustment - adaptive metabolism gets gentler approach
   let calories: number
-  switch (goal) {
-    case 'weight_loss':
-      calories = tdee - 400
-      break
-    case 'muscle_gain':
-      calories = tdee + 300
-      break
-    default:
-      calories = tdee
+
+  if (metabolismProfile === 'adaptive') {
+    switch (goal) {
+      case 'weight_loss':
+        calories = tdee - 100 // Gentle deficit (vs -400 for standard)
+        break
+      case 'muscle_gain':
+        calories = tdee + 200
+        break
+      default:
+        calories = tdee
+    }
+  } else {
+    switch (goal) {
+      case 'weight_loss':
+        calories = tdee - 400
+        break
+      case 'muscle_gain':
+        calories = tdee + 300
+        break
+      default:
+        calories = tdee
+    }
   }
   calories = Math.round(calories)
 
-  // Macro distribution
-  const proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
+  // Macro distribution - adaptive gets higher protein & fat
+  let proteinPerKg: number
+  let fatPercentage: number
+
+  if (metabolismProfile === 'adaptive') {
+    proteinPerKg = 2.0 // Higher protein for metabolic health
+    fatPercentage = 0.30 // Higher fat for hormonal balance
+  } else {
+    proteinPerKg = goal === 'muscle_gain' ? 2.0 : goal === 'weight_loss' ? 1.8 : 1.6
+    fatPercentage = 0.25
+  }
+
   const proteins = Math.round(weight * proteinPerKg)
-  const fats = Math.round((calories * 0.25) / 9)
+  const fats = Math.round((calories * fatPercentage) / 9)
   const carbs = Math.round((calories - (proteins * 4) - (fats * 9)) / 4)
 
   return {

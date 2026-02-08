@@ -29,17 +29,41 @@ import { useUserStore } from '@/stores/user-store'
 import { getGreeting, formatDate } from '@/lib/utils'
 import type { UserProfile } from '@/types'
 
-// Mock data for Solde Plaisir (7 days) - will be replaced by caloric-bank-store data
-// TODO: Replace with real data from useCaloricBankStore
-const mockDailyBalances = [
-  { day: 'Jeu', date: '25/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Ven', date: '26/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Sam', date: '27/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Dim', date: '28/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Lun', date: '29/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Mar', date: '30/12', consumed: 0, target: 2100, balance: 0 },
-  { day: 'Mer', date: '31/12', consumed: 0, target: 2100, balance: 0 },
-]
+// Short day labels for the caloric bank display
+const SHORT_DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+
+// Build real daily balances from caloric bank store and meals data
+function buildRealDailyBalances(
+  weekStartDate: string | null,
+  dailyBalances: Array<{ date: string; consumed: number; target: number; balance: number }>,
+  dailyTarget: number
+) {
+  if (!weekStartDate) return []
+
+  const start = new Date(weekStartDate)
+  const result = []
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + i)
+    const dateStr = date.toISOString().split('T')[0]
+    const dayOfWeek = date.getDay()
+    const dayLabel = SHORT_DAY_LABELS[dayOfWeek]
+    const dateLabel = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+
+    const existing = dailyBalances.find(b => b.date === dateStr)
+
+    result.push({
+      day: dayLabel,
+      date: dateLabel,
+      consumed: existing?.consumed ?? 0,
+      target: existing?.target ?? dailyTarget,
+      balance: existing?.balance ?? 0,
+    })
+  }
+
+  return result
+}
 
 
 // Fallback recipes when API suggestions are not available
@@ -82,12 +106,13 @@ export default function HomePage() {
   const [isHydrated, setIsHydrated] = React.useState(false)
 
   // User store (primary source of profile data)
-  const { profile: storeProfile, isOnboarded, migrateFromLocalStorage } = useUserStore()
+  const { profile: storeProfile, isOnboarded, migrateFromLocalStorage, weightHistory } = useUserStore()
   const [profile, setProfile] = React.useState<Partial<UserProfile> | null>(null)
 
   // Caloric bank store (7-day rolling period with automatic reset after 7 days)
   const {
     weekStartDate,
+    dailyBalances: storeDailyBalances,
     initializeWeek,
     getCurrentDayIndex,
     getTotalBalance,
@@ -176,23 +201,30 @@ export default function HomePage() {
   const todayMeals = getMealsForDate(todayString)
   const currentHydration = getHydration(todayString)
 
+  // Unified nutrition targets: prefer nutritionalNeeds (calculated), fallback to direct targets
+  const calorieTarget = profile.nutritionalNeeds?.calories || profile.dailyCaloriesTarget || 2100
+  const proteinTarget = profile.nutritionalNeeds?.proteins || profile.proteinTarget || 130
+  const carbsTarget = profile.nutritionalNeeds?.carbs || profile.carbsTarget || 250
+  const fatTarget = profile.nutritionalNeeds?.fats || profile.fatTarget || 70
+  const waterTarget = Math.round((profile.nutritionalNeeds?.water || 2.5) * 1000) // L to ml
+
   // Build nutrition data from real store values with profile targets
   const nutritionData = {
     calories: {
       current: todayNutrition.calories,
-      target: profile.dailyCaloriesTarget || 2100
+      target: calorieTarget
     },
     proteins: {
       current: todayNutrition.proteins,
-      target: profile.proteinTarget || 130
+      target: proteinTarget
     },
     carbs: {
       current: todayNutrition.carbs,
-      target: profile.carbsTarget || 250
+      target: carbsTarget
     },
     fats: {
       current: todayNutrition.fats,
-      target: profile.fatTarget || 70
+      target: fatTarget
     },
   }
 
@@ -272,7 +304,7 @@ export default function HomePage() {
         <Section>
           <HydrationTracker
             current={currentHydration}
-            target={2500}
+            target={waterTarget}
             onAdd={(amount) => addHydration(amount, todayString)}
             onRemove={(amount) => addHydration(-amount, todayString)}
           />
@@ -301,7 +333,13 @@ export default function HomePage() {
           <WeightTrackerCompact
             currentWeight={profile.weight || 70}
             targetWeight={profile.targetWeight || 65}
-            trend={-0.3}
+            trend={(() => {
+              if (weightHistory.length < 2) return 0
+              const sorted = [...weightHistory].sort((a, b) => a.date.localeCompare(b.date))
+              const latest = sorted[sorted.length - 1].weight
+              const previous = sorted[sorted.length - 2].weight
+              return Math.round((latest - previous) * 10) / 10
+            })()}
             onAddEntry={() => router.push('/weight')}
           />
         </Section>
@@ -309,11 +347,11 @@ export default function HomePage() {
         {/* Caloric Balance (Banque calorique) */}
         <Section>
           <CaloricBalance
-            dailyBalances={mockDailyBalances}
+            dailyBalances={buildRealDailyBalances(weekStartDate, storeDailyBalances, calorieTarget)}
             currentDay={currentDayIndex}
             daysUntilNewWeek={daysUntilNewWeek}
             weekStartDate={weekStartDate ?? undefined}
-            dailyTarget={profile.dailyCaloriesTarget || 2100}
+            dailyTarget={calorieTarget}
             isFirstTimeSetup={isFirstTimeSetup}
             onConfirmStart={confirmStartDay}
             onResetDay={resetToToday}

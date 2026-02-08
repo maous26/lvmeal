@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limiter'
 
 // Lazy initialization to avoid build-time errors
 let openaiClient: OpenAI | null = null
@@ -46,6 +47,16 @@ interface EnrichedRecipe {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit AI endpoint
+  const clientId = getClientIdentifier(request)
+  const rateLimit = checkRateLimit(`ai:${clientId}`, RATE_LIMITS.ai)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) } }
+    )
+  }
+
   try {
     const { recipe } = await request.json() as { recipe: RecipeToEnrich }
 
@@ -176,6 +187,16 @@ Réponds UNIQUEMENT avec le JSON, rien d'autre.`
 
 // Batch enrichment for multiple recipes
 export async function PUT(request: NextRequest) {
+  // Rate limit AI endpoint
+  const clientId = getClientIdentifier(request)
+  const rateLimit = checkRateLimit(`ai:${clientId}`, RATE_LIMITS.ai)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) } }
+    )
+  }
+
   try {
     const { recipes } = await request.json() as { recipes: RecipeToEnrich[] }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limiter'
 
 // Unit type for serving sizes
 type ServingUnit = 'g' | 'ml' | 'unit'
@@ -385,6 +386,16 @@ async function searchOpenFoodFacts(query: string, limit: number): Promise<FoodPr
 
 // Search for food products
 export async function GET(request: NextRequest) {
+  // Rate limit food search
+  const clientId = getClientIdentifier(request)
+  const rateLimit = checkRateLimit(`food:${clientId}`, RATE_LIMITS.general)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.', products: [] },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetTime - Date.now()) / 1000)) } }
+    )
+  }
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q') || ''
   const limit = parseInt(searchParams.get('limit') || '20')
