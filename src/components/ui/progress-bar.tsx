@@ -51,6 +51,11 @@ export function ProgressBar({
         </div>
       )}
       <div
+        role="progressbar"
+        aria-valuenow={Math.round(value)}
+        aria-valuemin={0}
+        aria-valuemax={Math.round(max)}
+        aria-label={label || `Progression : ${Math.round(percentage)}%`}
         className={cn('w-full rounded-full overflow-hidden', sizeClasses[size])}
         style={{ backgroundColor }}
       >

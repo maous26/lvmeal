@@ -20,8 +20,8 @@ import { useUserStore } from '@/stores/user-store'
 import { formatNumber, cn } from '@/lib/utils'
 
 const viewTabs = [
-  { id: 'overview', label: 'Apercu' },
-  { id: 'wellness', label: 'Bien-etre' },
+  { id: 'overview', label: 'Aperçu' },
+  { id: 'wellness', label: 'Bien-être' },
   { id: 'sport', label: 'Sport' },
 ]
 
@@ -51,7 +51,7 @@ export default function ProgressPage() {
   const { meals, getDailyNutrition } = useMealsStore()
 
   // User store for profile
-  const { profile } = useUserStore()
+  const { profile, updateProfile } = useUserStore()
 
   // Check if sport is enabled
   const isSportEnabled = profile?.sportTrackingEnabled || profile?.metabolismProfile === 'adaptive'
@@ -87,7 +87,7 @@ export default function ProgressPage() {
         day: days[dayIndex],
         shortDay: shortDays[dayIndex],
         calories: nutrition.calories,
-        target: 2100, // TODO: Get from profile
+        target: profile?.nutritionalNeeds?.calories || profile?.dailyCaloriesTarget || 2100,
         isToday: i === 0,
       })
     }
@@ -134,7 +134,7 @@ export default function ProgressPage() {
 
   return (
     <>
-      <Header title="Progres" />
+      <Header title="Progrès" />
 
       <PageContainer>
         {/* View selector */}
@@ -209,7 +209,7 @@ export default function ProgressPage() {
                   <Card padding="default">
                     <div className="flex items-center gap-2 mb-2">
                       <Calendar className="h-4 w-4 text-[var(--accent-primary)]" />
-                      <span className="text-xs text-[var(--text-tertiary)]">Repas enregistres</span>
+                      <span className="text-xs text-[var(--text-tertiary)]">Repas enregistrés</span>
                     </div>
                     <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
                       {totalMealsLogged}
@@ -310,11 +310,21 @@ export default function ProgressPage() {
                     Module Sport
                   </h3>
                   <p className="text-sm text-[var(--text-secondary)] mb-4">
-                    Active le suivi d&apos;activite pour beneficier d&apos;un programme sportif personalise.
+                    Active le suivi d&apos;activité pour bénéficier d&apos;un programme sportif personnalisé.
                   </p>
                   <button
                     onClick={() => {
-                      // TODO: Activate sport tracking in user profile
+                      updateProfile({
+                        sportTrackingEnabled: true,
+                        sportProgram: {
+                          currentPhase: 'discovery',
+                          weekInPhase: 1,
+                          weeklyWalkingMinutes: 90,
+                          resistanceSessionsPerWeek: 0,
+                          cardioSessionsPerWeek: 0,
+                          restDaysPerWeek: 5,
+                        },
+                      })
                     }}
                     className="px-6 py-2 rounded-lg bg-[var(--accent-primary)] text-white font-medium"
                   >
