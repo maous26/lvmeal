@@ -9,6 +9,12 @@
  * - Entitlement checks
  */
 
+// ============================================================================
+// BETA TEST MODE - Everyone gets premium for free
+// Set to false to restore normal subscription behavior
+// ============================================================================
+const BETA_TEST_MODE = true
+
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -95,6 +101,19 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         set({ isLoading: true, error: null })
 
         try {
+          // BETA TEST MODE: Everyone gets premium
+          if (BETA_TEST_MODE) {
+            console.log('[SubscriptionStore] BETA TEST MODE: Premium enabled for all users')
+            set({
+              isInitialized: true,
+              isLoading: false,
+              isPremium: true,
+              isInTrial: true,
+              status: null,
+            })
+            return
+          }
+
           // Initialize RevenueCat
           await revenueCatService.initialize(userId)
 
@@ -127,6 +146,12 @@ export const useSubscriptionStore = create<SubscriptionState>()(
        * Refresh subscription status
        */
       refreshStatus: async () => {
+        // BETA TEST MODE: Everyone gets premium
+        if (BETA_TEST_MODE) {
+          set({ isPremium: true, isInTrial: true })
+          return
+        }
+
         set({ isLoading: true, error: null })
 
         try {
@@ -360,6 +385,9 @@ export const useTrialDaysRemaining = () => {
 export const useSubscriptionPlanLabel = () => {
   const status = useSubscriptionStore((s) => s.status)
   const isInTrial = useSubscriptionStore((s) => s.isInTrial)
+
+  // BETA TEST MODE
+  if (BETA_TEST_MODE) return 'Premium (Bêta)'
 
   if (isInTrial) return 'Essai gratuit'
   if (!status?.plan) return 'Gratuit'

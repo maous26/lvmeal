@@ -43,7 +43,6 @@ import { LiquidProgress } from '../components/dashboard/LiquidProgress'
 import {
   CaloricBalance,
   ProgramsWidget,
-  UnifiedCoachBubble,
   HydrationWidget,
   MealSuggestions,
   type SuggestedMeal,
@@ -676,11 +675,6 @@ export default function HomeScreen() {
             <Text style={[styles.statValue, { color: colors.text.primary }]}>Suivi</Text>
             <Text style={[styles.statLabel, { color: colors.text.muted }]}>progrès</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Unified Coach Bubble - Single communication point */}
-        <View style={{ marginBottom: spacing.lg }}>
-          <UnifiedCoachBubble />
         </View>
 
         {/* Meals Section - GlassCard (moved above Aujourd'hui) */}

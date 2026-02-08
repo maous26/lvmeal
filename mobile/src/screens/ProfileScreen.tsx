@@ -52,6 +52,7 @@ import {
 import { useAuthStore } from '../stores/auth-store'
 import { useOnboardingStore } from '../stores/onboarding-store'
 import { useGamificationStore } from '../stores/gamification-store'
+import { useSubscriptionStore } from '../stores/subscription-store'
 import type { MealSourcePreference } from '../types'
 
 // Labels for meal source preferences
@@ -146,7 +147,7 @@ export default function ProfileScreen() {
 
   // Subscription status
   const { isSubscribed } = useOnboardingStore()
-  const { isPremium } = useGamificationStore()
+  const { isPremium } = useSubscriptionStore()
 
   // Calculate BMI (IMC)
   const calculateBMI = (): { value: number; category: string; color: string } | null => {
@@ -181,7 +182,7 @@ export default function ProfileScreen() {
   // Subscription type label
   const getSubscriptionLabel = (): { label: string; color: string } => {
     if (isPremium || isSubscribed) {
-      return { label: 'Premium', color: colors.warning }
+      return { label: 'Premium (Bêta)', color: colors.warning }
     }
     return { label: 'Gratuit', color: colors.text.tertiary }
   }
@@ -482,7 +483,7 @@ export default function ProfileScreen() {
               styles.subscriptionTitle,
               { color: isPremium || isSubscribed ? colors.warning : colors.text.primary },
             ]}>
-              {isPremium || isSubscribed ? 'Premium' : 'Gratuit'}
+              {isPremium || isSubscribed ? 'Premium (Bêta)' : 'Gratuit'}
             </Text>
             <Text style={[styles.subscriptionSubtitle, { color: colors.text.tertiary }]}>
               {isPremium || isSubscribed
