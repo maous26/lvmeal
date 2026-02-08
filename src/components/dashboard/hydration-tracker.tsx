@@ -265,11 +265,12 @@ export function HydrationTracker({
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Retirer 250ml d'eau"
               onClick={() => onRemove?.(250)}
               disabled={current <= 0}
               className="text-[var(--text-tertiary)] shrink-0"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-4 w-4" aria-hidden="true" />
             </Button>
 
             {/* Quick add options */}
@@ -279,10 +280,12 @@ export function HydrationTracker({
                   key={option.amount}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleAdd(option.amount)}
+                  aria-label={`Ajouter ${option.amount}ml (${option.label})`}
                   className={cn(
                     "flex flex-col items-center gap-0.5 py-2 px-2 rounded-xl",
                     "bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50",
-                    "transition-colors"
+                    "transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                   )}
                 >
                   <span className="text-lg">{option.icon}</span>
@@ -297,10 +300,11 @@ export function HydrationTracker({
             <Button
               variant="default"
               size="icon"
+              aria-label="Ajouter 250ml d'eau"
               onClick={() => handleAdd(250)}
               className="bg-sky-500 hover:bg-sky-600 text-white shrink-0"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-5 w-5" aria-hidden="true" />
             </Button>
           </div>
         </div>

@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button'
 import { StreakBadge, XPDisplay } from '@/components/dashboard/streak-badge'
 import { useGamificationStore } from '@/stores/gamification-store'
 import { useUserStore } from '@/stores/user-store'
+import { DataManagement } from '@/components/gdpr'
 import { formatNumber, cn } from '@/lib/utils'
 import type { UserProfile, DietType, ReligiousDiet, MetabolismProfile, ActivityLevel, Goal } from '@/types'
 
@@ -137,9 +138,14 @@ export default function ProfilePage() {
     localStorage.removeItem('presence-gamification')
     localStorage.removeItem('presence-wellness')
     localStorage.removeItem('presence-sport')
+    localStorage.removeItem('presence-sport-program')
     localStorage.removeItem('presence-devices')
     localStorage.removeItem('presence-recipes')
+    localStorage.removeItem('presence-recipes-storage')
     localStorage.removeItem('presence-ui')
+    localStorage.removeItem('presence-consent')
+    localStorage.removeItem('presence-feedback')
+    localStorage.removeItem('presence-preferences')
     router.push('/onboarding')
   }
 
@@ -713,6 +719,11 @@ export default function ProfilePage() {
               <Badge variant="outline" size="sm">Bientôt</Badge>
             </div>
           </Card>
+        </Section>
+
+        {/* Data Management (GDPR) */}
+        <Section title="Mes données">
+          <DataManagement />
         </Section>
 
         {/* Logout */}

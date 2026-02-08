@@ -11,6 +11,8 @@
  * - Supabase pgvector for semantic search
  * - OpenAI embeddings for context matching
  * - GPT-4o for intelligent responses
+ *
+ * Shared infrastructure extracted to brain-core.ts and brain-types.ts
  */
 
 import OpenAI from 'openai'
@@ -52,6 +54,24 @@ import {
   calculateNutritionalNeeds as calculateNutritionBase,
   ACTIVITY_MULTIPLIERS
 } from './nutrition-calculator'
+
+// Re-export shared modules for consumers that import from lymia-brain
+export { getOpenAI, queryKB, buildKBContext, executeAICall } from './brain-core'
+export type {
+  UserContext,
+  RAGDecision,
+  CalorieRecommendation,
+  MealRecommendation,
+  CoachingAdvice,
+  ProgramAdaptation,
+  HistoryData,
+  HistoryAnalysis,
+  ResultsAnalysis,
+  ConnectedInsight,
+  ProactiveMessageType,
+  PersonalizedMessageContext,
+  PersonalizedMessage,
+} from './brain-types'
 
 // ============= CONFIGURATION =============
 

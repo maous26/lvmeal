@@ -20,6 +20,7 @@ import {
   SportWidget,
   Lymia,
   ConnectedDevices,
+  WeeklyReview,
 } from '@/components/dashboard'
 import { useRecipeSuggestions } from '@/hooks/use-recipe-suggestions'
 import { useCaloricBankStore } from '@/stores/caloric-bank-store'
@@ -255,6 +256,11 @@ export default function HomePage() {
       />
 
       <PageContainer className="pt-2">
+        {/* Weekly Review (shows on Mondays if data available) */}
+        <Section>
+          <WeeklyReview />
+        </Section>
+
         {/* Gamification Panel (compact) */}
         <Section>
           <GamificationPanel

@@ -45,6 +45,7 @@ export function BottomNav() {
 
   return (
     <nav
+      aria-label="Navigation principale"
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50',
         'bg-[var(--bg-elevated)]/95 backdrop-blur-lg',
@@ -62,10 +63,13 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'relative flex flex-col items-center justify-center',
                 'w-16 h-full',
-                'transition-colors duration-200'
+                'transition-colors duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 rounded-lg'
               )}
             >
               {isActive && (

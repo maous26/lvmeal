@@ -20,6 +20,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <main
+      id="main-content"
       className={cn(
         'min-h-screen bg-[var(--bg-primary)]',
         !noPadding && 'px-4',

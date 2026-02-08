@@ -61,26 +61,30 @@ export function Header({
     backHref ? (
       <Link
         href={backHref}
+        aria-label="Retour"
         className={cn(
           'p-2 -ml-2 rounded-full',
           'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
           'hover:bg-[var(--bg-secondary)]',
-          'transition-colors duration-150'
+          'transition-colors duration-150',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]'
         )}
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </Link>
     ) : (
       <button
         onClick={handleBack}
+        aria-label="Retour"
         className={cn(
           'p-2 -ml-2 rounded-full',
           'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
           'hover:bg-[var(--bg-secondary)]',
-          'transition-colors duration-150'
+          'transition-colors duration-150',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]'
         )}
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </button>
     )
   ) : null
@@ -140,14 +144,16 @@ export function Header({
           {showNotifications && (
             <Link
               href="/notifications"
+              aria-label="Notifications"
               className={cn(
                 'relative p-2 rounded-full',
                 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
                 'hover:bg-[var(--bg-secondary)]',
-                'transition-colors duration-150'
+                'transition-colors duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]'
               )}
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5" aria-hidden="true" />
               {/* Notification dot */}
               {/* <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-[var(--error)] rounded-full" /> */}
             </Link>
@@ -156,14 +162,16 @@ export function Header({
           {showSettings && (
             <Link
               href="/settings"
+              aria-label="Paramètres"
               className={cn(
                 'p-2 rounded-full',
                 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
                 'hover:bg-[var(--bg-secondary)]',
-                'transition-colors duration-150'
+                'transition-colors duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]'
               )}
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-5 w-5" aria-hidden="true" />
             </Link>
           )}
         </div>
