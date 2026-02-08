@@ -25,22 +25,22 @@ import {
 // Icon mapping from string to component
 const ICON_MAP: Record<CoachMessageIcon, React.ReactNode> = {
   sparkles: <Sparkles size={20} color="#D4A574" />,
-  heart: <Heart size={20} color="#F43F5E" />,
-  moon: <Moon size={20} color="#6366F1" />,
-  droplets: <Droplets size={20} color="#06B6D4" />,
-  activity: <Activity size={20} color="#8B5CF6" />,
-  'trending-up': <TrendingUp size={20} color="#10B981" />,
-  utensils: <Utensils size={20} color="#3B82F6" />,
-  target: <Target size={20} color="#F59E0B" />,
-  flame: <Flame size={20} color="#EF4444" />,
-  award: <Award size={20} color="#8B5CF6" />,
-  scale: <Scale size={20} color="#6366F1" />,
+  heart: <Heart size={20} color="#C87863" />,
+  moon: <Moon size={20} color="#9B8BB8" />,
+  droplets: <Droplets size={20} color="#6BA3BE" />,
+  activity: <Activity size={20} color="#7A9E7E" />,
+  'trending-up': <TrendingUp size={20} color="#5C8A61" />,
+  utensils: <Utensils size={20} color="#7A9E7E" />,
+  target: <Target size={20} color="#C4956A" />,
+  flame: <Flame size={20} color="#C87863" />,
+  award: <Award size={20} color="#9B8BB8" />,
+  scale: <Scale size={20} color="#9B8BB8" />,
 }
 
 // Special icon colors for certain message types
 const getIconForMessage = (icon: CoachMessageIcon, type: CoachMessage['type']): React.ReactNode => {
   if (type === 'plaisir') {
-    return <Sparkles size={20} color="#D946EF" />
+    return <Sparkles size={20} color="#9B8BB8" />
   }
   return ICON_MAP[icon] || <Sparkles size={20} color="#D4A574" />
 }

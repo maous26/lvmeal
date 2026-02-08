@@ -38,7 +38,7 @@ import * as Haptics from 'expo-haptics'
 import { useNavigation } from '@react-navigation/native'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius, shadows, fonts } from '../constants/theme'
+import { spacing, typography, radius, shadows, fonts } from '../constants/theme'
 import { useUserStore, useUserStoreHydration } from '../stores/user-store'
 import { useAuthStore } from '../stores/auth-store'
 import { useMealsStore, useMealsStoreHydration } from '../stores/meals-store'
@@ -52,7 +52,6 @@ import {
 } from '../services/message-center'
 import { useCoachState, type CoachTopic } from '../services/coach-state'
 import { FeaturedInsight, MessageStack, CoachMessageCard } from '../components/coach'
-import { AnimatedBackground } from '../components/ui'
 
 // Map message category to CoachTopic
 const categoryToTopic: Record<string, CoachTopic> = {
@@ -79,7 +78,7 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
     <View style={[welcomeStyles.card, { backgroundColor: colors.bg.elevated }]}>
       {/* Header with dismiss */}
       <View style={welcomeStyles.header}>
-        <View style={[welcomeStyles.avatar, { backgroundColor: staticColors.accent.primary }]}>
+        <View style={[welcomeStyles.avatar, { backgroundColor: colors.accent.primary }]}>
           <Sparkles size={24} color="#FFFFFF" />
         </View>
         <TouchableOpacity
@@ -116,16 +115,16 @@ function WelcomeCard({ firstName, onDismiss, colors }: WelcomeCardProps) {
       {/* Features summary */}
       <View style={welcomeStyles.features}>
         <View style={welcomeStyles.featureItem}>
-          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${staticColors.success}20` }]}>
-            <TrendingUp size={16} color={staticColors.success} />
+          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${colors.accent.primary}20` }]}>
+            <TrendingUp size={16} color={colors.accent.primary} />
           </View>
           <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
             Conseils adaptés à ton profil
           </Text>
         </View>
         <View style={welcomeStyles.featureItem}>
-          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${staticColors.secondary.primary}20` }]}>
-            <Heart size={16} color={staticColors.secondary.primary} />
+          <View style={[welcomeStyles.featureIcon, { backgroundColor: `${colors.accent.secondary}20` }]}>
+            <Heart size={16} color={colors.accent.secondary} />
           </View>
           <Text style={[welcomeStyles.featureText, { color: colors.text.secondary }]}>
             Bienveillance, zéro culpabilité
@@ -471,7 +470,6 @@ export default function CoachScreen() {
   if (!isStoreHydrated) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-        <AnimatedBackground circleCount={4} intensity={0.06} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent.primary} />
           <Text style={[styles.loadingText, { color: colors.text.secondary }]}>
@@ -484,8 +482,6 @@ export default function CoachScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      <AnimatedBackground circleCount={4} intensity={0.06} />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -516,7 +512,7 @@ export default function CoachScreen() {
                 <History size={20} color={colors.text.secondary} />
               </TouchableOpacity>
               {/* Bot avatar */}
-              <View style={[styles.avatarGradient, { backgroundColor: staticColors.accent.primary }]}>
+              <View style={[styles.avatarGradient, { backgroundColor: colors.accent.primary }]}>
                 {isGeneratingAI ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (

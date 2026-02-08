@@ -26,7 +26,6 @@ import * as Haptics from 'expo-haptics'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, fonts, shadows } from '../constants/theme'
 import { useMessageCenter, getPriorityConfig, CATEGORY_EMOJI, type LymiaMessage } from '../services/message-center'
-import { AnimatedBackground } from '../components/ui'
 
 // Group messages by date
 function groupByDate(messages: LymiaMessage[]): Record<string, LymiaMessage[]> {
@@ -96,8 +95,6 @@ export default function CoachHistoryScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      <AnimatedBackground circleCount={3} intensity={0.04} />
-
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>

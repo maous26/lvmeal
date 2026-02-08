@@ -194,7 +194,7 @@ export function FeedbackButton({ bottomOffset = 100 }: FeedbackButtonProps) {
             {sent ? (
               // État envoyé
               <View style={styles.sentContainer}>
-                <View style={[styles.sentIcon, { backgroundColor: '#34C759' }]}>
+                <View style={[styles.sentIcon, { backgroundColor: '#7A9E7E' }]}>
                   <Check size={32} color="#FFFFFF" />
                 </View>
                 <Text style={[styles.sentTitle, { color: colors.text.primary }]}>

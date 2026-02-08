@@ -67,8 +67,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       subtitle: 'FACILITÉ',
       description: 'Une photo, quelques mots, c\'est tout. Pas de calculs, pas de pesée. Tu manges, tu notes, tu avances.',
       image: require('../../../assets/photo2.jpg'),
-      accentColor: '#1D1D1F',
-      gradient: ['#1D1D1F', '#3C3C43'] as const,
+      accentColor: '#2C2520',
+      gradient: ['#2C2520', '#5C5550'] as const,
     },
     {
       id: 'personalized',
@@ -77,8 +77,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       subtitle: 'PERSONNALISATION',
       description: 'Tes goûts, ton rythme, ta vie. Tout est pensé autour de qui tu es vraiment.',
       useMockPreview: true,
-      accentColor: '#AF52DE',
-      gradient: ['#AF52DE', '#9B47C9'] as const,
+      accentColor: '#9B8BB8',
+      gradient: ['#9B8BB8', '#8A7AA8'] as const,
     },
     {
       id: 'kind',
@@ -86,8 +86,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       title: 'Zéro culpabilité',
       subtitle: 'BIENVEILLANCE',
       description: 'Un écart ? Une pause ? C\'est humain. Ici, chaque jour est une nouvelle chance.',
-      accentColor: '#007AFF',
-      gradient: ['#007AFF', '#0066D6'] as const,
+      accentColor: '#7A9E7E',
+      gradient: ['#7A9E7E', '#5C8A61'] as const,
     },
     {
       id: 'duration',
@@ -96,8 +96,8 @@ export function OnboardingBenefits({ onComplete, onBack }: OnboardingBenefitsPro
       subtitle: 'DURABILITÉ',
       description: 'Fini les régimes yo-yo. Tu construis des habitudes saines, à ton rythme, pour la vie.',
       image: require('../../../assets/photo3.jpeg'),
-      accentColor: '#FF9500',
-      gradient: ['#FF9500', '#E68600'] as const,
+      accentColor: '#C4956A',
+      gradient: ['#C4956A', '#B5845A'] as const,
     },
   ]
 

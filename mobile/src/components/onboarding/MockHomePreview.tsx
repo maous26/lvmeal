@@ -17,7 +17,7 @@ import { spacing, typography, radius, fonts } from '../../constants/theme'
 
 export function MockHomePreview() {
   const { colors } = useTheme()
-  const purple = '#AF52DE' // Apple Purple - matches the slide
+  const purple = '#9B8BB8' // Soft lavender - matches the warm palette
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg.primary }]}>
@@ -41,16 +41,16 @@ export function MockHomePreview() {
       {/* Stats Cards */}
       <View style={styles.statsRow}>
         <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
-          <View style={[styles.statIcon, { backgroundColor: '#1D1D1F' + '20' }]}>
-            <Target size={16} color="#1D1D1F" />
+          <View style={[styles.statIcon, { backgroundColor: '#2C2520' + '20' }]}>
+            <Target size={16} color="#2C2520" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>1 850</Text>
           <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kcal/jour</Text>
         </View>
 
         <View style={[styles.statCard, { backgroundColor: colors.bg.secondary }]}>
-          <View style={[styles.statIcon, { backgroundColor: '#1D1D1F' + '20' }]}>
-            <TrendingUp size={16} color="#1D1D1F" />
+          <View style={[styles.statIcon, { backgroundColor: '#2C2520' + '20' }]}>
+            <TrendingUp size={16} color="#2C2520" />
           </View>
           <Text style={[styles.statValue, { color: colors.text.primary }]}>-2.3</Text>
           <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>kg ce mois</Text>
@@ -78,9 +78,9 @@ export function MockHomePreview() {
         <Text style={[styles.tagsTitle, { color: colors.text.tertiary }]}>Tes préférences</Text>
         <View style={styles.tagsRow}>
           {[
-            { label: 'Sans lactose', color: '#1D1D1F' },
+            { label: 'Sans lactose', color: '#2C2520' },
             { label: 'Végétarien', color: purple },
-            { label: '15 min', color: '#FF9500' },
+            { label: '15 min', color: '#C4956A' },
           ].map((tag, i) => (
             <View key={i} style={[styles.tag, { backgroundColor: tag.color + '15' }]}>
               <Text style={[styles.tagText, { color: tag.color }]}>{tag.label}</Text>
@@ -92,7 +92,7 @@ export function MockHomePreview() {
       {/* Weekly Progress */}
       <View style={[styles.weekCard, { backgroundColor: colors.bg.secondary }]}>
         <View style={styles.weekHeader}>
-          <Flame size={14} color="#FF9500" />
+          <Flame size={14} color="#C4956A" />
           <Text style={[styles.weekTitle, { color: colors.text.primary }]}>Cette semaine</Text>
         </View>
         <View style={styles.daysRow}>
@@ -100,7 +100,7 @@ export function MockHomePreview() {
             <View key={i} style={styles.dayCol}>
               <View style={[
                 styles.dayCircle,
-                { backgroundColor: i < 5 ? '#1D1D1F' : colors.border.light }
+                { backgroundColor: i < 5 ? '#2C2520' : colors.border.light }
               ]}>
                 {i < 5 && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
               </View>
@@ -108,7 +108,7 @@ export function MockHomePreview() {
             </View>
           ))}
         </View>
-        <Text style={[styles.streakText, { color: '#FF9500' }]}>🔥 5 jours</Text>
+        <Text style={[styles.streakText, { color: '#C4956A' }]}>🔥 5 jours</Text>
       </View>
     </View>
   )

@@ -21,7 +21,6 @@ import {
   Modal,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { LinearGradient } from 'expo-linear-gradient'
 import {
   Search,
   SlidersHorizontal,
@@ -39,7 +38,7 @@ import {
 import * as Haptics from 'expo-haptics'
 
 import { useTheme } from '../contexts/ThemeContext'
-import { colors as staticColors, spacing, typography, radius, fonts } from '../constants/theme'
+import { spacing, typography, radius, fonts } from '../constants/theme'
 import { useRecipesStore, type AIRecipeRating } from '../stores/recipes-store'
 import {
   loadStaticRecipes,
@@ -50,13 +49,13 @@ import { NutriScoreBadge } from '../components/ui'
 import { ShareModal, type ShareableRecipe } from '../components/social'
 import type { Recipe, MealType } from '../types'
 
-// Category configurations - iOS color palette
+// Category configurations - Warm palette
 const CATEGORIES = [
-  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#FF9500' },      // iOS Orange
-  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#34C759' },       // iOS Green
-  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#FF3B30' },           // iOS Red
-  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#30D158' },      // iOS Mint
-  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#AF52DE' },     // iOS Purple
+  { id: 'quick', label: 'Rapide (<20min)', emoji: '⚡', color: '#C4956A' },      // Caramel
+  { id: 'highprotein', label: 'Protéiné', emoji: '💪', color: '#7A9E7E' },       // Sage green
+  { id: 'lowcarb', label: 'Low Carb', emoji: '🥩', color: '#C87863' },           // Terracotta
+  { id: 'vegetarian', label: 'Végétarien', emoji: '🥗', color: '#8BAF8F' },      // Light sage
+  { id: 'mealprep', label: 'Batch Cooking', emoji: '🍱', color: '#9B8BB8' },     // Soft lavender
 ]
 
 const MEAL_TYPES: { id: MealType | ''; label: string }[] = [
@@ -412,10 +411,10 @@ export default function RecipesScreen() {
 
   // Get health quality indicator based on score
   const getHealthQuality = (score?: number): { label: string; color: string; bgColor: string } => {
-    if (!score || score < 50) return { label: 'Plaisir', color: '#DC2626', bgColor: '#FEE2E2' }
-    if (score < 70) return { label: 'Correct', color: '#F59E0B', bgColor: '#FEF3C7' }
-    if (score < 85) return { label: 'Sain', color: '#10B981', bgColor: '#D1FAE5' }
-    return { label: 'Top', color: '#059669', bgColor: '#A7F3D0' }
+    if (!score || score < 50) return { label: 'Plaisir', color: '#C87863', bgColor: '#F5E6E2' }
+    if (score < 70) return { label: 'Correct', color: '#C4956A', bgColor: '#F5EDE5' }
+    if (score < 85) return { label: 'Sain', color: '#7A9E7E', bgColor: '#E8F0E9' }
+    return { label: 'Top', color: '#5C8A61', bgColor: '#D8E8DA' }
   }
 
   // Render recipe card for horizontal carousel
@@ -509,22 +508,18 @@ export default function RecipesScreen() {
         key={category.id}
         style={[
           styles.categoryCard,
+          { backgroundColor: isSelected ? category.color + '30' : category.color + '15' },
           isSelected && { borderWidth: 2, borderColor: category.color }
         ]}
         onPress={() => handleCategoryPress(category.id)}
         activeOpacity={0.8}
       >
-        <LinearGradient
-          colors={isSelected
-            ? [category.color + '60', category.color + '40']
-            : [category.color + '40', category.color + '20']}
-          style={styles.categoryGradient}
-        >
+        <View style={styles.categoryGradient}>
           <Text style={styles.categoryEmoji}>{category.emoji}</Text>
           <Text style={[styles.categoryLabel, { color: colors.text.primary }, isSelected && { fontWeight: '700' }]}>
             {category.label}
           </Text>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     )
   }
@@ -1043,9 +1038,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.default, // iOS 8px
     overflow: 'hidden',
     marginRight: spacing.md,
-    shadowColor: '#000',
+    shadowColor: '#2C2520',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },

@@ -37,7 +37,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import * as Haptics from 'expo-haptics'
 
-import { Card, Button, AnimatedBackground } from '../components/ui'
+import { Card, Button } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { spacing, typography, radius, fonts } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -398,7 +398,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      <AnimatedBackground circleCount={4} intensity={0.06} />
+      {/* Clean background - no decorative elements */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -631,7 +631,7 @@ export default function ProfileScreen() {
             activeOpacity={canToggleMetabolic || isMetabolicEnrolled ? 0.7 : 1}
           >
             <View style={[styles.programIcon, styles.programIconMetabolic, isMetabolicEnrolled && styles.programIconMetabolicActive]}>
-              <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : '#C87863'} />
+              <Zap size={20} color={isMetabolicEnrolled ? '#FFFFFF' : colors.error} />
             </View>
             <View style={styles.programInfo}>
               <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleMetabolic && !isMetabolicEnrolled && { color: colors.text.muted }]}>
@@ -647,8 +647,8 @@ export default function ProfileScreen() {
               value={isMetabolicEnrolled}
               onValueChange={handleToggleMetabolic}
               disabled={!canToggleMetabolic && !isMetabolicEnrolled}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(200, 120, 99, 0.3)' }}
-              thumbColor={isMetabolicEnrolled ? '#C87863' : colors.text.tertiary}
+              trackColor={{ false: colors.bg.tertiary, true: colors.errorLight }}
+              thumbColor={isMetabolicEnrolled ? colors.error : colors.text.tertiary}
               ios_backgroundColor={colors.bg.tertiary}
             />
           </TouchableOpacity>
@@ -660,7 +660,7 @@ export default function ProfileScreen() {
             activeOpacity={canToggleWellness || isWellnessEnrolled ? 0.7 : 1}
           >
             <View style={[styles.programIcon, styles.programIconWellness, isWellnessEnrolled && styles.programIconWellnessActive]}>
-              <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : '#4A6741'} />
+              <Heart size={20} color={isWellnessEnrolled ? '#FFFFFF' : colors.accent.primary} />
             </View>
             <View style={styles.programInfo}>
               <Text style={[styles.programLabel, { color: colors.text.primary }, !canToggleWellness && !isWellnessEnrolled && { color: colors.text.muted }]}>
@@ -676,8 +676,8 @@ export default function ProfileScreen() {
               value={isWellnessEnrolled}
               onValueChange={handleToggleWellness}
               disabled={!canToggleWellness && !isWellnessEnrolled}
-              trackColor={{ false: colors.bg.tertiary, true: 'rgba(74, 103, 65, 0.3)' }}
-              thumbColor={isWellnessEnrolled ? '#4A6741' : colors.text.tertiary}
+              trackColor={{ false: colors.bg.tertiary, true: colors.accent.light }}
+              thumbColor={isWellnessEnrolled ? colors.accent.primary : colors.text.tertiary}
               ios_backgroundColor={colors.bg.tertiary}
             />
           </TouchableOpacity>
@@ -808,7 +808,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Version */}
-        <Text style={[styles.version, { color: colors.text.muted }]}>Presence v1.0.0</Text>
+        <Text style={[styles.version, { color: colors.text.muted }]}>LYM v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   )
@@ -1110,16 +1110,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   programIconMetabolic: {
-    backgroundColor: 'rgba(200, 120, 99, 0.15)',  // Terre Cuite light
+    backgroundColor: 'rgba(200, 120, 99, 0.12)',
   },
   programIconMetabolicActive: {
-    backgroundColor: '#C87863',  // Terre Cuite
+    backgroundColor: '#C87863',
   },
   programIconWellness: {
-    backgroundColor: 'rgba(74, 103, 65, 0.15)',   // Vert Mousse light
+    backgroundColor: 'rgba(122, 158, 126, 0.12)',
   },
   programIconWellnessActive: {
-    backgroundColor: '#4A6741',  // Vert Mousse
+    backgroundColor: '#7A9E7E',
   },
   programItemBorder: {
     borderBottomWidth: 1,

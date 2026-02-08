@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#34C759', // iOS Green
+    backgroundColor: '#7A9E7E', // Sage green
     borderRadius: 10,
     minWidth: 18,
     height: 18,

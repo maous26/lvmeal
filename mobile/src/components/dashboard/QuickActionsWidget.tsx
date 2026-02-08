@@ -15,7 +15,6 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Sparkles, Percent, ChevronRight, Calendar, CalendarDays, ChefHat } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { colors, spacing, typography, radius, shadows } from '../../constants/theme'
@@ -194,19 +193,14 @@ export default function QuickActionsWidget({
         ]}
         onPress={handleGenerate}
       >
-        <LinearGradient
-          colors={['#FB923C', '#F97316']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.generateGradient}
-        >
+        <View style={[styles.generateGradient, { backgroundColor: colors.accent.primary }]}>
           <Sparkles size={18} color="#FFFFFF" />
           <Text style={styles.generateText}>
             Générer mon plan {selectedDuration}j
             {calorieReduction ? ' (-10%)' : ''}
           </Text>
           <ChevronRight size={18} color="#FFFFFF" />
-        </LinearGradient>
+        </View>
       </Pressable>
 
       {/* Savings info */}

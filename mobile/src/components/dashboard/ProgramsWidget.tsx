@@ -6,7 +6,6 @@
 
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
 import { ChevronRight, Zap, Leaf, Check } from 'lucide-react-native'
 import * as Haptics from 'expo-haptics'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -15,15 +14,15 @@ import { spacing, typography, radius } from '../../constants/theme'
 import { useMetabolicBoostStore } from '../../stores/metabolic-boost-store'
 import { useWellnessProgramStore } from '../../stores/wellness-program-store'
 
-// iOS color palette matching ProgramsScreen
+// Warm palette matching ProgramsScreen
 const PROGRAM_COLORS = {
   metabolic: {
-    gradient: ['#FFE5CC', '#FF9500'] as const,
-    accent: '#FF9500',
+    bg: '#F5EDE5',
+    accent: '#C4956A',
   },
   wellness: {
-    gradient: ['#D4F5DC', '#34C759'] as const,
-    accent: '#34C759',
+    bg: '#E8F0E9',
+    accent: '#7A9E7E',
   },
 }
 
@@ -72,20 +71,18 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
           <View style={styles.left}>
             <View style={styles.iconsRow}>
               {isMetabolicEnrolled && (
-                <LinearGradient
-                  colors={PROGRAM_COLORS.metabolic.gradient}
-                  style={styles.iconBadge}
+                <View
+                  style={[styles.iconBadge, { backgroundColor: PROGRAM_COLORS.metabolic.bg }]}
                 >
                   <Zap size={14} color={PROGRAM_COLORS.metabolic.accent} />
-                </LinearGradient>
+                </View>
               )}
               {isWellnessEnrolled && (
-                <LinearGradient
-                  colors={PROGRAM_COLORS.wellness.gradient}
-                  style={[styles.iconBadge, isMetabolicEnrolled && styles.iconOverlap]}
+                <View
+                  style={[styles.iconBadge, { backgroundColor: PROGRAM_COLORS.wellness.bg }, isMetabolicEnrolled && styles.iconOverlap]}
                 >
                   <Leaf size={14} color={PROGRAM_COLORS.wellness.accent} />
-                </LinearGradient>
+                </View>
               )}
             </View>
             <View style={styles.textContent}>
@@ -104,7 +101,7 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
             {/* Progress indicators with iOS colors */}
             <View style={styles.progressBars}>
               {isMetabolicEnrolled && (
-                <View style={[styles.miniProgress, { backgroundColor: 'rgba(255, 149, 0, 0.15)' }]}>
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(196, 149, 106, 0.15)' }]}>
                   <View
                     style={[
                       styles.miniProgressFill,
@@ -114,7 +111,7 @@ export function ProgramsWidget({ onPress }: ProgramsWidgetProps) {
                 </View>
               )}
               {isWellnessEnrolled && (
-                <View style={[styles.miniProgress, { backgroundColor: 'rgba(52, 199, 89, 0.15)' }]}>
+                <View style={[styles.miniProgress, { backgroundColor: 'rgba(122, 158, 126, 0.15)' }]}>
                   <View
                     style={[
                       styles.miniProgressFill,

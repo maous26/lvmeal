@@ -25,12 +25,12 @@ import { spacing, radius, fonts } from '../../constants/theme'
 
 const { height } = Dimensions.get('window')
 
-// iOS color palette
+// Warm color palette
 const iosColors = {
-  green: '#1D1D1F',  // Black for primary actions
-  blue: '#007AFF',
-  orange: '#FF9500',
-  purple: '#AF52DE',
+  green: '#2C2520',  // Warm brown for primary actions
+  blue: '#7A9E7E',   // Sage green
+  orange: '#C4956A',  // Caramel
+  purple: '#9B8BB8',  // Soft lavender
 }
 
 interface StepSetupChoiceProps {

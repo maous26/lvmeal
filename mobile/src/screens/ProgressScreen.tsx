@@ -28,7 +28,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../navigation/RootNavigator'
 
-import { Card, Badge, ProgressBar, AnimatedBackground } from '../components/ui'
+import { Card, Badge, ProgressBar } from '../components/ui'
 import { useTheme } from '../contexts/ThemeContext'
 import { fonts, spacing, typography, radius, shadows } from '../constants/theme'
 import { useUserStore } from '../stores/user-store'
@@ -834,8 +834,6 @@ export default function ProgressScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg.primary }]}>
-      <AnimatedBackground circleCount={4} intensity={0.06} />
-
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text.primary }]}>Progrès</Text>

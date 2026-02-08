@@ -83,8 +83,8 @@ export function CreditsExhaustedModal({
           </TouchableOpacity>
 
           {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-            <Zap size={32} color="#EF4444" />
+          <View style={[styles.iconContainer, { backgroundColor: 'rgba(200, 120, 99, 0.1)' }]}>
+            <Zap size={32} color="#C87863" />
           </View>
 
           {/* Title */}
@@ -117,7 +117,7 @@ export function CreditsExhaustedModal({
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.border.light }]} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#8B5CF6' }]}>∞</Text>
+              <Text style={[styles.statValue, { color: '#9B8BB8' }]}>∞</Text>
               <Text style={[styles.statLabel, { color: colors.text.tertiary }]}>Premium</Text>
             </View>
           </View>
@@ -129,8 +129,8 @@ export function CreditsExhaustedModal({
             </Text>
             {premiumBenefits.map((benefit, index) => (
               <View key={index} style={styles.benefitRow}>
-                <View style={[styles.checkIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-                  <Check size={14} color="#8B5CF6" strokeWidth={3} />
+                <View style={[styles.checkIcon, { backgroundColor: 'rgba(155, 139, 184, 0.1)' }]}>
+                  <Check size={14} color="#9B8BB8" strokeWidth={3} />
                 </View>
                 <Text style={[styles.benefitText, { color: colors.text.secondary }]}>
                   {benefit}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#9B8BB8',
     width: '100%',
     paddingVertical: spacing.md,
     borderRadius: radius.lg,

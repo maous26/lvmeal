@@ -94,10 +94,10 @@ export default function CaloriesWidget({ consumed, burned, target, sportBonus = 
   const effectiveTarget = target + sportBonus
   const remaining = Math.max(0, effectiveTarget - consumed + burned)
 
-  // Dynamic gradient colors - iOS Green palette
+  // Dynamic gradient colors - Sage green palette
   const gradientColors = isDark
-    ? ['#28C94E', '#30D158'] as const    // Dark mode: iOS Dark green
-    : ['#2CA048', '#34C759'] as const    // Light mode: Apple Green
+    ? ['#5C8A61', '#6B9B70'] as const    // Dark mode: Deep sage
+    : ['#7A9E7E', '#8BAF8F'] as const    // Light mode: Sage green
 
   return (
     <View style={styles.container}>

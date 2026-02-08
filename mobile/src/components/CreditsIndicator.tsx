@@ -104,12 +104,12 @@ export function CreditsIndicator({
             styles.compactContainer,
             {
               backgroundColor: status.isPremium
-                ? 'rgba(139, 92, 246, 0.15)'
+                ? 'rgba(155, 139, 184, 0.15)'
                 : isLow
                 ? 'rgba(239, 68, 68, 0.1)'
                 : colors.bg.secondary,
               borderColor: status.isPremium
-                ? 'rgba(139, 92, 246, 0.3)'
+                ? 'rgba(155, 139, 184, 0.3)'
                 : isLow
                 ? 'rgba(239, 68, 68, 0.2)'
                 : colors.border.light,
@@ -119,8 +119,8 @@ export function CreditsIndicator({
         >
           {status.isPremium ? (
             <>
-              <Crown size={14} color="#8B5CF6" />
-              <Text style={[styles.compactText, { color: '#8B5CF6' }]}>Premium</Text>
+              <Crown size={14} color="#9B8BB8" />
+              <Text style={[styles.compactText, { color: '#9B8BB8' }]}>Premium</Text>
             </>
           ) : (
             <>
@@ -150,7 +150,7 @@ export function CreditsIndicator({
   const percentage = status.isPremium ? 100 : (status.creditsRemaining / status.creditsTotal) * 100
   const isLow = status.creditsRemaining <= 1 && !status.isPremium
   const progressColor = status.isPremium
-    ? '#8B5CF6'
+    ? '#9B8BB8'
     : isLow
     ? colors.error
     : colors.accent.primary
@@ -164,7 +164,7 @@ export function CreditsIndicator({
       <View style={styles.fullHeader}>
         <View style={styles.fullTitleRow}>
           {status.isPremium ? (
-            <Crown size={20} color="#8B5CF6" />
+            <Crown size={20} color="#9B8BB8" />
           ) : (
             <Sparkles size={20} color={progressColor} />
           )}

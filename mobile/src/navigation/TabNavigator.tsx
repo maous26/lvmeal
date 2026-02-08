@@ -18,7 +18,8 @@ import CoachScreen from '../screens/CoachScreen'
 import ProgramsScreen from '../screens/ProgramsScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 
-import { colors, shadows } from '../constants/theme'
+import { useTheme } from '../contexts/ThemeContext'
+import { shadows, radius, typography, fonts } from '../constants/theme'
 import { useMessageCenter } from '../services/message-center'
 import { requestHealthPermissions, isHealthAvailable } from '../services/health-service'
 
@@ -52,18 +53,18 @@ class CoachErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundar
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, backgroundColor: '#FFF5F5', padding: 20, paddingTop: 60 }}>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#C53030', marginBottom: 10 }}>
+        <View style={{ flex: 1, backgroundColor: '#FBF3F1', padding: 20, paddingTop: 60 }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#C87863', marginBottom: 10 }}>
             Erreur Coach Screen
           </Text>
-          <Text style={{ fontSize: 14, color: '#742A2A', marginBottom: 10 }}>
+          <Text style={{ fontSize: 14, color: '#5C5550', marginBottom: 10 }}>
             {this.state.error?.message}
           </Text>
-          <ScrollView style={{ flex: 1, backgroundColor: '#FED7D7', borderRadius: 8, padding: 10 }}>
-            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#742A2A' }}>
+          <ScrollView style={{ flex: 1, backgroundColor: '#F7E6E3', borderRadius: 12, padding: 10 }}>
+            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#5C5550' }}>
               {this.state.error?.stack}
             </Text>
-            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#742A2A', marginTop: 10 }}>
+            <Text style={{ fontSize: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#5C5550', marginTop: 10 }}>
               {this.state.errorInfo?.componentStack}
             </Text>
           </ScrollView>
@@ -74,7 +75,6 @@ class CoachErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundar
   }
 }
 
-// Wrap CoachScreen with error boundary
 const CoachScreenWithErrorBoundary = () => (
   <CoachErrorBoundary>
     <CoachScreen />
@@ -93,7 +93,7 @@ const TabIcon = ({
   badge?: number
 }) => (
   <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-    <Icon size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+    <Icon size={22} color={color} strokeWidth={focused ? 2.5 : 1.8} />
     {badge !== undefined && badge > 0 && (
       <View style={styles.badge}>
         <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
@@ -104,54 +104,33 @@ const TabIcon = ({
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets()
+  const { colors } = useTheme()
   const healthPermissionsRequested = useRef(false)
 
-  // Le CoachScreen n'affiche QUE les messages du MessageCenter
-  // Donc le badge doit refléter uniquement ces messages (pas le vieux CoachStore)
   const messages = useMessageCenter((state) => state.messages)
   const coachBadgeCount = messages.filter((m) => !m.read && !m.dismissed && (!m.expiresAt || new Date(m.expiresAt) > new Date())).length
 
-  // Request HealthKit/Health Connect permissions once on first app launch
-  // This makes LYM appear in iOS Health settings automatically
   useEffect(() => {
     const requestHealthPermissionsOnce = async () => {
-      // Prevent multiple requests in the same session
       if (healthPermissionsRequested.current) return
       healthPermissionsRequested.current = true
 
       try {
-        // Check if we've already requested permissions
         const alreadyRequested = await AsyncStorage.getItem(HEALTH_PERMISSIONS_REQUESTED_KEY)
-        if (alreadyRequested === 'true') {
-          console.log('[TabNavigator] Health permissions already requested previously')
-          return
-        }
+        if (alreadyRequested === 'true') return
 
-        // Check if health services are available
         const available = await isHealthAvailable()
-        if (!available) {
-          console.log('[TabNavigator] Health services not available on this device')
-          return
-        }
+        if (!available) return
 
-        // Request permissions - this will show the HealthKit prompt on iOS
-        console.log('[TabNavigator] Requesting health permissions...')
         const result = await requestHealthPermissions()
-        console.log('[TabNavigator] Health permissions result:', result)
-
-        // Mark as requested only after a successful init.
-        // If we mark it too early, we might never prompt (e.g. native module missing, user cancelled, init error).
         if (result.isAvailable) {
           await AsyncStorage.setItem(HEALTH_PERMISSIONS_REQUESTED_KEY, 'true')
-        } else {
-          console.log('[TabNavigator] Not marking permissions as requested (init failed)')
         }
       } catch (error) {
         console.log('[TabNavigator] Error requesting health permissions:', error)
       }
     }
 
-    // Small delay to let the app fully load before showing the permission dialog
     const timer = setTimeout(requestHealthPermissionsOnce, 1500)
     return () => clearTimeout(timer)
   }, [])
@@ -161,15 +140,24 @@ export default function TabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent.primary,
-        tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarInactiveTintColor: colors.text.muted,
         tabBarStyle: [
-          styles.tabBar,
           {
-            height: 60 + (Platform.OS === 'ios' ? insets.bottom : 10),
+            backgroundColor: colors.bg.elevated,
+            borderTopWidth: 1,
+            borderTopColor: colors.border.light,
+            paddingTop: 8,
+            height: 56 + (Platform.OS === 'ios' ? insets.bottom : 10),
             paddingBottom: Platform.OS === 'ios' ? insets.bottom : 10,
+            ...shadows.xs,
           },
         ],
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '500',
+          fontFamily: fonts.sans.medium,
+          marginTop: 2,
+        },
         tabBarHideOnKeyboard: true,
       }}
       screenListeners={{
@@ -233,40 +221,28 @@ export default function TabNavigator() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: colors.bg.elevated,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.light,
-    paddingTop: 8,
-    ...shadows.sm,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 2,
-  },
   iconContainer: {
     padding: 4,
+    borderRadius: radius.sm,
   },
   iconContainerActive: {
-    backgroundColor: colors.accent.light,
-    borderRadius: 12,
+    backgroundColor: 'rgba(122, 158, 126, 0.1)',
   },
   badge: {
     position: 'absolute',
     top: -4,
     right: -6,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.error,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#C87863',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
   },
 })
